@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  
+  /* Typography */
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  
+  /* Pet Store Color Palette (Vibrant & Premium) */
+  --color-primary: #9333FF; /* Vibrant Purple (Pawthantics vibe) */
+  --color-primary-hover: #7E22CE; /* Darker Purple for hover */
+  --color-secondary: #F3E8FF; /* Very light purple for secondary backgrounds */
+  --color-accent: #E879F9; /* Fuchsia accent */
+}
+
+:root {
+  --background: #F8FAFC; /* Slate 50 - Cool off white */
+  --foreground: #0F172A; /* Slate 900 - Very dark gray */
+  --surface: #FFFFFF;
+  --border: #E2E8F0;
+}
+
+.dark {
+  --background: #0F172A;
+  --foreground: #F8FAFC;
+  --surface: #1E293B;
+  --border: #334155;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+/* Gradient headline: Tailwind bg-clip-text can render invisible without explicit webkit clip + fill */
+.hero-gradient-heading {
+  color: rgb(244 114 182);
+  background-image: linear-gradient(
+    90deg,
+    rgb(196 181 253),
+    rgb(244 114 182)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
