@@ -23,8 +23,9 @@ export default async function Home() {
             alt="Happy pets" 
             className="w-full h-full object-cover opacity-50 mix-blend-overlay"
           />
+          <div className="absolute inset-0 hero-texture z-[1]" aria-hidden />
           {/* Gradient Overlay for text readability */}
-          <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-slate-950/90 via-slate-900/60 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-slate-950/90 via-slate-900/60 to-transparent z-[2]"></div>
         </div>
 
         {/* Hero Content */}
@@ -58,10 +59,13 @@ export default async function Home() {
       </section>
 
       {/* Featured Products Section */}
-      <section className="container mx-auto px-4 md:px-6 pt-24 pb-12">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-10">
+      <section className="container mx-auto px-4 md:px-6 max-w-7xl pt-20 md:pt-24 pb-12">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10">
           <div className="max-w-2xl">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-[var(--color-foreground)] mb-4">
+            <span className="inline-block text-xs font-bold uppercase tracking-widest text-[var(--color-primary)] mb-3 px-3 py-1 rounded-full bg-[var(--color-secondary)]/80 dark:bg-[var(--color-primary)]/15 border border-[var(--color-primary)]/20">
+              Featured
+            </span>
+            <h2 className="heading-section text-3xl md:text-4xl mb-4">
               Pawsitively Perfect Picks
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-lg">
@@ -78,7 +82,14 @@ export default async function Home() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
           {featuredProducts.length === 0 ? (
             <div className="col-span-full flex flex-col items-center justify-center py-24 px-4 bg-[var(--color-secondary)]/10 dark:bg-slate-800/30 backdrop-blur-sm border-2 border-dashed border-[var(--color-primary)]/20 rounded-[2rem] text-center max-w-xl mx-auto">
-              <span className="text-5xl mb-4 opacity-80" aria-hidden>🐾</span>
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--color-primary)]/10 text-[var(--color-primary)]" aria-hidden>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 3c.5 2.5 2 4 4 4s3.5-1.5 4-4" />
+                  <path d="M12 21c-.5-2.5-2-4-4-4s-3.5 1.5-4 4" />
+                  <circle cx="8" cy="12" r="2" />
+                  <circle cx="16" cy="12" r="2" />
+                </svg>
+              </div>
               <p className="text-[var(--color-foreground)] font-black text-xl mb-2">No featured products yet</p>
               <p className="text-slate-500 dark:text-slate-400 font-medium mb-6">
                 Connect your Shopify catalog or browse the shop when demo data is available.
@@ -134,7 +145,7 @@ export default async function Home() {
               <input 
                 type="email" 
                 placeholder="Your email address" 
-                className="bg-transparent text-white placeholder-white/70 px-5 sm:px-6 py-3 flex-grow outline-none font-medium rounded-2xl sm:rounded-full min-h-[48px]" 
+                className="newsletter-input-focus bg-transparent text-white placeholder-white/70 px-5 sm:px-6 py-3 flex-grow outline-none font-medium rounded-2xl sm:rounded-full min-h-[48px] border border-transparent" 
               />
               <button type="button" className="bg-white text-[var(--color-primary)] font-bold hover:bg-slate-100 transition-colors border-none rounded-2xl sm:rounded-full px-8 py-3 shrink-0 min-h-[48px]">
                 Join now

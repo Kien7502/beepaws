@@ -1,6 +1,7 @@
 import { getProduct } from "@/lib/shopify/queries";
 import { notFound } from "next/navigation";
 import VariantSelector from "@/components/product/VariantSelector";
+import { ProductGallery } from "@/components/product/ProductGallery";
 import { Truck, ShieldCheck, RefreshCcw } from "lucide-react";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import Link from "next/link";
@@ -30,12 +31,11 @@ export default async function ProductPage({
 
   if (!product) return notFound();
 
-  const imageUrl =
-    product.images?.edges[0]?.node?.url ||
+  const fallbackUrl =
     "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?q=80&w=1200&auto=format&fit=crop";
 
   return (
-    <div className="container mx-auto px-4 md:px-6 py-12 md:py-16">
+    <div className="container mx-auto px-4 md:px-6 section-y max-w-7xl">
       <Breadcrumbs
         items={[
           { label: "Home", href: "/" },
@@ -46,46 +46,19 @@ export default async function ProductPage({
 
       <div className="flex flex-col md:flex-row gap-10 lg:gap-16">
         <div className="w-full md:w-1/2">
-          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-4 md:sticky md:top-28">
-            <div className="relative aspect-square rounded-2xl overflow-hidden bg-[var(--background)]">
-              <img
-                src={imageUrl}
-                alt={product.title}
-                className="w-full h-full object-cover"
-              />
-            </div>
-
-            {product.images.edges.length > 1 && (
-              <div className="flex gap-3 mt-4 overflow-x-auto pb-2">
-                {product.images.edges.map(({ node }, index) => (
-                  <button
-                    key={node.url}
-                    type="button"
-                    className={`flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-colors ${
-                      index === 0
-                        ? "border-[var(--color-primary)]"
-                        : "border-transparent hover:border-[var(--color-border)]"
-                    }`}
-                    aria-label={`View image ${index + 1}`}
-                  >
-                    <img
-                      src={node.url}
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <ProductGallery
+            productTitle={product.title}
+            images={product.images.edges}
+            fallbackUrl={fallbackUrl}
+          />
         </div>
 
         <div className="w-full md:w-1/2 flex flex-col pt-2 md:pt-0">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-[var(--color-foreground)] mb-4 leading-tight">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-[var(--color-foreground)] mb-4 leading-tight tracking-tight">
             {product.title}
           </h1>
 
-          <div className="mt-4 mb-8 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-6 shadow-sm">
+          <div className="mt-4 mb-8 card-elevated p-6 md:transition-shadow md:hover:shadow-elevated">
             <VariantSelector product={product} />
           </div>
 
@@ -102,7 +75,7 @@ export default async function ProductPage({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-[var(--color-border)] pt-8 mt-auto">
-            <div className="flex flex-col items-center text-center p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl">
+            <div className="flex flex-col items-center text-center p-4 card-elevated rounded-2xl">
               <Truck className="text-[var(--color-accent)] mb-2" size={24} />
               <span className="text-sm font-bold text-[var(--color-foreground)]">
                 Free shipping
@@ -111,7 +84,7 @@ export default async function ProductPage({
                 On orders over $50
               </span>
             </div>
-            <div className="flex flex-col items-center text-center p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl">
+            <div className="flex flex-col items-center text-center p-4 card-elevated rounded-2xl">
               <RefreshCcw className="text-[var(--color-accent)] mb-2" size={24} />
               <span className="text-sm font-bold text-[var(--color-foreground)]">
                 30-day returns
@@ -120,7 +93,7 @@ export default async function ProductPage({
                 Hassle-free guarantee
               </span>
             </div>
-            <div className="flex flex-col items-center text-center p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl">
+            <div className="flex flex-col items-center text-center p-4 card-elevated rounded-2xl">
               <ShieldCheck className="text-[var(--color-accent)] mb-2" size={24} />
               <span className="text-sm font-bold text-[var(--color-foreground)]">
                 Secure checkout

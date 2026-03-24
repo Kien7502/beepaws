@@ -6,7 +6,7 @@ import Link from "next/link";
 import type { MockCartLine } from "@/lib/mock-data";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import { ArrowLeft, CheckCircle2, Lock, Package } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Lock, Package, Truck } from "lucide-react";
 
 const SHIPPING_FLAT = 5.99;
 const FREE_SHIPPING_THRESHOLD = 50;
@@ -45,7 +45,7 @@ export default function CheckoutClient({ lines }: Props) {
   if (placed) {
     return (
       <div className="container mx-auto px-4 md:px-6 py-16 md:py-24 max-w-lg text-center">
-        <div className="rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-10 md:p-12 shadow-lg">
+        <div className="rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-10 md:p-12 shadow-elevated">
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 className="h-9 w-9" strokeWidth={2} />
           </div>
@@ -57,7 +57,7 @@ export default function CheckoutClient({ lines }: Props) {
             provider, orders will be processed there.
           </p>
           <Link href="/collections/all">
-            <Button size="lg" fullWidth>
+            <Button size="lg" fullWidth className="min-h-[48px]">
               Continue shopping
             </Button>
           </Link>
@@ -67,7 +67,7 @@ export default function CheckoutClient({ lines }: Props) {
   }
 
   return (
-    <div className="container mx-auto px-4 md:px-6 py-10 md:py-16">
+    <div className="container mx-auto px-4 md:px-6 py-10 md:py-16 max-w-7xl">
       <Link
         href="/collections/all"
         className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-primary)] hover:underline mb-8"
@@ -76,7 +76,7 @@ export default function CheckoutClient({ lines }: Props) {
         Back to shop
       </Link>
 
-      <div className="mb-10">
+      <div className="mb-8">
         <h1 className="text-3xl md:text-4xl font-extrabold text-[var(--color-foreground)] tracking-tight">
           Checkout
         </h1>
@@ -85,10 +85,27 @@ export default function CheckoutClient({ lines }: Props) {
         </p>
       </div>
 
+      {/* Step indicator */}
+      <div className="flex flex-wrap items-center gap-1 sm:gap-2 mb-10 text-sm font-semibold">
+        <span className="inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] text-white px-4 py-2 min-h-[44px]">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs">1</span>
+          Shipping
+        </span>
+        <span className="text-slate-400 hidden sm:inline">→</span>
+        <span className="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] text-slate-600 dark:text-slate-300 px-4 py-2 min-h-[44px]">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-xs">2</span>
+          Payment
+        </span>
+        <span className="text-slate-400 hidden sm:inline">→</span>
+        <span className="inline-flex items-center gap-2 rounded-full border border-dashed border-[var(--color-border)] text-slate-500 px-4 py-2 min-h-[44px]">
+          <Truck className="h-4 w-4" />
+          Confirm
+        </span>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
-        {/* Form */}
         <div className="lg:col-span-7 space-y-10">
-          <section className="rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 md:p-8 shadow-sm">
+          <section className="card-elevated p-6 md:p-8 shadow-sm">
             <h2 className="text-lg font-bold text-[var(--color-foreground)] mb-6 flex items-center gap-2">
               <Package className="h-5 w-5 text-[var(--color-primary)]" />
               Shipping details
@@ -107,7 +124,7 @@ export default function CheckoutClient({ lines }: Props) {
             </div>
           </section>
 
-          <section className="rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 md:p-8 shadow-sm opacity-90">
+          <section className="card-elevated p-6 md:p-8 opacity-95">
             <h2 className="text-lg font-bold text-[var(--color-foreground)] mb-2 flex items-center gap-2">
               <Lock className="h-5 w-5 text-[var(--color-primary)]" />
               Payment
@@ -126,9 +143,8 @@ export default function CheckoutClient({ lines }: Props) {
           </section>
         </div>
 
-        {/* Order summary */}
         <aside className="lg:col-span-5 lg:sticky lg:top-28">
-          <div className="rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 md:p-8 shadow-sm">
+          <div className="card-elevated p-6 md:p-8 lg:shadow-lg">
             <h2 className="text-lg font-bold text-[var(--color-foreground)] mb-6">
               Order summary
             </h2>
@@ -195,7 +211,7 @@ export default function CheckoutClient({ lines }: Props) {
               type="button"
               size="lg"
               fullWidth
-              className="mt-8"
+              className="mt-8 min-h-[52px]"
               leftIcon={<Lock className="h-5 w-5" />}
               onClick={() => setPlaced(true)}
             >

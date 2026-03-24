@@ -2,8 +2,10 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ShoppingCart, Search, Menu, X } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { ShoppingCart, Menu, X } from "lucide-react";
 import { ThemeToggle } from "../ui/ThemeToggle";
+import { SearchOverlay } from "./SearchOverlay";
 
 const navLinks = [
   { href: "/collections/all", label: "Shop All" },
@@ -13,8 +15,18 @@ const navLinks = [
 
 const DemoCartCount = 3;
 
+function navLinkActive(pathname: string, href: string): boolean {
+  if (href === "/collections/all") {
+    return (
+      pathname === "/collections/all" || pathname.startsWith("/products/")
+    );
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
     <header className="sticky top-0 z-50 w-full bg-[var(--background)]/90 backdrop-blur-md border-b border-[var(--color-border)]">
@@ -48,33 +60,34 @@ const Header = () => {
           </div>
 
           <nav className="hidden md:flex flex-1 justify-center items-center gap-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-sm font-semibold text-[var(--color-foreground)] hover:text-[var(--color-primary)] transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const active = navLinkActive(pathname, link.href);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`text-sm font-semibold transition-colors relative py-1 ${
+                    active
+                      ? "text-[var(--color-primary)] after:absolute after:left-0 after:right-0 after:-bottom-0.5 after:h-0.5 after:rounded-full after:bg-[var(--color-primary)]"
+                      : "text-[var(--color-foreground)] hover:text-[var(--color-primary)]"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
           </nav>
 
           <div className="flex-1 flex items-center justify-end gap-1 md:gap-3">
             <ThemeToggle />
-            <button
-              type="button"
-              className="p-2 text-[var(--color-foreground)] hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors hidden md:inline-flex"
-              aria-label="Search"
-            >
-              <Search size={20} />
-            </button>
+            <SearchOverlay />
             <Link
               href="/checkout"
               className="relative p-2 text-[var(--color-foreground)] hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors inline-flex"
               aria-label="Shopping cart"
             >
               <ShoppingCart size={24} />
-              <span className="absolute top-0 right-0 inline-flex min-w-[1.25rem] h-5 px-1 items-center justify-center text-[10px] font-bold text-white bg-[var(--color-primary)] rounded-full border-2 border-[var(--background)]">
+              <span className="absolute top-0 right-0 inline-flex min-w-5 h-5 px-1 items-center justify-center text-[10px] font-bold text-white bg-[var(--color-primary)] rounded-full border-2 border-[var(--background)]">
                 {DemoCartCount}
               </span>
             </Link>
@@ -87,20 +100,31 @@ const Header = () => {
           <Link
             href="/"
             onClick={() => setMobileOpen(false)}
-            className="block rounded-xl px-4 py-3 text-base font-semibold text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/80 dark:hover:bg-slate-800/80"
+            className={`block rounded-xl px-4 py-3 text-base font-semibold ${
+              pathname === "/"
+                ? "text-[var(--color-primary)] bg-[var(--color-secondary)]/50 dark:bg-slate-800"
+                : "text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/80 dark:hover:bg-slate-800/80"
+            }`}
           >
             Home
           </Link>
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setMobileOpen(false)}
-              className="block rounded-xl px-4 py-3 text-base font-semibold text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/80 dark:hover:bg-slate-800/80"
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const active = navLinkActive(pathname, link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileOpen(false)}
+                className={`block rounded-xl px-4 py-3 text-base font-semibold ${
+                  active
+                    ? "text-[var(--color-primary)] bg-[var(--color-secondary)]/50 dark:bg-slate-800"
+                    : "text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/80 dark:hover:bg-slate-800/80"
+                }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
           <Link
             href="/checkout"
             onClick={() => setMobileOpen(false)}

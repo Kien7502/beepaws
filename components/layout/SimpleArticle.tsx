@@ -10,7 +10,7 @@ type Props = {
 
 export function SimpleArticle({ title, description, breadcrumbs, children }: Props) {
   return (
-    <div className="container mx-auto px-4 md:px-6 py-12 md:py-16 max-w-3xl">
+    <div className="container mx-auto px-4 md:px-6 section-y max-w-3xl">
       <Breadcrumbs items={breadcrumbs} />
       <h1 className="text-3xl md:text-4xl font-extrabold text-[var(--color-foreground)] mb-4 tracking-tight">
         {title}

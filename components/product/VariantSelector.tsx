@@ -57,6 +57,7 @@ export default function VariantSelector({ product }: { product: Product }) {
           fullWidth
           disabled={!isAvailable}
           leftIcon={<ShoppingBag size={20} />}
+          className="min-h-[48px]"
         >
           {isAvailable ? 'Add to Cart' : 'Out of Stock'}
         </Button>

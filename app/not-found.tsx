@@ -17,7 +17,7 @@ export default function NotFound() {
       </p>
       <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
         <Link href="/" className="w-full sm:w-auto">
-          <Button fullWidth className="sm:w-auto" leftIcon={<Home className="h-5 w-5" />}>
+          <Button fullWidth className="sm:w-auto min-h-[48px]" leftIcon={<Home className="h-5 w-5" />}>
             Back to home
           </Button>
         </Link>
@@ -25,7 +25,7 @@ export default function NotFound() {
           <Button
             variant="outline"
             fullWidth
-            className="sm:w-auto"
+            className="sm:w-auto min-h-[48px]"
             leftIcon={<Search className="h-5 w-5" />}
           >
             Shop all products

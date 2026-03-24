@@ -13,7 +13,7 @@ export default async function ShopAllPage() {
   const products = await getProducts();
 
   return (
-    <div className="container mx-auto px-4 md:px-6 py-12 md:py-16">
+    <div className="container mx-auto px-4 md:px-6 max-w-7xl section-y">
       <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "All products" }]} />
 
       <div className="mb-10 text-center max-w-2xl mx-auto">
