@@ -60,10 +60,11 @@ const Footer = () => {
           <div className="space-y-6">
             <h4 className="font-bold text-[var(--color-foreground)]">Shop</h4>
             <ul className="space-y-3">
-              <li><Link href="/collections/all" className="text-slate-500 dark:text-slate-400 hover:text-[var(--color-primary)] text-sm transition-colors">All Products</Link></li>
+              <li><Link href="/collections/all" className="text-slate-500 dark:text-slate-400 hover:text-[var(--color-primary)] text-sm transition-colors">All products</Link></li>
               <li><Link href="/collections/dogs" className="text-slate-500 dark:text-slate-400 hover:text-[var(--color-primary)] text-sm transition-colors">For Dogs</Link></li>
               <li><Link href="/collections/cats" className="text-slate-500 dark:text-slate-400 hover:text-[var(--color-primary)] text-sm transition-colors">For Cats</Link></li>
               <li><Link href="/collections/new" className="text-slate-500 dark:text-slate-400 hover:text-[var(--color-primary)] text-sm transition-colors">New Arrivals</Link></li>
+              <li><Link href="/checkout" className="text-slate-500 dark:text-slate-400 hover:text-[var(--color-primary)] text-sm transition-colors">Cart / checkout</Link></li>
             </ul>
           </div>
 
@@ -80,18 +81,18 @@ const Footer = () => {
         </div>
 
         {/* Bottom */}
-        <div className="pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="pt-8 border-t border-[var(--color-border)] flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-slate-500 dark:text-slate-400 text-sm">
             © {new Date().getFullYear()} Beepaws. All rights reserved.
           </p>
           <div className="flex items-center space-x-6">
-            <a href="https://instagram.com" target="_blank" rel="noreferrer" className="text-slate-500 dark:text-slate-400 hover:text-[var(--color-primary)] dark:hover:text-[var(--color-primary)] transition-colors">
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-slate-500 dark:text-slate-400 hover:text-[var(--color-primary)] dark:hover:text-[var(--color-primary)] transition-colors">
               <Instagram size={24} />
             </a>
-            <a href="https://facebook.com" target="_blank" rel="noreferrer" className="text-slate-500 dark:text-slate-400 hover:text-[var(--color-primary)] dark:hover:text-[var(--color-primary)] transition-colors">
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-slate-500 dark:text-slate-400 hover:text-[var(--color-primary)] dark:hover:text-[var(--color-primary)] transition-colors">
               <Facebook size={24} />
             </a>
-            <a href="https://twitter.com" target="_blank" rel="noreferrer" className="text-slate-500 dark:text-slate-400 hover:text-[var(--color-primary)] dark:hover:text-[var(--color-primary)] transition-colors">
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-slate-500 dark:text-slate-400 hover:text-[var(--color-primary)] dark:hover:text-[var(--color-primary)] transition-colors">
               <Twitter size={24} />
             </a>
           </div>

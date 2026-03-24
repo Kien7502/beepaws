@@ -77,10 +77,15 @@ export default async function Home() {
         {/* Product Grid Dynamic */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
           {featuredProducts.length === 0 ? (
-            <div className="col-span-full flex flex-col items-center justify-center py-24 px-4 bg-[var(--color-secondary)]/10 backdrop-blur-sm border-2 border-dashed border-[var(--color-primary)]/20 rounded-[2rem] text-center">
-              <span className="text-5xl mb-4 opacity-80">🐾</span>
-              <p className="text-[var(--color-foreground)] font-black text-xl mb-2">Paws paused currently.</p>
-              <p className="text-slate-500 dark:text-slate-400 font-medium">Please connect your real Shopify products to see them here!</p>
+            <div className="col-span-full flex flex-col items-center justify-center py-24 px-4 bg-[var(--color-secondary)]/10 dark:bg-slate-800/30 backdrop-blur-sm border-2 border-dashed border-[var(--color-primary)]/20 rounded-[2rem] text-center max-w-xl mx-auto">
+              <span className="text-5xl mb-4 opacity-80" aria-hidden>🐾</span>
+              <p className="text-[var(--color-foreground)] font-black text-xl mb-2">No featured products yet</p>
+              <p className="text-slate-500 dark:text-slate-400 font-medium mb-6">
+                Connect your Shopify catalog or browse the shop when demo data is available.
+              </p>
+              <Link href="/collections/all">
+                <Button variant="outline">Browse catalog</Button>
+              </Link>
             </div>
           ) : (
             featuredProducts.map((product) => {
@@ -125,14 +130,14 @@ export default async function Home() {
             <p className="text-white/90 mb-10 text-lg md:text-xl font-medium max-w-md">
               Sign up today and get <span className="font-bold text-yellow-300">15% off</span> your first accessory order, plus exclusive members-only tips for pet care.
             </p>
-            <div className="flex w-full max-w-md gap-3 bg-white/10 p-2 rounded-full border border-white/20 backdrop-blur-md">
+            <div className="flex flex-col sm:flex-row w-full max-w-md gap-2 sm:gap-3 bg-white/10 p-2 rounded-3xl sm:rounded-full border border-white/20 backdrop-blur-md">
               <input 
                 type="email" 
                 placeholder="Your email address" 
-                className="bg-transparent text-white placeholder-white/70 px-6 py-3 flex-grow outline-none font-medium" 
+                className="bg-transparent text-white placeholder-white/70 px-5 sm:px-6 py-3 flex-grow outline-none font-medium rounded-2xl sm:rounded-full min-h-[48px]" 
               />
-              <button className="bg-white text-[var(--color-primary)] font-bold hover:bg-slate-100 transition-colors border-none rounded-full px-8">
-                Join Now
+              <button type="button" className="bg-white text-[var(--color-primary)] font-bold hover:bg-slate-100 transition-colors border-none rounded-2xl sm:rounded-full px-8 py-3 shrink-0 min-h-[48px]">
+                Join now
               </button>
             </div>
           </div>

@@ -84,6 +84,13 @@ const Header = () => {
 
       {mobileOpen && (
         <div className="md:hidden border-t border-[var(--color-border)] bg-[var(--background)] px-4 py-4 space-y-1 shadow-lg">
+          <Link
+            href="/"
+            onClick={() => setMobileOpen(false)}
+            className="block rounded-xl px-4 py-3 text-base font-semibold text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/80 dark:hover:bg-slate-800/80"
+          >
+            Home
+          </Link>
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -94,6 +101,13 @@ const Header = () => {
               {link.label}
             </Link>
           ))}
+          <Link
+            href="/checkout"
+            onClick={() => setMobileOpen(false)}
+            className="block rounded-xl px-4 py-3 text-base font-semibold text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/80 dark:hover:bg-slate-800/80"
+          >
+            Checkout
+          </Link>
         </div>
       )}
     </header>
