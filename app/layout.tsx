@@ -11,6 +11,7 @@ const poppins = Poppins({
 });
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { CartProvider } from "@/components/cart/CartProvider";
 
 export const metadata: Metadata = {
   title: "Beepaws | Pet E-commerce",
@@ -31,11 +32,13 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-          <Header />
-          <main className="flex-grow">
-            {children}
-          </main>
-          <Footer />
+          <CartProvider>
+            <Header />
+            <main className="flex-grow">
+              {children}
+            </main>
+            <Footer />
+          </CartProvider>
         </ThemeProvider>
       </body>
     </html>

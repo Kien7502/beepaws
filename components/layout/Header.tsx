@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { ShoppingCart, Menu, X } from "lucide-react";
 import { ThemeToggle } from "../ui/ThemeToggle";
 import { SearchOverlay } from "./SearchOverlay";
-import { getHostedStoreCartUrl } from "@/lib/shopify/domain";
+import { useCart } from "@/components/cart/CartProvider";
 
 const navLinks = [
   { href: "/collections/all", label: "Shop All" },
@@ -26,8 +26,8 @@ function navLinkActive(pathname: string, href: string): boolean {
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
-  const hostedCartUrl = getHostedStoreCartUrl();
-  const cartHref = hostedCartUrl ?? "/checkout";
+  const { itemCount, hydrated } = useCart();
+  const cartHref = "/checkout";
 
   return (
     <header className="sticky top-0 z-50 w-full bg-[var(--background)]/90 backdrop-blur-md border-b border-[var(--color-border)]">
@@ -85,9 +85,14 @@ const Header = () => {
             <Link
               href={cartHref}
               className="relative p-2 text-[var(--color-foreground)] hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors inline-flex"
-              aria-label="Shopping cart — opens your Shopify cart"
+              aria-label="Shopping cart"
             >
               <ShoppingCart size={24} />
+              {hydrated && itemCount > 0 && (
+                <span className="absolute -right-1 -top-1 inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--color-primary)] px-1 text-xs font-bold text-white">
+                  {itemCount > 99 ? "99+" : itemCount}
+                </span>
+              )}
             </Link>
           </div>
         </div>

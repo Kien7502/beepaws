@@ -2,9 +2,10 @@ import { getProduct } from "@/lib/shopify/queries";
 import { notFound } from "next/navigation";
 import VariantSelector from "@/components/product/VariantSelector";
 import { ProductGallery } from "@/components/product/ProductGallery";
-import { Truck, ShieldCheck, RefreshCcw } from "lucide-react";
+import { Truck, ShieldCheck, RefreshCcw, Package } from "lucide-react";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import Link from "next/link";
+import { ProductAboutSection } from "@/components/product/ProductAboutSection";
 
 export const dynamic = "force-dynamic";
 
@@ -34,88 +35,134 @@ export default async function ProductPage({
   if (!product) return notFound();
 
   const fallbackUrl = "/product-placeholder.svg";
+  const { minVariantPrice, maxVariantPrice } = product.priceRange;
+  const hasPriceRange =
+    minVariantPrice.amount !== maxVariantPrice.amount &&
+    product.variants.edges.length > 1;
+
+  const plain = product.description?.trim() ?? "";
+  const subtitle =
+    plain.length > 180 ? `${plain.slice(0, 178).trim()}…` : plain || null;
+
+  const html =
+    product.descriptionHtml?.trim() || (plain ? `<p>${plain}</p>` : "");
 
   return (
-    <div className="container mx-auto px-4 md:px-6 section-y max-w-7xl">
-      <Breadcrumbs
-        items={[
-          { label: "Home", href: "/" },
-          { label: "Shop", href: "/collections/all" },
-          { label: product.title },
-        ]}
+    <div className="relative overflow-hidden">
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(147,51,234,0.12),transparent)] dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(147,51,234,0.18),transparent)]"
+        aria-hidden
       />
 
-      <div className="flex flex-col md:flex-row gap-10 lg:gap-16">
-        <div className="w-full md:w-1/2">
-          <ProductGallery
-            productTitle={product.title}
-            images={product.images.edges}
-            fallbackUrl={fallbackUrl}
-          />
-        </div>
+      <div className="relative container mx-auto max-w-7xl px-4 pb-16 pt-6 md:px-6 md:pb-24 md:pt-8">
+        <Breadcrumbs
+          items={[
+            { label: "Home", href: "/" },
+            { label: "Shop", href: "/collections/all" },
+            { label: product.title },
+          ]}
+        />
 
-        <div className="w-full md:w-1/2 flex flex-col pt-2 md:pt-0">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-[var(--color-foreground)] mb-4 leading-tight tracking-tight">
-            {product.title}
-          </h1>
-
-          <div className="mt-4 mb-8 card-elevated p-6 md:transition-shadow md:hover:shadow-elevated">
-            <VariantSelector product={product} />
-          </div>
-
-          <div className="mb-8">
-            <h2 className="font-bold text-lg mb-3 text-[var(--color-foreground)]">
-              Description
-            </h2>
-            <div
-              className="max-w-none text-slate-600 dark:text-slate-300 leading-relaxed text-base [&_p]:mb-4 [&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1"
-              dangerouslySetInnerHTML={{
-                __html: product.descriptionHtml || `<p>${product.description}</p>`,
-              }}
+        <div className="mt-6 grid gap-10 lg:grid-cols-12 lg:gap-12 xl:gap-16">
+          <div className="lg:col-span-7">
+            <ProductGallery
+              productTitle={product.title}
+              images={product.images.edges}
+              fallbackUrl={fallbackUrl}
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-[var(--color-border)] pt-8 mt-auto">
-            <div className="flex flex-col items-center text-center p-4 card-elevated rounded-2xl">
-              <Truck className="text-[var(--color-accent)] mb-2" size={24} />
-              <span className="text-sm font-bold text-[var(--color-foreground)]">
-                Free shipping
+          <div className="flex flex-col lg:col-span-5 lg:sticky lg:top-24 lg:self-start">
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${
+                  product.availableForSale
+                    ? "bg-emerald-500/15 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300"
+                    : "bg-slate-500/15 text-slate-600 dark:text-slate-400"
+                }`}
+              >
+                <Package className="h-3.5 w-3.5" aria-hidden />
+                {product.availableForSale ? "In stock" : "Unavailable"}
               </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">
-                On orders over $50
-              </span>
+              {hasPriceRange && (
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  Price varies by option
+                </span>
+              )}
             </div>
-            <div className="flex flex-col items-center text-center p-4 card-elevated rounded-2xl">
-              <RefreshCcw className="text-[var(--color-accent)] mb-2" size={24} />
-              <span className="text-sm font-bold text-[var(--color-foreground)]">
-                30-day returns
-              </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">
-                Hassle-free guarantee
-              </span>
-            </div>
-            <div className="flex flex-col items-center text-center p-4 card-elevated rounded-2xl">
-              <ShieldCheck className="text-[var(--color-accent)] mb-2" size={24} />
-              <span className="text-sm font-bold text-[var(--color-foreground)]">
-                Secure checkout
-              </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">
-                256-bit encryption
-              </span>
-            </div>
-          </div>
 
-          <p className="mt-8 text-center sm:text-left text-sm text-slate-500 dark:text-slate-400">
-            Need help?{" "}
-            <Link
-              href="/contact"
-              className="font-semibold text-[var(--color-primary)] hover:underline"
-            >
-              Contact us
-            </Link>
-            .
-          </p>
+            <h1 className="text-balance text-3xl font-extrabold leading-[1.15] tracking-tight text-[var(--color-foreground)] md:text-4xl xl:text-[2.5rem]">
+              {product.title}
+            </h1>
+
+            {subtitle && (
+              <p className="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">
+                {subtitle}
+              </p>
+            )}
+
+            <div className="mt-8 rounded-[1.75rem] border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-[var(--elev-shadow-card)] md:p-8">
+              <VariantSelector product={product} showPriceRangeHint={hasPriceRange} />
+            </div>
+
+            <ul className="mt-8 grid gap-3 sm:grid-cols-3">
+              <li className="flex gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/80 p-4">
+                <Truck
+                  className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-accent)]"
+                  aria-hidden
+                />
+                <div>
+                  <p className="text-sm font-bold text-[var(--color-foreground)]">
+                    Free shipping
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Orders over $50
+                  </p>
+                </div>
+              </li>
+              <li className="flex gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/80 p-4">
+                <RefreshCcw
+                  className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-accent)]"
+                  aria-hidden
+                />
+                <div>
+                  <p className="text-sm font-bold text-[var(--color-foreground)]">
+                    30-day returns
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Simple &amp; fair
+                  </p>
+                </div>
+              </li>
+              <li className="flex gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/80 p-4 sm:col-span-1">
+                <ShieldCheck
+                  className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-accent)]"
+                  aria-hidden
+                />
+                <div>
+                  <p className="text-sm font-bold text-[var(--color-foreground)]">
+                    Secure checkout
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Encrypted payment
+                  </p>
+                </div>
+              </li>
+            </ul>
+
+            <p className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400 sm:text-left">
+              Questions?{" "}
+              <Link
+                href="/contact"
+                className="font-semibold text-[var(--color-primary)] underline-offset-2 hover:underline"
+              >
+                Contact us
+              </Link>
+            </p>
+          </div>
         </div>
+
+        <ProductAboutSection html={html} />
       </div>
     </div>
   );

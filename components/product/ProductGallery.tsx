@@ -20,42 +20,52 @@ export function ProductGallery({ productTitle, images, fallbackUrl }: Props) {
   const main = list[active] ?? list[0];
 
   return (
-    <div className="card-elevated p-4 md:sticky md:top-28">
-      <div className="relative aspect-square rounded-2xl overflow-hidden bg-[var(--background)]">
-        <Image
-          src={main.url}
-          alt={main.altText || productTitle}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 100vw, 50vw"
-          priority
-        />
+    <div className="overflow-hidden rounded-[1.75rem] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--elev-shadow-card)]">
+      <div className="relative aspect-square bg-gradient-to-b from-slate-100/80 to-transparent p-3 dark:from-slate-800/50 dark:to-transparent md:p-4">
+        <div className="relative h-full w-full overflow-hidden rounded-2xl ring-1 ring-black/5 dark:ring-white/10">
+          <Image
+            src={main.url}
+            alt={main.altText || productTitle}
+            fill
+            className="object-cover"
+            sizes="(max-width: 1024px) 100vw, 58vw"
+            priority
+          />
+        </div>
       </div>
 
       {list.length > 1 && (
-        <div className="flex gap-3 mt-4 overflow-x-auto pb-2 snap-x snap-mandatory">
-          {list.map((node, index) => (
-            <button
-              key={node.url}
-              type="button"
-              onClick={() => setActive(index)}
-              className={`relative shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all snap-start ${
-                index === active
-                  ? "border-[var(--color-primary)] ring-2 ring-[var(--color-primary)]/25 scale-[1.02]"
-                  : "border-transparent opacity-80 hover:opacity-100 hover:border-[var(--color-border)]"
-              }`}
-              aria-label={`View image ${index + 1}`}
-              aria-pressed={index === active}
-            >
-              <Image
-                src={node.url}
-                alt=""
-                width={80}
-                height={80}
-                className="w-full h-full object-cover"
-              />
-            </button>
-          ))}
+        <div className="border-t border-[var(--color-border)] bg-[var(--background)]/50 px-3 pb-3 pt-2 md:px-4 md:pb-4">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Gallery ({list.length})
+          </p>
+          <div className="flex gap-2.5 overflow-x-auto pb-1 pt-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {list.map((node, index) => {
+              const isActive = index === active;
+              return (
+                <button
+                  key={`${node.url}-${index}`}
+                  type="button"
+                  onClick={() => setActive(index)}
+                  className={`relative h-[4.5rem] w-[4.5rem] shrink-0 overflow-hidden rounded-xl border-2 transition-all md:h-20 md:w-20 ${
+                    isActive
+                      ? "border-[var(--color-primary)] ring-2 ring-[var(--color-primary)]/25"
+                      : "border-transparent opacity-85 hover:border-[var(--color-border)] hover:opacity-100"
+                  }`}
+                  aria-label={`View image ${index + 1} of ${list.length}`}
+                  aria-pressed={isActive}
+                >
+                  <Image
+                    src={node.url}
+                    alt=""
+                    width={80}
+                    height={80}
+                    className="h-full w-full object-cover"
+                  />
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

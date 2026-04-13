@@ -2,10 +2,9 @@ import React from 'react';
 import Link from 'next/link';
 import { Instagram, Facebook, Twitter, Package, ShieldCheck, HeartPulse } from 'lucide-react';
 import Button from '../ui/Button';
-import { getHostedStoreCartUrl } from '@/lib/shopify/domain';
 
 const Footer = () => {
-  const cartHref = getHostedStoreCartUrl() ?? '/checkout';
+  const cartHref = '/checkout';
 
   return (
     <footer className="bg-[var(--color-surface)] border-t border-[var(--color-border)] pt-16 pb-8">

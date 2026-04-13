@@ -125,4 +125,67 @@ body {
     outline: none;
     box-shadow: 0 0 0 4px rgb(147 51 234 / 0.25);
   }
+
+  /* Rich HTML from Shopify Admin product description */
+  .product-html {
+    font-size: 1.0625rem;
+    line-height: 1.75;
+    color: rgb(51 65 85);
+  }
+  .dark .product-html {
+    color: rgb(203 213 225);
+  }
+  .product-html :where(p) {
+    margin-bottom: 1rem;
+  }
+  .product-html :where(p:last-child) {
+    margin-bottom: 0;
+  }
+  .product-html :where(ul, ol) {
+    margin: 1rem 0;
+    padding-left: 1.35rem;
+  }
+  .product-html :where(li) {
+    margin-bottom: 0.35rem;
+  }
+  .product-html :where(a) {
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .product-html :where(img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: 1rem;
+    margin: 1.25rem 0;
+    border: 1px solid var(--border);
+  }
+  .product-html :where(h1, h2, h3, h4) {
+    margin-top: 1.75rem;
+    margin-bottom: 0.75rem;
+    font-weight: 800;
+    color: var(--foreground);
+    letter-spacing: -0.02em;
+  }
+  .product-html :where(h1) {
+    font-size: 1.5rem;
+  }
+  .product-html :where(h2) {
+    font-size: 1.25rem;
+  }
+  .product-html :where(h3) {
+    font-size: 1.1rem;
+  }
+  .product-html :where(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.95rem;
+  }
+  .product-html :where(th, td) {
+    border: 1px solid var(--border);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+  }
 }
