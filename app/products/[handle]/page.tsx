@@ -6,6 +6,8 @@ import { Truck, ShieldCheck, RefreshCcw } from "lucide-react";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({
   params,
 }: {
@@ -31,8 +33,7 @@ export default async function ProductPage({
 
   if (!product) return notFound();
 
-  const fallbackUrl =
-    "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?q=80&w=1200&auto=format&fit=crop";
+  const fallbackUrl = "/product-placeholder.svg";
 
   return (
     <div className="container mx-auto px-4 md:px-6 section-y max-w-7xl">

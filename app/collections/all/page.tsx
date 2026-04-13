@@ -9,6 +9,8 @@ export const metadata = {
   description: "Shop all premium pet supplies and accessories at Beepaws.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function ShopAllPage() {
   const products = await getProducts();
 
@@ -31,8 +33,7 @@ export default async function ShopAllPage() {
             No products found
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mb-8">
-            Connect your Shopify store or check your Storefront API settings. Demo
-            data appears when the catalog is unavailable.
+            Check Admin API credentials in env, and that products are active and published to the Online Store channel.
           </p>
           <Link href="/">
             <Button variant="outline">Back to home</Button>
@@ -55,7 +56,7 @@ export default async function ShopAllPage() {
                 price={formattedPrice}
                 imageUrl={
                   product.images?.edges[0]?.node?.url ||
-                  "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=800&auto=format&fit=crop"
+                  "/product-placeholder.svg"
                 }
               />
             );

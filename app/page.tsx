@@ -1,10 +1,13 @@
 import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import ProductCard from '@/components/product/ProductCard';
 import { Sparkles, ShoppingBag } from 'lucide-react';
 
 import { getProducts } from '@/lib/shopify/queries';
+
+export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const products = await getProducts();
@@ -18,10 +21,13 @@ export default async function Home() {
       <section className="relative w-full min-h-[min(90vh,880px)] overflow-hidden flex flex-col">
         {/* Background Color/Pattern Base */}
         <div className="absolute inset-0 bg-slate-950 z-0">
-          <img 
-            src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?q=80&w=2000&auto=format&fit=crop" 
-            alt="Happy pets" 
-            className="w-full h-full object-cover opacity-50 mix-blend-overlay"
+          <Image
+            src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?q=80&w=2000&auto=format&fit=crop"
+            alt="Happy pets"
+            fill
+            className="object-cover opacity-50 mix-blend-overlay"
+            sizes="100vw"
+            priority
           />
           <div className="absolute inset-0 hero-texture z-[1]" aria-hidden />
           {/* Gradient Overlay for text readability */}
@@ -92,7 +98,7 @@ export default async function Home() {
               </div>
               <p className="text-[var(--color-foreground)] font-black text-xl mb-2">No featured products yet</p>
               <p className="text-slate-500 dark:text-slate-400 font-medium mb-6">
-                Connect your Shopify catalog or browse the shop when demo data is available.
+                Add Admin API credentials in env, then activate products and publish them to the Online Store sales channel to show them here.
               </p>
               <Link href="/collections/all">
                 <Button variant="outline">Browse catalog</Button>
@@ -112,7 +118,7 @@ export default async function Home() {
                   handle={product.handle}
                   title={product.title}
                   price={formattedPrice}
-                  imageUrl={product.images?.edges[0]?.node?.url || 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=800&auto=format&fit=crop'}
+                  imageUrl={product.images?.edges[0]?.node?.url || "/product-placeholder.svg"}
                 />
               );
             })
@@ -154,7 +160,13 @@ export default async function Home() {
           </div>
           <div className="md:w-1/2 flex justify-center relative z-10">
             <div className="relative w-72 h-72 md:w-96 md:h-96 rounded-3xl overflow-hidden border-4 border-white/20 shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500">
-               <img src="https://images.unsplash.com/photo-1541599540903-216a46ca1dc0?q=80&w=800&auto=format&fit=crop" className="w-full h-full object-cover" alt="Cute dog"/>
+              <Image
+                src="https://images.unsplash.com/photo-1541599540903-216a46ca1dc0?q=80&w=800&auto=format&fit=crop"
+                alt="Cute dog"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 18rem, 24rem"
+              />
             </div>
           </div>
         </div>

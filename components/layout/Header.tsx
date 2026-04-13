@@ -6,14 +6,13 @@ import { usePathname } from "next/navigation";
 import { ShoppingCart, Menu, X } from "lucide-react";
 import { ThemeToggle } from "../ui/ThemeToggle";
 import { SearchOverlay } from "./SearchOverlay";
+import { getHostedStoreCartUrl } from "@/lib/shopify/domain";
 
 const navLinks = [
   { href: "/collections/all", label: "Shop All" },
   { href: "/collections/dogs", label: "Dogs" },
   { href: "/collections/cats", label: "Cats" },
 ];
-
-const DemoCartCount = 3;
 
 function navLinkActive(pathname: string, href: string): boolean {
   if (href === "/collections/all") {
@@ -27,6 +26,8 @@ function navLinkActive(pathname: string, href: string): boolean {
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const hostedCartUrl = getHostedStoreCartUrl();
+  const cartHref = hostedCartUrl ?? "/checkout";
 
   return (
     <header className="sticky top-0 z-50 w-full bg-[var(--background)]/90 backdrop-blur-md border-b border-[var(--color-border)]">
@@ -82,14 +83,11 @@ const Header = () => {
             <ThemeToggle />
             <SearchOverlay />
             <Link
-              href="/checkout"
+              href={cartHref}
               className="relative p-2 text-[var(--color-foreground)] hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors inline-flex"
-              aria-label="Shopping cart"
+              aria-label="Shopping cart — opens your Shopify cart"
             >
               <ShoppingCart size={24} />
-              <span className="absolute top-0 right-0 inline-flex min-w-5 h-5 px-1 items-center justify-center text-[10px] font-bold text-white bg-[var(--color-primary)] rounded-full border-2 border-[var(--background)]">
-                {DemoCartCount}
-              </span>
             </Link>
           </div>
         </div>
@@ -126,11 +124,11 @@ const Header = () => {
             );
           })}
           <Link
-            href="/checkout"
+            href={cartHref}
             onClick={() => setMobileOpen(false)}
             className="block rounded-xl px-4 py-3 text-base font-semibold text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/80 dark:hover:bg-slate-800/80"
           >
-            Checkout
+            Cart
           </Link>
         </div>
       )}

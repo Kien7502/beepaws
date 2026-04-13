@@ -8,6 +8,8 @@ import {
   getCollectionSubtitle,
 } from "@/lib/format-collection";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({
   params,
 }: {
@@ -96,7 +98,7 @@ export default async function CollectionPage({
                 price={formattedPrice}
                 imageUrl={
                   product.images?.edges[0]?.node?.url ||
-                  "https://images.unsplash.com/photo-1541599540903-216a46ca1dc0?q=80&w=800&auto=format&fit=crop"
+                  "/product-placeholder.svg"
                 }
               />
             );

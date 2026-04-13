@@ -61,7 +61,7 @@ export function SearchOverlay() {
               </button>
             </div>
             <p className="text-sm text-slate-500 dark:text-slate-400 px-1">
-              Demo search — connect your Storefront API search or Algolia later.
+              Product search from the catalog is not wired yet — browse via Shop All and collections for now.
             </p>
           </div>
         </div>

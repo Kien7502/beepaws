@@ -2,8 +2,11 @@ import React from 'react';
 import Link from 'next/link';
 import { Instagram, Facebook, Twitter, Package, ShieldCheck, HeartPulse } from 'lucide-react';
 import Button from '../ui/Button';
+import { getHostedStoreCartUrl } from '@/lib/shopify/domain';
 
 const Footer = () => {
+  const cartHref = getHostedStoreCartUrl() ?? '/checkout';
+
   return (
     <footer className="bg-[var(--color-surface)] border-t border-[var(--color-border)] pt-16 pb-8">
       <div className="container mx-auto px-4 md:px-6">
@@ -64,7 +67,7 @@ const Footer = () => {
               <li><Link href="/collections/dogs" className="text-slate-500 dark:text-slate-400 hover:text-[var(--color-primary)] text-sm transition-colors">For Dogs</Link></li>
               <li><Link href="/collections/cats" className="text-slate-500 dark:text-slate-400 hover:text-[var(--color-primary)] text-sm transition-colors">For Cats</Link></li>
               <li><Link href="/collections/new" className="text-slate-500 dark:text-slate-400 hover:text-[var(--color-primary)] text-sm transition-colors">New Arrivals</Link></li>
-              <li><Link href="/checkout" className="text-slate-500 dark:text-slate-400 hover:text-[var(--color-primary)] text-sm transition-colors">Cart / checkout</Link></li>
+              <li><Link href={cartHref} className="text-slate-500 dark:text-slate-400 hover:text-[var(--color-primary)] text-sm transition-colors">Cart / checkout</Link></li>
             </ul>
           </div>
 
