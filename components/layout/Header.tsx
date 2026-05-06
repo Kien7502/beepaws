@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -28,7 +28,15 @@ function navLinkActive(pathname: string, href: string): boolean {
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
-  const { itemCount, hydrated } = useCart();
+  const { itemCount, hydrated, lastAddedAt, lastAddedQuantity } = useCart();
+  const [showCartPulse, setShowCartPulse] = useState(false);
+
+  useEffect(() => {
+    if (!lastAddedAt) return;
+    setShowCartPulse(true);
+    const t = window.setTimeout(() => setShowCartPulse(false), 850);
+    return () => window.clearTimeout(t);
+  }, [lastAddedAt]);
   const cartHref = "/checkout";
 
   return (
@@ -89,13 +97,18 @@ const Header = () => {
             <SearchOverlay />
             <Link
               href={cartHref}
-              className="relative p-2 text-[var(--color-foreground)] hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors inline-flex"
+              className={`relative p-2 text-[var(--color-foreground)] hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors inline-flex ${showCartPulse ? "scale-110 bg-[var(--color-primary)]/10 ring-2 ring-[var(--color-primary)]/35" : ""}`}
               aria-label="Shopping cart"
             >
               <ShoppingCart size={24} />
               {hydrated && itemCount > 0 && (
                 <span className="absolute -right-1 -top-1 inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--color-primary)] px-1 text-xs font-bold text-white">
                   {itemCount > 99 ? "99+" : itemCount}
+                </span>
+              )}
+              {showCartPulse && (
+                <span className="absolute -bottom-7 right-0 rounded-full bg-emerald-600 px-2.5 py-1 text-[10px] font-bold text-white shadow-md">
+                  +{lastAddedQuantity}
                 </span>
               )}
             </Link>

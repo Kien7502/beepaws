@@ -28,6 +28,8 @@ type CartContextValue = {
   subtotalAmount: number;
   subtotalCurrency: string;
   hydrated: boolean;
+  lastAddedAt: number;
+  lastAddedQuantity: number;
   addItem: (item: LocalCartItem) => void;
   updateQuantity: (merchandiseId: string, quantity: number) => void;
   removeItem: (merchandiseId: string) => void;
@@ -62,12 +64,15 @@ function safeWriteCart(items: LocalCartItem[]) {
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<LocalCartItem[]>([]);
+  const [items, setItems] = useState<LocalCartItem[]>(() => {
+    if (typeof window === "undefined") return [];
+    return safeReadCart();
+  });
   const [hydrated, setHydrated] = useState(false);
+  const [lastAddedAt, setLastAddedAt] = useState(0);
+  const [lastAddedQuantity, setLastAddedQuantity] = useState(0);
 
   useEffect(() => {
-    const existing = safeReadCart();
-    setItems(existing);
     setHydrated(true);
   }, []);
 
@@ -76,6 +81,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [items, hydrated]);
 
   const addItem = useCallback((next: LocalCartItem) => {
+    setLastAddedAt(Date.now());
+    setLastAddedQuantity(Math.max(1, next.quantity || 1));
     setItems((prev) => {
       const found = prev.find((p) => p.merchandiseId === next.merchandiseId);
       if (!found) return [...prev, next];
@@ -114,12 +121,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       subtotalAmount,
       subtotalCurrency,
       hydrated,
+      lastAddedAt,
+      lastAddedQuantity,
       addItem,
       updateQuantity,
       removeItem,
       clearCart,
     };
-  }, [items, hydrated, addItem, updateQuantity, removeItem, clearCart]);
+  }, [
+    items,
+    hydrated,
+    lastAddedAt,
+    lastAddedQuantity,
+    addItem,
+    updateQuantity,
+    removeItem,
+    clearCart,
+  ]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { Product } from "@/types/shopify";
 import Button from "@/components/ui/Button";
-import { ShoppingBag } from "lucide-react";
+import { CheckCircle2, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "@/components/cart/CartProvider";
 
@@ -27,6 +27,7 @@ export default function VariantSelector({
     product.variants.edges[0]?.node,
   );
   const [added, setAdded] = useState(false);
+  const [quantity, setQuantity] = useState(1);
   const { addItem } = useCart();
 
   const isAvailable = selectedVariant?.availableForSale;
@@ -60,9 +61,10 @@ export default function VariantSelector({
       imageUrl: product.images.edges[0]?.node?.url || "/product-placeholder.svg",
       currencyCode: selectedVariant.price.currencyCode,
       unitPriceAmount: selectedVariant.price.amount,
-      quantity: 1,
+      quantity,
     });
     setAdded(true);
+    window.setTimeout(() => setAdded(false), 1800);
   }
 
   return (
@@ -116,6 +118,30 @@ export default function VariantSelector({
       )}
 
       <div className="border-t border-[var(--color-border)] pt-6">
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-[var(--color-border)]/70 px-3 py-2">
+          <span className="text-sm font-semibold text-[var(--color-foreground)]">
+            Quantity
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+              className="min-h-[36px] min-w-[36px] rounded-full border border-[var(--color-border)] text-base font-bold"
+              aria-label="Decrease quantity"
+            >
+              -
+            </button>
+            <span className="min-w-7 text-center text-sm font-bold">{quantity}</span>
+            <button
+              type="button"
+              onClick={() => setQuantity((q) => Math.min(99, q + 1))}
+              className="min-h-[36px] min-w-[36px] rounded-full border border-[var(--color-border)] text-base font-bold"
+              aria-label="Increase quantity"
+            >
+              +
+            </button>
+          </div>
+        </div>
         <Button
           type="button"
           variant="primary"
@@ -126,14 +152,15 @@ export default function VariantSelector({
           className="min-h-[52px] rounded-2xl text-base md:text-lg"
           onClick={onAddToCart}
         >
-          {isAvailable ? "Add to cart" : "Out of stock"}
+          {isAvailable ? `Add ${quantity} to cart` : "Out of stock"}
         </Button>
         <p className="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">
           Added items stay in your Beepaws cart until you checkout.
         </p>
         {added && (
-          <p className="mt-2 text-center text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-            Added to cart.{" "}
+          <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+            <CheckCircle2 size={16} />
+            Added {quantity} to cart.{" "}
             <Link href="/checkout" className="underline underline-offset-2">
               View cart
             </Link>

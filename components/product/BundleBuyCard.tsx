@@ -26,6 +26,7 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
     Object.fromEntries(products.map((p) => [p.handle, true])),
   );
   const { addItem } = useCart();
+  const [addedCount, setAddedCount] = useState(0);
 
   const currentVariant = getPrimaryVariant(currentProduct);
   const currencyCode = currentVariant?.price.currencyCode || "USD";
@@ -45,6 +46,7 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
 
   function onAddSelected() {
     if (!currentVariant || !currentVariant.availableForSale) return;
+    let inserted = 0;
 
     addItem({
       merchandiseId: currentVariant.id,
@@ -56,6 +58,7 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
       unitPriceAmount: currentVariant.price.amount,
       quantity: 1,
     });
+    inserted += 1;
 
     for (const product of selectedProducts) {
       const variant = getPrimaryVariant(product);
@@ -70,7 +73,10 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
         unitPriceAmount: variant.price.amount,
         quantity: 1,
       });
+      inserted += 1;
     }
+    setAddedCount(inserted);
+    window.setTimeout(() => setAddedCount(0), 2000);
   }
 
   return (
@@ -111,7 +117,7 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
       </ul>
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm font-semibold text-[var(--color-foreground)]">
-          Total: {formatMoney(total, currencyCode)}
+          Total ({selectedProducts.length + 1} items): {formatMoney(total, currencyCode)}
         </p>
         <Button
           type="button"
@@ -124,6 +130,11 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
           Add selected bundle
         </Button>
       </div>
+      {addedCount > 0 && (
+        <p className="mt-3 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+          Added {addedCount} items to cart.
+        </p>
+      )}
     </div>
   );
 }
