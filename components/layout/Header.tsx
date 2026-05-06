@@ -2,11 +2,13 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ShoppingCart, Menu, X } from "lucide-react";
 import { ThemeToggle } from "../ui/ThemeToggle";
 import { SearchOverlay } from "./SearchOverlay";
 import { useCart } from "@/components/cart/CartProvider";
+import titleIcon from "@/app/Title_icon.jpeg";
 
 const navLinks = [
   { href: "/collections/all", label: "Shop All" },
@@ -54,9 +56,12 @@ const Header = () => {
 
           <div className="flex-1 md:flex-none text-center md:text-left">
             <Link href="/" className="inline-block">
-              <span className="text-2xl md:text-3xl font-extrabold tracking-tight text-[var(--color-foreground)]">
-                Bee<span className="text-[var(--color-primary)]">paws</span>
-              </span>
+              <Image
+                src={titleIcon}
+                alt="Beepaws"
+                className="h-9 w-auto md:h-11"
+                priority
+              />
             </Link>
           </div>
 

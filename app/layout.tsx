@@ -16,6 +16,11 @@ import { CartProvider } from "@/components/cart/CartProvider";
 export const metadata: Metadata = {
   title: "Beepaws | Pet E-commerce",
   description: "Your pet deserves the best - Shop premium pet supplies.",
+  icons: {
+    icon: "/icon.jpeg",
+    apple: "/icon.jpeg",
+    shortcut: "/icon.jpeg",
+  },
 };
 
 export default function RootLayout({
