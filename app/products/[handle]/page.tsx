@@ -50,11 +50,17 @@ export default async function ProductPage({
     product.descriptionHtml?.trim() || (plain ? `<p>${plain}</p>` : "");
 
   const primaryCollectionHandle = fullProduct?.collections?.edges?.[0]?.node?.handle;
-  const recommendedBundleProducts = primaryCollectionHandle
+  const collectionRecommendations = primaryCollectionHandle
     ? (await getProducts({ collectionHandle: primaryCollectionHandle }))
         .filter((p) => p.handle !== product.handle)
         .slice(0, 3)
     : [];
+  const recommendedBundleProducts =
+    collectionRecommendations.length > 0
+      ? collectionRecommendations
+      : (await getProducts())
+          .filter((p) => p.handle !== product.handle)
+          .slice(0, 3);
 
   return (
     <div className="relative overflow-hidden">
