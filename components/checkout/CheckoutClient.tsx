@@ -33,22 +33,21 @@ export default function CheckoutClient() {
     setError(null);
     setIsSubmitting(true);
     try {
-      let checkoutUrl = "";
-      for (const item of items) {
-        const res = await fetch("/api/shopify/cart/checkout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+      const res = await fetch("/api/shopify/cart/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lines: items.map((item) => ({
             merchandiseId: item.merchandiseId,
             quantity: item.quantity,
-          }),
-        });
-        const data = (await res.json()) as { checkoutUrl?: string; error?: string };
-        if (!res.ok) {
-          throw new Error(data.error || "Failed to sync cart with Shopify");
-        }
-        if (data.checkoutUrl) checkoutUrl = data.checkoutUrl;
+          })),
+        }),
+      });
+      const data = (await res.json()) as { checkoutUrl?: string; error?: string };
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to sync cart with Shopify");
       }
+      const checkoutUrl = data.checkoutUrl || "";
 
       if (!checkoutUrl) throw new Error("Shopify checkout URL not available");
       clearCart();

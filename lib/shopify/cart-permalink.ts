@@ -19,3 +19,21 @@ export function buildStorefrontCartPermalink(
   const origin = base.startsWith("http") ? base : `https://${base}`;
   return `${origin}/cart/${id}:${quantity}`;
 }
+
+export function buildStorefrontCartPermalinkFromLines(
+  storeOrigin: string | undefined,
+  lines: { merchandiseId: string; quantity: number }[],
+): string | null {
+  if (!storeOrigin?.trim() || !lines.length) return null;
+  const segments: string[] = [];
+  for (const line of lines) {
+    const id = variantGidToNumericId(line.merchandiseId);
+    if (!id) continue;
+    const qty = Number.isFinite(line.quantity) ? Math.max(1, Math.min(99, line.quantity)) : 1;
+    segments.push(`${id}:${qty}`);
+  }
+  if (!segments.length) return null;
+  const base = storeOrigin.trim().replace(/\/$/, "");
+  const origin = base.startsWith("http") ? base : `https://${base}`;
+  return `${origin}/cart/${segments.join(",")}`;
+}
