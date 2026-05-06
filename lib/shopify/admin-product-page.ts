@@ -50,7 +50,7 @@ type AdminProductFull = {
   vendor: string | null;
   productType: string | null;
   tags: string[];
-  descriptionHtml: string | null;
+  descriptionHtml: string;
   description: string;
   availableForSale: boolean;
   priceRange: {
@@ -64,9 +64,9 @@ type AdminProductFull = {
     };
   };
   seo: {
-    title: string | null;
-    description: string | null;
-  } | null;
+    title: string;
+    description: string;
+  };
   options: {
     id: string;
     name: string;
@@ -74,17 +74,17 @@ type AdminProductFull = {
   }[];
   featuredImage: {
     url: string;
-    altText: string | null;
-    width: number | null;
-    height: number | null;
+    altText: string;
+    width: number;
+    height: number;
   } | null;
   images: {
     edges: {
       node: {
         url: string;
-        altText: string | null;
-        width: number | null;
-        height: number | null;
+        altText: string;
+        width: number;
+        height: number;
       };
     }[];
   };
@@ -147,6 +147,30 @@ function withDerivedFields(product: Omit<AdminProductFull, "description" | "avai
 
   return {
     ...product,
+    descriptionHtml: product.descriptionHtml ?? "",
+    seo: {
+      title: product.seo?.title || product.title,
+      description: product.seo?.description || stripHtml(product.descriptionHtml),
+    },
+    featuredImage: product.featuredImage
+      ? {
+          url: product.featuredImage.url,
+          altText: product.featuredImage.altText ?? "",
+          width: product.featuredImage.width ?? 0,
+          height: product.featuredImage.height ?? 0,
+        }
+      : null,
+    images: {
+      edges: (product.images.edges ?? []).map((edge) => ({
+        node: {
+          url: edge.node.url,
+          altText: edge.node.altText ?? "",
+          width: edge.node.width ?? 0,
+          height: edge.node.height ?? 0,
+        },
+      })),
+    },
+    variants: product.variants,
     description: stripHtml(product.descriptionHtml) || product.title,
     availableForSale: product.status === "ACTIVE" && anyVariantAvailable,
     priceRange: {
@@ -159,6 +183,18 @@ function withDerivedFields(product: Omit<AdminProductFull, "description" | "avai
 function looksLikeBundleKey(key: string): boolean {
   return /(bundle|upsell|cross_sell|crosssell|frequently_bought|fbt|recommended)/i.test(
     key,
+  );
+}
+
+function isProductReference(
+  node: ShopifyNodeRef | null | undefined,
+): node is { __typename: "Product"; id: string; handle: string; title: string } {
+  return (
+    !!node &&
+    node.__typename === "Product" &&
+    typeof (node as { id?: unknown }).id === "string" &&
+    typeof (node as { handle?: unknown }).handle === "string" &&
+    typeof (node as { title?: unknown }).title === "string"
   );
 }
 
@@ -180,7 +216,7 @@ function normalizeMetafields(metafields: AdminMetafield[]) {
   const bundleProducts = bundleCandidates.flatMap((mf) => {
     const referenced = mf.references?.nodes ?? [];
     const productsFromRefs = referenced
-      .filter((node): node is Extract<ShopifyNodeRef, { __typename: "Product" }> => node.__typename === "Product")
+      .filter((node) => isProductReference(node))
       .map((node) => ({
         id: node.id,
         handle: node.handle,
@@ -190,7 +226,7 @@ function normalizeMetafields(metafields: AdminMetafield[]) {
     if (productsFromRefs.length > 0) return productsFromRefs;
 
     const single = mf.reference;
-    if (single && single.__typename === "Product") {
+    if (isProductReference(single)) {
       return [{ id: single.id, handle: single.handle, title: single.title }];
     }
     return [];

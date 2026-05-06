@@ -16,13 +16,12 @@ export async function generateMetadata({
   params: Promise<{ handle: string }>;
 }) {
   const resolvedParams = await params;
-  const fullProduct = await getFullProductForPage(resolvedParams.handle);
-  const product = fullProduct || (await getProduct(resolvedParams.handle));
+  const product = await getProduct(resolvedParams.handle);
   if (!product) return { title: "Not found | Beepaws" };
 
   return {
-    title: `${product.seo.title || product.title} | Beepaws`,
-    description: product.seo.description || product.description,
+    title: `${product.seo?.title || product.title} | Beepaws`,
+    description: product.seo?.description || product.description,
   };
 }
 
@@ -33,7 +32,7 @@ export default async function ProductPage({
 }) {
   const resolvedParams = await params;
   const fullProduct = await getFullProductForPage(resolvedParams.handle);
-  const product = fullProduct || (await getProduct(resolvedParams.handle));
+  const product = await getProduct(resolvedParams.handle);
 
   if (!product) return notFound();
 
