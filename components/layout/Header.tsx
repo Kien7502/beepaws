@@ -8,7 +8,7 @@ import { ShoppingCart, Menu, X } from "lucide-react";
 import { ThemeToggle } from "../ui/ThemeToggle";
 import { SearchOverlay } from "./SearchOverlay";
 import { useCart } from "@/components/cart/CartProvider";
-import titleIcon from "@/app/Title_icon.jpeg";
+import titleIcon from "@/app/Title_icon.png";
 
 const navLinks = [
   { href: "/collections/all", label: "Shop All" },

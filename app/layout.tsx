@@ -17,9 +17,9 @@ export const metadata: Metadata = {
   title: "Beepaws | Pet E-commerce",
   description: "Your pet deserves the best - Shop premium pet supplies.",
   icons: {
-    icon: "/icon.jpeg",
-    apple: "/icon.jpeg",
-    shortcut: "/icon.jpeg",
+    icon: "/icon.png",
+    apple: "/icon.png",
+    shortcut: "/icon.png",
   },
 };
 
