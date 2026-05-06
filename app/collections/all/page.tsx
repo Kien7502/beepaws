@@ -1,4 +1,5 @@
 import { getProducts } from "@/lib/shopify/queries";
+import { hasAdminApiCredentials } from "@/lib/shopify/admin-credentials";
 import ProductCard from "@/components/product/ProductCard";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import Link from "next/link";
@@ -12,6 +13,7 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ShopAllPage() {
+  const hasCreds = hasAdminApiCredentials();
   const products = await getProducts();
 
   return (
@@ -33,7 +35,9 @@ export default async function ShopAllPage() {
             No products found
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mb-8">
-            Check Admin API credentials in env, and that products are active and published to the Online Store channel.
+            {hasCreds
+              ? "Admin credentials are detected, but catalog returned empty. Ensure products are ACTIVE and available in your catalog."
+              : "Missing Shopify Admin credentials on the server environment. Set SHOPIFY_ADMIN_ACCESS_TOKEN (or SHOPIFY_ADMIN_CLIENT_ID + SHOPIFY_ADMIN_CLIENT_SECRET) and store domain env vars."}
           </p>
           <Link href="/">
             <Button variant="outline">Back to home</Button>

@@ -7,40 +7,46 @@
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
   --color-border: var(--border);
+  --color-text: var(--text);
+  --color-heading: var(--heading);
 
   --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
 
-  --color-primary: #9333ff;
-  --color-primary-hover: #7e22ce;
-  --color-secondary: #f3e8ff;
-  --color-accent: #e879f9;
+  --color-primary: #f5a800;
+  --color-primary-hover: #d89200;
+  --color-secondary: #e8f2e4;
+  --color-accent: #4a7c3f;
 }
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --surface: #ffffff;
-  --border: #e2e8f0;
+  --background: #f7faf5;
+  --foreground: #4a7c3f;
+  --text: #2a3d2a;
+  --heading: #4a7c3f;
+  --surface: #e8f2e4;
+  --border: #d3e3cd;
 
-  --elev-shadow-card: 0 4px 24px -8px rgb(15 23 42 / 0.07);
-  --elev-shadow-card-hover: 0 14px 40px -14px rgb(147 51 234 / 0.2);
-  --elev-shadow-elevated: 0 8px 32px -12px rgb(15 23 42 / 0.1);
+  --elev-shadow-card: 0 4px 20px -10px rgb(42 61 42 / 0.14);
+  --elev-shadow-card-hover: 0 14px 40px -16px rgb(74 124 63 / 0.26);
+  --elev-shadow-elevated: 0 8px 30px -14px rgb(42 61 42 / 0.2);
 }
 
 .dark {
-  --background: #0f172a;
-  --foreground: #f8fafc;
-  --surface: #1e293b;
-  --border: #334155;
+  --background: #182218;
+  --foreground: #b8d7af;
+  --text: #d7e9d0;
+  --heading: #cce6c2;
+  --surface: #223022;
+  --border: #355135;
 
-  --elev-shadow-card: 0 4px 28px -6px rgb(0 0 0 / 0.45);
-  --elev-shadow-card-hover: 0 14px 48px -16px rgb(147 51 234 / 0.28);
-  --elev-shadow-elevated: 0 10px 40px -12px rgb(0 0 0 / 0.55);
+  --elev-shadow-card: 0 4px 28px -8px rgb(0 0 0 / 0.5);
+  --elev-shadow-card-hover: 0 14px 48px -18px rgb(74 124 63 / 0.38);
+  --elev-shadow-elevated: 0 10px 40px -14px rgb(0 0 0 / 0.58);
 }
 
 body {
   background: var(--background);
-  color: var(--foreground);
+  color: var(--text);
   font-family: var(--font-sans);
 }
 
@@ -103,7 +109,7 @@ body {
   .heading-section {
     font-weight: 800;
     letter-spacing: -0.025em;
-    color: var(--foreground);
+    color: var(--heading);
   }
 
   .card-elevated {
@@ -165,7 +171,7 @@ body {
     margin-top: 1.75rem;
     margin-bottom: 0.75rem;
     font-weight: 800;
-    color: var(--foreground);
+    color: var(--heading);
     letter-spacing: -0.02em;
   }
   .product-html :where(h1) {
