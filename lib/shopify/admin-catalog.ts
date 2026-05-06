@@ -234,11 +234,14 @@ export async function adminGetCollections(): Promise<Collection[]> {
 }
 
 /**
- * Chỉ lấy sản phẩm đang bán (active + published). Kết hợp thêm bộ lọc tìm kiếm nếu có.
+ * Lấy sản phẩm đang hoạt động. Kết hợp thêm bộ lọc tìm kiếm nếu có.
+ *
+ * Note: `published_status:published` có thể không ổn định theo channel/context
+ * với Admin API trong một số shop, dẫn đến trả rỗng dù product vẫn hiển thị.
+ * Vì vậy chỉ giữ `status:ACTIVE` để tránh false-negative.
  * @see https://shopify.dev/docs/api/usage/search-syntax
  */
-const CATALOG_PRODUCT_SEARCH_BASE =
-  "status:ACTIVE AND published_status:published";
+const CATALOG_PRODUCT_SEARCH_BASE = "status:ACTIVE";
 
 function combineCatalogProductSearch(userQuery?: string | null): string {
   const q = userQuery?.trim();
