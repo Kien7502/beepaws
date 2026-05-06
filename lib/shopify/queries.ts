@@ -5,6 +5,10 @@ import {
   adminGetProductByHandle,
   adminGetProducts,
 } from "./admin-catalog";
+import {
+  adminGetFullProductsForPage,
+  type AdminFullProductForPage,
+} from "./admin-product-page";
 import { hasAdminApiCredentials } from "./admin-credentials";
 import type { Collection, Product } from "@/types/shopify";
 
@@ -59,6 +63,22 @@ export async function getProduct(handle: string): Promise<Product | undefined> {
     return await adminGetProductByHandle(handle);
   } catch (e) {
     console.error("Admin GraphQL product failed", e);
+    return undefined;
+  }
+}
+
+export async function getFullProductForPage(
+  handle: string,
+): Promise<AdminFullProductForPage | undefined> {
+  if (!hasAdminApiCredentials()) {
+    return undefined;
+  }
+
+  try {
+    const products = await adminGetFullProductsForPage({ handle });
+    return products[0];
+  } catch (e) {
+    console.error("Admin GraphQL full product failed", e);
     return undefined;
   }
 }

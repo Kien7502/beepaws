@@ -1,4 +1,4 @@
-import { getProduct } from "@/lib/shopify/queries";
+import { getFullProductForPage, getProduct, getProducts } from "@/lib/shopify/queries";
 import { notFound } from "next/navigation";
 import VariantSelector from "@/components/product/VariantSelector";
 import { ProductGallery } from "@/components/product/ProductGallery";
@@ -6,6 +6,7 @@ import { Truck, ShieldCheck, RefreshCcw, Package } from "lucide-react";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import Link from "next/link";
 import { ProductAboutSection } from "@/components/product/ProductAboutSection";
+import { ProductDetailsSections } from "@/components/product/ProductDetailsSections";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,8 @@ export async function generateMetadata({
   params: Promise<{ handle: string }>;
 }) {
   const resolvedParams = await params;
-  const product = await getProduct(resolvedParams.handle);
+  const fullProduct = await getFullProductForPage(resolvedParams.handle);
+  const product = fullProduct || (await getProduct(resolvedParams.handle));
   if (!product) return { title: "Not found | Beepaws" };
 
   return {
@@ -30,7 +32,8 @@ export default async function ProductPage({
   params: Promise<{ handle: string }>;
 }) {
   const resolvedParams = await params;
-  const product = await getProduct(resolvedParams.handle);
+  const fullProduct = await getFullProductForPage(resolvedParams.handle);
+  const product = fullProduct || (await getProduct(resolvedParams.handle));
 
   if (!product) return notFound();
 
@@ -46,6 +49,13 @@ export default async function ProductPage({
 
   const html =
     product.descriptionHtml?.trim() || (plain ? `<p>${plain}</p>` : "");
+
+  const primaryCollectionHandle = fullProduct?.collections?.edges?.[0]?.node?.handle;
+  const recommendedBundleProducts = primaryCollectionHandle
+    ? (await getProducts({ collectionHandle: primaryCollectionHandle }))
+        .filter((p) => p.handle !== product.handle)
+        .slice(0, 3)
+    : [];
 
   return (
     <div className="relative overflow-hidden">
@@ -163,6 +173,13 @@ export default async function ProductPage({
         </div>
 
         <ProductAboutSection html={html} />
+        {fullProduct?.normalized ? (
+          <ProductDetailsSections
+            currentProduct={product}
+            normalized={fullProduct.normalized}
+            recommendedBundleProducts={recommendedBundleProducts}
+          />
+        ) : null}
       </div>
     </div>
   );
