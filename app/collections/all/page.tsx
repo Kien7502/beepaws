@@ -13,7 +13,9 @@ export const metadata = {
   description: "Shop all premium pet supplies and accessories at Beepaws.",
 };
 
-export const dynamic = "force-dynamic";
+// ISR: revalidate via webhook → revalidateTag("products")
+// Fallback: re-generate every 1 hour without a webhook push
+export const revalidate = 3600;
 
 function parseSortParam(raw: unknown): SortValue {
   const allowed = SORT_OPTIONS.map((o) => o.value) as string[];
