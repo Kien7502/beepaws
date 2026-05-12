@@ -403,7 +403,6 @@ export async function adminGetFullProductsForPage(opts?: {
     }>({
       query,
       variables: { handle: opts.handle },
-      tags: ["products", "product-full"],
     });
 
     const rawProduct = res.body.data.productByHandle;
@@ -449,7 +448,6 @@ export async function adminGetFullProductsForPage(opts?: {
       first,
       query: "status:ACTIVE",
     },
-    tags: ["products", "product-full"],
   });
 
   return res.body.data.products.edges.map((edge) => {
