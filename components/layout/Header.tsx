@@ -26,7 +26,7 @@ function navLinkActive(pathname: string, href: string): boolean {
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
-  const { itemCount, hydrated, lastAddedAt, lastAddedQuantity } = useCart();
+  const { itemCount, hydrated, lastAddedAt, lastAddedQuantity, openDrawer } = useCart();
   const [showCartPulse, setShowCartPulse] = useState(false);
 
   useEffect(() => {
@@ -35,7 +35,6 @@ const Header = () => {
     const t = window.setTimeout(() => setShowCartPulse(false), 850);
     return () => window.clearTimeout(t);
   }, [lastAddedAt]);
-  const cartHref = "/checkout";
 
   return (
     <header className="sticky top-0 z-50 w-full bg-[var(--background)]/90 backdrop-blur-md border-b border-[var(--color-border)]">
@@ -91,10 +90,11 @@ const Header = () => {
           <div className="flex-1 flex items-center justify-end gap-1 md:gap-3">
             <ThemeToggle />
             <SearchOverlay />
-            <Link
-              href={cartHref}
-              className={`relative p-2 text-[var(--color-foreground)] hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors inline-flex ${showCartPulse ? "scale-110 bg-[var(--color-primary)]/10 ring-2 ring-[var(--color-primary)]/35" : ""}`}
-              aria-label="Shopping cart"
+            <button
+              type="button"
+              onClick={openDrawer}
+              className={`relative p-2 text-[var(--color-foreground)] hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all inline-flex ${showCartPulse ? "scale-110 bg-[var(--color-primary)]/10 ring-2 ring-[var(--color-primary)]/35" : ""}`}
+              aria-label={`Shopping cart${itemCount > 0 ? `, ${itemCount} items` : ""}`}
             >
               <ShoppingCart size={24} />
               {hydrated && itemCount > 0 && (
@@ -107,7 +107,7 @@ const Header = () => {
                   +{lastAddedQuantity}
                 </span>
               )}
-            </Link>
+            </button>
           </div>
         </div>
       </div>
@@ -142,13 +142,13 @@ const Header = () => {
               </Link>
             );
           })}
-          <Link
-            href={cartHref}
-            onClick={() => setMobileOpen(false)}
-            className="block rounded-xl px-4 py-3 text-base font-semibold text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/80 dark:hover:bg-slate-800/80"
+          <button
+            type="button"
+            onClick={() => { setMobileOpen(false); openDrawer(); }}
+            className="w-full text-left block rounded-xl px-4 py-3 text-base font-semibold text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/80 dark:hover:bg-slate-800/80"
           >
-            Cart
-          </Link>
+            Cart {hydrated && itemCount > 0 && `(${itemCount})`}
+          </button>
         </div>
       )}
     </header>
