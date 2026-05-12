@@ -3,6 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import Button from "../ui/Button";
 import { ShoppingBag } from "lucide-react";
+import type { Product } from "@/types/shopify";
+import QuickAddButton from "./QuickAddButton";
 
 interface ProductCardProps {
   handle: string;
@@ -10,6 +12,7 @@ interface ProductCardProps {
   price: string;
   compareAtPrice?: string;
   imageUrl: string;
+  product?: Product;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -18,6 +21,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   price,
   compareAtPrice,
   imageUrl,
+  product,
 }) => {
   return (
     <div className="group flex flex-col bg-[var(--color-surface)] rounded-3xl p-3 md:p-4 border border-[var(--color-border)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--elev-shadow-card-hover)] hover:border-[var(--color-primary)]/20">
@@ -53,14 +57,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
           )}
         </div>
 
-        <Button
-          variant="primary"
-          fullWidth
-          leftIcon={<ShoppingBag size={18} />}
-          className="mt-auto min-h-[44px]"
-        >
-          Add to Cart
-        </Button>
+        {product ? (
+          <QuickAddButton product={product} />
+        ) : (
+          <Link href={`/products/${handle}`} className="mt-auto">
+            <Button
+              variant="primary"
+              fullWidth
+              leftIcon={<ShoppingBag size={18} />}
+              className="min-h-[44px]"
+            >
+              Shop Now
+            </Button>
+          </Link>
+        )}
       </div>
     </div>
   );

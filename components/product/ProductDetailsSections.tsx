@@ -1,11 +1,10 @@
 import Link from "next/link";
 import type { Product } from "@/types/shopify";
-import { BundleBuyCard } from "./BundleBuyCard";
 
 type MaybeRecord = Record<string, unknown> | null | undefined;
 
 type Props = {
-  currentProduct: Product;
+  currentProduct?: Product;
   recommendedBundleProducts?: Product[];
   normalized: {
     usage_guide: {
@@ -102,15 +101,12 @@ function renderUsage(parsed: unknown) {
 }
 
 export function ProductDetailsSections({
-  currentProduct,
   normalized,
-  recommendedBundleProducts = [],
 }: Props) {
   const spec = toRecord(normalized.specifications?.parsed);
   const qnaList = toQnaList(normalized.qna?.parsed);
   const ingredients = toStringList(spec?.ingredients);
-  const hasBundle =
-    normalized.bundle_buy.length > 0 || recommendedBundleProducts.length > 0;
+  const hasBundle = normalized.bundle_buy.length > 0;
 
   if (!normalized.usage_guide && !spec && qnaList.length === 0 && !hasBundle) {
     return null;
@@ -203,14 +199,8 @@ export function ProductDetailsSections({
       {hasBundle && (
         <article className="rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 md:p-7">
           <h2 className="text-xl font-extrabold tracking-tight text-[var(--color-foreground)] md:text-2xl">
-            Frequently bought together
+            More from this collection
           </h2>
-          {recommendedBundleProducts.length > 0 ? (
-            <BundleBuyCard
-              currentProduct={currentProduct}
-              products={recommendedBundleProducts}
-            />
-          ) : null}
           <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {normalized.bundle_buy.map((item) => (
               <li key={item.id}>
@@ -223,13 +213,6 @@ export function ProductDetailsSections({
               </li>
             ))}
           </ul>
-          {recommendedBundleProducts.length === 0 &&
-          normalized.bundle_buy.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
-              Add bundle-related product references in Shopify metafields to
-              show suggestions here.
-            </p>
-          ) : null}
         </article>
       )}
     </section>
