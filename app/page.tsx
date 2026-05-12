@@ -7,7 +7,8 @@ import { Sparkles, ShoppingBag, Shield, Truck, RefreshCcw, Star, ArrowRight, Sci
 
 import { getProducts } from '@/lib/shopify/queries';
 
-export const dynamic = "force-dynamic";
+// ISR: revalidate via webhook → revalidateTag("products")
+export const revalidate = 3600;
 
 export default async function Home() {
   const products = await getProducts();
