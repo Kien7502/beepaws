@@ -62,6 +62,7 @@ export default async function ShopAllPage() {
                   product.images?.edges[0]?.node?.url ||
                   "/product-placeholder.svg"
                 }
+                product={product}
               />
             );
           })}

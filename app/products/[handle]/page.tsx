@@ -7,6 +7,7 @@ import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import Link from "next/link";
 import { ProductAboutSection } from "@/components/product/ProductAboutSection";
 import { ProductDetailsSections } from "@/components/product/ProductDetailsSections";
+import { BundleBuyCard } from "@/components/product/BundleBuyCard";
 
 export const dynamic = "force-dynamic";
 
@@ -165,7 +166,14 @@ export default async function ProductPage({
               </li>
             </ul>
 
-            <p className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400 sm:text-left">
+            {recommendedBundleProducts.length > 0 && (
+              <BundleBuyCard
+                currentProduct={product}
+                products={recommendedBundleProducts}
+              />
+            )}
+
+            <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400 sm:text-left">
               Questions?{" "}
               <Link
                 href="/contact"
@@ -180,9 +188,7 @@ export default async function ProductPage({
         <ProductAboutSection html={html} />
         {fullProduct?.normalized ? (
           <ProductDetailsSections
-            currentProduct={product}
             normalized={fullProduct.normalized}
-            recommendedBundleProducts={recommendedBundleProducts}
           />
         ) : null}
       </div>
