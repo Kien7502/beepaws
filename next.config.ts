@@ -2,15 +2,20 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    // Serve AVIF first (smallest), then WebP — browsers pick the best they support.
+    // next/image handles format negotiation automatically.
+    formats: ["image/avif", "image/webp"],
+
+    // All image sources the app loads remotely
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "images.unsplash.com",
+        hostname: "cdn.shopify.com",   // product images from Shopify CDN
         pathname: "/**",
       },
       {
         protocol: "https",
-        hostname: "cdn.shopify.com",
+        hostname: "images.unsplash.com", // hero / placeholder images
         pathname: "/**",
       },
       {
@@ -29,6 +34,10 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       },
     ],
+
+    // Predefine common widths so Next.js doesn't generate too many variants
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [64, 128, 256, 384],
   },
 };
 

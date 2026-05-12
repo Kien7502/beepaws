@@ -1,7 +1,10 @@
+import { Suspense } from "react";
 import { getProducts } from "@/lib/shopify/queries";
 import { hasAdminApiCredentials } from "@/lib/shopify/admin-credentials";
 import ProductCard from "@/components/product/ProductCard";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
+import SortDropdown, { SORT_OPTIONS, type SortValue } from "@/components/product/SortDropdown";
+import type { Product } from "@/types/shopify";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 
@@ -12,21 +15,77 @@ export const metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function ShopAllPage() {
+function parseSortParam(raw: unknown): SortValue {
+  const allowed = SORT_OPTIONS.map((o) => o.value) as string[];
+  const s = typeof raw === "string" ? raw : "featured";
+  return (allowed.includes(s) ? s : "featured") as SortValue;
+}
+
+function sortProducts(products: Product[], sort: SortValue): Product[] {
+  if (sort === "price-asc" || sort === "price-desc") {
+    const asc = sort === "price-asc";
+    return [...products].sort((a, b) => {
+      const pa = parseFloat(a.priceRange.minVariantPrice.amount);
+      const pb = parseFloat(b.priceRange.minVariantPrice.amount);
+      return asc ? pa - pb : pb - pa;
+    });
+  }
+  return products;
+}
+
+function formatPrice(amount: string, currencyCode: string) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currencyCode,
+  }).format(parseFloat(amount));
+}
+
+export default async function ShopAllPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const resolvedParams = await searchParams;
+  const sort = parseSortParam(resolvedParams.sort);
+
+  const option = SORT_OPTIONS.find((o) => o.value === sort)!;
+
+  // Price sort is handled client-side after fetch (Admin API products endpoint
+  // doesn't expose PRICE as a sort key outside of a collection context).
+  const fetchSortKey =
+    sort === "price-asc" || sort === "price-desc" ? undefined : option.sortKey;
+  const fetchReverse =
+    sort === "price-asc" || sort === "price-desc" ? false : option.reverse;
+
   const hasCreds = hasAdminApiCredentials();
-  const products = await getProducts();
+  const rawProducts = await getProducts({
+    sortKey: fetchSortKey,
+    reverse: fetchReverse,
+  });
+  const products = sortProducts(rawProducts, sort);
 
   return (
     <div className="container mx-auto px-4 md:px-6 max-w-7xl section-y">
       <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "All products" }]} />
 
-      <div className="mb-10 text-center max-w-2xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-extrabold text-[var(--color-foreground)] mb-4 tracking-tight">
-          All products
-        </h1>
-        <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
-          Explore our full catalog—curated for comfort, play, and everyday care.
-        </p>
+      {/* Page header + sort bar */}
+      <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-[var(--color-foreground)] tracking-tight">
+            All products
+          </h1>
+          {products.length > 0 && (
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              {products.length} item{products.length !== 1 ? "s" : ""}
+            </p>
+          )}
+        </div>
+
+        {products.length > 0 && (
+          <Suspense fallback={null}>
+            <SortDropdown current={sort} />
+          </Suspense>
+        )}
       </div>
 
       {products.length === 0 ? (
@@ -36,8 +95,8 @@ export default async function ShopAllPage() {
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mb-8">
             {hasCreds
-              ? "Admin credentials are detected, but catalog returned empty. Ensure products are ACTIVE and available in your catalog."
-              : "Missing Shopify Admin credentials on the server environment. Set SHOPIFY_ADMIN_ACCESS_TOKEN (or SHOPIFY_ADMIN_CLIENT_ID + SHOPIFY_ADMIN_CLIENT_SECRET) and store domain env vars."}
+              ? "Admin credentials detected, but catalog returned empty. Ensure products are ACTIVE in your Shopify store."
+              : "Missing Shopify Admin credentials. Set SHOPIFY_ADMIN_ACCESS_TOKEN and store domain env vars."}
           </p>
           <Link href="/">
             <Button variant="outline">Back to home</Button>
@@ -45,27 +104,19 @@ export default async function ShopAllPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-          {products.map((product) => {
-            const price = parseFloat(product.priceRange.minVariantPrice.amount);
-            const formattedPrice = new Intl.NumberFormat("en-US", {
-              style: "currency",
-              currency: product.priceRange.minVariantPrice.currencyCode,
-            }).format(price);
-
-            return (
-              <ProductCard
-                key={product.handle}
-                handle={product.handle}
-                title={product.title}
-                price={formattedPrice}
-                imageUrl={
-                  product.images?.edges[0]?.node?.url ||
-                  "/product-placeholder.svg"
-                }
-                product={product}
-              />
-            );
-          })}
+          {products.map((product) => (
+            <ProductCard
+              key={product.handle}
+              handle={product.handle}
+              title={product.title}
+              price={formatPrice(
+                product.priceRange.minVariantPrice.amount,
+                product.priceRange.minVariantPrice.currencyCode,
+              )}
+              imageUrl={product.images?.edges[0]?.node?.url ?? "/product-placeholder.svg"}
+              product={product}
+            />
+          ))}
         </div>
       )}
     </div>
