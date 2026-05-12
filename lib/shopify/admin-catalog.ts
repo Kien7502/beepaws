@@ -215,7 +215,7 @@ export async function adminGetCollections(): Promise<Collection[]> {
         }[];
       };
     };
-  }>({ query, cache: "force-cache", tags: ["collections"] });
+  }>({ query });
 
   return res.body.data.collections.edges.map(({ node }) => {
     const plain = stripHtml(node.descriptionHtml);
@@ -325,8 +325,6 @@ export async function adminGetProducts(opts: {
       };
     }>({
       query: gql,
-      cache: "force-cache",
-      tags: ["products"],
       variables: {
         handle: opts.collectionHandle,
         first: 100,
@@ -364,8 +362,6 @@ export async function adminGetProducts(opts: {
     };
   }>({
     query: gql,
-    cache: "force-cache",
-    tags: ["products"],
     variables: {
       first: 100,
       query: combineCatalogProductSearch(opts.query),
@@ -393,8 +389,6 @@ export async function adminGetProductByHandle(
     data: { productByHandle: AdminProductNode | null };
   }>({
     query: gql,
-    cache: "force-cache",
-    tags: ["products"],
     variables: { handle },
   });
 
