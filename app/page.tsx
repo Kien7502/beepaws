@@ -239,7 +239,7 @@ export default async function Home() {
                 From nail clippers to full-body trimmers — everything your pet needs for a spa-day experience without leaving home.
               </p>
               <Link href="/collections/all">
-                <Button size="lg" className="h-13 px-8 font-bold bg-white text-[var(--color-accent)] hover:bg-slate-100 border-none shadow-xl">
+                <Button size="lg" className="h-13 px-8 font-bold bg-white text-(--color-accent) hover:bg-slate-100 border-none shadow-xl">
                   Explore All Products <ArrowRight size={18} className="ml-1" />
                 </Button>
               </Link>
