@@ -1,6 +1,12 @@
+import Link from "next/link";
+import type { Product } from "@/types/shopify";
+
 type MaybeRecord = Record<string, unknown> | null | undefined;
 
 type Props = {
+  currentProduct?: Product;
+  recommendedBundleProducts?: Product[];
+
   normalized: {
     usage_guide: {
       parsed: unknown;
@@ -95,10 +101,14 @@ function renderUsage(parsed: unknown) {
   );
 }
 
-export function ProductDetailsSections({ normalized }: Props) {
+export function ProductDetailsSections({
+  normalized,
+}: Props) {
   const spec = toRecord(normalized.specifications?.parsed);
   const qnaList = toQnaList(normalized.qna?.parsed);
   const ingredients = toStringList(spec?.ingredients);
+  const hasBundle = normalized.bundle_buy.length > 0;
+
 
   if (!normalized.usage_guide && !spec && qnaList.length === 0) {
     return null;
@@ -185,6 +195,26 @@ export function ProductDetailsSections({ normalized }: Props) {
               </details>
             ))}
           </div>
+        </article>
+      )}
+
+      {hasBundle && (
+        <article className="rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 md:p-7">
+          <h2 className="text-xl font-extrabold tracking-tight text-[var(--color-foreground)] md:text-2xl">
+            More from this collection
+          </h2>
+          <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {normalized.bundle_buy.map((item) => (
+              <li key={item.id}>
+                <Link
+                  href={`/products/${item.handle}`}
+                  className="flex min-h-[44px] items-center rounded-2xl border border-[var(--color-border)] px-4 py-3 text-sm font-semibold text-[var(--color-foreground)] transition hover:bg-[var(--color-surface-2)]"
+                >
+                  {item.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </article>
       )}
 

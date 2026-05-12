@@ -27,7 +27,7 @@ function navLinkActive(pathname: string, href: string): boolean {
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
-  const { itemCount, hydrated, lastAddedAt, lastAddedQuantity, openCart } = useCart();
+  const { itemCount, hydrated, lastAddedAt, lastAddedQuantity, openDrawer, closeDrawer } = useCart();
   const [showCartPulse, setShowCartPulse] = useState(false);
 
   useEffect(() => {
@@ -94,9 +94,9 @@ const Header = () => {
             <SearchOverlay />
             <button
               type="button"
-              onClick={openCart}
+              onClick={openDrawer}
               className={`relative p-2 text-[var(--color-foreground)] hover:bg-[var(--color-surface)] rounded-full transition-colors inline-flex ${showCartPulse ? "scale-110 bg-[var(--color-primary)]/10 ring-2 ring-[var(--color-primary)]/35" : ""}`}
-              aria-label="Shopping cart"
+              aria-label={`Shopping cart${itemCount > 0 ? `, ${itemCount} items` : ""}`}
             >
               <ShoppingCart size={24} />
               {hydrated && itemCount > 0 && (
@@ -146,7 +146,7 @@ const Header = () => {
           })}
           <button
             type="button"
-            onClick={() => { setMobileOpen(false); openCart(); }}
+            onClick={() => { setMobileOpen(false); openDrawer(); }}
             className="block w-full rounded-xl px-4 py-3 text-left text-base font-semibold text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/80"
           >
             Cart {hydrated && itemCount > 0 && `(${itemCount})`}

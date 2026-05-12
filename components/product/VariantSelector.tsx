@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+
 import type { Product, ProductVariant } from "@/types/shopify";
 import Button from "@/components/ui/Button";
 import { CheckCircle2, ShoppingBag } from "lucide-react";
@@ -31,6 +32,7 @@ export default function VariantSelector({ product }: { product: Product }) {
   );
   const [added, setAdded] = useState(false);
   const { addItem } = useCart();
+
 
   const tier = TIERS[tierIdx];
   const currencyCode = selectedVariant?.price?.currencyCode || "USD";
@@ -63,6 +65,7 @@ export default function VariantSelector({ product }: { product: Product }) {
     });
   }
 
+
   function onAddToCart() {
     if (!selectedVariant?.availableForSale) return;
 
@@ -94,6 +97,7 @@ export default function VariantSelector({ product }: { product: Product }) {
 
   return (
     <div className="flex flex-col gap-6">
+
       <div>
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--color-accent)]/70">
           Your selection
@@ -107,9 +111,11 @@ export default function VariantSelector({ product }: { product: Product }) {
               {formatMoney(unitPrice, currencyCode)}/unit
             </span>
           )}
+
         </div>
       </div>
 
+      {/* Variant buttons */}
       {multi && (
         <div className="space-y-2">
           <p className="text-sm font-bold text-[var(--color-foreground)]">
@@ -118,6 +124,7 @@ export default function VariantSelector({ product }: { product: Product }) {
           <div className="flex flex-wrap gap-2">
             {variants.map((v) => {
               const active = selectedVariant?.id === v.id;
+
               return (
                 <button
                   key={v.id}
@@ -227,6 +234,7 @@ export default function VariantSelector({ product }: { product: Product }) {
       </div>
 
       <div>
+
         <Button
           type="button"
           variant="primary"
@@ -265,6 +273,7 @@ export default function VariantSelector({ product }: { product: Product }) {
             <span className="text-[11px] font-bold text-[#5F6368]">G Pay</span>
           </div>
         </div>
+
 
         {added && (
           <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-sm font-semibold text-emerald-600">

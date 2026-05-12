@@ -19,20 +19,47 @@ import { DescriptionAccordion } from "@/components/product/DescriptionAccordion"
 import { extractImagesFromProductHtml } from "@/lib/shopify/extract-description-images";
 import { parseDescriptionSections } from "@/lib/shopify/parse-description-sections";
 
-export const dynamic = "force-dynamic";
+// ISR: revalidate via webhook → revalidateTag("products")
+// Fallback: re-generate every 1 hour even without a webhook push
+export const revalidate = 3600;
 
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ handle: string }>;
 }) {
-  const resolvedParams = await params;
-  const product = await getProduct(resolvedParams.handle);
+  const { handle } = await params;
+  const product = await getProduct(handle);
   if (!product) return { title: "Not found | Beepaws" };
 
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
+  const pageUrl = `${siteUrl}/products/${handle}`;
+  const title = `${product.seo?.title || product.title} | Beepaws`;
+  const description = (product.seo?.description || product.description || "").slice(0, 160);
+  const ogImage = product.images.edges[0]?.node?.url;
+
   return {
-    title: `${product.seo?.title || product.title} | Beepaws`,
-    description: product.seo?.description || product.description,
+    title,
+    description,
+    alternates: {
+      canonical: pageUrl,
+    },
+    openGraph: {
+      title,
+      description,
+      url: pageUrl,
+      type: "website",
+      siteName: "Beepaws",
+      ...(ogImage && {
+        images: [{ url: ogImage, width: 1200, height: 1200, alt: product.title }],
+      }),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      ...(ogImage && { images: [ogImage] }),
+    },
   };
 }
 
@@ -77,9 +104,38 @@ export default async function ProductPage({
           .filter((p) => p.handle !== product.handle)
           .slice(0, 3);
 
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.title,
+    description: product.description,
+    image: product.images.edges.map((e) => e.node.url),
+    url: `${siteUrl}/products/${product.handle}`,
+    brand: { "@type": "Brand", name: "Beepaws" },
+    offers: {
+      "@type": "Offer",
+      priceCurrency: product.priceRange.minVariantPrice.currencyCode,
+      price: product.priceRange.minVariantPrice.amount,
+      availability: product.availableForSale
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+      seller: { "@type": "Organization", name: "Beepaws" },
+    },
+  };
+
   return (
-    <div className="relative">
-      <div className="container mx-auto max-w-7xl px-4 pb-8 pt-6 md:px-6 md:pb-12 md:pt-8">
+    <div className="relative overflow-hidden">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(147,51,234,0.12),transparent)]"
+        aria-hidden
+      />
+
+      <div className="relative container mx-auto max-w-7xl px-4 pb-16 pt-6 md:px-6 md:pb-24 md:pt-8">
         <Breadcrumbs
           items={[
             { label: "Home", href: "/" },
