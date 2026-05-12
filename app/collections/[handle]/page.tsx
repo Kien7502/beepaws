@@ -51,20 +51,20 @@ export default async function CollectionPage({
         <h1 className="text-4xl md:text-5xl font-extrabold text-[var(--color-foreground)] mb-4 tracking-tight">
           {title}
         </h1>
-        <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
+        <p className="text-[var(--color-accent)]/70 text-lg leading-relaxed">
           {subtitle}
         </p>
       </div>
 
       {products.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 px-4 bg-[var(--color-secondary)]/10 dark:bg-slate-800/30 border-2 border-dashed border-[var(--color-primary)]/25 rounded-[2rem] text-center max-w-xl mx-auto">
+        <div className="flex flex-col items-center justify-center py-24 px-4 bg-[var(--color-secondary)]/30 border-2 border-dashed border-[var(--color-primary)]/25 rounded-[2rem] text-center max-w-xl mx-auto">
           <span className="text-6xl mb-6 opacity-80" aria-hidden>
             🐾
           </span>
           <h2 className="text-2xl md:text-3xl font-black mb-3 text-[var(--color-foreground)]">
             No products here yet
           </h2>
-          <p className="text-slate-600 dark:text-slate-400 text-lg mb-8 max-w-md">
+          <p className="text-[var(--color-accent)]/70 text-lg mb-8 max-w-md">
             We could not find products in this collection. Browse the full catalog
             or try another category.
           </p>

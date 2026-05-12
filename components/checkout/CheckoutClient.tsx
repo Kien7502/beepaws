@@ -22,7 +22,6 @@ export default function CheckoutClient() {
     subtotalCurrency,
     updateQuantity,
     removeItem,
-    clearCart,
   } = useCart();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,7 +49,6 @@ export default function CheckoutClient() {
       const checkoutUrl = data.checkoutUrl || "";
 
       if (!checkoutUrl) throw new Error("Shopify checkout URL not available");
-      clearCart();
       window.location.href = checkoutUrl;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Checkout failed");
@@ -62,8 +60,8 @@ export default function CheckoutClient() {
     return (
       <div className="container mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-24">
         <div className="animate-pulse rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8">
-          <div className="mb-4 h-7 w-40 rounded bg-slate-200 dark:bg-slate-700" />
-          <div className="h-4 w-72 rounded bg-slate-200 dark:bg-slate-700" />
+          <div className="mb-4 h-7 w-40 rounded bg-[var(--color-border)]" />
+          <div className="h-4 w-72 rounded bg-[var(--color-border)]" />
         </div>
       </div>
     );
@@ -79,7 +77,7 @@ export default function CheckoutClient() {
           <h1 className="text-2xl font-extrabold text-[var(--color-foreground)]">
             Your cart is empty
           </h1>
-          <p className="mt-3 text-slate-600 dark:text-slate-400">
+          <p className="mt-3 text-[var(--color-accent)]/70">
             Add products from the catalog, then checkout from here.
           </p>
           <Link
@@ -98,7 +96,7 @@ export default function CheckoutClient() {
       <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-foreground)] md:text-4xl">
         Your cart
       </h1>
-      <p className="mt-2 text-slate-600 dark:text-slate-400">
+      <p className="mt-2 text-[var(--color-accent)]/70">
         Review items here, then we transfer your cart to Shopify for secure payment.
       </p>
 
@@ -129,7 +127,7 @@ export default function CheckoutClient() {
                       {item.productTitle}
                     </Link>
                     {item.variantTitle && item.variantTitle !== "Default Title" && (
-                      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                      <p className="mt-1 text-sm text-[var(--color-accent)]/70">
                         {item.variantTitle}
                       </p>
                     )}
@@ -137,7 +135,7 @@ export default function CheckoutClient() {
                   <button
                     type="button"
                     onClick={() => removeItem(item.merchandiseId)}
-                    className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-rose-500 dark:hover:bg-slate-800"
+                    className="rounded-lg p-2 text-[var(--color-accent)]/60 hover:bg-[var(--color-secondary)] hover:text-rose-500"
                     aria-label="Remove item"
                   >
                     <Trash2 size={18} />
@@ -148,7 +146,7 @@ export default function CheckoutClient() {
                   <div className="inline-flex items-center rounded-xl border border-[var(--color-border)]">
                     <button
                       type="button"
-                      className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="p-2 hover:bg-[var(--color-secondary)]"
                       onClick={() =>
                         updateQuantity(item.merchandiseId, Math.max(0, item.quantity - 1))
                       }
@@ -161,7 +159,7 @@ export default function CheckoutClient() {
                     </span>
                     <button
                       type="button"
-                      className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="p-2 hover:bg-[var(--color-secondary)]"
                       onClick={() =>
                         updateQuantity(item.merchandiseId, Math.min(99, item.quantity + 1))
                       }
@@ -188,13 +186,13 @@ export default function CheckoutClient() {
           </h2>
           <div className="mt-5 space-y-3 text-sm">
             <div className="flex justify-between">
-              <span className="text-slate-600 dark:text-slate-400">Subtotal</span>
+              <span className="text-[var(--color-accent)]/70">Subtotal</span>
               <span className="font-bold">
                 {formatMoney(subtotalAmount, subtotalCurrency)}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-600 dark:text-slate-400">Shipping</span>
+              <span className="text-[var(--color-accent)]/70">Shipping</span>
               <span className="font-bold">Calculated at checkout</span>
             </div>
           </div>
@@ -208,7 +206,7 @@ export default function CheckoutClient() {
           </div>
 
           {error && (
-            <p className="mt-4 rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
+            <p className="mt-4 rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-700">
               {error}
             </p>
           )}
@@ -224,7 +222,7 @@ export default function CheckoutClient() {
           >
             Proceed to payment
           </Button>
-          <p className="mt-3 text-center text-xs text-slate-500 dark:text-slate-400">
+          <p className="mt-3 text-center text-xs text-[var(--color-accent)]/60">
             You will be redirected to Shopify for secure checkout.
           </p>
         </aside>

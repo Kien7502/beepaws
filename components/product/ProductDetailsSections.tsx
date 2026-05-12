@@ -1,12 +1,6 @@
-import Link from "next/link";
-import type { Product } from "@/types/shopify";
-import { BundleBuyCard } from "./BundleBuyCard";
-
 type MaybeRecord = Record<string, unknown> | null | undefined;
 
 type Props = {
-  currentProduct: Product;
-  recommendedBundleProducts?: Product[];
   normalized: {
     usage_guide: {
       parsed: unknown;
@@ -84,7 +78,7 @@ function renderUsage(parsed: unknown) {
 
   if (!lines.length) return null;
   return (
-    <div className="space-y-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300 md:text-base">
+    <div className="space-y-3 text-sm leading-relaxed text-[var(--color-text)]/80 md:text-base">
       {lines.map((line, index) =>
         line.startsWith("## ") ? (
           <h3
@@ -101,18 +95,12 @@ function renderUsage(parsed: unknown) {
   );
 }
 
-export function ProductDetailsSections({
-  currentProduct,
-  normalized,
-  recommendedBundleProducts = [],
-}: Props) {
+export function ProductDetailsSections({ normalized }: Props) {
   const spec = toRecord(normalized.specifications?.parsed);
   const qnaList = toQnaList(normalized.qna?.parsed);
   const ingredients = toStringList(spec?.ingredients);
-  const hasBundle =
-    normalized.bundle_buy.length > 0 || recommendedBundleProducts.length > 0;
 
-  if (!normalized.usage_guide && !spec && qnaList.length === 0 && !hasBundle) {
+  if (!normalized.usage_guide && !spec && qnaList.length === 0) {
     return null;
   }
 
@@ -125,7 +113,7 @@ export function ProductDetailsSections({
           </h2>
           <div className="mt-4">
             {renderUsage(normalized.usage_guide.parsed) || (
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-[var(--color-accent)]/70">
                 Add `custom.usage_guide` metafield to show guided instructions.
               </p>
             )}
@@ -149,7 +137,7 @@ export function ProductDetailsSections({
                   <dt className="text-sm font-semibold text-[var(--color-foreground)]">
                     {formatLabel(key)}
                   </dt>
-                  <dd className="min-w-0 break-words text-sm text-slate-600 dark:text-slate-300">
+                  <dd className="min-w-0 break-words text-sm text-[var(--color-text)]/80">
                     {typeof value === "string" || typeof value === "number"
                       ? String(value)
                       : JSON.stringify(value)}
@@ -166,7 +154,7 @@ export function ProductDetailsSections({
                 {ingredients.map((item) => (
                   <li
                     key={item}
-                    className="rounded-full border border-[var(--color-border)] px-3 py-1 text-xs font-medium text-slate-600 dark:text-slate-300"
+                    className="rounded-full border border-[var(--color-border)] px-3 py-1 text-xs font-medium text-[var(--color-text)]/80"
                   >
                     {item}
                   </li>
@@ -191,7 +179,7 @@ export function ProductDetailsSections({
                 <summary className="min-h-[44px] cursor-pointer list-none pr-4 text-sm font-semibold text-[var(--color-foreground)]">
                   {item.question}
                 </summary>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                <p className="mt-2 text-sm leading-relaxed text-[var(--color-text)]/80">
                   {item.answer}
                 </p>
               </details>
@@ -200,38 +188,6 @@ export function ProductDetailsSections({
         </article>
       )}
 
-      {hasBundle && (
-        <article className="rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 md:p-7">
-          <h2 className="text-xl font-extrabold tracking-tight text-[var(--color-foreground)] md:text-2xl">
-            Frequently bought together
-          </h2>
-          {recommendedBundleProducts.length > 0 ? (
-            <BundleBuyCard
-              currentProduct={currentProduct}
-              products={recommendedBundleProducts}
-            />
-          ) : null}
-          <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {normalized.bundle_buy.map((item) => (
-              <li key={item.id}>
-                <Link
-                  href={`/products/${item.handle}`}
-                  className="flex min-h-[44px] items-center rounded-2xl border border-[var(--color-border)] px-4 py-3 text-sm font-semibold text-[var(--color-foreground)] transition hover:bg-[var(--color-surface-2)]"
-                >
-                  {item.title}
-                </Link>
-              </li>
-            ))}
-          </ul>
-          {recommendedBundleProducts.length === 0 &&
-          normalized.bundle_buy.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
-              Add bundle-related product references in Shopify metafields to
-              show suggestions here.
-            </p>
-          ) : null}
-        </article>
-      )}
     </section>
   );
 }

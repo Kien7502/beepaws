@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import ProductCard from '@/components/product/ProductCard';
+import { WaveDivider } from '@/components/ui/WaveDivider';
 import { Sparkles, ShoppingBag } from 'lucide-react';
 
 import { getProducts } from '@/lib/shopify/queries';
@@ -64,17 +65,19 @@ export default async function Home() {
         </div>
       </section>
 
+      <WaveDivider from="#0f172a" to="#fffaf2" />
+
       {/* Featured Products Section */}
       <section className="container mx-auto px-4 md:px-6 max-w-7xl pt-20 md:pt-24 pb-12">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10">
           <div className="max-w-2xl">
-            <span className="inline-block text-xs font-bold uppercase tracking-widest text-[var(--color-primary)] mb-3 px-3 py-1 rounded-full bg-[var(--color-secondary)]/80 dark:bg-[var(--color-primary)]/15 border border-[var(--color-primary)]/20">
+            <span className="inline-block text-xs font-bold uppercase tracking-widest text-[var(--color-primary)] mb-3 px-3 py-1 rounded-full bg-[var(--color-secondary)]/80 border border-[var(--color-primary)]/20">
               Featured
             </span>
             <h2 className="heading-section text-3xl md:text-4xl mb-4">
               Pawsitively Perfect Picks
             </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-lg">
+            <p className="text-[var(--color-accent)]/70 text-lg">
               Hand-selected favorites that your pets will obsess over. Grooming, playing, and relaxing made better.
             </p>
           </div>
@@ -87,7 +90,7 @@ export default async function Home() {
         {/* Product Grid Dynamic */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
           {featuredProducts.length === 0 ? (
-            <div className="col-span-full flex flex-col items-center justify-center py-24 px-4 bg-[var(--color-secondary)]/10 dark:bg-slate-800/30 backdrop-blur-sm border-2 border-dashed border-[var(--color-primary)]/20 rounded-[2rem] text-center max-w-xl mx-auto">
+            <div className="col-span-full flex flex-col items-center justify-center py-24 px-4 bg-[var(--color-secondary)]/30 backdrop-blur-sm border-2 border-dashed border-[var(--color-primary)]/20 rounded-[2rem] text-center max-w-xl mx-auto">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--color-primary)]/10 text-[var(--color-primary)]" aria-hidden>
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 3c.5 2.5 2 4 4 4s3.5-1.5 4-4" />
@@ -97,7 +100,7 @@ export default async function Home() {
                 </svg>
               </div>
               <p className="text-[var(--color-foreground)] font-black text-xl mb-2">No featured products yet</p>
-              <p className="text-slate-500 dark:text-slate-400 font-medium mb-6">
+              <p className="text-[var(--color-accent)]/70 font-medium mb-6">
                 Add Admin API credentials in env, then activate products and publish them to the Online Store sales channel to show them here.
               </p>
               <Link href="/collections/all">
@@ -132,15 +135,13 @@ export default async function Home() {
         </div>
       </section>
       
-      {/* Featured Banner Mini (Newsletter) */}
-      <section className="container mx-auto px-4 md:px-6 py-16 md:py-24">
-        <div className="bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] rounded-[3rem] p-8 md:p-16 flex flex-col md:flex-row items-center justify-between gap-12 shadow-2xl relative overflow-hidden">
-          
-          {/* Decorative shapes behind text */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-black/10 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none"></div>
-
-          <div className="md:w-1/2 relative z-10">
+      {/* Newsletter — full-width wave section */}
+      <WaveDivider from="#fffaf2" to="#f5a800" />
+      <section className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #f5a800 0%, #8b5e2a 100%)" }}>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-black/10 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none" />
+        <div className="container mx-auto px-4 md:px-6 py-16 md:py-24 flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
+          <div className="md:w-1/2">
             <h2 className="text-4xl md:text-5xl font-black text-white mb-6 leading-tight">
               Join the <br/>Beepaws Family
             </h2>
@@ -148,17 +149,17 @@ export default async function Home() {
               Sign up today and get <span className="font-bold text-yellow-300">15% off</span> your first accessory order, plus exclusive members-only tips for pet care.
             </p>
             <div className="flex flex-col sm:flex-row w-full max-w-md gap-2 sm:gap-3 bg-white/10 p-2 rounded-3xl sm:rounded-full border border-white/20 backdrop-blur-md">
-              <input 
-                type="email" 
-                placeholder="Your email address" 
-                className="newsletter-input-focus bg-transparent text-white placeholder-white/70 px-5 sm:px-6 py-3 flex-grow outline-none font-medium rounded-2xl sm:rounded-full min-h-[48px] border border-transparent" 
+              <input
+                type="email"
+                placeholder="Your email address"
+                className="newsletter-input-focus bg-transparent text-white placeholder-white/70 px-5 sm:px-6 py-3 flex-grow outline-none font-medium rounded-2xl sm:rounded-full min-h-[48px] border border-transparent"
               />
-              <button type="button" className="bg-white text-[var(--color-primary)] font-bold hover:bg-slate-100 transition-colors border-none rounded-2xl sm:rounded-full px-8 py-3 shrink-0 min-h-[48px]">
+              <button type="button" className="bg-white text-[var(--color-primary)] font-bold hover:bg-amber-50 transition-colors border-none rounded-2xl sm:rounded-full px-8 py-3 shrink-0 min-h-[48px]">
                 Join now
               </button>
             </div>
           </div>
-          <div className="md:w-1/2 flex justify-center relative z-10">
+          <div className="md:w-1/2 flex justify-center">
             <div className="relative w-72 h-72 md:w-96 md:h-96 rounded-3xl overflow-hidden border-4 border-white/20 shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500">
               <Image
                 src="https://images.unsplash.com/photo-1541599540903-216a46ca1dc0?q=80&w=800&auto=format&fit=crop"
@@ -171,6 +172,7 @@ export default async function Home() {
           </div>
         </div>
       </section>
+      <WaveDivider from="#8b5e2a" to="#fffaf2" flip />
 
     </div>
   );

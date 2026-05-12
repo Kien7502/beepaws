@@ -24,7 +24,7 @@ export default async function ShopAllPage() {
         <h1 className="text-4xl md:text-5xl font-extrabold text-[var(--color-foreground)] mb-4 tracking-tight">
           All products
         </h1>
-        <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
+        <p className="text-[var(--color-accent)]/70 text-lg leading-relaxed">
           Explore our full catalog—curated for comfort, play, and everyday care.
         </p>
       </div>
@@ -34,7 +34,7 @@ export default async function ShopAllPage() {
           <h2 className="text-2xl font-bold mb-2 text-[var(--color-foreground)]">
             No products found
           </h2>
-          <p className="text-slate-600 dark:text-slate-400 mb-8">
+          <p className="text-[var(--color-accent)]/70 mb-8">
             {hasCreds
               ? "Admin credentials are detected, but catalog returned empty. Ensure products are ACTIVE and available in your catalog."
               : "Missing Shopify Admin credentials on the server environment. Set SHOPIFY_ADMIN_ACCESS_TOKEN (or SHOPIFY_ADMIN_CLIENT_ID + SHOPIFY_ADMIN_CLIENT_SECRET) and store domain env vars."}

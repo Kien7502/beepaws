@@ -27,6 +27,7 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
   );
   const { addItem } = useCart();
   const [addedCount, setAddedCount] = useState(0);
+  const [buyingNow, setBuyingNow] = useState(false);
 
   const currentVariant = getPrimaryVariant(currentProduct);
   const currencyCode = currentVariant?.price.currencyCode || "USD";
@@ -44,10 +45,8 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
 
   const canAdd = !!currentVariant?.availableForSale;
 
-  function onAddSelected() {
-    if (!currentVariant || !currentVariant.availableForSale) return;
-    let inserted = 0;
-
+  function addSelectedItems() {
+    if (!currentVariant || !currentVariant.availableForSale) return 0;
     addItem({
       merchandiseId: currentVariant.id,
       productHandle: currentProduct.handle,
@@ -58,8 +57,7 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
       unitPriceAmount: currentVariant.price.amount,
       quantity: 1,
     });
-    inserted += 1;
-
+    let inserted = 1;
     for (const product of selectedProducts) {
       const variant = getPrimaryVariant(product);
       if (!variant || !variant.availableForSale) continue;
@@ -75,8 +73,20 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
       });
       inserted += 1;
     }
+    return inserted;
+  }
+
+  function onAddSelected() {
+    const inserted = addSelectedItems();
     setAddedCount(inserted);
     window.setTimeout(() => setAddedCount(0), 2000);
+  }
+
+  function onBuyNow() {
+    if (!canAdd || buyingNow) return;
+    setBuyingNow(true);
+    addSelectedItems();
+    window.location.href = "/checkout";
   }
 
   return (
@@ -104,7 +114,7 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
               />
               <label
                 htmlFor={`bundle-${product.handle}`}
-                className="min-h-[44px] flex-1 cursor-pointer text-sm text-slate-600 dark:text-slate-300"
+                className="min-h-[44px] flex-1 cursor-pointer text-sm text-[var(--color-text)]/80"
               >
                 <span className="block font-medium text-[var(--color-foreground)]">
                   {product.title}
@@ -115,23 +125,35 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
           );
         })}
       </ul>
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-4 flex flex-col gap-3">
         <p className="text-sm font-semibold text-[var(--color-foreground)]">
           Total ({selectedProducts.length + 1} items): {formatMoney(total, currencyCode)}
         </p>
-        <Button
-          type="button"
-          size="md"
-          variant="primary"
-          onClick={onAddSelected}
-          disabled={!canAdd}
-          className="min-h-[44px]"
-        >
-          Add selected bundle
-        </Button>
+        <div className="flex flex-col gap-2">
+          <Button
+            type="button"
+            size="md"
+            variant="primary"
+            onClick={onAddSelected}
+            disabled={!canAdd}
+            className="min-h-[44px] w-full"
+          >
+            Add to cart
+          </Button>
+          <Button
+            type="button"
+            size="md"
+            variant="primary"
+            onClick={onBuyNow}
+            disabled={!canAdd || buyingNow}
+            className="min-h-[44px] w-full !bg-[var(--color-accent)] !text-white hover:!brightness-110"
+          >
+            {buyingNow ? "Redirecting…" : "Buy now"}
+          </Button>
+        </div>
       </div>
       {addedCount > 0 && (
-        <p className="mt-3 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+        <p className="mt-3 text-sm font-semibold text-emerald-600">
           Added {addedCount} items to cart.
         </p>
       )}

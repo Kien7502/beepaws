@@ -1,115 +1,135 @@
 "use client";
 
 import { useState } from "react";
-import type { Product } from "@/types/shopify";
+import type { Product, ProductVariant } from "@/types/shopify";
 import Button from "@/components/ui/Button";
 import { CheckCircle2, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "@/components/cart/CartProvider";
 
-function formatMoney(amount: string, currencyCode: string) {
-  const n = parseFloat(amount);
-  if (Number.isNaN(n)) return amount;
+const TIERS = [
+  { qty: 1, label: "Buy 1" },
+  { qty: 2, label: "Buy 2", badge: "Free Shipping", popular: true },
+  { qty: 3, label: "Buy 3", badge: "Best Value" },
+] as const;
+
+function formatMoney(amount: number, currencyCode: string) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: currencyCode || "USD",
-  }).format(n);
+  }).format(amount);
 }
 
-export default function VariantSelector({
-  product,
-  showPriceRangeHint = false,
-}: {
-  product: Product;
-  showPriceRangeHint?: boolean;
-}) {
-  const [selectedVariant, setSelectedVariant] = useState(
-    product.variants.edges[0]?.node,
+export default function VariantSelector({ product }: { product: Product }) {
+  const variants = product.variants.edges.map((e) => e.node);
+  const multi = variants.length > 1;
+
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant>(variants[0]);
+  const [tierIdx, setTierIdx] = useState(0);
+  const [unitVariantIds, setUnitVariantIds] = useState<string[]>(
+    Array(3).fill(variants[0]?.id ?? ""),
   );
   const [added, setAdded] = useState(false);
-  const [quantity, setQuantity] = useState(1);
   const { addItem } = useCart();
 
-  const isAvailable = selectedVariant?.availableForSale;
+  const tier = TIERS[tierIdx];
+  const currencyCode = selectedVariant?.price?.currencyCode || "USD";
+  const unitPrice = parseFloat(selectedVariant?.price?.amount || "0");
+  const totalPrice = unitPrice * tier.qty;
 
-  const price = selectedVariant?.price
-    ? parseFloat(selectedVariant.price.amount)
-    : 0;
+  function selectTier(idx: number) {
+    setTierIdx(idx);
+    setUnitVariantIds((prev) => {
+      const next = [...prev];
+      next[0] = selectedVariant?.id ?? "";
+      return next;
+    });
+  }
 
-  const formattedPrice = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: selectedVariant?.price?.currencyCode || "USD",
-  }).format(price);
+  function selectTopVariant(variant: ProductVariant) {
+    setSelectedVariant(variant);
+    setUnitVariantIds((prev) => {
+      const next = [...prev];
+      next[0] = variant.id;
+      return next;
+    });
+  }
 
-  const { minVariantPrice, maxVariantPrice } = product.priceRange;
-  const rangeCaption =
-    showPriceRangeHint &&
-    minVariantPrice.amount !== maxVariantPrice.amount
-      ? `${formatMoney(minVariantPrice.amount, minVariantPrice.currencyCode)} – ${formatMoney(maxVariantPrice.amount, maxVariantPrice.currencyCode)}`
-      : null;
-
-  const multi = product.variants.edges.length > 1;
+  function setUnitVariant(unitIdx: number, variantId: string) {
+    setUnitVariantIds((prev) => {
+      const next = [...prev];
+      next[unitIdx] = variantId;
+      return next;
+    });
+  }
 
   function onAddToCart() {
-    if (!selectedVariant || !isAvailable) return;
+    if (!selectedVariant?.availableForSale) return;
 
-    addItem({
-      merchandiseId: selectedVariant.id,
-      productHandle: product.handle,
-      productTitle: product.title,
-      variantTitle: selectedVariant.title,
-      imageUrl: product.images.edges[0]?.node?.url || "/product-placeholder.svg",
-      currencyCode: selectedVariant.price.currencyCode,
-      unitPriceAmount: selectedVariant.price.amount,
-      quantity,
-    });
+    const counts = new Map<string, number>();
+    for (let i = 0; i < tier.qty; i++) {
+      const vid = unitVariantIds[i] ?? selectedVariant.id;
+      counts.set(vid, (counts.get(vid) ?? 0) + 1);
+    }
+
+    for (const [variantId, qty] of counts) {
+      const v = variants.find((vv) => vv.id === variantId) ?? selectedVariant;
+      addItem({
+        merchandiseId: variantId,
+        productHandle: product.handle,
+        productTitle: product.title,
+        variantTitle: v.title,
+        imageUrl: product.images.edges[0]?.node?.url || "/product-placeholder.svg",
+        currencyCode: v.price.currencyCode,
+        unitPriceAmount: v.price.amount,
+        quantity: qty,
+      });
+    }
+
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1800);
   }
 
+  const isAvailable = selectedVariant?.availableForSale;
+
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--color-accent)]/70">
           Your selection
         </p>
         <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <span className="text-4xl font-black tabular-nums tracking-tight text-[var(--color-primary)] md:text-5xl">
-            {formattedPrice}
+            {formatMoney(totalPrice, currencyCode)}
           </span>
-          {multi && selectedVariant?.title && selectedVariant.title !== "Default Title" && (
-            <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
-              · {selectedVariant.title}
+          {tier.qty > 1 && (
+            <span className="text-sm text-[var(--color-accent)]/70">
+              {formatMoney(unitPrice, currencyCode)}/unit
             </span>
           )}
         </div>
-        {rangeCaption && (
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            All options: {rangeCaption}
-          </p>
-        )}
       </div>
 
       {multi && (
-        <div className="space-y-3">
+        <div className="space-y-2">
           <p className="text-sm font-bold text-[var(--color-foreground)]">
             Choose an option
           </p>
           <div className="flex flex-wrap gap-2">
-            {product.variants.edges.map(({ node }) => {
-              const active = selectedVariant?.id === node.id;
+            {variants.map((v) => {
+              const active = selectedVariant?.id === v.id;
               return (
                 <button
-                  key={node.id}
+                  key={v.id}
                   type="button"
-                  onClick={() => setSelectedVariant(node)}
+                  onClick={() => selectTopVariant(v)}
                   className={`min-h-[44px] rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all ${
                     active
                       ? "border-[var(--color-primary)] bg-[var(--color-primary)]/12 text-[var(--color-primary)] shadow-sm ring-2 ring-[var(--color-primary)]/20"
                       : "border-[var(--color-border)] text-[var(--color-foreground)] hover:border-[var(--color-primary)]/50"
                   }`}
                 >
-                  {node.title}
+                  {v.title}
                 </button>
               );
             })}
@@ -117,31 +137,96 @@ export default function VariantSelector({
         </div>
       )}
 
-      <div className="border-t border-[var(--color-border)] pt-6">
-        <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-[var(--color-border)]/70 px-3 py-2">
-          <span className="text-sm font-semibold text-[var(--color-foreground)]">
-            Quantity
+      <div>
+        <div className="mb-4 flex items-center gap-3">
+          <div className="h-px flex-1 bg-[var(--color-border)]" />
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[var(--color-accent)]/70">
+            Bundle &amp; Save
           </span>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              className="min-h-[36px] min-w-[36px] rounded-full border border-[var(--color-border)] text-base font-bold"
-              aria-label="Decrease quantity"
-            >
-              -
-            </button>
-            <span className="min-w-7 text-center text-sm font-bold">{quantity}</span>
-            <button
-              type="button"
-              onClick={() => setQuantity((q) => Math.min(99, q + 1))}
-              className="min-h-[36px] min-w-[36px] rounded-full border border-[var(--color-border)] text-base font-bold"
-              aria-label="Increase quantity"
-            >
-              +
-            </button>
-          </div>
+          <div className="h-px flex-1 bg-[var(--color-border)]" />
         </div>
+
+        <div className="space-y-3">
+          {TIERS.map((t, i) => {
+            const selected = tierIdx === i;
+            const tTotal = unitPrice * t.qty;
+
+            return (
+              <div
+                key={t.qty}
+                onClick={() => selectTier(i)}
+                className={`relative cursor-pointer rounded-2xl border-2 p-4 transition-all ${
+                  selected
+                    ? "border-[var(--color-primary)] bg-[var(--color-primary)]/8 shadow-sm"
+                    : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-primary)]/40 hover:bg-[var(--color-primary)]/5"
+                }`}
+              >
+                {"popular" in t && (
+                  <span className="absolute -top-3 right-4 rounded-full bg-[var(--color-primary)] px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-sm">
+                    Most Popular
+                  </span>
+                )}
+
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                        selected
+                          ? "border-[var(--color-primary)]"
+                          : "border-[var(--color-border)]"
+                      }`}
+                    >
+                      {selected && (
+                        <span className="h-2.5 w-2.5 rounded-full bg-[var(--color-primary)]" />
+                      )}
+                    </span>
+                    <span className="font-bold text-[var(--color-foreground)]">
+                      {t.label}
+                    </span>
+                    {"badge" in t && (
+                      <span className="rounded-full bg-emerald-600/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-800">
+                        {t.badge}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-base font-extrabold tabular-nums text-[var(--color-primary)]">
+                    {formatMoney(tTotal, currencyCode)}
+                  </span>
+                </div>
+
+                {selected && multi && t.qty > 1 && (
+                  <div className="mt-3 space-y-2 border-t border-[var(--color-border)] pt-3">
+                    {Array.from({ length: t.qty }, (_, j) => {
+                      const uid = unitVariantIds[j] ?? variants[0]?.id ?? "";
+                      return (
+                        <div key={j} className="flex items-center gap-2">
+                          <span className="w-6 shrink-0 text-xs font-bold text-[var(--color-accent)]/70">
+                            #{j + 1}
+                          </span>
+                          <select
+                            value={uid}
+                            onChange={(e) => setUnitVariant(j, e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1.5 text-sm font-semibold text-[var(--color-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/40"
+                          >
+                            {variants.map((v) => (
+                              <option key={v.id} value={v.id}>
+                                {v.title}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
         <Button
           type="button"
           variant="primary"
@@ -152,15 +237,39 @@ export default function VariantSelector({
           className="min-h-[52px] rounded-2xl text-base md:text-lg"
           onClick={onAddToCart}
         >
-          {isAvailable ? `Add ${quantity} to cart` : "Out of stock"}
+          {isAvailable ? "Add to cart" : "Out of stock"}
         </Button>
-        <p className="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">
-          Added items stay in your Beepaws cart until you checkout.
-        </p>
+
+        {/* Payment processor badges */}
+        <div className="mt-3 flex items-center justify-center gap-2">
+          {/* Visa */}
+          <div className="flex h-7 w-11 items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm">
+            <span className="text-[11px] font-black italic tracking-tight text-[#1434CB]">VISA</span>
+          </div>
+          {/* Mastercard */}
+          <div className="relative flex h-7 w-11 items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm">
+            <span className="h-[18px] w-[18px] rounded-full bg-[#EB001B]" />
+            <span className="-ml-2.5 h-[18px] w-[18px] rounded-full bg-[#F79E1B] opacity-90" />
+          </div>
+          {/* PayPal */}
+          <div className="flex h-7 w-14 items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm">
+            <span className="text-[11px] font-black text-[#003087]">Pay</span>
+            <span className="text-[11px] font-black text-[#009cde]">Pal</span>
+          </div>
+          {/* Apple Pay */}
+          <div className="flex h-7 w-16 items-center justify-center rounded-md border border-slate-200 bg-black shadow-sm px-2">
+            <span className="text-[11px] font-semibold tracking-tight text-white">Apple Pay</span>
+          </div>
+          {/* Google Pay */}
+          <div className="flex h-7 w-16 items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm px-2">
+            <span className="text-[11px] font-bold text-[#5F6368]">G Pay</span>
+          </div>
+        </div>
+
         {added && (
-          <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+          <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-sm font-semibold text-emerald-600">
             <CheckCircle2 size={16} />
-            Added {quantity} to cart.{" "}
+            Added to cart!{" "}
             <Link href="/checkout" className="underline underline-offset-2">
               View cart
             </Link>

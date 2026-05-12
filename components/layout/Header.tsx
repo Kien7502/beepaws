@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ShoppingCart, Menu, X } from "lucide-react";
-import { ThemeToggle } from "../ui/ThemeToggle";
 import { SearchOverlay } from "./SearchOverlay";
 import { useCart } from "@/components/cart/CartProvider";
 import titleIcon from "@/app/Title_icon.png";
@@ -28,7 +27,7 @@ function navLinkActive(pathname: string, href: string): boolean {
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
-  const { itemCount, hydrated, lastAddedAt, lastAddedQuantity } = useCart();
+  const { itemCount, hydrated, lastAddedAt, lastAddedQuantity, openCart } = useCart();
   const [showCartPulse, setShowCartPulse] = useState(false);
 
   useEffect(() => {
@@ -37,10 +36,9 @@ const Header = () => {
     const t = window.setTimeout(() => setShowCartPulse(false), 850);
     return () => window.clearTimeout(t);
   }, [lastAddedAt]);
-  const cartHref = "/checkout";
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[var(--background)]/90 backdrop-blur-md border-b border-[var(--color-border)]">
+    <header className="sticky top-0 z-50 w-full bg-[var(--background)] shadow-[0_2px_12px_-4px_rgb(61_36_0/0.10)]">
       <div className="bg-[var(--color-primary)] text-white text-xs md:text-sm font-medium py-2.5 text-center tracking-wide px-2">
         Free shipping on orders over $50 —{" "}
         <Link href="/collections/all" className="underline underline-offset-2 font-semibold">
@@ -54,7 +52,7 @@ const Header = () => {
             <button
               type="button"
               onClick={() => setMobileOpen((o) => !o)}
-              className="p-2 text-[var(--color-foreground)] hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors md:hidden"
+              className="p-2 text-[var(--color-foreground)] hover:bg-[var(--color-surface)] rounded-full transition-colors md:hidden"
               aria-expanded={mobileOpen}
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
             >
@@ -93,11 +91,11 @@ const Header = () => {
           </nav>
 
           <div className="flex-1 flex items-center justify-end gap-1 md:gap-3">
-            <ThemeToggle />
             <SearchOverlay />
-            <Link
-              href={cartHref}
-              className={`relative p-2 text-[var(--color-foreground)] hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors inline-flex ${showCartPulse ? "scale-110 bg-[var(--color-primary)]/10 ring-2 ring-[var(--color-primary)]/35" : ""}`}
+            <button
+              type="button"
+              onClick={openCart}
+              className={`relative p-2 text-[var(--color-foreground)] hover:bg-[var(--color-surface)] rounded-full transition-colors inline-flex ${showCartPulse ? "scale-110 bg-[var(--color-primary)]/10 ring-2 ring-[var(--color-primary)]/35" : ""}`}
               aria-label="Shopping cart"
             >
               <ShoppingCart size={24} />
@@ -111,7 +109,7 @@ const Header = () => {
                   +{lastAddedQuantity}
                 </span>
               )}
-            </Link>
+            </button>
           </div>
         </div>
       </div>
@@ -123,8 +121,8 @@ const Header = () => {
             onClick={() => setMobileOpen(false)}
             className={`block rounded-xl px-4 py-3 text-base font-semibold ${
               pathname === "/"
-                ? "text-[var(--color-primary)] bg-[var(--color-secondary)]/50 dark:bg-slate-800"
-                : "text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/80 dark:hover:bg-slate-800/80"
+                ? "text-[var(--color-primary)] bg-[var(--color-secondary)]/50"
+                : "text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/80"
             }`}
           >
             Home
@@ -138,21 +136,21 @@ const Header = () => {
                 onClick={() => setMobileOpen(false)}
                 className={`block rounded-xl px-4 py-3 text-base font-semibold ${
                   active
-                    ? "text-[var(--color-primary)] bg-[var(--color-secondary)]/50 dark:bg-slate-800"
-                    : "text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/80 dark:hover:bg-slate-800/80"
+                    ? "text-[var(--color-primary)] bg-[var(--color-secondary)]/50"
+                    : "text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/80"
                 }`}
               >
                 {link.label}
               </Link>
             );
           })}
-          <Link
-            href={cartHref}
-            onClick={() => setMobileOpen(false)}
-            className="block rounded-xl px-4 py-3 text-base font-semibold text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/80 dark:hover:bg-slate-800/80"
+          <button
+            type="button"
+            onClick={() => { setMobileOpen(false); openCart(); }}
+            className="block w-full rounded-xl px-4 py-3 text-left text-base font-semibold text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/80"
           >
-            Cart
-          </Link>
+            Cart {hydrated && itemCount > 0 && `(${itemCount})`}
+          </button>
         </div>
       )}
     </header>

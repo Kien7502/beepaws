@@ -30,6 +30,9 @@ type CartContextValue = {
   hydrated: boolean;
   lastAddedAt: number;
   lastAddedQuantity: number;
+  isCartOpen: boolean;
+  openCart: () => void;
+  closeCart: () => void;
   addItem: (item: LocalCartItem) => void;
   updateQuantity: (merchandiseId: string, quantity: number) => void;
   removeItem: (merchandiseId: string) => void;
@@ -64,15 +67,16 @@ function safeWriteCart(items: LocalCartItem[]) {
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<LocalCartItem[]>(() => {
-    if (typeof window === "undefined") return [];
-    return safeReadCart();
-  });
+  const [items, setItems] = useState<LocalCartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [lastAddedAt, setLastAddedAt] = useState(0);
   const [lastAddedQuantity, setLastAddedQuantity] = useState(0);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const openCart = useCallback(() => setIsCartOpen(true), []);
+  const closeCart = useCallback(() => setIsCartOpen(false), []);
 
   useEffect(() => {
+    setItems(safeReadCart());
     setHydrated(true);
   }, []);
 
@@ -83,6 +87,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const addItem = useCallback((next: LocalCartItem) => {
     setLastAddedAt(Date.now());
     setLastAddedQuantity(Math.max(1, next.quantity || 1));
+    setIsCartOpen(true);
     setItems((prev) => {
       const found = prev.find((p) => p.merchandiseId === next.merchandiseId);
       if (!found) return [...prev, next];
@@ -123,6 +128,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       hydrated,
       lastAddedAt,
       lastAddedQuantity,
+      isCartOpen,
+      openCart,
+      closeCart,
       addItem,
       updateQuantity,
       removeItem,
@@ -133,6 +141,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     hydrated,
     lastAddedAt,
     lastAddedQuantity,
+    isCartOpen,
+    openCart,
+    closeCart,
     addItem,
     updateQuantity,
     removeItem,

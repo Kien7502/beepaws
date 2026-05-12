@@ -9,7 +9,7 @@ export type BreadcrumbItem = {
 export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
   return (
     <nav aria-label="Breadcrumb" className="mb-8">
-      <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-500 dark:text-slate-400">
+      <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-[var(--color-accent)]/70">
         {items.map((item, i) => (
           <li key={`${item.label}-${i}`} className="flex items-center gap-2 min-w-0">
             {i > 0 && (

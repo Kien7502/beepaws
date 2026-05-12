@@ -49,7 +49,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <div className="flex items-center justify-center gap-2 mt-auto mb-4">
           <span className="text-[var(--color-foreground)] font-extrabold text-lg">{price}</span>
           {compareAtPrice && (
-            <span className="text-slate-400 text-sm font-semibold line-through block">{compareAtPrice}</span>
+            <span className="text-[var(--color-accent)]/50 text-sm font-semibold line-through block">{compareAtPrice}</span>
           )}
         </div>
 

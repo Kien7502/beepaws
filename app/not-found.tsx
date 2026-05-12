@@ -11,7 +11,7 @@ export default function NotFound() {
       <h1 className="text-2xl md:text-3xl font-extrabold text-[var(--color-foreground)] mb-3">
         Page not found
       </h1>
-      <p className="text-slate-600 dark:text-slate-400 mb-10 leading-relaxed">
+      <p className="text-[var(--color-accent)]/70 mb-10 leading-relaxed">
         The page you are looking for does not exist or has been moved. Try the
         shop home or browse all products.
       </p>

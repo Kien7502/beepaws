@@ -16,9 +16,9 @@ export function SimpleArticle({ title, description, breadcrumbs, children }: Pro
         {title}
       </h1>
       {description && (
-        <p className="text-slate-600 dark:text-slate-400 mb-10 text-lg">{description}</p>
+        <p className="text-[var(--color-accent)]/70 mb-10 text-lg">{description}</p>
       )}
-      <div className="space-y-6 text-slate-600 dark:text-slate-300 leading-relaxed">
+      <div className="space-y-6 text-[var(--color-text)]/80 leading-relaxed">
         {children}
       </div>
     </div>

@@ -24,7 +24,7 @@ export function SearchOverlay() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="p-2 text-[var(--color-foreground)] hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors hidden md:inline-flex"
+        className="p-2 text-[var(--color-foreground)] hover:bg-[var(--color-surface)] rounded-full transition-colors hidden md:inline-flex"
         aria-label="Search products"
         aria-expanded={open}
       >
@@ -49,18 +49,18 @@ export function SearchOverlay() {
                 ref={inputRef}
                 type="search"
                 placeholder="Search products…"
-                className="flex-1 bg-transparent text-[var(--color-foreground)] placeholder-slate-400 outline-none text-base min-h-[44px]"
+                className="flex-1 bg-transparent text-[var(--color-foreground)] placeholder-[var(--color-accent)]/50 outline-none text-base min-h-[44px]"
               />
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="p-2 rounded-full hover:bg-[var(--color-surface)]"
                 aria-label="Close search"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <p className="text-sm text-slate-500 dark:text-slate-400 px-1">
+            <p className="text-sm text-[var(--color-accent)]/70 px-1">
               Product search from the catalog is not wired yet — browse via Shop All and collections for now.
             </p>
           </div>

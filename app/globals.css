@@ -1,6 +1,5 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
   --color-background: var(--background);
@@ -10,44 +9,37 @@
   --color-text: var(--text);
   --color-heading: var(--heading);
 
-  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
 
   --color-primary: #f5a800;
   --color-primary-hover: #d89200;
-  --color-secondary: #e8f2e4;
-  --color-accent: #4a7c3f;
+  --color-secondary: #fff3dc;
+  --color-accent: #8b5e2a;
 }
 
 :root {
-  --background: #f7faf5;
-  --foreground: #4a7c3f;
-  --text: #2a3d2a;
-  --heading: #4a7c3f;
-  --surface: #e8f2e4;
-  --border: #d3e3cd;
+  --background: #fffaf2;
+  --foreground: #8b5e2a;
+  --text: #3d2400;
+  --heading: #8b5e2a;
+  --surface: #fff3dc;
+  --border: #e8d5aa;
 
-  --elev-shadow-card: 0 4px 20px -10px rgb(42 61 42 / 0.14);
-  --elev-shadow-card-hover: 0 14px 40px -16px rgb(74 124 63 / 0.26);
-  --elev-shadow-elevated: 0 8px 30px -14px rgb(42 61 42 / 0.2);
+  --elev-shadow-card: 0 4px 20px -10px rgb(61 36 0 / 0.10);
+  --elev-shadow-card-hover: 0 14px 40px -16px rgb(139 94 42 / 0.20);
+  --elev-shadow-elevated: 0 8px 30px -14px rgb(61 36 0 / 0.14);
 }
 
-.dark {
-  --background: #182218;
-  --foreground: #b8d7af;
-  --text: #d7e9d0;
-  --heading: #cce6c2;
-  --surface: #223022;
-  --border: #355135;
-
-  --elev-shadow-card: 0 4px 28px -8px rgb(0 0 0 / 0.5);
-  --elev-shadow-card-hover: 0 14px 48px -18px rgb(74 124 63 / 0.38);
-  --elev-shadow-elevated: 0 10px 40px -14px rgb(0 0 0 / 0.58);
-}
 
 body {
   background: var(--background);
   color: var(--text);
   font-family: var(--font-sans);
+}
+
+@keyframes waveScroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -136,10 +128,7 @@ body {
   .product-html {
     font-size: 1.0625rem;
     line-height: 1.75;
-    color: rgb(51 65 85);
-  }
-  .dark .product-html {
-    color: rgb(203 213 225);
+    color: #3d2400;
   }
   .product-html :where(p) {
     margin-bottom: 1rem;
@@ -147,12 +136,19 @@ body {
   .product-html :where(p:last-child) {
     margin-bottom: 0;
   }
-  .product-html :where(ul, ol) {
+  .product-html :where(ul) {
     margin: 1rem 0;
-    padding-left: 1.35rem;
+    padding-left: 1.5rem;
+    list-style-type: disc;
+  }
+  .product-html :where(ol) {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+    list-style-type: decimal;
   }
   .product-html :where(li) {
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.4rem;
+    padding-left: 0.25rem;
   }
   .product-html :where(a) {
     color: var(--color-primary);
