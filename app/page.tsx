@@ -52,7 +52,7 @@ export default async function Home() {
 
         {/* Hero Content */}
         <div className="relative z-10 container mx-auto px-4 sm:px-6 flex flex-1 min-h-0 items-center justify-center text-center py-20 md:py-28">
-          <div className="max-w-3xl w-full flex flex-col items-center">
+          <div className="max-w-4xl w-full flex flex-col items-center">
             <div className="inline-flex items-center space-x-2 bg-[var(--color-primary)]/25 backdrop-blur-md px-5 py-2 rounded-full text-[var(--color-primary)] font-bold text-sm mb-5 border border-[var(--color-primary)]/40 shadow-sm">
               <Sparkles size={15} />
               <span>Premium Pet Grooming &amp; Care</span>
@@ -68,7 +68,7 @@ export default async function Home() {
               <span>Trusted by <strong className="text-white font-extrabold">50,000+</strong> pet owners</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[1.08] mb-6 max-w-4xl mx-auto px-1 sm:px-0">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-white leading-[1.08] mb-6 max-w-4xl mx-auto px-1 sm:px-0">
               <span className="block">Your pet deserves</span>
               <span className="hero-gradient-heading mt-1 block pb-2">the absolute best.</span>
             </h1>
@@ -103,12 +103,37 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ───── As Seen In ───── */}
+      <section className="container mx-auto px-4 md:px-6 max-w-6xl pt-10 pb-2">
+        <div className="flex flex-col items-center gap-5">
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">As featured in</p>
+          <div className="w-full flex flex-wrap items-center justify-center gap-x-10 gap-y-3 py-1">
+            {[
+              { name: "Petco", style: "font-black italic" },
+              { name: "BarkBox", style: "font-extrabold tracking-wide" },
+              { name: "PetSmart", style: "font-black" },
+              { name: "Modern Dog", style: "font-bold tracking-wider italic" },
+              { name: "Rover", style: "font-extrabold tracking-tight" },
+            ].map(({ name, style }) => (
+              <span
+                key={name}
+                className={`text-base md:text-lg ${style} text-slate-300/70 dark:text-slate-600 select-none`}
+                aria-hidden="true"
+              >
+                {name}
+              </span>
+            ))}
+          </div>
+          <div className="w-full h-px bg-[var(--color-border)]" />
+        </div>
+      </section>
+
       {/* ───── Category Cards ───── */}
-      <section className="container mx-auto px-4 md:px-6 max-w-7xl pt-14 pb-4">
+      <section className="container mx-auto px-4 md:px-6 max-w-7xl pt-14 lg:pt-20 pb-4">
         <div className="text-center mb-8">
           <p className="text-xs font-bold uppercase tracking-widest text-[var(--color-primary)]">Browse by category</p>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 md:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 md:gap-5">
           {[
             {
               label: "Nail Care",
@@ -165,8 +190,55 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ───── Shop by Pet ───── */}
+      <section className="container mx-auto px-4 md:px-6 max-w-7xl pt-10 pb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+          {[
+            {
+              label: "For Dogs",
+              subtitle: "Clippers, brushes & more",
+              href: "/collections/dogs",
+              img: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?q=80&w=900&auto=format&fit=crop",
+              accent: "from-amber-500/80",
+              badge: "🐕 Dogs",
+            },
+            {
+              label: "For Cats",
+              subtitle: "Gentle grooming tools",
+              href: "/collections/cats",
+              img: "https://images.unsplash.com/photo-1533743983669-94fa5c4338ec?q=80&w=900&auto=format&fit=crop",
+              accent: "from-[#4a7c3f]/80",
+              badge: "🐈 Cats",
+            },
+          ].map((pet) => (
+            <Link
+              key={pet.label}
+              href={pet.href}
+              className="group relative overflow-hidden rounded-[2rem] min-h-[280px] md:min-h-[340px] flex flex-col justify-end"
+            >
+              <Image
+                src={pet.img}
+                alt={pet.label}
+                fill
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                sizes="(max-width: 640px) 100vw, 50vw"
+              />
+              <div className={`absolute inset-0 bg-gradient-to-t ${pet.accent} via-black/20 to-transparent`} />
+              <div className="relative z-10 p-7 md:p-9 flex flex-col gap-1">
+                <span className="text-xs font-bold text-white/80 mb-1">{pet.badge}</span>
+                <h3 className="text-2xl md:text-3xl font-black text-white leading-tight">{pet.label}</h3>
+                <p className="text-sm text-white/80 font-medium">{pet.subtitle}</p>
+                <span className="mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white font-bold text-sm px-5 py-2.5 rounded-full border border-white/30 w-fit transition-all group-hover:bg-white/30">
+                  Shop now <ArrowRight size={14} />
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       {/* ───── Featured Products ───── */}
-      <section className="container mx-auto px-4 md:px-6 max-w-7xl pt-16 md:pt-20 pb-12">
+      <section className="container mx-auto px-4 md:px-6 max-w-7xl pt-16 md:pt-20 lg:pt-24 pb-12 lg:pb-16">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10">
           <div className="max-w-2xl">
             <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-[var(--color-primary)] mb-3 px-3 py-1 rounded-full bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20">
@@ -184,7 +256,7 @@ export default async function Home() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-10">
           {featuredProducts.length === 0 ? (
             <div className="col-span-full flex flex-col items-center justify-center py-24 px-4 bg-[var(--color-surface)] border-2 border-dashed border-[var(--color-border)] rounded-3xl text-center max-w-md mx-auto">
               <p className="text-[var(--color-foreground)] font-black text-xl mb-2">No products yet</p>
@@ -236,7 +308,7 @@ export default async function Home() {
       </section>
 
       {/* ───── Why Beepaws ───── */}
-      <section className="container mx-auto px-4 md:px-6 max-w-7xl py-16 md:py-20">
+      <section className="container mx-auto px-4 md:px-6 max-w-7xl py-16 md:py-20 lg:py-24">
         <div className="text-center mb-12">
           <span className="inline-block text-xs font-bold uppercase tracking-widest text-[var(--color-primary)] mb-3 px-3 py-1 rounded-full bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20">
             Why Beepaws
@@ -245,7 +317,7 @@ export default async function Home() {
             Grooming made easy, at home
           </h2>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6 lg:gap-8">
           {[
             {
               icon: <Scissors className="h-8 w-8" />,
@@ -321,9 +393,9 @@ export default async function Home() {
                 From nail clippers to full-body trimmers — everything your pet needs for a spa-day experience without leaving home.
               </p>
               <Link href="/collections/all">
-                <Button size="lg" className="w-fit h-13 px-8 font-bold bg-white text-(--color-accent) hover:bg-slate-100 border-none shadow-xl">
-                  Explore All Products <ArrowRight size={18} className="ml-1" />
-                </Button>
+                <button className="inline-flex items-center gap-2 bg-white text-[var(--color-accent)] hover:bg-slate-100 font-bold text-base lg:text-lg px-8 py-4 rounded-full shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl">
+                  Explore All Products <ArrowRight size={18} />
+                </button>
               </Link>
 
               {/* Stats row */}
