@@ -161,7 +161,7 @@ export function UGCReviews() {
   const doubled = [...REVIEWS, ...REVIEWS];
 
   return (
-    <section className="bg-[#8b5e2a] py-14 md:py-20 overflow-hidden">
+    <section className="bg-[#7A4A1E] py-14 md:py-20 overflow-hidden">
       <div className="container mx-auto max-w-7xl px-4 md:px-6 mb-10">
         <h2 className="mb-2 text-center text-3xl font-black tracking-tight text-white md:text-4xl">
           Don&apos;t just take our word for it
@@ -186,7 +186,7 @@ export function UGCReviews() {
           {doubled.map((r, i) => (
             <div
               key={i}
-              className="w-72 shrink-0 flex flex-col bg-[#fffaf2] text-sm shadow-lg rounded-2xl overflow-hidden"
+              className="w-72 shrink-0 flex flex-col bg-[#fff5e4] text-sm shadow-lg rounded-2xl overflow-hidden"
             >
               <div className="flex items-start gap-3 p-4">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fff3dc] text-sm font-extrabold text-[#8b5e2a]">

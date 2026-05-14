@@ -27,7 +27,7 @@ const CASES = [
 
 export function UseCaseCards() {
   return (
-    <section className="bg-[var(--color-surface)] py-14 md:py-20">
+    <section className="bg-[#FFE8B0] py-14 md:py-20">
       <div className="container mx-auto max-w-7xl px-4 md:px-6">
         <h2 className="mb-2 text-center text-3xl font-black tracking-tight text-[var(--color-foreground)] md:text-4xl">
           Made for every kind of pet parent

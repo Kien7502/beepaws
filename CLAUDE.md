@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Session continuity
+At the start of every new session, read the project memory file before doing anything else:
+`C:\Users\Asus\.claude\projects\d--Business-Website-beepaws\memory\project_beepaws_state.md`
+It contains the current branch state, what was built across prior sessions, pending tasks, and environment quirks. Update it at the end of each session.
+
 ## Commands
 
 ```bash

@@ -16,7 +16,7 @@ function formatMoney(amount: number, currencyCode: string) {
 export function StickyAddToCart({ product }: { product: Product }) {
   const [visible, setVisible] = useState(false);
   const [added, setAdded] = useState(false);
-  const { addItem } = useCart();
+  const { addItem, closeDrawer } = useCart();
 
   const variant = product.variants.edges[0]?.node;
   const price = parseFloat(variant?.price?.amount || "0");
@@ -25,6 +25,8 @@ export function StickyAddToCart({ product }: { product: Product }) {
   const isAvailable = variant?.availableForSale;
 
   useEffect(() => {
+    // Sentinel is an invisible div placed right after the variant selector.
+    // Bar becomes visible once the sentinel scrolls above the viewport top.
     const sentinel = document.getElementById("sticky-cta-sentinel");
     if (!sentinel) return;
 
@@ -50,6 +52,8 @@ export function StickyAddToCart({ product }: { product: Product }) {
       unitPriceAmount: variant.price.amount,
       quantity: 1,
     });
+    // Don't open the drawer from the sticky bar — let the user stay on the page
+    closeDrawer();
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1800);
   }
@@ -60,16 +64,16 @@ export function StickyAddToCart({ product }: { product: Product }) {
         visible ? "translate-y-0" : "translate-y-full"
       }`}
     >
-      <div className="container mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 md:px-6">
-        <div className="relative h-12 w-12 shrink-0 overflow-hidden border border-[var(--color-border)]">
-          <Image src={imageUrl} alt={product.title} fill className="object-cover" sizes="48px" />
+      <div className="container mx-auto flex max-w-7xl items-center gap-4 px-4 py-2 md:px-6">
+        <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-[var(--color-border)]">
+          <Image src={imageUrl} alt={product.title} fill className="object-cover" sizes="56px" />
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold text-[var(--color-foreground)]">
+          <p className="truncate text-base font-bold text-[var(--color-foreground)]">
             {product.title}
           </p>
-          <p className="text-sm font-extrabold text-[var(--color-primary)]">
+          <p className="text-base font-extrabold text-[var(--color-primary)]">
             {formatMoney(price, currencyCode)}
           </p>
         </div>
@@ -78,9 +82,9 @@ export function StickyAddToCart({ product }: { product: Product }) {
           type="button"
           onClick={onAdd}
           disabled={!isAvailable}
-          className="flex shrink-0 items-center gap-2 bg-[var(--color-primary)] px-5 py-2.5 text-sm font-extrabold text-white transition-colors hover:bg-[var(--color-primary-hover)] disabled:opacity-50"
+          className="flex shrink-0 items-center gap-2 rounded-xl bg-[var(--color-primary)] px-6 py-3 text-base font-extrabold text-white transition-colors hover:bg-[var(--color-primary-hover)] disabled:opacity-50"
         >
-          <ShoppingBag size={16} />
+          <ShoppingBag size={18} />
           {added ? "Added!" : isAvailable ? "Add to cart" : "Out of stock"}
         </button>
       </div>

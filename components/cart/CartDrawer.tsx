@@ -46,7 +46,7 @@ export function CartDrawer() {
   }, [drawerOpen, closeDrawer]);
 
   function handleCheckout() {
-    if (checkoutUrl) window.location.href = checkoutUrl;
+    window.location.href = checkoutUrl || "/checkout";
   }
 
   return (
@@ -64,7 +64,7 @@ export function CartDrawer() {
         role="dialog"
         aria-modal
         aria-label="Shopping cart"
-        className={`fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col bg-[var(--color-surface)] shadow-2xl transition-transform duration-300 ease-out ${
+        className={`fixed right-0 top-0 z-50 flex h-full w-full max-w-sm flex-col bg-[var(--color-surface)] shadow-2xl transition-transform duration-300 ease-out ${
           drawerOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -222,7 +222,7 @@ export function CartDrawer() {
               variant="primary"
               size="lg"
               fullWidth
-              disabled={!checkoutUrl || isCartLoading}
+              disabled={isCartLoading}
               isLoading={isCartLoading}
               leftIcon={isCartLoading ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}
               className="min-h-[52px] rounded-2xl"
@@ -230,15 +230,6 @@ export function CartDrawer() {
             >
               {isCartLoading ? "Syncing cart…" : "Checkout securely"}
             </Button>
-            {!checkoutUrl && !isCartLoading && (
-              <Link
-                href="/checkout"
-                onClick={closeDrawer}
-                className="mt-3 block text-center text-sm font-semibold text-[var(--color-primary)] underline-offset-2 hover:underline"
-              >
-                Or review cart →
-              </Link>
-            )}
           </div>
         )}
       </aside>

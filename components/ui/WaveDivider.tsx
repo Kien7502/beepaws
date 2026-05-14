@@ -4,6 +4,7 @@ type Props = {
   from: string;
   to: string;
   flip?: boolean;
+  simple?: boolean;
 };
 
 const PATH_A = "M0,55 C240,110 480,0 720,55 C960,110 1200,0 1440,55 C1680,110 1920,0 2160,55 C2400,110 2640,0 2880,55 L2880,110 L0,110 Z";
@@ -16,7 +17,7 @@ const CSS = `
   }
 `;
 
-export function WaveDivider({ from, to, flip = false }: Props) {
+export function WaveDivider({ from, to, flip = false, simple = false }: Props) {
   const fwd = flip ? "reverse" : "normal";
   const rev = flip ? "normal" : "reverse";
 
@@ -51,9 +52,11 @@ export function WaveDivider({ from, to, flip = false }: Props) {
   return (
     <>
       <style>{CSS}</style>
-      <div style={{ background: from, position: "relative", height: "110px", overflow: "hidden", marginBottom: "-1px" }}>
-        {layer("32s", "-14s", PATH_B, 0.3, "80px",  fwd)}
-        {layer("22s", "-7s",  PATH_A, 0.6, "95px",  rev)}
+      {/* marginBottom:"-2px" ensures the next section physically overlaps this div,
+          closing any 1px subpixel compositor gap at non-integer zoom levels */}
+      <div style={{ background: from, position: "relative", height: "110px", overflow: "hidden", marginBottom: "-2px" }}>
+        {!simple && layer("32s", "-14s", PATH_B, 0.3, "80px",  fwd)}
+        {!simple && layer("22s", "-7s",  PATH_A, 0.6, "95px",  rev)}
         {layer("15s", "0s",   PATH_A, 1.0, "110px", fwd)}
       </div>
     </>

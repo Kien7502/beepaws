@@ -242,7 +242,7 @@ export default function VariantSelector({ product }: { product: Product }) {
           fullWidth
           disabled={!isAvailable}
           leftIcon={<ShoppingBag size={22} />}
-          className="min-h-[52px] rounded-2xl text-base md:text-lg"
+          className="min-h-[52px] rounded-xl text-base md:text-lg"
           onClick={onAddToCart}
         >
           {isAvailable ? "Add to cart" : "Out of stock"}

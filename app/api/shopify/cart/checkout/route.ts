@@ -82,6 +82,7 @@ export async function POST(req: Request) {
     // Fallback: use Online Store cart permalink even if Storefront API fails.
     const storeOrigin =
       process.env.NEXT_PUBLIC_SHOPIFY_ONLINE_STORE_URL ||
+      process.env.SHOPIFY_SHOP_DOMAIN ||
       process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
     const fallbackUrl = buildStorefrontCartPermalinkFromLines(storeOrigin, lines);
     if (fallbackUrl) {

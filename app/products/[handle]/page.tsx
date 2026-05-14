@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import VariantSelector from "@/components/product/VariantSelector";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { Truck, ShieldCheck, RefreshCcw, Package } from "lucide-react";
-import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import Link from "next/link";
 import { ProductDetailsSections } from "@/components/product/ProductDetailsSections";
 import { BundleBuyCard } from "@/components/product/BundleBuyCard";
@@ -125,28 +124,17 @@ export default async function ProductPage({
   };
 
   return (
-    <div className="relative overflow-hidden">
+    // overflowX:"clip" not overflow-clip — avoids hard vertical paint boundary that causes 1px compositor seam at sub-100% zoom
+    <div className="relative" style={{ overflowX: "clip" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(147,51,234,0.12),transparent)]"
-        aria-hidden
-      />
 
-      <div className="relative container mx-auto max-w-7xl px-4 pb-16 pt-6 md:px-6 md:pb-24 md:pt-8">
-        <Breadcrumbs
-          items={[
-            { label: "Home", href: "/" },
-            { label: "Shop", href: "/collections/all" },
-            { label: product.title },
-          ]}
-        />
-
-        <div className="mt-6 grid gap-10 lg:grid-cols-12 lg:gap-12 xl:gap-16">
+      <div className="relative container mx-auto max-w-7xl px-4 pb-16 pt-8 md:px-6 md:pb-24 md:pt-10">
+        <div className="grid gap-10 lg:grid-cols-12 lg:gap-12 xl:gap-16">
           <div className="lg:col-span-7">
-            <div className="lg:sticky lg:top-24">
+            <div className="lg:sticky lg:top-[7.5rem]">
               <ProductGallery
                 productTitle={product.title}
                 images={product.images.edges}
@@ -208,7 +196,7 @@ export default async function ProductPage({
             <ul className="mt-8 grid gap-3 sm:grid-cols-3">
               <li className="flex gap-3 border border-[var(--color-border)] bg-[var(--color-surface)]/80 p-4">
                 <Truck
-                  className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-accent)]"
+                  className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-green-icon)]"
                   aria-hidden
                 />
                 <div>
@@ -222,7 +210,7 @@ export default async function ProductPage({
               </li>
               <li className="flex gap-3 border border-[var(--color-border)] bg-[var(--color-surface)]/80 p-4">
                 <RefreshCcw
-                  className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-accent)]"
+                  className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-green-icon)]"
                   aria-hidden
                 />
                 <div>
@@ -236,7 +224,7 @@ export default async function ProductPage({
               </li>
               <li className="flex gap-3 border border-[var(--color-border)] bg-[var(--color-surface)]/80 p-4">
                 <ShieldCheck
-                  className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-accent)]"
+                  className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-green-icon)]"
                   aria-hidden
                 />
                 <div>
@@ -263,21 +251,47 @@ export default async function ProductPage({
         </div>
       </div>
 
-      <WaveDivider from="#fffaf2" to="#f5a800" />
-      <StatsTrustBar />
-      <WaveDivider from="#f5a800" to="#fffaf2" flip />
-      <ComparisonTable />
-      <WaveDivider from="#fffaf2" to="#fff3dc" />
-      <UseCaseCards />
-      <WaveDivider from="#fff3dc" to="#8b5e2a" />
-      <UGCReviews />
-      <WaveDivider from="#8b5e2a" to="#fffaf2" flip />
-      <FAQSection />
+      {/* ── Below-fold sections ─────────────────────────────────────────────────
+          Each WaveDivider carries the bg of the section ABOVE (from=) and BELOW (to=).
+          marginTop:"-3px" + zIndex:1 on every wrapper ensures the section physically
+          overlaps the wave bottom edge, hiding any subpixel compositor gap. ──────── */}
 
-      <div className="container mx-auto max-w-7xl px-4 pb-16 md:px-6 md:pb-24">
-        {fullProduct?.normalized ? (
-          <ProductDetailsSections normalized={fullProduct.normalized} />
-        ) : null}
+      {/* cream → gold stats bar */}
+      <WaveDivider from="#fff5e4" to="#f5a800" />
+      <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
+        <StatsTrustBar />
+      </div>
+
+      {/* gold → cream comparison */}
+      <WaveDivider from="#f5a800" to="#fff5e4" flip />
+      <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
+        <ComparisonTable />
+      </div>
+
+      {/* cream → amber use cases */}
+      <WaveDivider from="#fff5e4" to="#FFE8B0" />
+      <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
+        <UseCaseCards />
+      </div>
+
+      {/* amber → brown testimonials (#7A4A1E = same as Buy now button --color-accent) */}
+      <WaveDivider from="#FFE8B0" to="#7A4A1E" />
+      <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
+        <UGCReviews />
+      </div>
+
+      {/* brown → cream FAQ */}
+      <WaveDivider from="#7A4A1E" to="#FFF5E4" flip />
+      <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
+        <FAQSection />
+        {/* bg must match FAQSection so ProductDetailsSections continues seamlessly */}
+        <div className="bg-[#FFF5E4]">
+          {fullProduct?.normalized && (
+            <div className="container mx-auto max-w-7xl px-4 pb-12 md:px-6 md:pb-16">
+              <ProductDetailsSections normalized={fullProduct.normalized} />
+            </div>
+          )}
+        </div>
       </div>
 
       <StickyAddToCart product={product} />

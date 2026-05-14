@@ -327,7 +327,7 @@ export default async function Home() {
 
       {/* ───── Newsletter ───── */}
       <section className="container mx-auto px-4 md:px-6 max-w-7xl pb-4">
-        <div className="bg-gradient-to-br from-[var(--color-primary)] to-amber-500 rounded-[2.5rem] p-8 md:p-14 flex flex-col md:flex-row items-center justify-between gap-10 shadow-2xl relative overflow-hidden">
+        <div className="bg-[#79BC6A] rounded-[2.5rem] p-8 md:p-14 flex flex-col md:flex-row items-center justify-between gap-10 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-72 h-72 bg-white/10 rounded-full blur-3xl -mr-24 -mt-24 pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-black/10 rounded-full blur-3xl -ml-24 -mb-24 pointer-events-none" />
 
@@ -335,7 +335,7 @@ export default async function Home() {
             <div className="inline-flex items-center gap-2 bg-white/20 rounded-full px-4 py-1.5 text-white/90 text-xs font-bold mb-4 border border-white/30">
               <Sparkles size={12} /> Beepaws Newsletter
             </div>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-4 leading-tight">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#2D6A2D] mb-4 leading-tight">
               Join the <br className="hidden md:block" />Beepaws Family
 
             </h2>

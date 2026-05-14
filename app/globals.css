@@ -14,11 +14,11 @@
   --color-primary: #f5a800;
   --color-primary-hover: #d89200;
   --color-secondary: #fff3dc;
-  --color-accent: #8b5e2a;
+  --color-accent: #7A4A1E;
 }
 
 :root {
-  --background: #fffaf2;
+  --background: #fff5e4;
   --foreground: #8b5e2a;
   --text: #3d2400;
   --heading: #8b5e2a;
@@ -28,11 +28,33 @@
   --elev-shadow-card: 0 4px 20px -10px rgb(61 36 0 / 0.10);
   --elev-shadow-card-hover: 0 14px 40px -16px rgb(139 94 42 / 0.20);
   --elev-shadow-elevated: 0 8px 30px -14px rgb(61 36 0 / 0.14);
+
+  /* BeePaws v4 brand palette */
+  --color-bg-primary:       #FFF5E4;
+  --color-bg-secondary:     #FFE8B0;
+  --color-bg-dark:          #3D1600;
+  --color-bg-footer:        #3B2210;
+
+  --color-brand-orange:     #C86503;
+  --color-brand-gold:       #E39200;
+  --color-brand-gold-light: #F5B800;
+
+  --color-on-dark:          #FFFAF2;
+  --color-body:             #3D1600;
+
+  --color-dog:              #5BB8F5;
+  --color-cat:              #FF7F6B;
+
+  --color-green-whisper:    #F7FAF5;
+  --color-green-badge-bg:   #E8F2E4;
+  --color-green-badge-tx:   #2A5A1A;
+  --color-green-icon:       #4A7C3F;
+  --color-green-footer:     #3B2210;
 }
 
 
 body {
-  background: var(--background);
+  background: var(--color-bg-primary);
   color: var(--text);
   font-family: var(--font-sans);
 }

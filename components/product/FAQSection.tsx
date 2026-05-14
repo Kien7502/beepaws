@@ -35,7 +35,7 @@ export function FAQSection() {
   const [open, setOpen] = useState<number | null>(null);
 
   return (
-    <section className="bg-[var(--background)] py-14 md:py-20">
+    <section className="bg-[#FFF5E4] py-14 md:py-20">
       <div className="container mx-auto max-w-3xl px-4 md:px-6">
 
         <div className="mb-12 text-center">
@@ -54,7 +54,7 @@ export function FAQSection() {
             return (
               <div
                 key={faq.q}
-                className={`rounded-2xl border border-dashed overflow-hidden transition-colors duration-200 ${isOpen ? "border-[var(--color-primary)] bg-[var(--color-primary)]/5" : "border-[var(--color-border)] bg-[var(--color-secondary)]/40"}`}
+                className={`rounded-2xl border border-dashed overflow-hidden transition-colors duration-200 ${isOpen ? "border-[var(--color-primary)] bg-[#FFD880]" : "border-[var(--color-border)] bg-[#FFE8B0]"}`}
               >
                 <button
                   onClick={() => setOpen(isOpen ? null : i)}
