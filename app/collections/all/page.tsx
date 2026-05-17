@@ -104,7 +104,7 @@ export default async function ShopAllPage({
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-          {products.map((product) => (
+          {products.map((product, index) => (
             <ProductCard
               key={product.handle}
               handle={product.handle}
@@ -115,6 +115,7 @@ export default async function ShopAllPage({
               )}
               imageUrl={product.images?.edges[0]?.node?.url ?? "/product-placeholder.svg"}
               product={product}
+              priority={index === 0}
             />
           ))}
         </div>

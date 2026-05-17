@@ -18,6 +18,10 @@ interface ProductCardProps {
   /** Full Product when available — enables rating row, savings calc, stock pill,
    * and the Quick-add affordance. Falls back to a "Shop Now" link without it. */
   product?: Product;
+  /** Pass true for the first card in a grid so the image is eager-loaded and
+   * preloaded (LCP). Without this, Next.js warns when the card image turns
+   * out to be the LCP. */
+  priority?: boolean;
 }
 
 function formatMoney(amount: string, currencyCode: string) {
@@ -34,6 +38,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   compareAtPrice: compareAtPriceProp,
   imageUrl,
   product,
+  priority,
 }) => {
   // Derive sale info from product when caller didn't pass an explicit compare price.
   // We prefer numeric comparison (priceRange vs compareAtPriceRange) over the
@@ -85,6 +90,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           fill
           className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          priority={priority}
         />
 
         {/* Top-left: savings badge — shows dollar amount + % off when both exist,

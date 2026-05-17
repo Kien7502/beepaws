@@ -74,7 +74,7 @@ export default async function CollectionPage({
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-          {products.map((product) => {
+          {products.map((product, index) => {
             const price = parseFloat(product.priceRange.minVariantPrice.amount);
             const formattedPrice = new Intl.NumberFormat("en-US", {
               style: "currency",
@@ -92,6 +92,7 @@ export default async function CollectionPage({
                   "/product-placeholder.svg"
                 }
                 product={product}
+                priority={index === 0}
               />
             );
           })}

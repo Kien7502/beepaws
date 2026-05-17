@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Plus, Tag } from "lucide-react";
 import type { Product } from "@/types/shopify";
@@ -34,6 +34,15 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
   const { addItem } = useCart();
   const [addedCount, setAddedCount] = useState(0);
   const [buyingNow, setBuyingNow] = useState(false);
+
+  // Reset stuck "Redirecting…" state after bfcache restore from Shopify back nav.
+  useEffect(() => {
+    function onPageShow(e: PageTransitionEvent) {
+      if (e.persisted) setBuyingNow(false);
+    }
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
 
   const currentVariant = getPrimaryVariant(currentProduct);
   const currencyCode = currentVariant?.price.currencyCode || "USD";

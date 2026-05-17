@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
 // "Buy with Shop Pay" — Shopify's accelerated-checkout button. POSTs the
@@ -28,6 +28,18 @@ type Props = {
 export function ShopPayButton({ buildLines, disabled }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Reset stuck loading state after bfcache restore from Shopify back nav.
+  useEffect(() => {
+    function onPageShow(e: PageTransitionEvent) {
+      if (e.persisted) {
+        setLoading(false);
+        setError(null);
+      }
+    }
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
 
   async function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
@@ -69,14 +81,15 @@ export function ShopPayButton({ buildLines, disabled }: Props) {
         className="relative block w-full overflow-hidden rounded-xl shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:brightness-110 active:translate-y-0 active:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:-translate-y-0 disabled:hover:brightness-100 disabled:hover:shadow-sm"
         aria-label="Buy with Shop Pay"
       >
-        <Image
-          src="/payment/shop-pay.svg"
-          alt="Buy with Shop Pay"
-          width={400}
-          height={48}
-          className="h-12 w-full object-contain"
-          priority={false}
-        />
+        <div className="relative h-12 w-full">
+          <Image
+            src="/payment/shop-pay.svg"
+            alt="Buy with Shop Pay"
+            fill
+            className="object-contain"
+            priority={false}
+          />
+        </div>
       </button>
       {error && (
         <p className="mt-2 text-center text-xs text-rose-600">{error}</p>

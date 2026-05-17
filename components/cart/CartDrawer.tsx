@@ -48,6 +48,23 @@ export function CartDrawer() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
+  // Reset stuck spinner after bfcache restore. handleCheckout sets
+  // checkoutLoading=true then navigates away to Shopify; the navigation tears
+  // down the promise chain before setCheckoutLoading(false) ever runs. When the
+  // user presses Back, bfcache restores React state exactly as-is — including
+  // the orphaned true flag. pageshow.persisted is the canonical signal for
+  // "we just came back from bfcache"; clear the flag so the button is usable.
+  useEffect(() => {
+    function onPageShow(e: PageTransitionEvent) {
+      if (e.persisted) {
+        setCheckoutLoading(false);
+        setCheckoutError(null);
+      }
+    }
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
+
   // Always go to the Storefront cart's checkoutUrl when available. If it
   // isn't synced yet (or sync failed), fall back to the API endpoint which
   // creates a fresh Shopify cart from our local items. No in-app cart page.

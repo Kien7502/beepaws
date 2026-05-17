@@ -14,11 +14,32 @@ Open http://localhost:3000.
 Other commands:
 
 ```bash
-npm run build      # production build
-npm run start      # serve production build
 npm run lint       # ESLint
 npx tsc --noEmit   # type-check (primary correctness gate — no test suite)
 ```
+
+### Running the production build locally
+
+```bash
+npm run build      # compile (webpack, ~10s)
+npm start          # serve on http://localhost:3000
+```
+
+One-liner (PowerShell 5.1 — no `&&`):
+
+```powershell
+npm run build; if ($?) { npm start }
+```
+
+Stop the dev server first — both bind port 3000. If something stays bound after Ctrl+C, kill stray node processes:
+
+```powershell
+Get-Process -Name node | Stop-Process -Force
+```
+
+### ⚠️ Test payment / checkout flows in the production build
+
+Next.js 16.2.x dev (`next dev` / Turbopack) has a regression: after `window.location.href` redirects to Shopify checkout, pressing Back leaves the page un-hydrated (CSS works, nothing clickable). **It is a dev-mode bug only — works correctly in production.** Always validate ShopPay / Buy Now / cart checkout / back-from-Shopify flows with `npm run build && npm start`, not `npm run dev`.
 
 ## Environment
 

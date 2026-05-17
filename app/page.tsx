@@ -149,7 +149,7 @@ export default async function Home() {
               </Link>
             </div>
           ) : (
-            featuredProducts.map((product) => {
+            featuredProducts.map((product, index) => {
               const price = parseFloat(product.priceRange.minVariantPrice.amount);
               const formattedPrice = new Intl.NumberFormat('en-US', {
                 style: 'currency',
@@ -164,6 +164,7 @@ export default async function Home() {
                   price={formattedPrice}
                   imageUrl={product.images?.edges[0]?.node?.url || "/product-placeholder.svg"}
                   product={product}
+                  priority={index === 0}
                 />
               );
             })

@@ -122,6 +122,27 @@ function mapShopifyToLocal(cart: ShopifyCart): LocalCartItem[] {
   }));
 }
 
+// Reorder Shopify response lines to match the local order. Shopify returns
+// lines in its own (cursor) order, which doesn't always match the order the
+// user just saw — committing the response as-is causes a visible "jump" on
+// add. We preserve current display order; unknown lines (rare — server-side
+// adds) go at the end.
+function reorderLikePrev(
+  updated: ShopifyCart,
+  prev: ShopifyCart | null,
+): ShopifyCart {
+  if (!prev || prev.lines.length === 0) return updated;
+  const orderIndex = new Map(
+    prev.lines.map((l, i) => [l.merchandiseId, i]),
+  );
+  const lines = [...updated.lines].sort((a, b) => {
+    const ai = orderIndex.get(a.merchandiseId) ?? Number.POSITIVE_INFINITY;
+    const bi = orderIndex.get(b.merchandiseId) ?? Number.POSITIVE_INFINITY;
+    return ai - bi;
+  });
+  return { ...updated, lines };
+}
+
 function mergeLocalItem(prev: LocalCartItem[], next: LocalCartItem): LocalCartItem[] {
   const found = prev.find((p) => p.merchandiseId === next.merchandiseId);
   if (!found) return [...prev, next];
@@ -159,10 +180,24 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // skip syncing the removal (lineId not yet known), and the in-flight add
   // would then push the removed item back into Shopify state.
   const cartOpQueue = useRef<Promise<unknown>>(Promise.resolve());
+  // Counts ops that have been enqueued but not yet completed. Used by each
+  // op's success handler: only commit Shopify's response when no LATER op
+  // is queued. Otherwise the response is stale w.r.t. the user's intent —
+  // e.g. removing A then B in quick succession: A's response still contains
+  // B, and committing it would visibly resurrect B until B's op finishes
+  // (the "reappear-then-disappear" flicker).
+  const inFlightCount = useRef(0);
   function queueCartOp(op: () => Promise<unknown>): void {
+    inFlightCount.current++;
     cartOpQueue.current = cartOpQueue.current
       .catch(() => {}) // one failing op shouldn't block the queue
-      .then(op);
+      .then(async () => {
+        try {
+          await op();
+        } finally {
+          inFlightCount.current--;
+        }
+      });
   }
 
   // addItem buffer — multiple addItem calls fired in the same tick (e.g. a
@@ -221,6 +256,46 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     // Optimistic local update — visible immediately regardless of sync mode.
     setLocalItems((prev) => mergeLocalItem(prev, next));
 
+    // Mirror the optimistic add into shopifyCart too. The `items` selector
+    // picks shopifyCart over localItems when present, so without this the
+    // new item stays invisible until Shopify responds (~hundreds of ms felt
+    // like the cart was "slow"). lineId is filled in by the eventual API
+    // response; until then it's an empty string.
+    setShopifyCart((prev) => {
+      if (!prev) return prev;
+      const idx = prev.lines.findIndex(
+        (l) => l.merchandiseId === next.merchandiseId,
+      );
+      const lines =
+        idx === -1
+          ? [
+              ...prev.lines,
+              {
+                lineId: "",
+                merchandiseId: next.merchandiseId,
+                productHandle: next.productHandle,
+                productTitle: next.productTitle,
+                variantTitle: next.variantTitle,
+                imageUrl: next.imageUrl,
+                currencyCode: next.currencyCode,
+                unitPriceAmount: next.unitPriceAmount,
+                quantity: next.quantity,
+              },
+            ]
+          : prev.lines.map((l, i) =>
+              i === idx
+                ? { ...l, quantity: Math.min(99, l.quantity + next.quantity) }
+                : l,
+            );
+      const subtotalAmount = lines
+        .reduce(
+          (sum, l) => sum + parseFloat(l.unitPriceAmount || "0") * l.quantity,
+          0,
+        )
+        .toFixed(2);
+      return { ...prev, lines, subtotalAmount };
+    });
+
     if (!hasStorefrontConfig()) return;
 
     setIsCartLoading(true);
@@ -269,8 +344,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           }
 
           writeCartId(updated.id);
-          setShopifyCart(updated);
-          setLocalItems(mapShopifyToLocal(updated));
+          // Only commit if no later op is pending — see inFlightCount note.
+          if (inFlightCount.current <= 1) {
+            const ordered = reorderLikePrev(updated, shopifyCartRef.current);
+            setShopifyCart(ordered);
+            setLocalItems(mapShopifyToLocal(ordered));
+          }
         } catch (e) {
           console.error("[Cart] addItem sync failed:", e);
         } finally {
@@ -332,8 +411,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               quantity <= 0
                 ? await removeCartLine(cartId, lineId)
                 : await updateCartLine(cartId, lineId, quantity);
-            setShopifyCart(updated);
-            setLocalItems(mapShopifyToLocal(updated));
+            if (inFlightCount.current <= 1) {
+              const ordered = reorderLikePrev(updated, shopifyCartRef.current);
+              setShopifyCart(ordered);
+              setLocalItems(mapShopifyToLocal(ordered));
+            }
           } catch (e) {
             console.error("[Cart] updateQuantity sync failed:", e);
           }
@@ -387,8 +469,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const updated = await removeCartLine(cartId, lineId);
-        setShopifyCart(updated);
-        setLocalItems(mapShopifyToLocal(updated));
+        if (inFlightCount.current <= 1) {
+          const ordered = reorderLikePrev(updated, shopifyCartRef.current);
+          setShopifyCart(ordered);
+          setLocalItems(mapShopifyToLocal(ordered));
+        }
       } catch (e) {
         console.error("[Cart] removeItem sync failed:", e);
       }
