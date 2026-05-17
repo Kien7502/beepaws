@@ -154,6 +154,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const debounceTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
+  // Operation queue — serializes cart API mutations so add/remove/update
+  // can't race each other. Without this, removing an item mid-add could
+  // skip syncing the removal (lineId not yet known), and the in-flight add
+  // would then push the removed item back into Shopify state.
+  const cartOpQueue = useRef<Promise<unknown>>(Promise.resolve());
+  function queueCartOp(op: () => Promise<unknown>): void {
+    cartOpQueue.current = cartOpQueue.current
+      .catch(() => {}) // one failing op shouldn't block the queue
+      .then(op);
+  }
+
+  // addItem buffer — multiple addItem calls fired in the same tick (e.g. a
+  // bundle that adds 4 products at once) are coalesced into a single
+  // addCartLines request. Without this, each item took a separate round-trip
+  // and each response clobbered the optimistic state, making items visibly
+  // appear in the cart one by one.
+  const pendingAddsRef = useRef<{ merchandiseId: string; quantity: number }[]>([]);
+  const flushScheduledRef = useRef(false);
+
   // Derived: use Shopify cart items when available, else localStorage items
   const items = useMemo<LocalCartItem[]>(
     () => (shopifyCart ? mapShopifyToLocal(shopifyCart) : localItems),
@@ -199,45 +218,66 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setLastAddedQuantity(Math.max(1, next.quantity || 1));
     setDrawerOpen(true);
 
-    if (!hasStorefrontConfig()) {
-      // Offline-only path
-      setLocalItems((prev) => mergeLocalItem(prev, next));
-      return;
-    }
-
-    // Optimistic local update while API call is in flight
+    // Optimistic local update — visible immediately regardless of sync mode.
     setLocalItems((prev) => mergeLocalItem(prev, next));
 
+    if (!hasStorefrontConfig()) return;
+
     setIsCartLoading(true);
-    const line = { merchandiseId: next.merchandiseId, quantity: next.quantity };
 
-    (async () => {
-      try {
-        const existingId = readCartId();
-        let updated: ShopifyCart;
+    // Buffer this line and schedule a single flush at end of the current tick.
+    pendingAddsRef.current.push({
+      merchandiseId: next.merchandiseId,
+      quantity: next.quantity,
+    });
 
-        if (existingId) {
-          try {
-            updated = await addCartLines(existingId, [line]);
-          } catch {
-            // Cart GID expired — start fresh
-            updated = await apiCreateCart([line]);
-          }
-        } else {
-          updated = await apiCreateCart([line]);
-        }
+    if (flushScheduledRef.current) return;
+    flushScheduledRef.current = true;
 
-        writeCartId(updated.id);
-        setShopifyCart(updated);
-        // Replace optimistic items with authoritative Shopify data
-        setLocalItems(mapShopifyToLocal(updated));
-      } catch (e) {
-        console.error("[Cart] addItem sync failed:", e);
-        // Keep the optimistic local state — user can still see their items
-      } finally {
+    queueMicrotask(() => {
+      flushScheduledRef.current = false;
+      const batch = pendingAddsRef.current;
+      pendingAddsRef.current = [];
+      if (batch.length === 0) {
         setIsCartLoading(false);
+        return;
       }
-    })();
+
+      // Coalesce repeated merchandiseIds so we send one line per variant.
+      const counts = new Map<string, number>();
+      for (const l of batch) {
+        counts.set(l.merchandiseId, (counts.get(l.merchandiseId) ?? 0) + l.quantity);
+      }
+      const lines = Array.from(counts, ([merchandiseId, quantity]) => ({
+        merchandiseId,
+        quantity,
+      }));
+
+      queueCartOp(async () => {
+        try {
+          const existingId = readCartId();
+          let updated: ShopifyCart;
+
+          if (existingId) {
+            try {
+              updated = await addCartLines(existingId, lines);
+            } catch {
+              updated = await apiCreateCart(lines);
+            }
+          } else {
+            updated = await apiCreateCart(lines);
+          }
+
+          writeCartId(updated.id);
+          setShopifyCart(updated);
+          setLocalItems(mapShopifyToLocal(updated));
+        } catch (e) {
+          console.error("[Cart] addItem sync failed:", e);
+        } finally {
+          setIsCartLoading(false);
+        }
+      });
+    });
   }, []);
 
   // ── updateQuantity (optimistic + debounced API) ───────────────────────────
@@ -282,18 +322,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const prev = debounceTimers.current.get(merchandiseId);
       if (prev) clearTimeout(prev);
 
-      const timer = setTimeout(async () => {
+      const timer = setTimeout(() => {
         debounceTimers.current.delete(merchandiseId);
-        try {
-          const updated =
-            quantity <= 0
-              ? await removeCartLine(cartId, lineId)
-              : await updateCartLine(cartId, lineId, quantity);
-          setShopifyCart(updated);
-          setLocalItems(mapShopifyToLocal(updated));
-        } catch (e) {
-          console.error("[Cart] updateQuantity sync failed:", e);
-        }
+        // Route through the same operation queue so quantity changes can't
+        // race with concurrent add/remove on the same cart.
+        queueCartOp(async () => {
+          try {
+            const updated =
+              quantity <= 0
+                ? await removeCartLine(cartId, lineId)
+                : await updateCartLine(cartId, lineId, quantity);
+            setShopifyCart(updated);
+            setLocalItems(mapShopifyToLocal(updated));
+          } catch (e) {
+            console.error("[Cart] updateQuantity sync failed:", e);
+          }
+        });
       }, DEBOUNCE_MS);
 
       debounceTimers.current.set(merchandiseId, timer);
@@ -304,7 +348,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // ── removeItem (immediate) ────────────────────────────────────────────────
 
   const removeItem = useCallback((merchandiseId: string) => {
-    // Optimistic removal
+    // Optimistic removal — local state is the user's intent, applied immediately.
     setLocalItems((prev) => prev.filter((i) => i.merchandiseId !== merchandiseId));
     setShopifyCart((prev) =>
       prev
@@ -312,21 +356,43 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         : prev,
     );
 
-    const cartId = readCartId();
-    if (!cartId || !hasStorefrontConfig()) return;
+    if (!hasStorefrontConfig()) return;
 
-    const item = localItemsRef.current.find(
-      (i) => i.merchandiseId === merchandiseId,
-    );
-    if (!item?.lineId) return;
+    // Queue the Shopify-side removal so it can't race with a pending add. The
+    // queue ensures the previous add (if any) has already given us a lineId
+    // by the time we run; if not, we refetch the cart to find it.
+    queueCartOp(async () => {
+      const cartId = readCartId();
+      if (!cartId) return;
 
-    const lineId = item.lineId;
-    removeCartLine(cartId, lineId)
-      .then((updated) => {
+      // Look up lineId — first from our cached Shopify cart, otherwise refetch.
+      // The refetch path is the important fix: previously, a missing lineId
+      // skipped the sync entirely, leaving the item alive in Shopify and
+      // letting it reappear on the next addItem refresh.
+      let lineId = shopifyCartRef.current?.lines.find(
+        (l) => l.merchandiseId === merchandiseId,
+      )?.lineId;
+
+      if (!lineId) {
+        try {
+          const fresh = await getCart(cartId);
+          if (fresh) lineId = fresh.lines.find((l) => l.merchandiseId === merchandiseId)?.lineId;
+        } catch (e) {
+          console.error("[Cart] removeItem refetch failed:", e);
+          return;
+        }
+      }
+
+      if (!lineId) return; // Item genuinely not in Shopify cart — nothing to remove.
+
+      try {
+        const updated = await removeCartLine(cartId, lineId);
         setShopifyCart(updated);
         setLocalItems(mapShopifyToLocal(updated));
-      })
-      .catch((e) => console.error("[Cart] removeItem sync failed:", e));
+      } catch (e) {
+        console.error("[Cart] removeItem sync failed:", e);
+      }
+    });
   }, []);
 
   // ── clearCart ─────────────────────────────────────────────────────────────

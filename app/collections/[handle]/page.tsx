@@ -1,6 +1,5 @@
 import { getProducts } from "@/lib/shopify/queries";
 import ProductCard from "@/components/product/ProductCard";
-import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
 import {
@@ -39,14 +38,6 @@ export default async function CollectionPage({
 
   return (
     <div className="container mx-auto px-4 md:px-6 max-w-7xl section-y">
-      <Breadcrumbs
-        items={[
-          { label: "Home", href: "/" },
-          { label: "Shop", href: "/collections/all" },
-          { label: title },
-        ]}
-      />
-
       <div className="mb-10 text-center max-w-2xl mx-auto">
         <h1 className="text-4xl md:text-5xl font-extrabold text-[var(--color-foreground)] mb-4 tracking-tight">
           {title}
@@ -100,6 +91,7 @@ export default async function CollectionPage({
                   product.images?.edges[0]?.node?.url ||
                   "/product-placeholder.svg"
                 }
+                product={product}
               />
             );
           })}

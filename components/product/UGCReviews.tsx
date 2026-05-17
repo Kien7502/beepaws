@@ -2,99 +2,105 @@
 
 import { useRef, useEffect } from "react";
 import { Star, ThumbsUp, MessageCircle, Share2 } from "lucide-react";
+import type { Review } from "@/types/metafields";
 
-const REVIEWS = [
+const DEFAULT_REVIEWS: Review[] = [
   {
     name: "Sarah K.",
     time: "2 weeks ago",
     rating: 5,
-    likes: "1.8k",
+    likes: 1800,
     comments: 42,
-    text: "Finally, grooming that doesn't stress them out! My golden retriever used to shake at the sound of clippers. With BeePaws he just sits there calmly. Life changing. 🐾",
-    reply: "So happy to hear that! A calm grooming experience is exactly what we designed for. Thanks Sarah! 🐶",
+    text: "My golden's teeth were covered in brown tartar for years. Vets quoted me $1,400 for an anesthesia cleaning. After 3 sessions with BeePaws — completely transformed. I'm in shock. 🐾",
+    reply: "Before/after stories like this are exactly why we built BeePaws. Thanks Sarah! 🐶",
   },
   {
     name: "Mike T.",
     time: "1 month ago",
     rating: 5,
-    likes: "1.1k",
+    likes: 1100,
     comments: 28,
-    text: "Skipped the $80 groomer visit and did it myself in 20 minutes. Honestly looks just as good. My wallet and my dog both thank me. 😂",
+    text: "Skipped the vet cleaning and did it myself in 20 minutes. My corgi's breath went from absolutely awful to actually fine. The dental gel makes the whole thing easy. 😂",
     reply: null,
   },
   {
     name: "Jessica L.",
     time: "3 weeks ago",
     rating: 5,
-    likes: "980",
+    likes: 980,
     comments: 19,
-    text: "My anxious rescue actually stayed calm the whole time. The quiet motor makes such a difference. I wish I'd found this sooner! ❤️",
-    reply: "This made our day! Rescue pets deserve extra gentle care — so glad BeePaws could help. ✨",
+    text: "My anxious rescue freaks out at the vet but sat completely still for the whole session. The near-silent operation is a game changer. I wish I'd found this sooner! ❤️",
+    reply: "Rescue pets deserve the gentlest care — so glad BeePaws could help. ✨",
   },
   {
     name: "David R.",
     time: "1 week ago",
     rating: 4,
-    likes: "654",
+    likes: 654,
     comments: 11,
-    text: "Works great on my husky's thick coat. Takes a bit of practice but once you get the hang of it the results are really impressive for an at-home tool.",
+    text: "Works great on my lab's heavy tartar buildup. Takes a bit of patience on the first session but the results after session 2 were really impressive. Solid at-home alternative to the vet.",
     reply: null,
   },
   {
     name: "Emily C.",
     time: "5 days ago",
     rating: 5,
-    likes: "872",
+    likes: 872,
     comments: 16,
-    text: "Bought this for my persian cat and she didn't move once during the whole session. The low noise is what sold me. My previous clipper had her running under the bed! 😸",
-    reply: "Persian cats are such divas — love that she approved! 🐱",
+    text: "Bought this for my 9-year-old dachshund. The vet said she needed a $900 dental procedure. Two BeePaws sessions later and her teeth look years younger. Incredible for the price. 😸",
+    reply: "Senior dogs see some of the biggest results — love hearing this! 🐱",
   },
   {
     name: "James W.",
     time: "2 months ago",
     rating: 5,
-    likes: "1.4k",
+    likes: 1400,
     comments: 33,
-    text: "Got the bundle deal and it's a complete game changer. Everything you need in one box. The quality is premium and my poodle actually enjoys grooming now.",
+    text: "Got the bundle deal for both my dogs. One session each and the plaque buildup I'd been worried about for months was visibly reduced. The dental gel smells great too — they actually enjoy it.",
     reply: null,
   },
   {
     name: "Lisa M.",
     time: "3 weeks ago",
     rating: 4,
-    likes: "521",
+    likes: 521,
     comments: 9,
-    text: "The nail grinder attachment is so much better than clippers. No more split nails and my dog doesn't flinch anymore. Would give 5 stars but took a little getting used to.",
-    reply: "Totally normal! Give it 2-3 sessions and it becomes second nature. You're doing great 🐾",
+    text: "My vet confirmed the tartar reduction at the last checkup and was genuinely surprised. She asked what I'd been doing differently. Would give 5 stars but takes a few sessions to see full results.",
+    reply: "Give it 2-3 sessions and you'll see the full transformation. You're doing great! 🐾",
   },
   {
     name: "Carlos P.",
     time: "6 days ago",
     rating: 5,
-    likes: "743",
+    likes: 743,
     comments: 22,
-    text: "First-time dog owner here. Was nervous about grooming at home but the guide that comes with it is super clear. My corgi looks like he just came out of a salon. 10/10!",
-    reply: "Welcome to the BeePaws family! Corgis are the best grooming subjects 🧡",
+    text: "First-time dog owner here. Was nervous about doing this at home but the guide is super clear. My beagle's breath is so much better after just one session. 10/10 would recommend!",
+    reply: "Welcome to the BeePaws family! Beagles are the best 🧡",
   },
   {
     name: "Rachel T.",
     time: "1 month ago",
     rating: 5,
-    likes: "1.2k",
+    likes: 1200,
     comments: 37,
-    text: "Bought this as a gift for my sister and she messaged me three days later saying she cried because her dog (who used to HATE grooming) sat still for the first time ever.",
+    text: "Bought this for my sister after her vet gave her a scary dental quote. She messaged me three days later saying her dog's teeth look completely different. Best gift I've ever given.",
     reply: null,
   },
   {
     name: "Tom B.",
     time: "2 weeks ago",
     rating: 5,
-    likes: "609",
+    likes: 609,
     comments: 14,
-    text: "I was skeptical about the price but honestly it's worth every penny. The motor is whisper quiet, charges fast, and the results rival professional grooming. Sold! 🙌",
-    reply: "Quality you can feel — that's the BeePaws promise. Thanks Tom! ✨",
+    text: "Was skeptical but $1,400 vet quotes will make you try anything. After 2 sessions the difference is visible and my vet actually complimented his teeth at his last checkup. Sold! 🙌",
+    reply: "That vet compliment is the ultimate review. Thanks Tom! ✨",
   },
 ];
+
+function formatLikes(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(".0", "")}k`;
+  return String(n);
+}
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -112,12 +118,19 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
-export function UGCReviews() {
+interface Props {
+  reviews?: Review[] | null;
+}
+
+export function UGCReviews({ reviews }: Props) {
   const trackRef = useRef<HTMLDivElement>(null);
   const posRef = useRef(0);
   const drag = useRef({ active: false, startX: 0, startPos: 0 });
   const raf = useRef<number>(0);
   const paused = useRef(false);
+
+  const data = reviews && reviews.length > 0 ? reviews : DEFAULT_REVIEWS;
+  const doubled = [...data, ...data];
 
   useEffect(() => {
     const track = trackRef.current;
@@ -157,8 +170,6 @@ export function UGCReviews() {
     drag.current.active = false;
     paused.current = false;
   }
-
-  const doubled = [...REVIEWS, ...REVIEWS];
 
   return (
     <section className="bg-[#7A4A1E] py-14 md:py-20 overflow-hidden">
@@ -214,7 +225,7 @@ export function UGCReviews() {
               )}
 
               <div className="flex items-center justify-between border-t border-[#e8d5aa] px-4 py-2.5 text-xs text-[#8b5e2a]/60">
-                <span>👍 {r.likes}</span>
+                <span>👍 {formatLikes(r.likes)}</span>
                 <div className="flex gap-4">
                   <button className="flex items-center gap-1 hover:text-[#f5a800] transition-colors">
                     <ThumbsUp size={12} /> Like

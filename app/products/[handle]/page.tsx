@@ -1,8 +1,8 @@
-import { getFullProductForPage, getProduct, getProducts } from "@/lib/shopify/queries";
+import { getFullProductForPage, getPaymentMethods, getProduct, getProducts } from "@/lib/shopify/queries";
 import { notFound } from "next/navigation";
 import VariantSelector from "@/components/product/VariantSelector";
 import { ProductGallery } from "@/components/product/ProductGallery";
-import { Truck, ShieldCheck, RefreshCcw, Package } from "lucide-react";
+import { Truck, ShieldCheck, RefreshCcw, Package, Check } from "lucide-react";
 import Link from "next/link";
 import { ProductDetailsSections } from "@/components/product/ProductDetailsSections";
 import { BundleBuyCard } from "@/components/product/BundleBuyCard";
@@ -13,10 +13,10 @@ import { ComparisonTable } from "@/components/product/ComparisonTable";
 import { UseCaseCards } from "@/components/product/UseCaseCards";
 import { FAQSection } from "@/components/product/FAQSection";
 import { UGCReviews } from "@/components/product/UGCReviews";
+import { BeforeAfterSection } from "@/components/product/BeforeAfterSection";
 import { WaveDivider } from "@/components/ui/WaveDivider";
 import { DescriptionAccordion } from "@/components/product/DescriptionAccordion";
-import { extractImagesFromProductHtml } from "@/lib/shopify/extract-description-images";
-import { parseDescriptionSections } from "@/lib/shopify/parse-description-sections";
+import { ProductMediaSync } from "@/components/product/ProductMediaSync";
 
 // ISR: revalidate via webhook → revalidateTag("products")
 // Fallback: re-generate every 1 hour even without a webhook push
@@ -68,8 +68,13 @@ export default async function ProductPage({
   params: Promise<{ handle: string }>;
 }) {
   const resolvedParams = await params;
-  const fullProduct = await getFullProductForPage(resolvedParams.handle);
-  const product = await getProduct(resolvedParams.handle);
+  // Parallel fetch — payment methods are shop-wide so they don't need the
+  // product to resolve. Single round-trip latency instead of stacked.
+  const [fullProduct, product, paymentMethods] = await Promise.all([
+    getFullProductForPage(resolvedParams.handle),
+    getProduct(resolvedParams.handle),
+    getPaymentMethods(),
+  ]);
 
   if (!product) return notFound();
 
@@ -79,16 +84,9 @@ export default async function ProductPage({
     minVariantPrice.amount !== maxVariantPrice.amount &&
     product.variants.edges.length > 1;
 
-  const plain = product.description?.trim() ?? "";
-  const html =
-    product.descriptionHtml?.trim() || (plain ? `<p>${plain}</p>` : "");
+  const descriptionBodyHtml = product.descriptionHtml?.trim() || null;
 
-  const { strippedHtml } = extractImagesFromProductHtml(html);
-  const allSections = parseDescriptionSections(strippedHtml);
-  const introSection = allSections.find((s) => s.heading === null);
-  const accordionSections = allSections.filter((s) => s.heading !== null);
-
-  const introHtml = introSection?.html ?? null;
+  const beepaws = fullProduct?.normalized?.beepaws;
 
   const primaryCollectionHandle = fullProduct?.collections?.edges?.[0]?.node?.handle;
   const collectionRecommendations = primaryCollectionHandle
@@ -132,6 +130,10 @@ export default async function ProductPage({
       />
 
       <div className="relative container mx-auto max-w-7xl px-4 pb-16 pt-8 md:px-6 md:pb-24 md:pt-10">
+        {/* ProductMediaSync provides shared activeImage state between the
+            gallery (left col) and the variant selector (right col), so picking
+            a variant scrolls the gallery to the matching image. */}
+        <ProductMediaSync imageUrls={product.images.edges.map((e) => e.node.url)}>
         <div className="grid gap-10 lg:grid-cols-12 lg:gap-12 xl:gap-16">
           <div className="lg:col-span-7">
             <div className="lg:sticky lg:top-[7.5rem]">
@@ -168,15 +170,28 @@ export default async function ProductPage({
               {product.title}
             </h1>
 
-            {introHtml && (
-              <p className="mt-4 text-base leading-relaxed text-[var(--color-accent)]/75">
-                {introHtml.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()}
-              </p>
+            {beepaws?.bullets && beepaws.bullets.length > 0 && (
+              <ul className="mt-6 space-y-2.5">
+                {beepaws.bullets.map((b, i) => (
+                  <li
+                    key={i}
+                    className="flex items-start gap-2.5 text-sm text-[var(--color-foreground)]"
+                  >
+                    <Check
+                      className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-green-icon)]"
+                      strokeWidth={3}
+                      aria-hidden
+                    />
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
             )}
 
             <div className="mt-8 border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-[var(--elev-shadow-card)] md:p-8">
-              <VariantSelector product={product} />
+              <VariantSelector product={product} addonProducts={recommendedBundleProducts} paymentMethods={paymentMethods} />
             </div>
+            {/* IntersectionObserver target — StickyAddToCart shows once this scrolls past viewport top */}
             <div id="sticky-cta-sentinel" />
 
             {recommendedBundleProducts.length > 0 && (
@@ -191,7 +206,11 @@ export default async function ProductPage({
               </div>
             )}
 
-            <DescriptionAccordion sections={accordionSections} />
+            <DescriptionAccordion
+              descriptionHtml={descriptionBodyHtml}
+              techSpecs={beepaws?.techSpecs}
+              ingredients={beepaws?.ingredients}
+            />
 
             <ul className="mt-8 grid gap-3 sm:grid-cols-3">
               <li className="flex gap-3 border border-[var(--color-border)] bg-[var(--color-surface)]/80 p-4">
@@ -249,6 +268,7 @@ export default async function ProductPage({
             </p>
           </div>
         </div>
+        </ProductMediaSync>
       </div>
 
       {/* ── Below-fold sections ─────────────────────────────────────────────────
@@ -259,31 +279,37 @@ export default async function ProductPage({
       {/* cream → gold stats bar */}
       <WaveDivider from="#fff5e4" to="#f5a800" />
       <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
-        <StatsTrustBar />
+        <StatsTrustBar stats={beepaws?.stats} />
       </div>
 
       {/* gold → cream comparison */}
       <WaveDivider from="#f5a800" to="#fff5e4" flip />
       <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
-        <ComparisonTable />
+        <ComparisonTable rows={beepaws?.comparisonRows} />
       </div>
 
-      {/* cream → amber use cases */}
-      <WaveDivider from="#fff5e4" to="#FFE8B0" />
+      {/* cream → warm cream before/after */}
+      <WaveDivider from="#fff5e4" to="#fff3dc" />
       <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
-        <UseCaseCards />
+        <BeforeAfterSection slides={beepaws?.beforeAfterSlides} />
+      </div>
+
+      {/* warm cream → amber use cases */}
+      <WaveDivider from="#fff3dc" to="#FFE8B0" />
+      <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
+        <UseCaseCards cards={beepaws?.useCases} />
       </div>
 
       {/* amber → brown testimonials (#7A4A1E = same as Buy now button --color-accent) */}
       <WaveDivider from="#FFE8B0" to="#7A4A1E" />
       <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
-        <UGCReviews />
+        <UGCReviews reviews={beepaws?.reviews} />
       </div>
 
       {/* brown → cream FAQ */}
       <WaveDivider from="#7A4A1E" to="#FFF5E4" flip />
       <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
-        <FAQSection />
+        <FAQSection items={beepaws?.faqItems} />
         {/* bg must match FAQSection so ProductDetailsSections continues seamlessly */}
         <div className="bg-[#FFF5E4]">
           {fullProduct?.normalized && (

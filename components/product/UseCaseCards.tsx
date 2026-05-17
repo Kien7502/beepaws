@@ -1,31 +1,39 @@
-const CASES = [
+import type { UseCaseCard } from "@/types/metafields";
+
+const DEFAULT_USE_CASES: UseCaseCard[] = [
   {
-    emoji: "🐾",
-    label: "Anxiety-free",
-    title: "For anxious pets",
-    description: "Gentle, whisper-quiet motor means no scary buzzing. Your fur baby stays calm from start to finish.",
+    emoji: "😴",
+    label: "Stress-free",
+    title: "For anxious dogs",
+    description: "Silent ultrasonic frequency — no scary whirring or vibration. Your dog stays calm from start to finish.",
     from: "#f5a800",
     to: "#fff3dc",
   },
   {
-    emoji: "🐩",
-    label: "All coats",
-    title: "For long-haired breeds",
-    description: "Glides through thick coats and tangles without pulling or yanking — no matted fur left behind.",
+    emoji: "🦷",
+    label: "All sizes",
+    title: "Any breed, any age",
+    description: "From tiny Chihuahuas to large Labradors, BeePaws safely breaks down tartar on every dog.",
     from: "#8b5e2a",
     to: "#fff3dc",
   },
   {
     emoji: "🏠",
     label: "At home",
-    title: "At-home convenience",
-    description: "Skip the $80 groomer visit. Get professional results in 15 minutes from your own couch.",
+    title: "Skip the vet bill",
+    description: "Professional-grade tartar removal at home. Save up to $1,400 on anesthesia cleanings — no appointment needed.",
     from: "#3d2400",
     to: "#fff3dc",
   },
 ];
 
-export function UseCaseCards() {
+interface Props {
+  cards?: UseCaseCard[] | null;
+}
+
+export function UseCaseCards({ cards }: Props) {
+  const data = cards && cards.length > 0 ? cards : DEFAULT_USE_CASES;
+
   return (
     <section className="bg-[#FFE8B0] py-14 md:py-20">
       <div className="container mx-auto max-w-7xl px-4 md:px-6">
@@ -33,11 +41,11 @@ export function UseCaseCards() {
           Made for every kind of pet parent
         </h2>
         <p className="mb-10 text-center text-base text-[var(--color-accent)]/70">
-          Whether your pet is anxious, fluffy, or just overdue for a trim.
+          Whether your dog is anxious, big, or just overdue for a cleaning.
         </p>
 
         <div className="grid gap-6 sm:grid-cols-3">
-          {CASES.map((c) => (
+          {data.map((c) => (
             <div
               key={c.title}
               className="group flex flex-col overflow-hidden rounded-3xl border border-[var(--color-border)] bg-[var(--background)] shadow-[var(--elev-shadow-card)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--elev-shadow-card-hover)]"

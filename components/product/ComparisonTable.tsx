@@ -1,15 +1,22 @@
-import { Check, X, PawPrint, Stethoscope, Wrench } from "lucide-react";
+import type { ComparisonRow } from "@/types/metafields";
+import { Check, X, PawPrint, Stethoscope, Leaf } from "lucide-react";
 
-const ROWS = [
-  { label: "Quiet Motor",      beepaws: true, vet: false, other: false },
-  { label: "Safe at Home",     beepaws: true, vet: false, other: false },
-  { label: "Stress-free",      beepaws: true, vet: false, other: false },
-  { label: "All Coat Types",   beepaws: true, vet: true,  other: false },
-  { label: "30-Day Guarantee", beepaws: true, vet: false, other: false },
-  { label: "One-time Cost",    beepaws: true, vet: false, other: true  },
+const DEFAULT_ROWS: ComparisonRow[] = [
+  { label: "Removes hard tartar",  beepaws: true,  vet: true,  other: false },
+  { label: "No anesthesia risk",   beepaws: true,  vet: false, other: true  },
+  { label: "Safe at home",         beepaws: true,  vet: false, other: true  },
+  { label: "Silent operation",     beepaws: true,  vet: false, other: true  },
+  { label: "One-time cost",        beepaws: true,  vet: false, other: false },
+  { label: "30-day guarantee",     beepaws: true,  vet: false, other: false },
 ];
 
-export function ComparisonTable() {
+interface Props {
+  rows?: ComparisonRow[] | null;
+}
+
+export function ComparisonTable({ rows }: Props) {
+  const data = rows && rows.length > 0 ? rows : DEFAULT_ROWS;
+
   return (
     <section className="bg-[var(--background)] py-14 md:py-20">
       <div className="container mx-auto max-w-6xl px-4 md:px-6">
@@ -21,7 +28,7 @@ export function ComparisonTable() {
               Why thousands of pet parents choose BeePaws
             </h2>
             <p className="mx-auto max-w-xs leading-relaxed text-[var(--color-accent)]/70 md:mx-0">
-              See how BeePaws stacks up against a vet visit or cheap clippers — no contest.
+              See how BeePaws stacks up against a $1,400 vet cleaning or those useless Greenies — no contest.
             </p>
           </div>
 
@@ -45,15 +52,15 @@ export function ComparisonTable() {
               </div>
               <div className="flex flex-col items-center gap-1.5">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-secondary)]">
-                  <Wrench size={20} className="text-[var(--color-accent)]" />
+                  <Leaf size={20} className="text-[var(--color-accent)]" />
                 </div>
-                <span className="text-xs font-bold text-[var(--color-accent)]/60">Other Tools</span>
+                <span className="text-xs font-bold text-[var(--color-accent)]/60">Dental Chews</span>
               </div>
             </div>
 
             {/* Rows */}
             <div className="space-y-2">
-              {ROWS.map((row) => (
+              {data.map((row) => (
                 <div
                   key={row.label}
                   className="grid grid-cols-4 items-center overflow-hidden rounded-2xl bg-[var(--color-secondary)]/60"

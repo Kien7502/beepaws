@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { BeepawsMetafields } from "@/types/metafields";
 import { adminGraphqlFetch } from "./admin-graphql";
 
 type ShopifyNodeRef =
@@ -198,6 +199,9 @@ function isProductReference(
   );
 }
 
+// Two metafield namespaces are in play:
+//   - custom.*   (legacy / Shopify defaults) — usage_guide, qna, bundle_buy detection
+//   - beepaws.*  (our own namespace) — all marketing/section content for the PDP
 function normalizeMetafields(metafields: AdminMetafield[]) {
   const byKey: Record<string, AdminMetafield> = {};
   for (const mf of metafields) {
@@ -208,8 +212,6 @@ function normalizeMetafields(metafields: AdminMetafield[]) {
     byKey["custom.usage_guide"] ||
     byKey["custom.how_to_use"] ||
     byKey["custom.usage"];
-  const specifications =
-    byKey["custom.specifications"] || byKey["custom.specs"];
   const qna = byKey["custom.qna"] || byKey["custom.faq"] || byKey["custom.qa"];
 
   const bundleCandidates = metafields.filter((mf) => looksLikeBundleKey(mf.key));
@@ -232,19 +234,33 @@ function normalizeMetafields(metafields: AdminMetafield[]) {
     return [];
   });
 
+  // Extract beepaws.* namespace keys — populated via Shopify Admin metafield definitions
+  const parseBeepaws = <T>(key: string): T | null => {
+    const raw = byKey[`beepaws.${key}`]?.value ?? null;
+    if (!raw) return null;
+    try { return JSON.parse(raw) as T; } catch { return null; }
+  };
+
+  const beepaws: BeepawsMetafields = {
+    comparisonRows:   parseBeepaws("comparison_rows"),
+    useCases:         parseBeepaws("use_cases"),
+    faqItems:         parseBeepaws("faq_items"),
+    reviews:          parseBeepaws("reviews"),
+    stats:            parseBeepaws("stats"),
+    techSpecs:        parseBeepaws("tech_specs"),
+    bullets:          parseBeepaws("product_bullets"),
+    ingredients:      parseBeepaws("ingredients"),
+    tagline:          byKey["beepaws.tagline"]?.value ?? null,
+    educationNote:    byKey["beepaws.education_note"]?.value ?? null,
+    beforeAfterSlides: parseBeepaws("before_after_slides"),
+  };
+
   return {
     usage_guide: usage
       ? {
           source: `${usage.namespace}.${usage.key}`,
           type: usage.type,
           parsed: parseJsonValue(usage.value),
-        }
-      : null,
-    specifications: specifications
-      ? {
-          source: `${specifications.namespace}.${specifications.key}`,
-          type: specifications.type,
-          parsed: parseJsonValue(specifications.value),
         }
       : null,
     qna: qna
@@ -255,6 +271,7 @@ function normalizeMetafields(metafields: AdminMetafield[]) {
         }
       : null,
     bundle_buy: bundleProducts,
+    beepaws,
   };
 }
 

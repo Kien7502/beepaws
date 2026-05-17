@@ -1,27 +1,16 @@
 import Link from "next/link";
-import type { Product } from "@/types/shopify";
+
+// Page-bottom section: shows "How to use", "Q&A", "More from this collection".
+// Specifications + Description live in the DescriptionAccordion near the buy box (not here).
+// usage_guide / qna come from `custom.*` metafields (legacy namespace, not beepaws.*).
 
 type MaybeRecord = Record<string, unknown> | null | undefined;
 
 type Props = {
-  currentProduct?: Product;
-  recommendedBundleProducts?: Product[];
-
   normalized: {
-    usage_guide: {
-      parsed: unknown;
-    } | null;
-    specifications: {
-      parsed: unknown;
-    } | null;
-    qna: {
-      parsed: unknown;
-    } | null;
-    bundle_buy: {
-      id: string;
-      handle: string;
-      title: string;
-    }[];
+    usage_guide: { parsed: unknown } | null;
+    qna: { parsed: unknown } | null;
+    bundle_buy: { id: string; handle: string; title: string }[];
   };
 };
 
@@ -30,11 +19,6 @@ type QnaItem = { question: string; answer: string };
 function toRecord(value: unknown): MaybeRecord {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   return value as Record<string, unknown>;
-}
-
-function toStringList(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  return value.filter((item): item is string => typeof item === "string");
 }
 
 function toQnaList(value: unknown): QnaItem[] {
@@ -49,14 +33,6 @@ function toQnaList(value: unknown): QnaItem[] {
       return { question, answer };
     })
     .filter((item): item is QnaItem => item !== null);
-}
-
-function formatLabel(key: string): string {
-  return key
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function renderUsage(parsed: unknown) {
@@ -104,13 +80,10 @@ function renderUsage(parsed: unknown) {
 export function ProductDetailsSections({
   normalized,
 }: Props) {
-  const spec = toRecord(normalized.specifications?.parsed);
   const qnaList = toQnaList(normalized.qna?.parsed);
-  const ingredients = toStringList(spec?.ingredients);
   const hasBundle = normalized.bundle_buy.length > 0;
 
-
-  if (!normalized.usage_guide && !spec && qnaList.length === 0) {
+  if (!normalized.usage_guide && qnaList.length === 0 && !hasBundle) {
     return null;
   }
 
@@ -128,50 +101,6 @@ export function ProductDetailsSections({
               </p>
             )}
           </div>
-        </article>
-      )}
-
-      {spec && (
-        <article className="rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 md:p-7">
-          <h2 className="text-xl font-extrabold tracking-tight text-[var(--color-foreground)] md:text-2xl">
-            Specifications
-          </h2>
-          <dl className="mt-4 grid grid-cols-1 gap-3">
-            {Object.entries(spec)
-              .filter(([key]) => key !== "ingredients")
-              .map(([key, value]) => (
-                <div
-                  key={key}
-                  className="grid gap-1 rounded-2xl border border-[var(--color-border)]/70 px-4 py-3 sm:grid-cols-[180px_1fr] sm:items-start"
-                >
-                  <dt className="text-sm font-semibold text-[var(--color-foreground)]">
-                    {formatLabel(key)}
-                  </dt>
-                  <dd className="min-w-0 break-words text-sm text-[var(--color-text)]/80">
-                    {typeof value === "string" || typeof value === "number"
-                      ? String(value)
-                      : JSON.stringify(value)}
-                  </dd>
-                </div>
-              ))}
-          </dl>
-          {ingredients.length > 0 && (
-            <div className="mt-4">
-              <h3 className="text-sm font-semibold text-[var(--color-foreground)]">
-                Ingredients
-              </h3>
-              <ul className="mt-2 flex flex-wrap gap-2">
-                {ingredients.map((item) => (
-                  <li
-                    key={item}
-                    className="rounded-full border border-[var(--color-border)] px-3 py-1 text-xs font-medium text-[var(--color-text)]/80"
-                  >
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </article>
       )}
 

@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import { getProducts } from "@/lib/shopify/queries";
 import { hasAdminApiCredentials } from "@/lib/shopify/admin-credentials";
 import ProductCard from "@/components/product/ProductCard";
-import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import SortDropdown from "@/components/product/SortDropdown";
 import { SORT_OPTIONS, type SortValue } from "@/components/product/sort-config";
 import type { Product } from "@/types/shopify";
@@ -69,8 +68,6 @@ export default async function ShopAllPage({
 
   return (
     <div className="container mx-auto px-4 md:px-6 max-w-7xl section-y">
-      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "All products" }]} />
-
       {/* Page header + sort bar */}
       <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div>

@@ -1,38 +1,48 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Shield, PawPrint, Volume2, Package, RefreshCw } from "lucide-react";
+import { Plus, Shield, PawPrint, Volume2, Package, RefreshCw, type LucideIcon } from "lucide-react";
+import type { FaqItem } from "@/types/metafields";
 
-const FAQS = [
+const ICON_MAP: Record<string, LucideIcon> = {
+  Shield, PawPrint, Volume2, Package, RefreshCw,
+};
+
+const DEFAULT_FAQ_ITEMS: FaqItem[] = [
   {
-    icon: Shield,
-    q: "Is it safe for my pet?",
-    a: "Yes — BeePaws is designed specifically for at-home pet grooming. The rounded blade tips and protective guard prevent accidental nicks, making it safe even for wiggly pets.",
+    icon: "Shield",
+    q: "Is it safe for my dog's teeth and gums?",
+    a: "Yes — BeePaws uses gentle ultrasonic vibration calibrated for pet tooth enamel. The non-invasive tip won't scratch or damage gums when used as directed, and there's no anesthesia risk.",
   },
   {
-    icon: PawPrint,
-    q: "What breeds is it suitable for?",
-    a: "BeePaws works on all coat types — short, medium, and long hair for both dogs and cats. The adjustable guard combs let you choose the trim length that suits your breed.",
+    icon: "PawPrint",
+    q: "What breeds and ages is it suitable for?",
+    a: "BeePaws works for dogs of all breeds and sizes. We recommend starting once adult teeth are in (around 6 months). Senior dogs with heavy tartar buildup tend to see the biggest transformation.",
   },
   {
-    icon: Volume2,
-    q: "How loud is it? Will it scare my pet?",
-    a: "Our motor runs at under 50dB — quieter than a normal conversation. Most pets barely notice it, even on the first use.",
+    icon: "Volume2",
+    q: "Will the ultrasonic sound scare my pet?",
+    a: "The frequency operates near the upper limit of human hearing, and most dogs habituate within the first 30 seconds — especially when paired with the included pet-safe dental gel as a positive reinforcement.",
   },
   {
-    icon: Package,
+    icon: "Package",
     q: "What's included in the box?",
-    a: "You'll get the BeePaws grooming unit, 4 guard combs (3mm, 6mm, 9mm, 12mm), a cleaning brush, a USB charging cable, and a storage pouch.",
+    a: "You'll get the BeePaws ultrasonic scaler, 3 interchangeable tip sizes, a tube of pet-safe dental gel, a USB-C charging cable, and a travel pouch.",
   },
   {
-    icon: RefreshCw,
-    q: "What if it doesn't work for my pet?",
-    a: "We offer a 30-day no-questions-asked return policy. If you and your pet aren't happy, just reach out and we'll sort it out — simple and fair.",
+    icon: "RefreshCw",
+    q: "What if it doesn't work for my dog?",
+    a: "We offer a 30-day no-questions-asked return policy. If you and your dog aren't happy with the results, just reach out and we'll make it right — simple and fair.",
   },
 ];
 
-export function FAQSection() {
+interface Props {
+  items?: FaqItem[] | null;
+}
+
+export function FAQSection({ items }: Props) {
   const [open, setOpen] = useState<number | null>(null);
+  const data = items && items.length > 0 ? items : DEFAULT_FAQ_ITEMS;
 
   return (
     <section className="bg-[#FFF5E4] py-14 md:py-20">
@@ -48,8 +58,8 @@ export function FAQSection() {
         </div>
 
         <div className="space-y-3">
-          {FAQS.map((faq, i) => {
-            const Icon = faq.icon;
+          {data.map((faq, i) => {
+            const Icon = ICON_MAP[faq.icon] ?? Shield;
             const isOpen = open === i;
             return (
               <div

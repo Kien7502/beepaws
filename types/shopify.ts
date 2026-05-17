@@ -14,11 +14,24 @@ export type Product = {
     minVariantPrice: Money;
     maxVariantPrice: Money;
   };
+  // Present when at least one variant has a compareAtPrice. Used to drive
+  // "SALE" badges and savings calculations on cards/PDP.
+  compareAtPriceRange?: {
+    minVariantPrice: Money;
+    maxVariantPrice: Money;
+  } | null;
   variants: {
     edges: {
       node: ProductVariant;
     }[];
   };
+  // Aggregated from beepaws.reviews metafield on catalog fetch. Null if
+  // the metafield is missing — card hides the rating row in that case.
+  rating?: { avg: number; count: number } | null;
+  // First sentence of descriptionHtml's first <p>, derived server-side.
+  // Used as the short tagline on product cards. Null if no <p> exists.
+  tagline?: string | null;
+  tags?: string[];
   seo: SEO;
 };
 
@@ -31,6 +44,10 @@ export type ProductVariant = {
     name: string;
     value: string;
   }[];
+  // Variant-specific image when the merchant assigns one in Shopify Admin
+  // (Product → Variants → Edit → Media). Used to sync the gallery to the
+  // selected variant. Null if the variant doesn't have a dedicated image.
+  image?: { url: string; altText: string } | null;
 };
 
 export type Collection = {

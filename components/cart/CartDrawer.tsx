@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { X, Minus, Plus, Trash2, ShoppingBag, ArrowRight, Loader2 } from "lucide-react";
@@ -45,8 +45,40 @@ export function CartDrawer() {
     };
   }, [drawerOpen, closeDrawer]);
 
-  function handleCheckout() {
-    window.location.href = checkoutUrl || "/checkout";
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  // Always go to the Storefront cart's checkoutUrl when available. If it
+  // isn't synced yet (or sync failed), fall back to the API endpoint which
+  // creates a fresh Shopify cart from our local items. No in-app cart page.
+  async function handleCheckout() {
+    if (items.length === 0 || checkoutLoading) return;
+    setCheckoutError(null);
+    if (checkoutUrl) {
+      window.location.href = checkoutUrl;
+      return;
+    }
+    setCheckoutLoading(true);
+    try {
+      const res = await fetch("/api/shopify/cart/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lines: items.map((item) => ({
+            merchandiseId: item.merchandiseId,
+            quantity: item.quantity,
+          })),
+        }),
+      });
+      const data = (await res.json()) as { checkoutUrl?: string; error?: string };
+      if (!res.ok || !data.checkoutUrl) {
+        throw new Error(data.error || "Couldn't open checkout");
+      }
+      window.location.href = data.checkoutUrl;
+    } catch (e) {
+      setCheckoutLoading(false);
+      setCheckoutError(e instanceof Error ? e.message : "Checkout failed");
+    }
   }
 
   return (
@@ -222,14 +254,25 @@ export function CartDrawer() {
               variant="primary"
               size="lg"
               fullWidth
-              disabled={isCartLoading}
-              isLoading={isCartLoading}
-              leftIcon={isCartLoading ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}
+              disabled={isCartLoading || checkoutLoading}
+              isLoading={isCartLoading || checkoutLoading}
+              leftIcon={
+                isCartLoading || checkoutLoading
+                  ? <Loader2 size={18} className="animate-spin" />
+                  : <ArrowRight size={18} />
+              }
               className="min-h-[52px] rounded-2xl"
               onClick={handleCheckout}
             >
-              {isCartLoading ? "Syncing cart…" : "Checkout securely"}
+              {isCartLoading
+                ? "Syncing cart…"
+                : checkoutLoading
+                  ? "Opening checkout…"
+                  : "Checkout securely"}
             </Button>
+            {checkoutError && (
+              <p className="mt-2 text-center text-xs text-rose-600">{checkoutError}</p>
+            )}
           </div>
         )}
       </aside>

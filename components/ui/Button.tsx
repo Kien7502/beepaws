@@ -30,11 +30,17 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const baseStyles = 'inline-flex items-center justify-center font-bold rounded-full transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[var(--color-primary)]/20 disabled:opacity-50 disabled:cursor-not-allowed';
 
+    // Transparent borders on primary/secondary keep the inner content box the
+    // same size as outline (which has a visible border-2), so buttons of
+    // different variants don't visually shift sizes side-by-side in a grid.
     const variants = {
-      primary: 'bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] shadow-sm hover:shadow-md hover:-translate-y-0.5',
-      secondary: 'bg-[var(--color-secondary)] text-[var(--color-foreground)] hover:brightness-95 shadow-sm hover:shadow-md hover:-translate-y-0.5',
-      outline: 'border-2 border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white bg-transparent',
-      ghost: 'bg-transparent text-[var(--color-foreground)] hover:bg-black/5',
+      primary: 'border-2 border-transparent bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] shadow-sm hover:shadow-md hover:-translate-y-0.5',
+      secondary: 'border-2 border-transparent bg-[var(--color-secondary)] text-[var(--color-foreground)] hover:brightness-95 shadow-sm hover:shadow-md hover:-translate-y-0.5',
+      // Soft hover (tint, not full fill) keeps the lift visible as the dominant
+      // motion. A full bg-transparent → bg-primary flip on hover reads as a
+      // size shift, not a lift, because the colored area expands sharply.
+      outline: 'border-2 border-[var(--color-primary)] text-[var(--color-primary)] bg-transparent shadow-sm hover:bg-[var(--color-primary)]/10 hover:shadow-md hover:-translate-y-0.5',
+      ghost: 'border-2 border-transparent bg-transparent text-[var(--color-foreground)] hover:bg-black/5',
     };
 
     const sizes = {

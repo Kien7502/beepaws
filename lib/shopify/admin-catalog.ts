@@ -2,10 +2,24 @@ import "server-only";
 
 import type { Collection, Image, Product, ProductVariant } from "@/types/shopify";
 import { adminGraphqlFetch } from "./admin-graphql";
+import { shopifyFetch } from "./index";
 
 function stripHtml(html: string | null | undefined): string {
   const s = html ?? "";
   return s.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+// Extract a short tagline from the first <p> of the description. Returns the
+// first sentence (up to . ! ?). Skips the leading <h2> title so we don't echo
+// the product title. Null when descriptionHtml has no <p>.
+function extractTagline(html: string | null | undefined): string | null {
+  if (!html) return null;
+  const match = html.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
+  if (!match) return null;
+  const text = stripHtml(match[1]);
+  if (!text) return null;
+  const sentence = text.match(/^[^.!?]+[.!?]/)?.[0] ?? text;
+  return sentence.trim() || null;
 }
 
 type Money = { amount: string; currencyCode: string };
@@ -16,9 +30,18 @@ type AdminProductNode = {
   title: string;
   descriptionHtml: string | null;
   status: string;
+  tags: string[] | null;
   priceRangeV2: {
     minVariantPrice: Money;
     maxVariantPrice: Money;
+  } | null;
+  // NOTE: Shopify's ProductCompareAtPriceRange uses *CompareAtPrice* suffixes,
+  // not the *Price suffixes that priceRangeV2 uses. We normalize to the same
+  // shape (minVariantPrice / maxVariantPrice) on the Product type so callers
+  // don't have to learn the distinction.
+  compareAtPriceRange: {
+    minVariantCompareAtPrice: Money;
+    maxVariantCompareAtPrice: Money;
   } | null;
   featuredImage: {
     url: string;
@@ -44,9 +67,15 @@ type AdminProductNode = {
         availableForSale: boolean;
         price: string;
         selectedOptions: { name: string; value: string }[];
+        image: { url: string; altText: string | null } | null;
       };
     }[];
   };
+  // Targeted fetch: only the metafields cards need (ratings + tagline).
+  // Avoids pulling all metafields (the full PDP query in admin-product-page.ts
+  // handles that for the product page itself).
+  reviewsMetafield: { value: string | null } | null;
+  taglineMetafield: { value: string | null } | null;
   seo: { title: string | null; description: string | null } | null;
 };
 
@@ -57,9 +86,14 @@ const PRODUCT_FRAGMENT = `
     title
     descriptionHtml
     status
+    tags
     priceRangeV2 {
       minVariantPrice { amount currencyCode }
       maxVariantPrice { amount currencyCode }
+    }
+    compareAtPriceRange {
+      minVariantCompareAtPrice { amount currencyCode }
+      maxVariantCompareAtPrice { amount currencyCode }
     }
     featuredImage {
       url
@@ -88,8 +122,18 @@ const PRODUCT_FRAGMENT = `
             name
             value
           }
+          image {
+            url
+            altText
+          }
         }
       }
+    }
+    reviewsMetafield: metafield(namespace: "beepaws", key: "reviews") {
+      value
+    }
+    taglineMetafield: metafield(namespace: "beepaws", key: "tagline") {
+      value
     }
     seo {
       title
@@ -151,6 +195,9 @@ function mapAdminProduct(node: AdminProductNode): Product {
           currencyCode: currency,
         },
         selectedOptions: edge.node.selectedOptions ?? [],
+        image: edge.node.image
+          ? { url: edge.node.image.url, altText: edge.node.image.altText ?? "" }
+          : null,
       },
     }),
   );
@@ -158,6 +205,41 @@ function mapAdminProduct(node: AdminProductNode): Product {
   const anyVariantAvailable = variants.some((v) => v.node.availableForSale);
   const availableForSale =
     node.status === "ACTIVE" && anyVariantAvailable;
+
+  // Derive aggregate rating from beepaws.reviews. We do this server-side once
+  // per catalog fetch rather than store a separate metafield, so the content
+  // editor never has to keep two fields in sync.
+  let rating: { avg: number; count: number } | null = null;
+  const reviewsRaw = node.reviewsMetafield?.value;
+  if (reviewsRaw) {
+    try {
+      const parsed = JSON.parse(reviewsRaw) as { rating?: number }[];
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const ratings = parsed
+          .map((r) => Number(r?.rating))
+          .filter((n) => Number.isFinite(n) && n > 0);
+        if (ratings.length > 0) {
+          const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+          rating = { avg: Math.round(avg * 10) / 10, count: ratings.length };
+        }
+      }
+    } catch { /* malformed metafield — skip */ }
+  }
+
+  const minCmp = node.compareAtPriceRange?.minVariantCompareAtPrice;
+  const maxCmp = node.compareAtPriceRange?.maxVariantCompareAtPrice;
+  const compareAtPriceRange = minCmp?.amount
+    ? {
+        minVariantPrice: {
+          amount: String(minCmp.amount),
+          currencyCode: minCmp.currencyCode || currency,
+        },
+        maxVariantPrice: {
+          amount: String(maxCmp?.amount ?? minCmp.amount),
+          currencyCode: maxCmp?.currencyCode || currency,
+        },
+      }
+    : null;
 
   return {
     id: node.id,
@@ -170,10 +252,17 @@ function mapAdminProduct(node: AdminProductNode): Product {
       minVariantPrice: { amount: minA, currencyCode: currency },
       maxVariantPrice: { amount: maxA, currencyCode: currency },
     },
+    compareAtPriceRange,
     variants: { edges: variants },
     images: {
       edges: imageNodes.map((img) => ({ node: img })),
     },
+    rating,
+    // Prefer the explicit metafield (clean, merchant-controlled). Fall back
+    // to the first sentence of descriptionHtml only when no metafield is set
+    // so cards always have something rather than nothing.
+    tagline: node.taglineMetafield?.value?.trim() || extractTagline(bodyHtml),
+    tags: node.tags ?? [],
     seo: {
       title: node.seo?.title || node.title,
       description: (node.seo?.description || plain).slice(0, 320),
@@ -371,6 +460,95 @@ export async function adminGetProducts(opts: {
   });
 
   return res.body.data.products.edges.map((e) => mapAdminProduct(e.node));
+}
+
+export type PaymentMethods = {
+  /** Shopify CardBrand enum values: VISA, MASTERCARD, AMERICAN_EXPRESS, DISCOVER, DINERS_CLUB, JCB */
+  cards: string[];
+  /** Shopify DigitalWallet enum values: APPLE_PAY, GOOGLE_PAY, ANDROID_PAY, SHOPIFY_PAY, SHOP_PAY, etc. */
+  wallets: string[];
+};
+
+// Card brand fallback when no Storefront token is set. The Admin API doesn't
+// expose acceptedCardBrands — only Storefront API does — so we default to the
+// common Western baseline until a Storefront token is configured.
+const DEFAULT_CARDS = ["VISA", "MASTERCARD", "AMERICAN_EXPRESS"];
+
+// Manual list of "extra" wallets to display alongside whatever Shopify's
+// supportedDigitalWallets returns. Shopify doesn't classify PayPal (and a few
+// other alternative providers) as digital wallets, so they never appear in
+// the API response even when enabled. Configure via env var:
+//   NEXT_PUBLIC_SHOPIFY_EXTRA_WALLETS=PAYPAL,AMAZON_PAY
+// Comma-separated, values must match the PaymentMethodsRow renderer keys.
+function getExtraWallets(): string[] {
+  const raw = process.env.NEXT_PUBLIC_SHOPIFY_EXTRA_WALLETS?.trim();
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((s) => s.trim().toUpperCase())
+    .filter(Boolean);
+}
+
+// Try to fetch the real merchant-configured card brands from the Storefront
+// API. Returns null when no Storefront token is set or the request fails,
+// signalling the caller to use the default set instead.
+async function tryGetStorefrontCardBrands(): Promise<string[] | null> {
+  const hasToken = !!process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN?.trim();
+  if (!hasToken) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[payment methods] NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN not set — using DEFAULT_CARDS");
+    }
+    return null;
+  }
+
+  try {
+    const res = await shopifyFetch<{
+      data: {
+        shop: { paymentSettings: { acceptedCardBrands: string[] | null } | null };
+      };
+    }>({
+      query: `
+        query AcceptedCardBrands {
+          shop { paymentSettings { acceptedCardBrands } }
+        }
+      `,
+      cache: "no-store",
+      tags: ["shop"],
+    });
+    return res.body.data.shop?.paymentSettings?.acceptedCardBrands ?? null;
+  } catch (e) {
+    // Dev-only visibility so the silent fallback doesn't hide a real bug.
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[payment methods] Storefront card brands fetch failed — using DEFAULT_CARDS:", e);
+    }
+    return null;
+  }
+}
+
+export async function adminGetPaymentMethods(): Promise<PaymentMethods> {
+  // Admin API has digital wallets; Storefront API has card brands. We query
+  // both in parallel and combine. Either source failing falls back gracefully.
+  const [adminRes, storefrontCards] = await Promise.all([
+    adminGraphqlFetch<{
+      data: {
+        shop: { paymentSettings: { supportedDigitalWallets: string[] | null } | null };
+      };
+    }>({
+      query: `
+        query PaymentSettings {
+          shop { paymentSettings { supportedDigitalWallets } }
+        }
+      `,
+    }),
+    tryGetStorefrontCardBrands(),
+  ]);
+
+  const apiWallets = adminRes.body.data.shop?.paymentSettings?.supportedDigitalWallets ?? [];
+  // Merge API wallets with manual extras (e.g., PAYPAL) — dedupe so the same
+  // wallet doesn't render twice if Shopify starts returning it natively later.
+  const wallets = Array.from(new Set([...apiWallets, ...getExtraWallets()]));
+  const cards = storefrontCards ?? DEFAULT_CARDS;
+  return { cards, wallets };
 }
 
 export async function adminGetProductByHandle(

@@ -11,6 +11,9 @@ import { getProducts } from '@/lib/shopify/queries';
 export const revalidate = 3600;
 
 export default async function Home() {
+  // Homepage shows a curated trio for visual interest — the actual best-seller
+  // filtering happens on cards via the badge (driven by Shopify tags). The
+  // homepage isn't meant to be conversion-heavy; it's an editorial entry point.
   const products = await getProducts();
   const featuredProducts = products.slice(0, 3);
 

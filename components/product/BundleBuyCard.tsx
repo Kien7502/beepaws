@@ -87,11 +87,36 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
     window.setTimeout(() => setAddedCount(0), 2500);
   }
 
-  function onBuyNow() {
+  async function onBuyNow() {
     if (!canAdd || buyingNow) return;
     setBuyingNow(true);
-    onAddBundle();
-    window.location.href = "/checkout";
+    // Build the cart lines from selected products + current + their primary
+    // variants — same composition as onAddBundle but skip the local cart
+    // round-trip and go straight to Shopify checkout.
+    try {
+      const lines: { merchandiseId: string; quantity: number }[] = [];
+      if (currentVariant?.availableForSale) {
+        lines.push({ merchandiseId: currentVariant.id, quantity: 1 });
+      }
+      for (const product of selectedProducts) {
+        const variant = getPrimaryVariant(product);
+        if (variant?.availableForSale) {
+          lines.push({ merchandiseId: variant.id, quantity: 1 });
+        }
+      }
+      const res = await fetch("/api/shopify/cart/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lines }),
+      });
+      const data = (await res.json()) as { checkoutUrl?: string; error?: string };
+      if (!res.ok || !data.checkoutUrl) {
+        throw new Error(data.error || "Couldn't open checkout");
+      }
+      window.location.href = data.checkoutUrl;
+    } catch {
+      setBuyingNow(false);
+    }
   }
 
   if (products.length === 0) return null;

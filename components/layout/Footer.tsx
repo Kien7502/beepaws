@@ -6,11 +6,8 @@ import { WaveDivider } from '@/components/ui/WaveDivider';
 import titleIcon from '@/app/Title_icon.png';
 
 const Footer = () => {
-  const cartHref = '/checkout';
-
   return (
-    {/* marginTop:"-16px" pulls footer up to overlap the FAQ section bottom, hiding any compositor gap.
-        background:"#FFF5E4" is a gap-fill: if a subpixel seam appears, it shows cream (= FAQ bg) not a dark sliver. */}
+    // marginTop:"-16px" overlaps the FAQ section bottom; background:"#FFF5E4" gap-fills any compositor seam
     <footer style={{ marginTop: "-16px", position: "relative", zIndex: 1, background: "#FFF5E4" }}>
       <WaveDivider from="#FFF5E4" to="#14380c" />
       {/* marginTop:"-8px" overlaps the wave bottom so the dark bg starts flush */}
@@ -52,7 +49,6 @@ const Footer = () => {
                 <li><Link href="/collections/dogs" className="text-white/60 hover:text-[var(--color-primary)] text-sm transition-colors">For Dogs</Link></li>
                 <li><Link href="/collections/cats" className="text-white/60 hover:text-[var(--color-primary)] text-sm transition-colors">For Cats</Link></li>
                 <li><Link href="/collections/new" className="text-white/60 hover:text-[var(--color-primary)] text-sm transition-colors">New Arrivals</Link></li>
-                <li><Link href={cartHref} className="text-white/60 hover:text-[var(--color-primary)] text-sm transition-colors">Cart / checkout</Link></li>
               </ul>
             </div>
 
