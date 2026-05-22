@@ -37,9 +37,11 @@ Stop the dev server first — both bind port 3000. If something stays bound afte
 Get-Process -Name node | Stop-Process -Force
 ```
 
-### ⚠️ Test payment / checkout flows in the production build
+### Next.js version is pinned to 16.1.6
 
-Next.js 16.2.x dev (`next dev` / Turbopack) has a regression: after `window.location.href` redirects to Shopify checkout, pressing Back leaves the page un-hydrated (CSS works, nothing clickable). **It is a dev-mode bug only — works correctly in production.** Always validate ShopPay / Buy Now / cart checkout / back-from-Shopify flows with `npm run build && npm start`, not `npm run dev`.
+`package.json` pins `"next"` and `"eslint-config-next"` to `16.1.6` exact (no caret). Next 16.2.x has a Turbopack dev-mode regression where `window.location.href` redirects to Shopify checkout, then Back, leaves the page un-hydrated (CSS works, nothing clickable) — production was unaffected, but dev was unusable for checkout testing.
+
+Don't bump Next.js without confirming the fix has shipped (test: add to cart → drawer → Checkout securely → Shopify → Back → drawer items still interactive). To bump deliberately: `npm install --save-exact next@<version> eslint-config-next@<version>`.
 
 ## Environment
 
