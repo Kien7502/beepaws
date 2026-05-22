@@ -50,6 +50,16 @@ export interface BeforeAfterSlide {
   caption?: string | null;
 }
 
+// Per-tier override of the bundle picker copy. Structure (mainQty, addonRefs,
+// popular/bestValue badges) stays code-defined — only the visible text is
+// overridable so editors can A/B copy without breaking pricing/composition.
+// Index 0 = Starter, 1 = Complete Care, 2 = Family Pack. Missing entries or
+// empty strings fall back to the in-code defaults in VariantSelector.
+export interface BundleTierCopy {
+  name?: string;
+  description?: string;
+}
+
 export interface BeepawsMetafields {
   comparisonRows: ComparisonRow[] | null;
   useCases: UseCaseCard[] | null;
@@ -64,4 +74,5 @@ export interface BeepawsMetafields {
   tagline: string | null;
   educationNote: string | null;
   beforeAfterSlides: BeforeAfterSlide[] | null;
+  bundleTiers: BundleTierCopy[] | null;
 }

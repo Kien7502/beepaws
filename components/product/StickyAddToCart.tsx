@@ -16,7 +16,7 @@ function formatMoney(amount: number, currencyCode: string) {
 export function StickyAddToCart({ product }: { product: Product }) {
   const [visible, setVisible] = useState(false);
   const [added, setAdded] = useState(false);
-  const { addItem, closeDrawer } = useCart();
+  const { addItem, closeDrawer, drawerOpen } = useCart();
 
   const variant = product.variants.edges[0]?.node;
   const price = parseFloat(variant?.price?.amount || "0");
@@ -60,8 +60,11 @@ export function StickyAddToCart({ product }: { product: Product }) {
 
   return (
     <div
+      // Hide the bar while the cart drawer is open. The drawer (z-50) is
+      // visually atop the page but the sticky bar at the same z would still
+      // poke up over the drawer's right edge on narrow viewports.
       className={`fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--color-border)] bg-[var(--background)] shadow-[0_-4px_24px_-8px_rgb(61_36_0/0.12)] transition-transform duration-300 ease-in-out ${
-        visible ? "translate-y-0" : "translate-y-full"
+        visible && !drawerOpen ? "translate-y-0" : "translate-y-full"
       }`}
     >
       <div className="container mx-auto flex max-w-7xl items-center gap-4 px-4 py-2 md:px-6">

@@ -87,10 +87,13 @@ All in the `beepaws.*` namespace, owner type `PRODUCT`:
 | `faq_items` | `json` | `FAQSection` below the fold |
 | `reviews` | `json` | `UGCReviews` carousel below the fold |
 | `before_after_slides` | `json` | `BeforeAfterSection` below the fold |
+| `bundle_tiers` | `json` | Per-tier name + description overrides in VariantSelector. Shape: `[{name?, description?}]` — index 0 = Starter, 1 = Complete Care, 2 = Family Pack. Empty/missing entries fall back to defaults. |
 
-JSON shapes are defined in `types/metafields.ts`.
+JSON shapes are defined in `types/metafields.ts`. The single source of truth for the schema (Shopify type + editor shape) is [`scripts/metafield-schemas.mjs`](scripts/metafield-schemas.mjs) — see [`scripts/README.md`](scripts/README.md) for the full workflow including how to add a new metafield end-to-end.
 
 ## Adding content to a new product
+
+Quick reference below. Full details, the schema entry shape, and the utility scripts (Storefront token, payment-methods diagnostic, OAuth test) live in [`scripts/README.md`](scripts/README.md).
 
 ### 1. One-time per shop — create metafield definitions
 

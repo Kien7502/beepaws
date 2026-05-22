@@ -14,6 +14,7 @@ import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { METAFIELD_SCHEMAS } from "./metafield-schemas.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -224,21 +225,12 @@ if (existsSync(contentFile)) {
   console.log(`(To author content interactively: node scripts/edit-product-content.mjs ${handle})\n`);
 }
 
-// Map each field key to its Shopify metafield type. Only keys present in `content`
-// are pushed — that way the seed file can be partial without clobbering Shopify.
-const FIELD_TYPES = {
-  product_bullets:     "list.single_line_text_field",
-  ingredients:         "list.single_line_text_field",
-  education_note:      "single_line_text_field",
-  tagline:             "single_line_text_field",
-  tech_specs:          "json",
-  comparison_rows:     "json",
-  use_cases:           "json",
-  faq_items:           "json",
-  reviews:             "json",
-  stats:               "json",
-  before_after_slides: "json",
-};
+// Derive { key → Shopify type } from the central schema. Adding/removing a
+// metafield needs no change here. Only keys present in `content` are pushed
+// (so a partial seed file can update a subset without clobbering the rest).
+const FIELD_TYPES = Object.fromEntries(
+  METAFIELD_SCHEMAS.map((s) => [s.key, s.shopifyType]),
+);
 
 // Shopify type → serialization rule for metafieldsSet:
 //   json:                          must be a JSON-stringified array/object

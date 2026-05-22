@@ -189,7 +189,13 @@ export default async function ProductPage({
             )}
 
             <div className="mt-8 border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-[var(--elev-shadow-card)] md:p-8">
-              <VariantSelector product={product} addonProducts={recommendedBundleProducts} paymentMethods={paymentMethods} />
+              <VariantSelector
+                product={product}
+                addonProducts={recommendedBundleProducts}
+                paymentMethods={paymentMethods}
+                educationNote={beepaws?.educationNote}
+                bundleTiers={beepaws?.bundleTiers}
+              />
             </div>
             {/* IntersectionObserver target — StickyAddToCart shows once this scrolls past viewport top */}
             <div id="sticky-cta-sentinel" />

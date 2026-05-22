@@ -1,7 +1,14 @@
 /**
  * Interactive editor for product metafield content.
  *
- * Reads/writes scripts/products/<handle>.json.
+ * Reads/writes scripts/products/<handle>.json. Field shape comes from
+ * scripts/metafield-schemas.mjs — adding a metafield there shows up in the
+ * editor menu on the next run with no code changes needed here.
+ *
+ * On first run for a handle, copies scripts/products/_template.json (which
+ * seed-metafield-definitions.mjs keeps in sync with the schema). On
+ * subsequent runs, backfills any newly-added schema keys.
+ *
  * Auto-saves after every change.
  *
  * Usage:
@@ -16,9 +23,11 @@ import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as readline from "node:readline/promises";
+import { METAFIELD_SCHEMAS, emptyValue, buildTemplate } from "./metafield-schemas.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PRODUCTS_DIR = resolve(__dirname, "products");
+const TEMPLATE_PATH = resolve(PRODUCTS_DIR, "_template.json");
 
 const handle = process.argv[2]?.trim();
 if (!handle) {
@@ -31,93 +40,19 @@ const filePath = resolve(PRODUCTS_DIR, `${handle}.json`);
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 const ask = (q) => rl.question(q);
 
-// ── Schemas for each list-of-objects field ────────────────────────────────
-
-const ITEM_SCHEMAS = {
-  stats: {
-    fields: [
-      { key: "value", label: "Value (e.g. 10,000+)" },
-      { key: "label", label: "Label" },
-    ],
-    summary: (i) => `${i.value} ${i.label}`,
-  },
-  tech_specs: {
-    fields: [
-      { key: "label", label: "Label" },
-      { key: "value", label: "Value" },
-    ],
-    summary: (i) => `${i.label} → ${i.value}`,
-  },
-  comparison_rows: {
-    fields: [
-      { key: "label", label: "Row label" },
-      { key: "beepaws", label: "BeePaws? (true/false)", type: "boolean", default: true },
-      { key: "vet", label: "Vet? (true/false)", type: "boolean", default: false },
-      { key: "other", label: "Other? (true/false)", type: "boolean", default: false },
-    ],
-    summary: (i) => `${i.label}  [${i.beepaws ? "✓" : "✗"} / ${i.vet ? "✓" : "✗"} / ${i.other ? "✓" : "✗"}]`,
-  },
-  use_cases: {
-    fields: [
-      { key: "emoji", label: "Emoji" },
-      { key: "label", label: "Label (badge)" },
-      { key: "title", label: "Title" },
-      { key: "description", label: "Description" },
-      { key: "from", label: "Gradient from (#hex)", default: "#f5a800" },
-      { key: "to", label: "Gradient to (#hex)", default: "#fff3dc" },
-    ],
-    summary: (i) => `${i.emoji} ${i.title}`,
-  },
-  faq_items: {
-    fields: [
-      { key: "icon", label: "Icon (Shield|PawPrint|Volume2|Package|RefreshCw)", default: "Shield" },
-      { key: "q", label: "Question" },
-      { key: "a", label: "Answer" },
-    ],
-    summary: (i) => `[${i.icon}] ${i.q}`,
-  },
-  reviews: {
-    fields: [
-      { key: "name", label: "Name (e.g. Sarah K.)" },
-      { key: "time", label: "Time (e.g. 2 weeks ago)" },
-      { key: "rating", label: "Rating (1-5)", type: "number", default: 5 },
-      { key: "likes", label: "Likes (integer)", type: "number", default: 0 },
-      { key: "comments", label: "Comments (integer)", type: "number", default: 0 },
-      { key: "text", label: "Review text" },
-      { key: "reply", label: "Reply (blank or '-' for none)", type: "nullable_string" },
-    ],
-    summary: (i) => `${i.name} (${"★".repeat(i.rating)}) — ${(i.text || "").slice(0, 50)}…`,
-  },
-  before_after_slides: {
-    fields: [
-      { key: "beforeImageUrl", label: "Before image URL (blank for placeholder)" },
-      { key: "afterImageUrl", label: "After image URL (blank for placeholder)" },
-      { key: "beforeLabel", label: "Before label", default: "Before" },
-      { key: "afterLabel", label: "After label", default: "After 3 Sessions" },
-      { key: "petName", label: "Pet name (e.g. Bella, 4yr Chihuahua)" },
-      { key: "caption", label: "Caption (blank or '-' for none)", type: "nullable_string" },
-    ],
-    summary: (i) => i.petName || "(unnamed slide)",
-  },
-};
-
-const FIELDS = [
-  { key: "tagline",             kind: "text",             label: "Card tagline" },
-  { key: "education_note",      kind: "text",             label: "Education note" },
-  { key: "product_bullets",     kind: "list_of_strings",  label: "Product bullets" },
-  { key: "ingredients",         kind: "list_of_strings",  label: "Ingredients" },
-  { key: "stats",               kind: "list_of_objects",  label: "Stats" },
-  { key: "tech_specs",          kind: "list_of_objects",  label: "Tech specs" },
-  { key: "comparison_rows",     kind: "list_of_objects",  label: "Comparison rows" },
-  { key: "use_cases",           kind: "list_of_objects",  label: "Use cases" },
-  { key: "faq_items",           kind: "list_of_objects",  label: "FAQ items" },
-  { key: "reviews",             kind: "list_of_objects",  label: "Reviews" },
-  { key: "before_after_slides", kind: "list_of_objects",  label: "Before/after slides" },
-];
-
 // ── Load existing content ─────────────────────────────────────────────────
 
-let data = {};
+async function loadTemplate() {
+  // Prefer the on-disk template (kept in sync by seed-metafield-definitions).
+  // Falls back to building one in memory if the seed script hasn't been run.
+  if (existsSync(TEMPLATE_PATH)) {
+    try { return JSON.parse(await readFile(TEMPLATE_PATH, "utf8")); }
+    catch { /* fall through */ }
+  }
+  return buildTemplate();
+}
+
+let data;
 if (existsSync(filePath)) {
   const raw = await readFile(filePath, "utf8");
   try { data = JSON.parse(raw); console.log(`Loaded ${filePath}`); }
@@ -125,14 +60,25 @@ if (existsSync(filePath)) {
 } else {
   console.log(`Creating new file: ${filePath}`);
   await mkdir(PRODUCTS_DIR, { recursive: true });
+  // Seed from the template so a brand-new product file starts with all the
+  // currently-defined keys, in the right shape.
+  data = await loadTemplate();
 }
 
-// Initialize missing fields
-for (const f of FIELDS) {
-  if (data[f.key] === undefined) {
-    data[f.key] = f.kind === "text" ? "" : [];
+// Backfill keys that were added to the schema after this product file was
+// created. Keeps existing values untouched.
+const addedKeys = [];
+for (const s of METAFIELD_SCHEMAS) {
+  if (data[s.key] === undefined) {
+    data[s.key] = emptyValue(s);
+    addedKeys.push(s.key);
   }
 }
+if (addedKeys.length > 0) {
+  console.log(`Backfilled ${addedKeys.length} new key(s) from schema: ${addedKeys.join(", ")}`);
+}
+
+const FIELDS = METAFIELD_SCHEMAS;
 
 async function save() {
   await writeFile(filePath, JSON.stringify(data, null, 2));
@@ -203,7 +149,9 @@ async function promptForObject(schema, existing = {}) {
 }
 
 async function editListOfObjects(field) {
-  const schema = ITEM_SCHEMAS[field.key];
+  // The schema entry doubles as the item schema — promptForObject reads
+  // `fields`, editListOfObjects reads `itemFields`. Adapter below.
+  const schema = { fields: field.itemFields, summary: field.summary };
   while (true) {
     const list = data[field.key];
     console.log(`\n${field.label} — ${list.length} items:`);

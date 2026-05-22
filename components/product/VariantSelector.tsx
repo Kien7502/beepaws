@@ -4,9 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 
 import type { Product, ProductVariant } from "@/types/shopify";
+import type { BundleTierCopy } from "@/types/metafields";
 import type { PaymentMethods } from "@/lib/shopify/queries";
 import Button from "@/components/ui/Button";
-import { CheckCircle2, ShoppingBag } from "lucide-react";
+import { CheckCircle2, Info, ShoppingBag } from "lucide-react";
 import { useCart } from "@/components/cart/CartProvider";
 import { useProductMedia } from "./ProductMediaSync";
 import { PaymentMethodsRow } from "./PaymentMethodsRow";
@@ -133,13 +134,32 @@ type Props = {
   /** Enabled payment methods from Shopify shop.paymentSettings. Drives the
    * badge row under the buy button. Falls back to nothing rendered when empty. */
   paymentMethods?: PaymentMethods;
+  /** Short reassurance copy displayed directly above the CTA. Used to
+   * pre-empt the most common refund reason ("I think it's broken") — for
+   * the ultrasonic scaler, this is the "silent until tooth contact" note.
+   * Comes from the `beepaws.education_note` metafield. */
+  educationNote?: string | null;
+  /** Per-tier copy overrides from the `beepaws.bundle_tiers` metafield.
+   * Index 0 = Starter, 1 = Complete Care, 2 = Family Pack. Missing entries
+   * or empty strings fall back to the in-code TIERS defaults so structure
+   * (qty/addons/badges) stays separate from editable text. */
+  bundleTiers?: BundleTierCopy[] | null;
 };
 
 export default function VariantSelector({
   product,
   addonProducts = [],
   paymentMethods = { cards: [], wallets: [] },
+  educationNote,
+  bundleTiers,
 }: Props) {
+  // Resolve tier copy: metafield wins when set, else default. We do this
+  // here rather than mutating TIERS so the structural shape (and the
+  // (typeof TIERS)[number] type used by resolveAddons) stays untouched.
+  function tierCopy(i: number, field: "name" | "description"): string {
+    const custom = bundleTiers?.[i]?.[field]?.trim();
+    return custom || TIERS[i][field];
+  }
   const variants = product.variants.edges.map((e) => e.node);
   const multi = variants.length > 1;
 
@@ -516,8 +536,8 @@ export default function VariantSelector({
                       )}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="font-bold text-[var(--color-foreground)]">{t.name}</p>
-                      <p className="mt-0.5 text-xs text-[var(--color-accent)]/70">{t.description}</p>
+                      <p className="font-bold text-[var(--color-foreground)]">{tierCopy(i, "name")}</p>
+                      <p className="mt-0.5 text-xs text-[var(--color-accent)]/70">{tierCopy(i, "description")}</p>
                     </div>
                   </div>
                   <span className="shrink-0 text-base font-extrabold tabular-nums text-[var(--color-primary)]">
@@ -643,6 +663,13 @@ export default function VariantSelector({
 
       <div>
 
+        {educationNote && (
+          <div className="mb-3 flex items-start gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)]/60 px-3 py-2.5 text-xs leading-relaxed text-[var(--color-accent)]/80">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-primary)]" aria-hidden />
+            <span>{educationNote}</span>
+          </div>
+        )}
+
         <Button
           type="button"
           variant="primary"
@@ -655,6 +682,17 @@ export default function VariantSelector({
         >
           {isAvailable ? "Add to cart" : "Out of stock"}
         </Button>
+
+        {/* Compact trust line — sits flush under the CTA at the decision moment.
+            The richer 3-card trust grid (Free shipping / Returns / Secure)
+            still renders further down the page for SEO + reinforcement. */}
+        <p className="mt-2.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs font-medium text-[var(--color-accent)]/70">
+          <span>30-day money-back</span>
+          <span aria-hidden className="text-[var(--color-accent)]/40">·</span>
+          <span>Free shipping over $50</span>
+          <span aria-hidden className="text-[var(--color-accent)]/40">·</span>
+          <span>Secure checkout</span>
+        </p>
 
         {/* Shop Pay accelerated checkout — only renders when the shop has
             SHOP_PAY enabled in Shopify Payments. POSTs the current selection

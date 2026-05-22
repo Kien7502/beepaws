@@ -1,10 +1,25 @@
 /**
- * One-off: create the 9 beepaws.* metafield definitions in Shopify Admin.
- * Idempotent — re-running is safe (existing definitions report TAKEN and are skipped).
+ * Create all `beepaws.*` metafield definitions in Shopify Admin AND keep
+ * `scripts/products/_template.json` (an empty starter shape) in sync with
+ * the schema. Idempotent — re-running is safe.
+ *
+ * Schema lives in `scripts/metafield-schemas.mjs` — adding/removing a
+ * metafield is one edit there, then this script propagates to Shopify and
+ * to the template. The template is what edit-product-content.mjs copies
+ * from when creating a new product file, and what it backfills missing
+ * keys from when the schema gains fields.
  *
  * Usage:
  *   node --env-file=.env.local scripts/seed-metafield-definitions.mjs
  */
+
+import { writeFile, mkdir } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { METAFIELD_SCHEMAS, buildTemplate } from "./metafield-schemas.mjs";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const TEMPLATE_PATH = resolve(__dirname, "products", "_template.json");
 
 const API_VERSION =
   process.env.SHOPIFY_ADMIN_GRAPHQL_VERSION?.trim() ||
@@ -69,20 +84,13 @@ const MUTATION = `
   }
 `;
 
-// All 9 definitions per v5 plan Section 7
-const DEFINITIONS = [
-  { key: "product_bullets",     name: "Product Bullet Points",   type: "list.single_line_text_field" },
-  { key: "ingredients",         name: "Ingredients",             type: "list.single_line_text_field" },
-  { key: "education_note",      name: "Education Note",          type: "single_line_text_field" },
-  { key: "tagline",             name: "Card Tagline",            type: "single_line_text_field" },
-  { key: "tech_specs",          name: "Tech Specifications",     type: "json" },
-  { key: "comparison_rows",     name: "Comparison Table Rows",   type: "json" },
-  { key: "use_cases",           name: "Use Case Cards",          type: "json" },
-  { key: "faq_items",           name: "FAQ Items",               type: "json" },
-  { key: "reviews",             name: "Customer Reviews",        type: "json" },
-  { key: "stats",               name: "Stats Trust Bar",         type: "json" },
-  { key: "before_after_slides", name: "Before After Slides",     type: "json" },
-];
+// Derive Shopify definitions from the central schema — single source of truth
+// in metafield-schemas.mjs.
+const DEFINITIONS = METAFIELD_SCHEMAS.map((s) => ({
+  key: s.key,
+  name: s.name,
+  type: s.shopifyType,
+}));
 
 async function gql(token, query, variables) {
   const res = await fetch(`https://${shop}/admin/api/${API_VERSION}/graphql.json`, {
@@ -151,4 +159,11 @@ for (const def of DEFINITIONS) {
 }
 
 console.log(`\nSummary: ${created} created, ${skipped} already existed, ${failed} failed`);
+
+// Refresh the local template alongside the Shopify definitions — keeps the
+// editable starter shape aligned with whatever's in METAFIELD_SCHEMAS.
+await mkdir(dirname(TEMPLATE_PATH), { recursive: true });
+await writeFile(TEMPLATE_PATH, JSON.stringify(buildTemplate(), null, 2));
+console.log(`Template:   ${TEMPLATE_PATH}`);
+
 process.exit(failed > 0 ? 1 : 0);
