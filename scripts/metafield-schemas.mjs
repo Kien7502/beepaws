@@ -176,6 +176,46 @@ export const METAFIELD_SCHEMAS = [
     summary: (i) =>
       `${i.name || "(default name)"} — ${i.description || "(default description)"}`,
   },
+  {
+    key: "pain_points",
+    name: "Pain Points",
+    shopifyType: "json",
+    kind: "list_of_objects",
+    label: "Pain points",
+    itemFields: [
+      { key: "number",      label: "Number (e.g. 01)" },
+      { key: "title",       label: "Title" },
+      { key: "description", label: "Description" },
+    ],
+    summary: (i) => `${i.number} ${i.title}`,
+  },
+  {
+    key: "mechanism_steps",
+    name: "Mechanism Steps",
+    shopifyType: "json",
+    kind: "list_of_objects",
+    label: "Mechanism steps (how it works)",
+    itemFields: [
+      { key: "number",      label: "Step number (e.g. 1)" },
+      { key: "title",       label: "Step title" },
+      { key: "description", label: "Step description" },
+    ],
+    summary: (i) => `Step ${i.number}: ${i.title}`,
+  },
+  {
+    key: "guarantee",
+    name: "Guarantee Block",
+    shopifyType: "json",
+    kind: "list_of_objects",
+    label: "Guarantee block (single entry)",
+    itemFields: [
+      { key: "sealNumber",  label: "Seal numeral (e.g. 30)" },
+      { key: "sealLabel",   label: "Seal label (e.g. Day Promise)" },
+      { key: "title",       label: "Headline" },
+      { key: "description", label: "Body copy" },
+    ],
+    summary: (i) => `${i.sealNumber}-${i.sealLabel}: ${i.title}`,
+  },
 ];
 
 /** Empty initial value for a schema entry — used for new product files

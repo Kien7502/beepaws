@@ -13,7 +13,11 @@ import { ComparisonTable } from "@/components/product/ComparisonTable";
 import { UseCaseCards } from "@/components/product/UseCaseCards";
 import { FAQSection } from "@/components/product/FAQSection";
 import { UGCReviews } from "@/components/product/UGCReviews";
-import { BeforeAfterSection } from "@/components/product/BeforeAfterSection";
+import { BeforeAfterSlider } from "@/components/product/BeforeAfterSlider";
+import { PainPoints } from "@/components/product/PainPoints";
+import { Mechanism } from "@/components/product/Mechanism";
+import { SilentReassurance } from "@/components/product/SilentReassurance";
+import { GuaranteeBlock } from "@/components/product/GuaranteeBlock";
 import { WaveDivider } from "@/components/ui/WaveDivider";
 import { DescriptionAccordion } from "@/components/product/DescriptionAccordion";
 import { ProductMediaSync } from "@/components/product/ProductMediaSync";
@@ -87,6 +91,11 @@ export default async function ProductPage({
   const descriptionBodyHtml = product.descriptionHtml?.trim() || null;
 
   const beepaws = fullProduct?.normalized?.beepaws;
+
+  // Gate device-only sections (Mechanism, SilentReassurance) on Shopify tag.
+  // Add tag "device" to dental scaler / hardware products; consumables and
+  // accessories skip those sections automatically.
+  const isDevice = product.tags?.includes("device") ?? false;
 
   const primaryCollectionHandle = fullProduct?.collections?.edges?.[0]?.node?.handle;
   const collectionRecommendations = primaryCollectionHandle
@@ -278,48 +287,76 @@ export default async function ProductPage({
       </div>
 
       {/* ── Below-fold sections ─────────────────────────────────────────────────
-          Warm Honey palette: each WaveDivider carries the bg of the section
-          ABOVE (from=) and BELOW (to=) as a hex literal — SVG fill attribute
-          doesn't process var(), so we keep these in sync with globals.css by
-          hand. marginTop:"-3px" + zIndex:1 keeps every section physically
-          overlapping the wave bottom edge, closing any subpixel compositor
-          gap at non-100% zoom. ──────────────────────────────────────────── */}
+          Plan §Phase 4 order: gallery+bundle → PainPoints → StatsTrustBar →
+          Mechanism → SilentReassurance → BeforeAfterSlider → ComparisonTable →
+          UseCaseCards → UGCReviews → FAQSection → GuaranteeBlock.
 
-      {/* paper → cocoa: into the trust-stats strip (dark, authoritative) */}
-      <WaveDivider from="#FDF8EC" to="#4A2E16" />
+          Mechanism + SilentReassurance are device-only; they render only when
+          the Shopify product carries the "device" tag. The wave sequence
+          adapts to whichever path renders. WaveDivider takes hex literals —
+          SVG fill doesn't process var() — so we hand-maintain these against
+          globals.css. ──────────────────────────────────────────────────── */}
+
+      {/* paper → cream: into PainPoints */}
+      <WaveDivider from="#FDF8EC" to="#FBF3E1" />
+      <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
+        <PainPoints points={beepaws?.painPoints} />
+      </div>
+
+      {/* cream → cocoa: into the trust-stats strip */}
+      <WaveDivider from="#FBF3E1" to="#4A2E16" />
       <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
         <StatsTrustBar stats={beepaws?.stats} />
       </div>
 
-      {/* cocoa → honey-tint: into the comparison table */}
-      <WaveDivider from="#4A2E16" to="#F6E6C6" flip />
+      {isDevice ? (
+        <>
+          {/* cocoa → paper: into Mechanism (device-only) */}
+          <WaveDivider from="#4A2E16" to="#FDF8EC" flip />
+          <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
+            <Mechanism steps={beepaws?.mechanismSteps} />
+            {/* SilentReassurance sits flush against Mechanism (same paper bg,
+                no wave between) so they read as one "how it actually works"
+                arc per the reference. */}
+            <SilentReassurance note={beepaws?.educationNote} />
+          </div>
+
+          {/* paper → cream: into BeforeAfterSlider */}
+          <WaveDivider from="#FDF8EC" to="#FBF3E1" />
+        </>
+      ) : (
+        <>
+          {/* Non-device path: skip Mechanism / SilentReassurance, go straight
+              from the stats strip into the before/after proof. */}
+          <WaveDivider from="#4A2E16" to="#FBF3E1" flip />
+        </>
+      )}
       <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
-        <ComparisonTable rows={beepaws?.comparisonRows} />
+        <BeforeAfterSlider slides={beepaws?.beforeAfterSlides} />
       </div>
 
-      {/* honey-tint → cream: into before/after */}
-      <WaveDivider from="#F6E6C6" to="#FBF3E1" />
-      <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
-        <BeforeAfterSection slides={beepaws?.beforeAfterSlides} />
-      </div>
-
-      {/* cream → honey-tint: into use cases */}
+      {/* cream → honey-tint: into ComparisonTable */}
       <WaveDivider from="#FBF3E1" to="#F6E6C6" />
       <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
+        <ComparisonTable rows={beepaws?.comparisonRows} />
+        {/* UseCaseCards also lives on honey-tint — no wave between, the two
+            sections share the band visually. */}
         <UseCaseCards cards={beepaws?.useCases} />
       </div>
 
-      {/* honey-tint → cocoa: into testimonials (dark proof moment) */}
+      {/* honey-tint → cocoa: into testimonials */}
       <WaveDivider from="#F6E6C6" to="#4A2E16" />
       <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
         <UGCReviews reviews={beepaws?.reviews} />
       </div>
 
-      {/* cocoa → cream: into FAQ */}
+      {/* cocoa → cream: into FAQ + GuaranteeBlock + product details */}
       <WaveDivider from="#4A2E16" to="#FBF3E1" flip />
       <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
         <FAQSection items={beepaws?.faqItems} />
-        {/* bg must match FAQSection (cream) so ProductDetailsSections continues seamlessly */}
+        {/* GuaranteeBlock and ProductDetailsSections share the cream band so
+            they continue seamlessly. */}
+        <GuaranteeBlock guarantee={beepaws?.guarantee} />
         <div className="bg-cream">
           {fullProduct?.normalized && (
             <div className="container mx-auto max-w-7xl px-4 pb-12 md:px-6 md:pb-16">

@@ -60,6 +60,25 @@ export interface BundleTierCopy {
   description?: string;
 }
 
+export interface PainPoint {
+  number: string;
+  title: string;
+  description: string;
+}
+
+export interface MechanismStep {
+  number: string;
+  title: string;
+  description: string;
+}
+
+export interface Guarantee {
+  sealNumber: string;
+  sealLabel: string;
+  title: string;
+  description: string;
+}
+
 export interface BeepawsMetafields {
   comparisonRows: ComparisonRow[] | null;
   useCases: UseCaseCard[] | null;
@@ -75,4 +94,7 @@ export interface BeepawsMetafields {
   educationNote: string | null;
   beforeAfterSlides: BeforeAfterSlide[] | null;
   bundleTiers: BundleTierCopy[] | null;
+  painPoints: PainPoint[] | null;
+  mechanismSteps: MechanismStep[] | null;
+  guarantee: Guarantee[] | null;
 }
