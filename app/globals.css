@@ -2,59 +2,110 @@
 
 
 @theme inline {
+  /* ─── Warm Honey palette ──────────────────────────────────────────────────
+     Generates Tailwind utilities: bg-clay, text-cocoa, border-line, etc.
+     Each token references its raw hex in :root so the palette lives in one
+     place. Names match plans/beepaws-website-upgrade-plan.md §"Visual system". */
+  --color-cream:      var(--cream);
+  --color-paper:      var(--paper);
+  --color-card:       var(--card);
+  --color-clay:       var(--clay);
+  --color-cocoa:      var(--cocoa);
+  --color-gold:       var(--gold);
+  --color-gold-deep:  var(--gold-deep);
+  --color-amber:      var(--amber);
+  --color-brown:      var(--brown);
+  --color-ink:        var(--ink);
+  --color-honey-tint: var(--honey-tint);
+  --color-line:       var(--line);
+  --color-rose-soft:  var(--rose-soft);
+  --color-sage:       var(--sage);
+  --color-moss:       var(--moss);
+
+  /* ─── Semantic tokens (existing component code uses these) ────────────────
+     Each one points at a Warm Honey color, so swapping the palette here
+     re-skins the whole app without touching components. Keep these names —
+     dozens of components reference them. */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-surface: var(--surface);
-  --color-border: var(--border);
-  --color-text: var(--text);
-  --color-heading: var(--heading);
+  --color-surface:    var(--surface);
+  --color-surface-2:  var(--surface-2);   /* NEW: was undefined, silently broken */
+  --color-border:     var(--border);
+  --color-text:       var(--text);
+  --color-heading:    var(--heading);
+
+  --color-primary:       var(--gold);       /* CTAs — was #f5a800 */
+  --color-primary-hover: var(--gold-deep);  /* was #d89200 */
+  --color-secondary:     var(--honey-tint); /* was #fff3dc */
+  --color-accent:        var(--cocoa);      /* was #7A4A1E warm brown */
 
   --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
-
-  --color-primary: #f5a800;
-  --color-primary-hover: #d89200;
-  --color-secondary: #fff3dc;
-  --color-accent: #7A4A1E;
 }
 
 :root {
-  --background: #fff5e4;
-  --foreground: #8b5e2a;
-  --text: #3d2400;
-  --heading: #8b5e2a;
-  --surface: #fff3dc;
-  --border: #e8d5aa;
+  /* ─── Warm Honey palette — raw hex values (single source of truth) ────── */
+  --cream:      #FBF3E1;   /* warm cream — page sections                  */
+  --paper:      #FDF8EC;   /* base page background                        */
+  --card:       #FFFFFF;
+  --clay:       #C56A1E;   /* burnt amber — logo fur, brand primary       */
+  --cocoa:      #4A2E16;   /* deep brown — dark sections, headings        */
+  --gold:       #E7A92F;   /* honey gold — CTAs + highlights              */
+  --gold-deep:  #C8901C;   /* gold hover                                  */
+  --amber:      #DD8A38;   /* mid warm accent                             */
+  --brown:      #4A3B2A;   /* warm secondary text                         */
+  --ink:        #2A1B0E;   /* body text                                   */
+  --honey-tint: #F6E6C6;   /* light warm tint — cards, bands              */
+  --line:       #EADEC2;   /* hairline border                             */
+  --rose-soft:  #BC5E38;   /* warm alert tone — never harsh red           */
+  --sage:       #8CA081;   /* soft sage — fusion accent (footer stripe)   */
+  --moss:       #2F3B2A;   /* deep sage — footer bg, plant-brand nod      */
 
-  --elev-shadow-card: 0 4px 20px -10px rgb(61 36 0 / 0.10);
-  --elev-shadow-card-hover: 0 14px 40px -16px rgb(139 94 42 / 0.20);
-  --elev-shadow-elevated: 0 8px 30px -14px rgb(61 36 0 / 0.14);
+  /* ─── Semantic token values (referenced by @theme inline above) ──────── */
+  --background: var(--paper);
+  --foreground: var(--cocoa);
+  --text:       var(--ink);
+  --heading:    var(--cocoa);
+  --surface:    var(--card);       /* cards are white per Warm Honey plan */
+  --surface-2:  var(--cream);      /* subtle bands inside cards            */
+  --border:     var(--line);
 
-  /* BeePaws v4 brand palette */
-  --color-bg-primary:       #FFF5E4;
-  --color-bg-secondary:     #FFE8B0;
-  --color-bg-dark:          #3D1600;
-  --color-bg-footer:        #3B2210;
+  /* Elevation shadows — tuned to Warm Honey tone (warm brown @ low alpha) */
+  --elev-shadow-card:        0 4px 20px -10px rgb(74 46 22 / 0.10);
+  --elev-shadow-card-hover:  0 14px 40px -16px rgb(74 46 22 / 0.18);
+  --elev-shadow-elevated:    0 8px 30px -14px rgb(74 46 22 / 0.14);
 
-  --color-brand-orange:     #C86503;
-  --color-brand-gold:       #E39200;
-  --color-brand-gold-light: #F5B800;
+  /* ─── Legacy brand tokens ─────────────────────────────────────────────────
+     Defined but not currently referenced by any component (verified via grep).
+     Kept here remapped to Warm Honey so if anything reaches for them they
+     stay brand-aligned. Candidates for removal — see flag list in chat. */
+  --color-bg-primary:       var(--paper);
+  --color-bg-secondary:     var(--honey-tint);
+  --color-bg-dark:          var(--cocoa);
+  --color-bg-footer:        var(--moss);
 
-  --color-on-dark:          #FFFAF2;
-  --color-body:             #3D1600;
+  --color-brand-orange:     var(--clay);
+  --color-brand-gold:       var(--gold);
+  --color-brand-gold-light: var(--amber);
 
+  --color-on-dark:          var(--cream);
+  --color-body:             var(--ink);
+
+  /* Sky/coral category accents — kept literal; reassess in Phase 5 polish */
   --color-dog:              #5BB8F5;
   --color-cat:              #FF7F6B;
 
+  /* Green palette — used for "vet-safe / no anesthesia" badges (Phase 5).
+     Footer green now maps to moss per the plan. */
   --color-green-whisper:    #F7FAF5;
   --color-green-badge-bg:   #E8F2E4;
   --color-green-badge-tx:   #2A5A1A;
   --color-green-icon:       #4A7C3F;
-  --color-green-footer:     #3B2210;
+  --color-green-footer:     var(--moss);
 }
 
 
 body {
-  background: var(--color-bg-primary);
+  background: var(--background);
   color: var(--text);
   font-family: var(--font-sans);
 }
@@ -75,7 +126,8 @@ body {
   }
 }
 
-/* Gradient headline */
+/* Gradient headline — pink/purple, off-palette. Likely dead code; verify
+   before Phase 2 polish and either retheme to clay/gold or remove. */
 .hero-gradient-heading {
   color: rgb(244 114 182);
   background-image: linear-gradient(
@@ -142,6 +194,8 @@ body {
     box-shadow: var(--elev-shadow-elevated);
   }
 
+  /* Off-palette purple focus ring — flag for Phase 2 re-skin (Newsletter
+     lives in the Footer). Replace with clay/gold ring on the next pass. */
   .newsletter-input-focus:focus {
     outline: none;
     box-shadow: 0 0 0 4px rgb(147 51 234 / 0.25);
@@ -151,7 +205,7 @@ body {
   .product-html {
     font-size: 1.0625rem;
     line-height: 1.75;
-    color: #3d2400;
+    color: var(--ink);
   }
   .product-html :where(p) {
     margin-bottom: 1rem;
