@@ -103,14 +103,15 @@ function formatLikes(n: number): string {
 }
 
 function Stars({ rating }: { rating: number }) {
+  // Warm Honey: gold stars filled, soft brown outlines for unfilled.
   return (
     <div className="flex gap-0.5">
       {Array.from({ length: 5 }, (_, i) => (
         <Star
           key={i}
           className="h-3.5 w-3.5"
-          fill={i < rating ? "#f5a800" : "none"}
-          stroke={i < rating ? "#f5a800" : "#a07850"}
+          fill={i < rating ? "#E7A92F" : "none"}
+          stroke={i < rating ? "#E7A92F" : "#a99e83"}
           strokeWidth={1.5}
         />
       ))}
@@ -171,13 +172,19 @@ export function UGCReviews({ reviews }: Props) {
     paused.current = false;
   }
 
+  // Warm Honey: cocoa bg (dark proof moment per reference). Cards stay
+  // light/warm so the testimonial copy reads with full warmth against the
+  // dark section.
   return (
-    <section className="bg-[#7A4A1E] py-14 md:py-20 overflow-hidden">
+    <section className="bg-cocoa py-14 md:py-20 overflow-hidden">
       <div className="container mx-auto max-w-7xl px-4 md:px-6 mb-10">
-        <h2 className="mb-2 text-center text-3xl font-black tracking-tight text-white md:text-4xl">
+        <span className="block text-center text-xs font-extrabold uppercase tracking-[0.14em] text-gold mb-2">
+          Real pet parents
+        </span>
+        <h2 className="font-display mb-2 text-center text-3xl font-bold tracking-tight text-white md:text-4xl">
           Don&apos;t just take our word for it
         </h2>
-        <p className="text-center text-base text-white/50">
+        <p className="text-center text-base text-[#CFCBBA]">
           Real pet parents, real results. Drag to explore →
         </p>
       </div>
@@ -197,43 +204,43 @@ export function UGCReviews({ reviews }: Props) {
           {doubled.map((r, i) => (
             <div
               key={i}
-              className="w-72 shrink-0 flex flex-col bg-[#fff5e4] text-sm shadow-lg rounded-2xl overflow-hidden"
+              className="w-72 shrink-0 flex flex-col bg-card text-sm shadow-[0_8px_24px_-12px_rgba(0,0,0,0.4)] rounded-2xl overflow-hidden border border-line"
             >
               <div className="flex items-start gap-3 p-4">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fff3dc] text-sm font-extrabold text-[#8b5e2a]">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-honey-tint text-sm font-extrabold text-clay">
                   {r.name[0]}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <p className="font-bold text-[#3d2400]">{r.name}</p>
-                    <span className="rounded-full bg-[#f5a800]/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#8b5e2a]">
+                    <p className="font-extrabold text-cocoa">{r.name}</p>
+                    <span className="rounded-full bg-honey-tint px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-clay">
                       Verified
                     </span>
                   </div>
-                  <p className="text-xs text-[#8b5e2a]/60">{r.time}</p>
+                  <p className="text-xs text-brown">{r.time}</p>
                   <Stars rating={r.rating} />
                 </div>
               </div>
 
-              <p className="flex-1 px-4 pb-3 leading-relaxed text-[#3d2400]/80">{r.text}</p>
+              <p className="flex-1 px-4 pb-3 leading-relaxed text-ink">{r.text}</p>
 
               {r.reply && (
-                <div className="mx-4 mb-3 border-l-2 border-[#f5a800] bg-[#fff3dc] px-3 py-2">
-                  <p className="text-xs font-bold text-[#8b5e2a]">BeePaws</p>
-                  <p className="mt-0.5 text-xs leading-relaxed text-[#3d2400]/70">{r.reply}</p>
+                <div className="mx-4 mb-3 border-l-[3px] border-gold bg-cream px-3 py-2 rounded-r-md">
+                  <p className="text-xs font-bold text-clay">BeePaws</p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-brown">{r.reply}</p>
                 </div>
               )}
 
-              <div className="flex items-center justify-between border-t border-[#e8d5aa] px-4 py-2.5 text-xs text-[#8b5e2a]/60">
+              <div className="flex items-center justify-between border-t border-line px-4 py-2.5 text-xs text-brown">
                 <span>👍 {formatLikes(r.likes)}</span>
                 <div className="flex gap-4">
-                  <button className="flex items-center gap-1 hover:text-[#f5a800] transition-colors">
+                  <button className="flex items-center gap-1 hover:text-gold-deep transition-colors">
                     <ThumbsUp size={12} /> Like
                   </button>
-                  <button className="flex items-center gap-1 hover:text-[#f5a800] transition-colors">
+                  <button className="flex items-center gap-1 hover:text-gold-deep transition-colors">
                     <MessageCircle size={12} /> {r.comments}
                   </button>
-                  <button className="flex items-center gap-1 hover:text-[#f5a800] transition-colors">
+                  <button className="flex items-center gap-1 hover:text-gold-deep transition-colors">
                     <Share2 size={12} /> Share
                   </button>
                 </div>

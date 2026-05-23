@@ -34,13 +34,20 @@ interface Props {
 export function UseCaseCards({ cards }: Props) {
   const data = cards && cards.length > 0 ? cards : DEFAULT_USE_CASES;
 
+  // Warm Honey: honey-tint section bg, white cards with hairline border.
+  // Per-card accent colors (c.from / c.to) still drive the gradient header
+  // and bookmark accent — the metafield contract is preserved so editors
+  // can keep authoring colors. Headings use the display serif.
   return (
-    <section className="bg-[#FFE8B0] py-14 md:py-20">
+    <section className="bg-honey-tint py-14 md:py-20">
       <div className="container mx-auto max-w-7xl px-4 md:px-6">
-        <h2 className="mb-2 text-center text-3xl font-black tracking-tight text-[var(--color-foreground)] md:text-4xl">
+        <span className="block text-center text-xs font-extrabold uppercase tracking-[0.14em] text-gold-deep mb-2">
+          Who it's for
+        </span>
+        <h2 className="font-display mb-2 text-center text-3xl font-bold tracking-tight text-cocoa md:text-4xl">
           Made for every kind of pet parent
         </h2>
-        <p className="mb-10 text-center text-base text-[var(--color-accent)]/70">
+        <p className="mb-10 text-center text-base text-brown">
           Whether your dog is anxious, big, or just overdue for a cleaning.
         </p>
 
@@ -48,9 +55,9 @@ export function UseCaseCards({ cards }: Props) {
           {data.map((c) => (
             <div
               key={c.title}
-              className="group flex flex-col overflow-hidden rounded-3xl border border-[var(--color-border)] bg-[var(--background)] shadow-[var(--elev-shadow-card)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--elev-shadow-card-hover)]"
+              className="group flex flex-col overflow-hidden rounded-3xl border border-line bg-card shadow-[0_4px_20px_-10px_rgba(74,46,22,0.10)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_40px_-16px_rgba(74,46,22,0.20)]"
             >
-              {/* Gradient emoji area */}
+              {/* Gradient emoji area — uses per-card metafield colors */}
               <div
                 className="relative flex h-44 items-center justify-center text-6xl"
                 style={{ background: `linear-gradient(135deg, ${c.from}25 0%, ${c.to} 100%)` }}
@@ -69,8 +76,8 @@ export function UseCaseCards({ cards }: Props) {
               {/* Content */}
               <div className="flex flex-col gap-2 p-6">
                 <div className="h-1 w-8 rounded-full" style={{ background: c.from }} />
-                <h3 className="text-lg font-extrabold text-[var(--color-foreground)]">{c.title}</h3>
-                <p className="text-sm leading-relaxed text-[var(--color-accent)]/80">{c.description}</p>
+                <h3 className="font-display text-xl font-bold text-cocoa">{c.title}</h3>
+                <p className="text-[14.5px] leading-relaxed text-brown">{c.description}</p>
               </div>
             </div>
           ))}

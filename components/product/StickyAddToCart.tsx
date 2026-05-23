@@ -60,23 +60,22 @@ export function StickyAddToCart({ product }: { product: Product }) {
 
   return (
     <div
-      // Hide the bar while the cart drawer is open. The drawer (z-50) is
-      // visually atop the page but the sticky bar at the same z would still
-      // poke up over the drawer's right edge on narrow viewports.
-      className={`fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--color-border)] bg-[var(--background)] shadow-[0_-4px_24px_-8px_rgb(61_36_0/0.12)] transition-transform duration-300 ease-in-out ${
+      // Warm Honey re-skin per plan: paper bg, hairline line border,
+      // warm-brown shadow. Hides while the cart drawer is open.
+      className={`fixed bottom-0 left-0 right-0 z-50 border-t border-line bg-paper shadow-[0_-6px_22px_-4px_rgba(74,46,22,0.12)] transition-transform duration-300 ease-in-out ${
         visible && !drawerOpen ? "translate-y-0" : "translate-y-full"
       }`}
     >
-      <div className="container mx-auto flex max-w-7xl items-center gap-4 px-4 py-2 md:px-6">
-        <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-[var(--color-border)]">
-          <Image src={imageUrl} alt={product.title} fill className="object-cover" sizes="56px" />
+      <div className="container mx-auto flex max-w-7xl items-center gap-4 px-4 py-2.5 md:px-6">
+        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-line">
+          <Image src={imageUrl} alt={product.title} fill className="object-cover" sizes="48px" />
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-base font-bold text-[var(--color-foreground)]">
+          <p className="truncate text-sm md:text-[14.5px] font-extrabold text-cocoa">
             {product.title}
           </p>
-          <p className="text-base font-extrabold text-[var(--color-primary)]">
+          <p className="text-[13px] font-bold text-brown">
             {formatMoney(price, currencyCode)}
           </p>
         </div>
@@ -85,7 +84,7 @@ export function StickyAddToCart({ product }: { product: Product }) {
           type="button"
           onClick={onAdd}
           disabled={!isAvailable}
-          className="flex shrink-0 items-center gap-2 rounded-xl bg-[var(--color-primary)] px-6 py-3 text-base font-extrabold text-white transition-colors hover:bg-[var(--color-primary-hover)] disabled:opacity-50"
+          className="flex shrink-0 items-center gap-2 rounded-xl bg-gold px-5 py-3 md:px-7 text-[15px] font-extrabold text-cocoa transition-all hover:bg-gold-deep hover:text-white hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         >
           <ShoppingBag size={18} />
           {added ? "Added!" : isAvailable ? "Add to cart" : "Out of stock"}

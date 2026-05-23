@@ -13,16 +13,19 @@ interface Props {
 export function StatsTrustBar({ stats }: Props) {
   const data = stats && stats.length > 0 ? stats : DEFAULT_STATS;
 
+  // Warm Honey: cocoa bg as a strong trust-proof moment between the gallery
+  // and the comparison section. Stat numerals in gold (display font), labels
+  // in soft cream.
   return (
-    <div className="bg-[var(--color-primary)] py-8">
+    <div className="bg-cocoa py-12">
       <div className="container mx-auto max-w-7xl px-4 md:px-6">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
           {data.map((stat) => (
-            <div key={stat.label} className="flex flex-col items-center gap-1 text-center">
-              <span className="text-4xl font-black tracking-tight text-[#3d2400] md:text-5xl">
+            <div key={stat.label} className="flex flex-col items-center gap-1.5 text-center">
+              <span className="font-display text-4xl font-bold tracking-tight text-gold md:text-5xl">
                 {stat.value}
               </span>
-              <span className="text-sm font-semibold text-[#3d2400]/70">
+              <span className="text-sm font-semibold uppercase tracking-wider text-[#D6D2C2]">
                 {stat.label}
               </span>
             </div>

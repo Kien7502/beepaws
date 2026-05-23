@@ -132,12 +132,17 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
 
   const allItems = [currentProduct, ...products];
 
+  // Warm Honey re-skin. Card = white on cream-tint header strip. Selection
+  // uses clay accent for the active thumb border + check, gold-deep accent
+  // line on the totals row, and a gold "Add bundle" CTA over cocoa outline
+  // "Buy now". Phase 4 will add the $1,400 vet-price anchor; for now the
+  // structure and metafield wiring stay identical.
   return (
-    <div className="mt-6 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+    <div className="mt-6 overflow-hidden rounded-2xl border border-line bg-card shadow-[0_4px_20px_-10px_rgba(74,46,22,0.10)]">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-[var(--color-border)] bg-[var(--color-surface-2)]/60 px-4 py-3">
-        <Tag className="h-4 w-4 text-[var(--color-primary)]" aria-hidden />
-        <p className="text-sm font-bold text-[var(--color-foreground)]">
+      <div className="flex items-center gap-2 border-b border-line bg-honey-tint/50 px-4 py-3">
+        <Tag className="h-4 w-4 text-gold-deep" aria-hidden />
+        <p className="text-sm font-extrabold uppercase tracking-wider text-cocoa">
           Frequently Bought Together
         </p>
       </div>
@@ -151,7 +156,7 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
             <div key={product.id} className="flex shrink-0 items-center gap-1.5 sm:gap-2">
               {idx > 0 && (
                 <Plus
-                  className="h-3.5 w-3.5 shrink-0 text-slate-400"
+                  className="h-3.5 w-3.5 shrink-0 text-brown/50"
                   aria-hidden
                 />
               )}
@@ -166,8 +171,8 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
                 }}
                 className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 transition-all sm:h-20 sm:w-20 ${
                   isChecked
-                    ? "border-[var(--color-primary)] opacity-100"
-                    : "border-[var(--color-border)] opacity-40"
+                    ? "border-clay opacity-100"
+                    : "border-line opacity-40"
                 } ${isAddon ? "cursor-pointer hover:opacity-80" : "cursor-default"}`}
                 aria-label={isAddon ? `Toggle ${product.title}` : product.title}
               >
@@ -179,7 +184,7 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
                   sizes="80px"
                 />
                 {isChecked && (
-                  <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--color-primary)] text-white shadow">
+                  <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-clay text-white shadow">
                     <svg width="9" height="7" viewBox="0 0 9 7" fill="none" aria-hidden>
                       <path d="M1 3.5L3.5 6L8 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
@@ -192,20 +197,20 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
       </div>
 
       {/* Product list with checkboxes */}
-      <ul className="divide-y divide-[var(--color-border)]/60 px-4">
+      <ul className="divide-y divide-line/60 px-4">
         {/* Current product (always selected) */}
         <li className="flex items-center gap-3 py-2.5">
-          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 border-[var(--color-primary)] bg-[var(--color-primary)]">
+          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 border-clay bg-clay">
             <svg width="9" height="7" viewBox="0 0 9 7" fill="none" aria-hidden>
               <path d="M1 3.5L3.5 6L8 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold text-[var(--color-foreground)]">
+            <p className="truncate text-xs font-semibold text-cocoa">
               This item — {currentProduct.title}
             </p>
           </div>
-          <span className="shrink-0 text-xs font-bold text-[var(--color-foreground)]">
+          <span className="shrink-0 text-xs font-bold text-cocoa">
             {formatMoney(currentAmount, currencyCode)}
           </span>
         </li>
@@ -228,8 +233,8 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
                 }
                 className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 transition-colors ${
                   checked
-                    ? "border-[var(--color-primary)] bg-[var(--color-primary)]"
-                    : "border-slate-300"
+                    ? "border-clay bg-clay"
+                    : "border-line"
                 }`}
                 aria-checked={checked}
                 role="checkbox"
@@ -242,11 +247,11 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
                 )}
               </button>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-semibold text-[var(--color-foreground)]">
+                <p className="truncate text-xs font-semibold text-cocoa">
                   {product.title}
                 </p>
               </div>
-              <span className="shrink-0 text-xs font-bold text-[var(--color-foreground)]">
+              <span className="shrink-0 text-xs font-bold text-cocoa">
                 {formatMoney(amount, currencyCode)}
               </span>
             </li>
@@ -255,12 +260,12 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
       </ul>
 
       {/* Footer: total + CTA */}
-      <div className="border-t border-[var(--color-border)] bg-[var(--color-surface-2)]/40 px-4 py-4">
+      <div className="border-t border-line bg-cream/60 px-4 py-4">
         <div className="mb-3 flex items-baseline justify-between">
-          <span className="text-xs text-[var(--color-accent)]/70">
+          <span className="text-xs font-semibold uppercase tracking-wider text-brown">
             Bundle total ({itemCount} {itemCount === 1 ? "item" : "items"})
           </span>
-          <span className="text-base font-black text-[var(--color-primary)]">
+          <span className="font-display text-lg font-bold text-cocoa">
             {formatMoney(total, currencyCode)}
           </span>
         </div>
@@ -272,17 +277,17 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
             fullWidth
             onClick={onAddBundle}
             disabled={!canAdd}
-            className="min-h-[44px] rounded-xl"
+            className="min-h-[44px] rounded-xl !bg-gold !text-cocoa hover:!bg-gold-deep hover:!text-white"
           >
             Add bundle to cart
           </Button>
           <Button
             type="button"
             size="md"
-            variant="primary"
+            variant="outline"
             onClick={onBuyNow}
             disabled={!canAdd || buyingNow}
-            className="min-h-[44px] w-full !bg-[var(--color-accent)] !text-white hover:!brightness-110 rounded-xl"
+            className="min-h-[44px] w-full rounded-xl !border-cocoa !border-[1.8px] !text-cocoa hover:!bg-cocoa hover:!text-white !bg-transparent"
           >
             {buyingNow ? "Redirecting…" : "Buy now"}
           </Button>

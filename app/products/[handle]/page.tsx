@@ -278,46 +278,49 @@ export default async function ProductPage({
       </div>
 
       {/* ── Below-fold sections ─────────────────────────────────────────────────
-          Each WaveDivider carries the bg of the section ABOVE (from=) and BELOW (to=).
-          marginTop:"-3px" + zIndex:1 on every wrapper ensures the section physically
-          overlaps the wave bottom edge, hiding any subpixel compositor gap. ──────── */}
+          Warm Honey palette: each WaveDivider carries the bg of the section
+          ABOVE (from=) and BELOW (to=) as a hex literal — SVG fill attribute
+          doesn't process var(), so we keep these in sync with globals.css by
+          hand. marginTop:"-3px" + zIndex:1 keeps every section physically
+          overlapping the wave bottom edge, closing any subpixel compositor
+          gap at non-100% zoom. ──────────────────────────────────────────── */}
 
-      {/* cream → gold stats bar */}
-      <WaveDivider from="#fff5e4" to="#f5a800" />
+      {/* paper → cocoa: into the trust-stats strip (dark, authoritative) */}
+      <WaveDivider from="#FDF8EC" to="#4A2E16" />
       <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
         <StatsTrustBar stats={beepaws?.stats} />
       </div>
 
-      {/* gold → cream comparison */}
-      <WaveDivider from="#f5a800" to="#fff5e4" flip />
+      {/* cocoa → honey-tint: into the comparison table */}
+      <WaveDivider from="#4A2E16" to="#F6E6C6" flip />
       <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
         <ComparisonTable rows={beepaws?.comparisonRows} />
       </div>
 
-      {/* cream → warm cream before/after */}
-      <WaveDivider from="#fff5e4" to="#fff3dc" />
+      {/* honey-tint → cream: into before/after */}
+      <WaveDivider from="#F6E6C6" to="#FBF3E1" />
       <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
         <BeforeAfterSection slides={beepaws?.beforeAfterSlides} />
       </div>
 
-      {/* warm cream → amber use cases */}
-      <WaveDivider from="#fff3dc" to="#FFE8B0" />
+      {/* cream → honey-tint: into use cases */}
+      <WaveDivider from="#FBF3E1" to="#F6E6C6" />
       <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
         <UseCaseCards cards={beepaws?.useCases} />
       </div>
 
-      {/* amber → brown testimonials (#7A4A1E = same as Buy now button --color-accent) */}
-      <WaveDivider from="#FFE8B0" to="#7A4A1E" />
+      {/* honey-tint → cocoa: into testimonials (dark proof moment) */}
+      <WaveDivider from="#F6E6C6" to="#4A2E16" />
       <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
         <UGCReviews reviews={beepaws?.reviews} />
       </div>
 
-      {/* brown → cream FAQ */}
-      <WaveDivider from="#7A4A1E" to="#FFF5E4" flip />
+      {/* cocoa → cream: into FAQ */}
+      <WaveDivider from="#4A2E16" to="#FBF3E1" flip />
       <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
         <FAQSection items={beepaws?.faqItems} />
-        {/* bg must match FAQSection so ProductDetailsSections continues seamlessly */}
-        <div className="bg-[#FFF5E4]">
+        {/* bg must match FAQSection (cream) so ProductDetailsSections continues seamlessly */}
+        <div className="bg-cream">
           {fullProduct?.normalized && (
             <div className="container mx-auto max-w-7xl px-4 pb-12 md:px-6 md:pb-16">
               <ProductDetailsSections normalized={fullProduct.normalized} />

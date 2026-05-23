@@ -27,7 +27,7 @@ function navLinkActive(pathname: string, href: string): boolean {
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
-  const { itemCount, hydrated, lastAddedAt, lastAddedQuantity, openDrawer, closeDrawer } = useCart();
+  const { itemCount, hydrated, lastAddedAt, lastAddedQuantity, openDrawer } = useCart();
   const [showCartPulse, setShowCartPulse] = useState(false);
 
   useEffect(() => {
@@ -38,21 +38,24 @@ const Header = () => {
   }, [lastAddedAt]);
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[var(--background)] shadow-[0_2px_12px_-4px_rgb(61_36_0/0.10)]">
-      <div className="bg-[var(--color-primary)] text-white text-xs md:text-sm font-medium py-2.5 text-center tracking-wide px-2">
-        Free shipping on orders over $50 —{" "}
-        <Link href="/collections/all" className="underline underline-offset-2 font-semibold">
+    // Warm Honey re-skin: paper bg + hairline border (no shadow). Sticky stays.
+    <header className="sticky top-0 z-50 w-full bg-paper border-b border-line">
+      {/* Announcement bar — cocoa per reference. Keep the existing honest
+          "free shipping" copy (hard rule: no fake countdowns). */}
+      <div className="bg-cocoa text-cream text-xs md:text-sm font-medium py-2.5 text-center tracking-wide px-2">
+        Free shipping on orders over <b className="text-gold">$50</b> —{" "}
+        <Link href="/collections/all" className="underline underline-offset-2 font-semibold hover:text-gold transition-colors">
           Shop now
         </Link>
       </div>
 
       <div className="container mx-auto px-4 md:px-6">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-16 md:h-[68px]">
           <div className="flex flex-1 items-center md:flex-none">
             <button
               type="button"
               onClick={() => setMobileOpen((o) => !o)}
-              className="p-2 text-[var(--color-foreground)] hover:bg-[var(--color-surface)] rounded-full transition-colors md:hidden"
+              className="p-2 text-cocoa hover:bg-honey-tint rounded-full transition-colors md:hidden"
               aria-expanded={mobileOpen}
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
             >
@@ -71,17 +74,17 @@ const Header = () => {
             </Link>
           </div>
 
-          <nav className="hidden md:flex flex-1 justify-center items-center gap-8">
+          <nav className="hidden md:flex flex-1 justify-center items-center gap-7">
             {navLinks.map((link) => {
               const active = navLinkActive(pathname, link.href);
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`text-sm font-semibold transition-colors relative py-1 ${
+                  className={`text-[14.5px] font-semibold transition-colors relative py-1 ${
                     active
-                      ? "text-[var(--color-primary)] after:absolute after:left-0 after:right-0 after:-bottom-0.5 after:h-0.5 after:rounded-full after:bg-[var(--color-primary)]"
-                      : "text-[var(--color-foreground)] hover:text-[var(--color-primary)]"
+                      ? "text-clay after:absolute after:left-0 after:right-0 after:-bottom-0.5 after:h-0.5 after:rounded-full after:bg-clay"
+                      : "text-brown hover:text-gold-deep"
                   }`}
                 >
                   {link.label}
@@ -95,12 +98,14 @@ const Header = () => {
             <button
               type="button"
               onClick={openDrawer}
-              className={`relative p-2 text-[var(--color-foreground)] hover:bg-[var(--color-surface)] rounded-full transition-colors inline-flex ${showCartPulse ? "scale-110 bg-[var(--color-primary)]/10 ring-2 ring-[var(--color-primary)]/35" : ""}`}
+              className={`relative p-2 text-cocoa hover:bg-honey-tint rounded-full transition-colors inline-flex ${
+                showCartPulse ? "scale-110 bg-gold/15 ring-2 ring-gold/35" : ""
+              }`}
               aria-label={`Shopping cart${itemCount > 0 ? `, ${itemCount} items` : ""}`}
             >
               <ShoppingCart size={24} />
               {hydrated && itemCount > 0 && (
-                <span className="absolute -right-1 -top-1 inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--color-primary)] px-1 text-xs font-bold text-white">
+                <span className="absolute -right-1 -top-1 inline-flex min-w-5 items-center justify-center rounded-full bg-clay px-1 text-xs font-bold text-white">
                   {itemCount > 99 ? "99+" : itemCount}
                 </span>
               )}
@@ -115,14 +120,14 @@ const Header = () => {
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden border-t border-[var(--color-border)] bg-[var(--background)] px-4 py-4 space-y-1 shadow-lg">
+        <div className="md:hidden border-t border-line bg-paper px-4 py-4 space-y-1 shadow-lg">
           <Link
             href="/"
             onClick={() => setMobileOpen(false)}
             className={`block rounded-xl px-4 py-3 text-base font-semibold ${
               pathname === "/"
-                ? "text-[var(--color-primary)] bg-[var(--color-secondary)]/50"
-                : "text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/80"
+                ? "text-clay bg-honey-tint/60"
+                : "text-cocoa hover:bg-honey-tint/80"
             }`}
           >
             Home
@@ -136,8 +141,8 @@ const Header = () => {
                 onClick={() => setMobileOpen(false)}
                 className={`block rounded-xl px-4 py-3 text-base font-semibold ${
                   active
-                    ? "text-[var(--color-primary)] bg-[var(--color-secondary)]/50"
-                    : "text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/80"
+                    ? "text-clay bg-honey-tint/60"
+                    : "text-cocoa hover:bg-honey-tint/80"
                 }`}
               >
                 {link.label}
@@ -147,7 +152,7 @@ const Header = () => {
           <button
             type="button"
             onClick={() => { setMobileOpen(false); openDrawer(); }}
-            className="block w-full rounded-xl px-4 py-3 text-left text-base font-semibold text-[var(--color-foreground)] hover:bg-[var(--color-secondary)]/80"
+            className="block w-full rounded-xl px-4 py-3 text-left text-base font-semibold text-cocoa hover:bg-honey-tint/80"
           >
             Cart {hydrated && itemCount > 0 && `(${itemCount})`}
           </button>
