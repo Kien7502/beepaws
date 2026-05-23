@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Nunito } from "next/font/google";
+import { Fraunces, Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -7,10 +7,24 @@ import { CartProvider } from "@/components/cart/CartProvider";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { ScrollToTopButton } from "@/components/ui/ScrollToTopButton";
 
-const nunito = Nunito({
-  variable: "--font-nunito",
+// Warm Honey type system: Fraunces (display serif) for headings + brand
+// moments, Hanken Grotesk (humanist sans) for body. next/font assigns each a
+// CSS variable; globals.css wires those into @theme as --font-display /
+// --font-body so Tailwind's font-display / font-body utilities resolve to the
+// real font (and the literal var-name conflict — `--font-display: var(--font-display)` —
+// is avoided by giving next/font its own internal name).
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+});
+
+const hankenGrotesk = Hanken_Grotesk({
+  variable: "--font-hanken",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -30,7 +44,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${nunito.variable} antialiased min-h-screen flex flex-col`}>
+      <body className={`${fraunces.variable} ${hankenGrotesk.variable} antialiased min-h-screen flex flex-col`}>
         <CartProvider>
           <Header />
           <main className="flex-grow">

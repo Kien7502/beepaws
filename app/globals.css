@@ -39,7 +39,15 @@
   --color-secondary:     var(--honey-tint); /* was #fff3dc */
   --color-accent:        var(--cocoa);      /* was #7A4A1E warm brown */
 
-  --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+  /* ─── Type system ─────────────────────────────────────────────────────────
+     Fraunces (display serif) and Hanken Grotesk (humanist sans) are loaded
+     via next/font in app/layout.tsx, which sets --font-fraunces and
+     --font-hanken on body. We re-expose them here under the semantic names
+     the plan calls for so Tailwind utilities font-display / font-body / the
+     default font-sans (= body) all resolve to the live fonts. */
+  --font-display: var(--font-fraunces), ui-serif, Georgia, "Times New Roman", serif;
+  --font-body:    var(--font-hanken),   ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans:    var(--font-hanken),   ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
 :root {
