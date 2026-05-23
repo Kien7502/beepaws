@@ -16,14 +16,14 @@ import { ScrollToTopButton } from "@/components/ui/ScrollToTopButton";
 const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700", "800", "900"],
   display: "swap",
 });
 
 const hankenGrotesk = Hanken_Grotesk({
   variable: "--font-hanken",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700", "800", "900"],
   display: "swap",
 });
 
