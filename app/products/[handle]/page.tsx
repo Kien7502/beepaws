@@ -2,13 +2,10 @@ import { getFullProductForPage, getPaymentMethods, getProduct, getProducts } fro
 import { notFound } from "next/navigation";
 import VariantSelector from "@/components/product/VariantSelector";
 import { ProductGallery } from "@/components/product/ProductGallery";
-import { Truck, ShieldCheck, RefreshCcw, Package, Check } from "lucide-react";
-import Link from "next/link";
+import { Truck, ShieldCheck, RefreshCcw, Check } from "lucide-react";
 import { ProductDetailsSections } from "@/components/product/ProductDetailsSections";
-import { BundleBuyCard } from "@/components/product/BundleBuyCard";
-import { SocialProofBar } from "@/components/product/SocialProofBar";
+import { FinalCTASection } from "@/components/product/FinalCTASection";
 import { StickyAddToCart } from "@/components/product/StickyAddToCart";
-import { StatsTrustBar } from "@/components/product/StatsTrustBar";
 import { ComparisonTable } from "@/components/product/ComparisonTable";
 import { UseCaseCards } from "@/components/product/UseCaseCards";
 import { FAQSection } from "@/components/product/FAQSection";
@@ -18,8 +15,8 @@ import { PainPoints } from "@/components/product/PainPoints";
 import { Mechanism } from "@/components/product/Mechanism";
 import { SilentReassurance } from "@/components/product/SilentReassurance";
 import { GuaranteeBlock } from "@/components/product/GuaranteeBlock";
+import { BundleBuyCard } from "@/components/product/BundleBuyCard";
 import { WaveDivider } from "@/components/ui/WaveDivider";
-import { DescriptionAccordion } from "@/components/product/DescriptionAccordion";
 import { ProductMediaSync } from "@/components/product/ProductMediaSync";
 
 // ISR: revalidate via webhook → revalidateTag("products")
@@ -92,9 +89,10 @@ export default async function ProductPage({
 
   const beepaws = fullProduct?.normalized?.beepaws;
 
-  // Gate device-only sections (Mechanism, SilentReassurance) on Shopify tag.
-  // Add tag "device" to dental scaler / hardware products; consumables and
-  // accessories skip those sections automatically.
+  // Device-only sections (Mechanism + SilentReassurance) gate on the Shopify
+  // product tag "device". The seed-product-metafields script auto-applies
+  // this tag on each product run, so new device launches pick it up without
+  // a manual Admin step. Consumables stay untagged → those sections skip.
   const isDevice = product.tags?.includes("device") ?? false;
 
   const primaryCollectionHandle = fullProduct?.collections?.edges?.[0]?.node?.handle;
@@ -155,39 +153,91 @@ export default async function ProductPage({
           </div>
 
           <div className="flex flex-col lg:col-span-5 lg:pb-16" style={{ overflowAnchor: "none" }}>
-            <SocialProofBar />
+            {/* Eyebrow pill — per device reference §PRODUCT HERO. Brand
+                anchor before the headline. Phase 5 will let editors swap
+                this via metafield. */}
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-honey-tint px-3 py-1.5 text-[12px] font-extrabold uppercase tracking-[0.07em] text-clay">
+              Vet-grade technology · At home
+            </span>
 
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${
-                  product.availableForSale
-                    ? "bg-emerald-600/15 text-emerald-800"
-                    : "bg-[var(--color-accent)]/10 text-[var(--color-accent)]"
-                }`}
-              >
-                <Package className="h-3.5 w-3.5" aria-hidden />
-                {product.availableForSale ? "In stock" : "Unavailable"}
+            <h1 className="font-display mt-3 text-balance text-[33px] font-bold leading-[1.1] tracking-tight text-cocoa md:text-[40px]">
+              {product.title}
+            </h1>
+
+            {/* Rating row — pulled from beepaws.reviews aggregation when
+                present. SocialProofBar replaced inline for tighter layout. */}
+            {product.rating && (
+              <div className="mt-3 flex items-center gap-2 text-sm text-brown">
+                <span className="text-base tracking-widest text-gold">★★★★★</span>
+                <span>
+                  <span className="font-bold text-cocoa">{product.rating.avg.toFixed(1)}</span>
+                  <span> · </span>
+                  <span className="underline-offset-2 hover:underline">
+                    {product.rating.count.toLocaleString()}+ pet parents
+                  </span>
+                </span>
+              </div>
+            )}
+
+            {/* Price row — strikethrough + sale pill when compareAtPrice is set */}
+            <div className="mt-4 flex flex-wrap items-baseline gap-3">
+              <span className="font-display text-[33px] font-bold text-ink">
+                {new Intl.NumberFormat("en-US", {
+                  style: "currency",
+                  currency: minVariantPrice.currencyCode,
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                }).format(parseFloat(minVariantPrice.amount))}
               </span>
-              {hasPriceRange && (
-                <span className="text-xs font-semibold text-[var(--color-accent)]/70">
-                  Price varies by option
+              {product.compareAtPriceRange?.minVariantPrice &&
+                parseFloat(product.compareAtPriceRange.minVariantPrice.amount) >
+                  parseFloat(minVariantPrice.amount) && (
+                  <>
+                    <span className="text-lg text-brown/60 line-through">
+                      {new Intl.NumberFormat("en-US", {
+                        style: "currency",
+                        currency: product.compareAtPriceRange.minVariantPrice.currencyCode,
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                      }).format(parseFloat(product.compareAtPriceRange.minVariantPrice.amount))}
+                    </span>
+                    <span className="rounded-md bg-gold px-2 py-0.5 text-xs font-extrabold uppercase tracking-wider text-cocoa">
+                      Save{" "}
+                      {Math.round(
+                        ((parseFloat(product.compareAtPriceRange.minVariantPrice.amount) -
+                          parseFloat(minVariantPrice.amount)) /
+                          parseFloat(product.compareAtPriceRange.minVariantPrice.amount)) *
+                          100,
+                      )}
+                      %
+                    </span>
+                  </>
+                )}
+              {!product.availableForSale && (
+                <span className="rounded-full bg-cocoa/10 px-2.5 py-0.5 text-xs font-bold text-cocoa">
+                  Out of stock
                 </span>
               )}
             </div>
 
-            <h1 className="text-balance text-3xl font-extrabold leading-[1.15] tracking-tight text-[var(--color-foreground)] md:text-4xl xl:text-[2.5rem]">
-              {product.title}
-            </h1>
+            {/* Vet-bill anchor — frames the price against the $500-$1,400+ vet
+                quote per plan §"Anchoring rule". Always include the vet bill
+                comparison, never undercut against cheaper competitor devices. */}
+            <div className="mt-3 rounded-r-md border-l-[3px] border-gold bg-cream px-3 py-2.5 text-[13.5px] leading-snug text-brown">
+              The same ultrasonic technology your vet uses in the operatory —
+              the one they charge <b className="text-rose-soft">$500–$1,400+</b>{" "}
+              to use. Now it lives in your hand.
+            </div>
 
             {beepaws?.bullets && beepaws.bullets.length > 0 && (
-              <ul className="mt-6 space-y-2.5">
+              <ul className="mt-5 space-y-2.5">
                 {beepaws.bullets.map((b, i) => (
                   <li
                     key={i}
-                    className="flex items-start gap-2.5 text-sm text-[var(--color-foreground)]"
+                    className="flex items-start gap-2.5 text-sm text-cocoa"
                   >
                     <Check
-                      className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-green-icon)]"
+                      className="mt-0.5 h-4 w-4 shrink-0 text-clay"
                       strokeWidth={3}
                       aria-hidden
                     />
@@ -197,7 +247,12 @@ export default async function ProductPage({
               </ul>
             )}
 
-            <div className="mt-8 border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-[var(--elev-shadow-card)] md:p-8">
+            {/* Buy area — bundle tier picker + Add/Buy + payment row. The
+                Add-to-cart button carries id="sticky-cta-trigger"; the
+                StickyAddToCart bar reveals the moment that button's bottom
+                edge scrolls past viewport top (scroll listener, matches the
+                reference HTML's addBtn.getBoundingClientRect().bottom check). */}
+            <div className="mt-6">
               <VariantSelector
                 product={product}
                 addonProducts={recommendedBundleProducts}
@@ -206,90 +261,39 @@ export default async function ProductPage({
                 bundleTiers={beepaws?.bundleTiers}
               />
             </div>
-            {/* IntersectionObserver target — StickyAddToCart shows once this scrolls past viewport top */}
-            <div id="sticky-cta-sentinel" />
 
-            {recommendedBundleProducts.length > 0 && (
-              <div className="mt-6 border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--elev-shadow-card)] md:p-6">
-                <p className="text-sm font-extrabold uppercase tracking-[0.2em] text-[var(--color-accent)]/70">
-                  Frequently bought together
-                </p>
-                <BundleBuyCard
-                  currentProduct={product}
-                  products={recommendedBundleProducts}
-                />
-              </div>
-            )}
-
-            <DescriptionAccordion
-              descriptionHtml={descriptionBodyHtml}
-              techSpecs={beepaws?.techSpecs}
-              ingredients={beepaws?.ingredients}
-            />
-
-            <ul className="mt-8 grid gap-3 sm:grid-cols-3">
-              <li className="flex gap-3 border border-[var(--color-border)] bg-[var(--color-surface)]/80 p-4">
-                <Truck
-                  className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-green-icon)]"
-                  aria-hidden
-                />
-                <div>
-                  <p className="text-sm font-bold text-[var(--color-foreground)]">
-                    Free shipping
-                  </p>
-                  <p className="text-xs text-[var(--color-accent)]/70">
-                    Orders over $50
-                  </p>
-                </div>
+            {/* Mini-trust 3-up — matches device reference .mini-trust. Smaller,
+                closer to the CTA than the previous full trust grid. */}
+            <ul className="mt-5 grid grid-cols-3 gap-2 border-t border-line pt-4">
+              <li className="flex flex-col items-center gap-1 text-center text-[11.5px] font-bold text-brown">
+                <ShieldCheck className="h-5 w-5 text-clay" aria-hidden />
+                <span>Silent — won&apos;t scare<br />skittish pets</span>
               </li>
-              <li className="flex gap-3 border border-[var(--color-border)] bg-[var(--color-surface)]/80 p-4">
-                <RefreshCcw
-                  className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-green-icon)]"
-                  aria-hidden
-                />
-                <div>
-                  <p className="text-sm font-bold text-[var(--color-foreground)]">
-                    30-day returns
-                  </p>
-                  <p className="text-xs text-[var(--color-accent)]/70">
-                    Simple &amp; fair
-                  </p>
-                </div>
+              <li className="flex flex-col items-center gap-1 text-center text-[11.5px] font-bold text-brown">
+                <Truck className="h-5 w-5 text-clay" aria-hidden />
+                <span>Free shipping<br />over $50</span>
               </li>
-              <li className="flex gap-3 border border-[var(--color-border)] bg-[var(--color-surface)]/80 p-4">
-                <ShieldCheck
-                  className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-green-icon)]"
-                  aria-hidden
-                />
-                <div>
-                  <p className="text-sm font-bold text-[var(--color-foreground)]">
-                    Secure checkout
-                  </p>
-                  <p className="text-xs text-[var(--color-accent)]/70">
-                    Encrypted payment
-                  </p>
-                </div>
+              <li className="flex flex-col items-center gap-1 text-center text-[11.5px] font-bold text-brown">
+                <RefreshCcw className="h-5 w-5 text-clay" aria-hidden />
+                <span>30-day money-back<br />guarantee</span>
               </li>
             </ul>
 
-            <p className="mt-8 text-center text-sm text-[var(--color-accent)]/70 sm:text-left">
-              Questions?{" "}
-              <Link
-                href="/contact"
-                className="font-semibold text-[var(--color-primary)] underline-offset-2 hover:underline"
-              >
-                Contact us
-              </Link>
-            </p>
+            {/* Description/Specs accordion and "Questions? Contact us" link
+                intentionally removed per device reference — pinfo ends at the
+                mini-trust 3-up so the buy column stays focused on the decision.
+                Description/specs data still lives on the product; surface it
+                via metafields if it needs to render below the fold. */}
           </div>
         </div>
         </ProductMediaSync>
       </div>
 
       {/* ── Below-fold sections ─────────────────────────────────────────────────
-          Plan §Phase 4 order: gallery+bundle → PainPoints → StatsTrustBar →
-          Mechanism → SilentReassurance → BeforeAfterSlider → ComparisonTable →
-          UseCaseCards → UGCReviews → FAQSection → GuaranteeBlock.
+          Section order (matches device reference): gallery+bundle → PainPoints
+          → Mechanism → SilentReassurance → BeforeAfterSlider → ComparisonTable
+          → UseCaseCards → UGCReviews → FAQSection → GuaranteeBlock → FBT →
+          FinalCTASection.
 
           Mechanism + SilentReassurance are device-only; they render only when
           the Shopify product carries the "device" tag. The wave sequence
@@ -303,59 +307,51 @@ export default async function ProductPage({
         <PainPoints points={beepaws?.painPoints} />
       </div>
 
-      {/* cream → cocoa: into the trust-stats strip */}
-      <WaveDivider from="#FBF3E1" to="#4A2E16" />
-      <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
-        <StatsTrustBar stats={beepaws?.stats} />
-      </div>
-
       {isDevice ? (
         <>
-          {/* cocoa → paper: into Mechanism (device-only) */}
-          <WaveDivider from="#4A2E16" to="#FDF8EC" flip />
+          {/* cream → paper: into Mechanism (Reason + 3-step "how it works") */}
+          <WaveDivider from="#FBF3E1" to="#FDF8EC" />
           <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
             <Mechanism steps={beepaws?.mechanismSteps} />
-            {/* SilentReassurance sits flush against Mechanism (same paper bg,
-                no wave between) so they read as one "how it actually works"
-                arc per the reference. */}
+            {/* SilentReassurance shares the paper bg — they read as one arc. */}
             <SilentReassurance note={beepaws?.educationNote} />
           </div>
-
           {/* paper → cream: into BeforeAfterSlider */}
-          <WaveDivider from="#FDF8EC" to="#FBF3E1" />
+          <WaveDivider from="#FDF8EC" to="#FBF3E1" flip />
         </>
-      ) : (
-        <>
-          {/* Non-device path: skip Mechanism / SilentReassurance, go straight
-              from the stats strip into the before/after proof. */}
-          <WaveDivider from="#4A2E16" to="#FBF3E1" flip />
-        </>
-      )}
+      ) : null}
       <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
         <BeforeAfterSlider slides={beepaws?.beforeAfterSlides} />
       </div>
 
-      {/* cream → honey-tint: into ComparisonTable */}
+      {/* cream → honey-tint: into ComparisonTable + UseCaseCards */}
       <WaveDivider from="#FBF3E1" to="#F6E6C6" />
       <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
         <ComparisonTable rows={beepaws?.comparisonRows} />
         {/* UseCaseCards also lives on honey-tint — no wave between, the two
-            sections share the band visually. */}
+            sections share the band visually. UseCaseCards isn't in the
+            reference template; kept as a generic "who it's for" moment. */}
         <UseCaseCards cards={beepaws?.useCases} />
       </div>
 
-      {/* honey-tint → cocoa: into testimonials */}
-      <WaveDivider from="#F6E6C6" to="#4A2E16" />
+      {/* honey-tint → paper: into testimonials (paper per reference) */}
+      <WaveDivider from="#F6E6C6" to="#FDF8EC" flip />
       <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
         <UGCReviews reviews={beepaws?.reviews} />
       </div>
 
-      {/* cocoa → cream: into FAQ + GuaranteeBlock + product details */}
-      <WaveDivider from="#4A2E16" to="#FBF3E1" flip />
+      {/* paper → honey-tint: into FAQ (honey-tint per reference) */}
+      <WaveDivider from="#FDF8EC" to="#F6E6C6" />
       <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
         <FAQSection items={beepaws?.faqItems} />
-        {/* GuaranteeBlock and ProductDetailsSections share the cream band so
-            they continue seamlessly. */}
+      </div>
+
+      {/* honey-tint → cream: into Guarantee + product details + FBT */}
+      <WaveDivider from="#F6E6C6" to="#FBF3E1" flip />
+      <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
+        {/* GuaranteeBlock, ProductDetailsSections, and the FBT cross-sell
+            share the cream band so they continue seamlessly into the cocoa
+            final-CTA below. */}
         <GuaranteeBlock guarantee={beepaws?.guarantee} />
         <div className="bg-cream">
           {fullProduct?.normalized && (
@@ -363,7 +359,35 @@ export default async function ProductPage({
               <ProductDetailsSections normalized={fullProduct.normalized} />
             </div>
           )}
+          {recommendedBundleProducts.length > 0 && (
+            <section className="pb-14 md:pb-20">
+              <div className="container mx-auto max-w-3xl px-4 md:px-6">
+                <div className="mb-8 text-center">
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-clay">
+                    Frequently bought together
+                  </p>
+                  <h2 className="font-display mt-2 text-3xl font-bold text-cocoa md:text-[34px]">
+                    Complete the routine
+                  </h2>
+                </div>
+                <BundleBuyCard currentProduct={product} products={recommendedBundleProducts} />
+              </div>
+            </section>
+          )}
         </div>
+      </div>
+
+      {/* cream → cocoa: lean final CTA — one button, one price, one push. */}
+      <WaveDivider from="#FBF3E1" to="#4A2E16" />
+      <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
+        <FinalCTASection
+          fromPrice={new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: minVariantPrice.currencyCode,
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+          }).format(parseFloat(minVariantPrice.amount))}
+        />
       </div>
 
       <StickyAddToCart product={product} />

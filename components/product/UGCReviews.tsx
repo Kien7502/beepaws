@@ -172,20 +172,20 @@ export function UGCReviews({ reviews }: Props) {
     paused.current = false;
   }
 
-  // Warm Honey: cocoa bg (dark proof moment per reference). Cards stay
-  // light/warm so the testimonial copy reads with full warmth against the
-  // dark section.
+  // Warm Honey: paper bg (per reference — testimonials live on the same
+  // paper as Mechanism/PainPoints, not in a dark moment). Cards have a
+  // subtle line border and warm-brown shadow so they lift off the page.
   return (
-    <section className="bg-cocoa py-14 md:py-20 overflow-hidden">
+    <section className="bg-paper py-14 md:py-20 overflow-hidden">
       <div className="container mx-auto max-w-7xl px-4 md:px-6 mb-10">
-        <span className="block text-center text-xs font-extrabold uppercase tracking-[0.14em] text-gold mb-2">
-          Real pet parents
+        <span className="block text-center text-xs font-extrabold uppercase tracking-[0.14em] text-gold-deep mb-2.5">
+          From dog moms like you
         </span>
-        <h2 className="font-display mb-2 text-center text-3xl font-bold tracking-tight text-white md:text-4xl">
-          Don&apos;t just take our word for it
+        <h2 className="font-display mb-2 text-center text-3xl font-bold tracking-tight text-cocoa md:text-[33px]">
+          &ldquo;I guess I&apos;m a dentist now?!&rdquo;
         </h2>
-        <p className="text-center text-base text-[#CFCBBA]">
-          Real pet parents, real results. Drag to explore →
+        <p className="text-center text-base text-brown">
+          Real customer voices — drag to explore →
         </p>
       </div>
 
@@ -204,7 +204,7 @@ export function UGCReviews({ reviews }: Props) {
           {doubled.map((r, i) => (
             <div
               key={i}
-              className="w-72 shrink-0 flex flex-col bg-card text-sm shadow-[0_8px_24px_-12px_rgba(0,0,0,0.4)] rounded-2xl overflow-hidden border border-line"
+              className="w-72 shrink-0 flex flex-col bg-card text-sm shadow-[0_4px_20px_-10px_rgba(74,46,22,0.12)] rounded-2xl overflow-hidden border border-line"
             >
               <div className="flex items-start gap-3 p-4">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-honey-tint text-sm font-extrabold text-clay">

@@ -25,19 +25,27 @@ export function StickyAddToCart({ product }: { product: Product }) {
   const isAvailable = variant?.availableForSale;
 
   useEffect(() => {
-    // Sentinel is an invisible div placed right after the variant selector.
-    // Bar becomes visible once the sentinel scrolls above the viewport top.
-    const sentinel = document.getElementById("sticky-cta-sentinel");
-    if (!sentinel) return;
+    // Watch the Add-to-cart button itself, not a zero-height sentinel —
+    // matches the reference template's scroll handler exactly. Reveal sticky
+    // the moment the trigger button's bottom edge passes viewport top.
+    // Scroll listener (vs IntersectionObserver) because IO on zero-or-small
+    // targets is flaky across browsers; a `passive: true` scroll handler is
+    // cheap and predictable.
+    const trigger = document.getElementById("sticky-cta-trigger");
+    if (!trigger) return;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setVisible(!entry.isIntersecting && entry.boundingClientRect.top < 0);
-      },
-      { threshold: 0 },
-    );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
+    function check() {
+      if (!trigger) return;
+      setVisible(trigger.getBoundingClientRect().bottom < 0);
+    }
+
+    check(); // initialize for the case where the page loads scrolled past the trigger
+    window.addEventListener("scroll", check, { passive: true });
+    window.addEventListener("resize", check, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", check);
+      window.removeEventListener("resize", check);
+    };
   }, []);
 
   function onAdd() {

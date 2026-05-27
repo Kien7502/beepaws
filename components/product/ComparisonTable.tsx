@@ -25,13 +25,16 @@ export function ComparisonTable({ rows }: Props) {
       <div className="container mx-auto max-w-6xl px-4 md:px-6">
         <div className="flex flex-col items-center gap-12 md:flex-row md:items-start md:gap-20">
 
-          {/* Left — heading */}
+          {/* Left — heading (copy matches device reference template) */}
           <div className="shrink-0 text-center md:w-2/5 md:text-left">
-            <h2 className="font-display mb-4 text-4xl font-bold leading-tight tracking-tight text-cocoa md:text-5xl">
-              Why thousands of pet parents choose BeePaws
+            <span className="block text-xs font-extrabold uppercase tracking-[0.14em] text-gold-deep mb-2.5">
+              An honest comparison
+            </span>
+            <h2 className="font-display mb-4 text-4xl font-bold leading-tight tracking-tight text-cocoa md:text-[33px]">
+              How BeePaws compares to everything you&apos;ve already tried
             </h2>
             <p className="mx-auto max-w-xs leading-relaxed text-brown md:mx-0">
-              See how BeePaws stacks up against a $1,400 vet cleaning or those useless Greenies — no contest.
+              No &ldquo;us vs. a vague competitor.&rdquo; Here&apos;s the device against the real options on your table.
             </p>
           </div>
 

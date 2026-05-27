@@ -6,18 +6,16 @@ import { WaveDivider } from '@/components/ui/WaveDivider';
 import titleIcon from '@/app/Title_icon.png';
 
 const Footer = () => {
-  // Warm Honey re-skin: footer is the one deliberate green moment per the
-  // plan — moss bg with a 3px sage top stripe. Wave divider flows from
-  // cream (matches the FAQ section above) into moss. marginTop:"-16px" and
-  // the cream gap-fill bg stay — they hide any subpixel compositor seam
-  // between the FAQ wave and the footer block.
+  // Warm Honey re-skin: footer is the green moment. The wave curve fills with
+  // moss (same as the footer block) so it blends in seamlessly at the bottom;
+  // the sage band sits behind the wave curve as the visible accent. Hard edge
+  // sits at the top between the cocoa final-CTA section and the sage band —
+  // intentional, sage frames the wave.
   return (
-    <footer style={{ marginTop: "-16px", position: "relative", zIndex: 1, background: "#FBF3E1" }}>
-      <WaveDivider from="#FBF3E1" to="#2F3B2A" />
-      {/* 3px sage stripe as the fusion accent. marginTop:"-8px" overlaps the
-          wave bottom so the moss bg starts flush. */}
+    <footer style={{ marginTop: "-16px", position: "relative", zIndex: 1, background: "#4A2E16" }}>
+      <WaveDivider from="#8CA081" to="#2F3B2A" flip />
       <div
-        className="bg-moss border-t-[3px] border-sage pb-24"
+        className="bg-moss pb-24"
         style={{ marginTop: "-8px", position: "relative", zIndex: 1 }}
       >
         <div className="container mx-auto px-4 md:px-6 pt-10">

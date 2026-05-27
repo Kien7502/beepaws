@@ -7,11 +7,10 @@ import type { Product, ProductVariant } from "@/types/shopify";
 import type { BundleTierCopy } from "@/types/metafields";
 import type { PaymentMethods } from "@/lib/shopify/queries";
 import Button from "@/components/ui/Button";
-import { CheckCircle2, Info, ShoppingBag } from "lucide-react";
+import { CheckCircle2, Info, ShoppingBag, Loader2 } from "lucide-react";
 import { useCart } from "@/components/cart/CartProvider";
 import { useProductMedia } from "./ProductMediaSync";
 import { PaymentMethodsRow } from "./PaymentMethodsRow";
-import { ShopPayButton } from "./ShopPayButton";
 
 // Color name → hex map for swatch rendering. Falls back to text button when a
 // value isn't recognized, so the picker degrades gracefully for unusual colors.
@@ -232,6 +231,7 @@ export default function VariantSelector({
     Array(3).fill(variants[0]?.id ?? ""),
   );
   const [added, setAdded] = useState(false);
+  const [buyingNow, setBuyingNow] = useState(false);
   const { addItem, openDrawer } = useCart();
   // Destructure the stable setter so it can be a useEffect dep without firing
   // every time the parent's context value memo recreates (it would otherwise
@@ -247,7 +247,6 @@ export default function VariantSelector({
 
   const tier = TIERS[tierIdx];
   const currencyCode = selectedVariant?.price?.currencyCode || "USD";
-  const unitPrice = parseFloat(selectedVariant?.price?.amount || "0");
 
   // Resolve tier's addon references to actual products + their primary variants.
   // Unresolvable indexes (out-of-range) drop out — keeps the tier valid even
@@ -349,46 +348,47 @@ export default function VariantSelector({
     window.setTimeout(() => setAdded(false), 1800);
   }
 
-  // Compute the cart lines for the current selection (main units + resolved
-  // add-ons). Shared by Add-to-cart and Buy-with-Shop-Pay — keeps the bundle
-  // composition logic in one place.
-  function buildCartLines() {
-    const counts = new Map<string, number>();
-    for (let i = 0; i < tier.mainQty; i++) {
-      const vid = unitVariantIds[i] ?? selectedVariant.id;
-      counts.set(vid, (counts.get(vid) ?? 0) + 1);
+  // Buy It Now — bypass the local cart and POST the current bundle composition
+  // straight to /api/shopify/cart/checkout, then redirect to Shopify checkout.
+  // Same pattern as BundleBuyCard.onBuyNow so behavior stays consistent.
+  async function onBuyNow() {
+    if (!selectedVariant?.availableForSale || buyingNow) return;
+    setBuyingNow(true);
+    try {
+      const counts = new Map<string, number>();
+      for (let i = 0; i < tier.mainQty; i++) {
+        const vid = unitVariantIds[i] ?? selectedVariant.id;
+        counts.set(vid, (counts.get(vid) ?? 0) + 1);
+      }
+      const lines: { merchandiseId: string; quantity: number }[] = [];
+      for (const [merchandiseId, quantity] of counts) {
+        lines.push({ merchandiseId, quantity });
+      }
+      for (const addon of resolvedAddons) {
+        lines.push({ merchandiseId: addon.variant.id, quantity: addon.qty });
+      }
+      const res = await fetch("/api/shopify/cart/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lines }),
+      });
+      const data = (await res.json()) as { checkoutUrl?: string; error?: string };
+      if (!res.ok || !data.checkoutUrl) {
+        throw new Error(data.error || "Couldn't open checkout");
+      }
+      window.location.href = data.checkoutUrl;
+    } catch {
+      setBuyingNow(false);
     }
-    const lines: { merchandiseId: string; quantity: number }[] = [];
-    for (const [variantId, qty] of counts) {
-      lines.push({ merchandiseId: variantId, quantity: qty });
-    }
-    for (const addon of resolvedAddons) {
-      lines.push({ merchandiseId: addon.variant.id, quantity: addon.qty });
-    }
-    return lines;
   }
 
   const isAvailable = selectedVariant?.availableForSale;
 
   return (
     <div className="flex flex-col gap-6">
-
-      <div>
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--color-accent)]/70">
-          Your selection
-        </p>
-        <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <span className="text-4xl font-black tabular-nums tracking-tight text-[var(--color-primary)] md:text-5xl">
-            {formatMoney(totalPrice, currencyCode)}
-          </span>
-          {tier.mainQty > 1 && (
-            <span className="text-sm text-[var(--color-accent)]/70">
-              {formatMoney(unitPrice, currencyCode)}/unit
-            </span>
-          )}
-
-        </div>
-      </div>
+      {/* No "Your selection" total here — the hero price row above shows the
+          from-price, and the running total is baked into the Add-to-cart label
+          below. One price on screen at a time per the device reference. */}
 
       {/* Variant pickers — one section per Shopify product option.
           Color options render as circular swatches (diagonal split for
@@ -400,9 +400,9 @@ export default function VariantSelector({
         return (
           <div key={opt.name} className="space-y-2">
             <div className="flex flex-wrap items-baseline gap-x-2 text-sm">
-              <span className="font-bold text-[var(--color-foreground)]">{opt.name}</span>
+              <span className="font-bold text-cocoa">{opt.name}</span>
               {colorMode && selectedValue && (
-                <span className="text-[var(--color-accent)]/70">{selectedValue}</span>
+                <span className="text-brown">{selectedValue}</span>
               )}
             </div>
             <div className={colorMode ? "flex flex-wrap gap-2" : "flex flex-col gap-2"}>
@@ -419,8 +419,8 @@ export default function VariantSelector({
                         title={value}
                         className={`min-h-[44px] rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all ${
                           active
-                            ? "border-[var(--color-primary)] bg-[var(--color-primary)]/12 text-[var(--color-primary)] shadow-sm ring-2 ring-[var(--color-primary)]/20"
-                            : "border-[var(--color-border)] text-[var(--color-foreground)] hover:border-[var(--color-primary)]/50"
+                            ? "border-clay bg-[#FCFBF4] text-cocoa shadow-sm"
+                            : "border-line text-cocoa hover:border-clay/60"
                         }`}
                       >
                         {value}
@@ -437,8 +437,8 @@ export default function VariantSelector({
                       aria-pressed={active}
                       className={`relative flex h-12 w-12 items-center justify-center rounded-xl border transition-all ${
                         active
-                          ? "border-transparent bg-[#EFE6CF] ring-2 ring-[var(--color-primary)] ring-offset-2 ring-offset-[var(--background)]"
-                          : "border-[var(--color-border)] bg-[#EFE6CF] hover:border-[var(--color-primary)]/50"
+                          ? "border-transparent bg-[#EFE6CF] ring-2 ring-clay"
+                          : "border-line bg-[#EFE6CF] hover:border-clay/60"
                       }`}
                     >
                       <span
@@ -457,8 +457,8 @@ export default function VariantSelector({
                     onClick={() => pickOptionValue(opt.name, value)}
                     className={`w-full min-h-[44px] rounded-xl border-2 px-4 py-2.5 text-left text-sm font-bold transition-all ${
                       active
-                        ? "border-[var(--color-primary)] bg-[var(--color-primary)]/12 text-[var(--color-primary)] shadow-sm"
-                        : "border-[var(--color-border)] text-[var(--color-foreground)] hover:border-[var(--color-primary)]/50"
+                        ? "border-clay bg-[#FCFBF4] text-cocoa shadow-sm"
+                        : "border-line text-cocoa hover:border-clay/60"
                     }`}
                   >
                     {value}
@@ -472,11 +472,11 @@ export default function VariantSelector({
 
       <div>
         <div className="mb-4 flex items-center gap-3">
-          <div className="h-px flex-1 bg-[var(--color-border)]" />
-          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[var(--color-accent)]/70">
+          <div className="h-px flex-1 bg-line" />
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-brown">
             Bundle &amp; Save
           </span>
-          <div className="h-px flex-1 bg-[var(--color-border)]" />
+          <div className="h-px flex-1 bg-line" />
         </div>
 
         <div className="space-y-3">
@@ -502,92 +502,104 @@ export default function VariantSelector({
               <div
                 key={t.name}
                 onClick={() => selectTier(i)}
-                className={`relative cursor-pointer rounded-2xl border-2 p-4 transition-all ${
+                className={`relative cursor-pointer rounded-[13px] border-[1.8px] py-3.5 pl-12 pr-4 transition-all ${
                   selected
-                    ? "border-[var(--color-primary)] bg-[var(--color-primary)]/8 shadow-sm"
-                    : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-primary)]/40 hover:bg-[var(--color-primary)]/5"
+                    ? "border-clay bg-[#FCFBF4] shadow-sm"
+                    : "border-line bg-card hover:border-clay/60"
                 }`}
               >
+                {/* Radio: absolute, left-edge, vertically centered. Active state
+                    uses a radial-gradient fill so the dot has a thin white ring
+                    around the clay center, matching the reference template. */}
+                <span
+                  aria-hidden
+                  className={`absolute left-4 top-1/2 h-[19px] w-[19px] -translate-y-1/2 rounded-full border-2 transition-all ${
+                    selected ? "border-clay" : "border-[#cdc4a7] bg-white"
+                  }`}
+                  style={
+                    selected
+                      ? { background: "radial-gradient(circle, var(--color-clay) 0 44%, #fff 47%)" }
+                      : undefined
+                  }
+                />
+
+                {/* Floating flag — sits half-above the card border at top-right.
+                    Clay for "Most Chosen", cocoa for "Best Value". */}
                 {"popular" in t && t.popular && (
-                  <span className="absolute -top-3 right-4 rounded-full bg-[var(--color-primary)] px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-sm">
-                    Most Popular
+                  <span className="absolute -top-2.5 right-3.5 rounded-full bg-clay px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.06em] text-white">
+                    Most Chosen
                   </span>
                 )}
                 {"bestValue" in t && t.bestValue && (
-                  <span className="absolute -top-3 right-4 rounded-full bg-[var(--color-accent)] px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-sm">
+                  <span className="absolute -top-2.5 right-3.5 rounded-full bg-cocoa px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.06em] text-white">
                     Best Value
                   </span>
                 )}
 
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex flex-1 items-start gap-3">
-                    {/* iOS-style radio: filled circle with a tiny white dot when
-                        selected; outlined circle when not. Crisper read than
-                        ring+dot at the same color, which looked like a target. */}
-                    <span
-                      className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all ${
-                        selected
-                          ? "border-[var(--color-primary)] bg-[var(--color-primary)]"
-                          : "border-[var(--color-border)] bg-[var(--color-surface)]"
-                      }`}
-                    >
-                      {selected && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                      )}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-bold text-[var(--color-foreground)]">{tierCopy(i, "name")}</p>
-                      <p className="mt-0.5 text-xs text-[var(--color-accent)]/70">{tierCopy(i, "description")}</p>
-                    </div>
-                  </div>
-                  <span className="shrink-0 text-base font-extrabold tabular-nums text-[var(--color-primary)]">
+                {/* Title row: tier name + price on one baseline. Mixed case per
+                    reference — no uppercase, the floating flag carries the
+                    visual emphasis. */}
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-[15.5px] font-extrabold text-cocoa">
+                    {tierCopy(i, "name")}
+                  </span>
+                  <span className="text-[15.5px] font-extrabold tabular-nums text-cocoa">
                     {formatMoney(tTotal, currencyCode)}
                   </span>
                 </div>
 
-                {/* What's included — main qty + resolved addons, with thumbnails
-                    so customers see the actual items, not just titles. */}
-                <div className="mt-2 space-y-1.5 pl-8 text-xs text-[var(--color-accent)]/80">
-                  <div className="flex items-center gap-2">
-                    <span className="relative h-7 w-7 shrink-0 overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-surface-2)]">
+                <p className="mt-0.5 text-[12.5px] leading-snug text-brown">
+                  {tierCopy(i, "description")}
+                </p>
+
+                {/* What's included — main qty + resolved addons with thumbnails.
+                    Off-reference but kept because customers benefit from seeing
+                    the actual items per tier, especially when add-ons differ. */}
+                <ul className="mt-2 space-y-1 text-[12px] text-brown">
+                  <li className="flex items-center gap-2">
+                    <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded-md border border-line bg-cream">
                       <Image
                         src={product.images.edges[0]?.node?.url || "/product-placeholder.svg"}
                         alt=""
                         fill
                         className="object-cover"
-                        sizes="28px"
+                        sizes="24px"
                       />
                     </span>
                     <span className="min-w-0 truncate">
                       <span className="font-bold">{t.mainQty}×</span> {product.title}
                     </span>
-                  </div>
+                  </li>
                   {tAddons.map((a) => (
-                    <div key={a.product.id} className="flex items-center gap-2">
-                      <span className="relative h-7 w-7 shrink-0 overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-surface-2)]">
+                    <li key={a.product.id} className="flex items-center gap-2">
+                      <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded-md border border-line bg-cream">
                         <Image
                           src={a.product.images.edges[0]?.node?.url || "/product-placeholder.svg"}
                           alt=""
                           fill
                           className="object-cover"
-                          sizes="28px"
+                          sizes="24px"
                         />
                       </span>
                       <span className="min-w-0 truncate">
                         <span className="font-bold">{a.qty}×</span> {a.product.title}
                       </span>
-                    </div>
+                    </li>
                   ))}
-                </div>
+                </ul>
 
+                {/* Per-unit pickers (Family Pack: pick color per device). Not in
+                    the reference template but kept as a real feature for multi-
+                    pet bundles — only renders when the user has selected this
+                    tier AND it has more than one main unit. */}
                 {selected && multi && t.mainQty > 1 && (
-                  <div className="mt-3 space-y-3 border-t border-[var(--color-border)] pt-3">
+                  <div className="mt-3 space-y-3 border-t border-line pt-3">
                     {Array.from({ length: t.mainQty }, (_, j) => {
                       const uid = unitVariantIds[j] ?? variants[0]?.id ?? "";
                       const unitOpts = getUnitOptionValues(uid);
                       return (
                         <div key={j} className="space-y-1.5">
-                          <p className="text-[11px] font-extrabold uppercase tracking-wider text-[var(--color-accent)]/70">
+                          <p className="text-[11px] font-extrabold uppercase tracking-wider text-brown">
                             Unit #{j + 1}
                           </p>
                           {optionGroups.map((opt) => {
@@ -595,7 +607,7 @@ export default function VariantSelector({
                             const unitSelected = unitOpts[opt.name];
                             return (
                               <div key={opt.name} className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
-                                <span className="text-[11px] font-semibold text-[var(--color-accent)]/70">
+                                <span className="text-[11px] font-semibold text-brown">
                                   {opt.name}:
                                 </span>
                                 {opt.values.map((value) => {
@@ -616,8 +628,8 @@ export default function VariantSelector({
                                           aria-pressed={active}
                                           className={`relative flex h-9 w-9 items-center justify-center rounded-lg border bg-[#EFE6CF] transition-all ${
                                             active
-                                              ? "border-transparent ring-2 ring-[var(--color-primary)]"
-                                              : "border-[var(--color-border)] hover:border-[var(--color-primary)]/50"
+                                              ? "border-transparent ring-2 ring-clay"
+                                              : "border-line hover:border-clay/60"
                                           }`}
                                         >
                                           <span
@@ -639,8 +651,8 @@ export default function VariantSelector({
                                       }}
                                       className={`rounded-lg border-2 px-2.5 py-1 text-xs font-bold transition-all ${
                                         active
-                                          ? "border-[var(--color-primary)] bg-[var(--color-primary)]/12 text-[var(--color-primary)]"
-                                          : "border-[var(--color-border)] text-[var(--color-foreground)] hover:border-[var(--color-primary)]/50"
+                                          ? "border-clay bg-[#FCFBF4] text-cocoa"
+                                          : "border-line text-cocoa hover:border-clay/60"
                                       }`}
                                     >
                                       {value}
@@ -664,49 +676,58 @@ export default function VariantSelector({
       <div>
 
         {educationNote && (
-          <div className="mb-3 flex items-start gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)]/60 px-3 py-2.5 text-xs leading-relaxed text-[var(--color-accent)]/80">
-            <Info className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-primary)]" aria-hidden />
+          <div className="mb-3 flex items-start gap-2 rounded-xl border border-line bg-cream px-3 py-2.5 text-xs leading-relaxed text-brown">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-clay" aria-hidden />
             <span>{educationNote}</span>
           </div>
         )}
 
+        {/* id="sticky-cta-trigger" — StickyAddToCart watches THIS button's
+            bottom edge (not a separate zero-height sentinel, which was
+            unreliable: IntersectionObserver on a 0-height div reports
+            isIntersecting:false constantly in some browsers and never fires
+            callbacks after the initial one). Sticky reveals the moment this
+            button's bottom passes viewport top — matches reference HTML's
+            `addBtn.getBoundingClientRect().bottom < 0` check exactly. */}
         <Button
+          id="sticky-cta-trigger"
           type="button"
           variant="primary"
           size="lg"
           fullWidth
           disabled={!isAvailable}
           leftIcon={<ShoppingBag size={22} />}
-          className="min-h-[52px] rounded-xl text-base md:text-lg"
+          className="min-h-[52px] rounded-xl text-base md:text-lg !bg-gold !text-white hover:!bg-gold-deep"
           onClick={onAddToCart}
         >
-          {isAvailable ? "Add to cart" : "Out of stock"}
+          {isAvailable ? `Add to cart — ${formatMoney(totalPrice, currencyCode)}` : "Out of stock"}
         </Button>
 
-        {/* Compact trust line — sits flush under the CTA at the decision moment.
-            The richer 3-card trust grid (Free shipping / Returns / Secure)
-            still renders further down the page for SEO + reinforcement. */}
-        <p className="mt-2.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs font-medium text-[var(--color-accent)]/70">
+        {/* Buy It Now — outline secondary CTA per device reference. Skips the
+            local cart and goes straight to Shopify checkout with the current
+            bundle composition. */}
+        <button
+          type="button"
+          disabled={!isAvailable || buyingNow}
+          onClick={onBuyNow}
+          className="mt-2.5 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border-2 border-cocoa bg-transparent px-4 py-2.5 text-base font-extrabold text-cocoa transition-colors hover:bg-cocoa hover:text-white disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-cocoa md:text-lg"
+        >
+          {buyingNow && <Loader2 size={18} className="animate-spin" />}
+          {buyingNow ? "Opening checkout…" : "Buy it now"}
+        </button>
+
+        {/* Compact trust line — sits flush under the CTA at the decision moment. */}
+        <p className="mt-2.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs font-medium text-brown">
           <span>30-day money-back</span>
-          <span aria-hidden className="text-[var(--color-accent)]/40">·</span>
+          <span aria-hidden className="text-brown/40">·</span>
           <span>Free shipping over $50</span>
-          <span aria-hidden className="text-[var(--color-accent)]/40">·</span>
+          <span aria-hidden className="text-brown/40">·</span>
           <span>Secure checkout</span>
         </p>
 
-        {/* Shop Pay accelerated checkout — only renders when the shop has
-            SHOP_PAY enabled in Shopify Payments. POSTs the current selection
-            directly to the Shopify cart API and redirects to the hosted
-            checkout where Shop Pay is the express-checkout option. Skips the
-            in-app cart entirely. */}
-        {(paymentMethods.wallets.includes("SHOP_PAY") ||
-          paymentMethods.wallets.includes("SHOPIFY_PAY")) && (
-          <ShopPayButton buildLines={buildCartLines} disabled={!isAvailable} />
-        )}
-
-        {/* Payment processor badges — card brands + non-Shop-Pay wallets.
-            Shop Pay is intentionally excluded here since it has its own
-            dedicated button above. */}
+        {/* Payment processor badges — card brands + wallets. ShopPay button
+            removed per redesign; ShopPay appears on the Shopify checkout
+            page as an express-checkout option for users who use it. */}
         <PaymentMethodsRow methods={paymentMethods} />
 
 

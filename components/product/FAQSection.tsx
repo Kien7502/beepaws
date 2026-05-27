@@ -44,19 +44,19 @@ export function FAQSection({ items }: Props) {
   const [open, setOpen] = useState<number | null>(null);
   const data = items && items.length > 0 ? items : DEFAULT_FAQ_ITEMS;
 
-  // Warm Honey: cream bg, white question cards with hairline border. Per
-  // reference: cocoa question text, gold-deep "+" that rotates to "x" on
-  // open, brown answer text. Display serif on the heading.
+  // Warm Honey: honey-tint section per reference. White question cards
+  // with hairline border, cocoa question text, gold-deep "+" rotating on
+  // open, brown answer text. Copy from device reference template.
   return (
-    <section className="bg-cream py-14 md:py-20">
+    <section className="bg-honey-tint py-14 md:py-20">
       <div className="container mx-auto max-w-3xl px-4 md:px-6">
 
         <div className="mb-12 text-center">
-          <span className="block text-xs font-extrabold uppercase tracking-[0.14em] text-gold-deep mb-2">
-            Questions
+          <span className="block text-xs font-extrabold uppercase tracking-[0.14em] text-gold-deep mb-2.5">
+            Honest answers
           </span>
-          <h2 className="font-display text-4xl md:text-5xl font-bold tracking-tight text-cocoa leading-tight">
-            Frequently asked
+          <h2 className="font-display text-3xl md:text-[33px] font-bold tracking-tight text-cocoa leading-tight">
+            The questions every careful pet parent asks
           </h2>
         </div>
 
