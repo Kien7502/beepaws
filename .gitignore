@@ -43,3 +43,6 @@ yarn-error.log*
 next-env.d.ts
 
 /plans
+
+# scripts — kept local while we polish the tooling; re-include later
+/scripts
