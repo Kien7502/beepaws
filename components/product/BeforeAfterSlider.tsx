@@ -12,33 +12,35 @@ import type { BeforeAfterSlide } from "@/types/metafields";
 // drag-reveal interaction. Each panel keeps its own drag-pct, so navigating
 // back to a previously-viewed pet preserves the user's drag position.
 
+// Lorem ipsum placeholders — set beepaws.before_after_slides to override
+// with real customer stories and image URLs.
 const DEFAULT_SLIDES: BeforeAfterSlide[] = [
   {
     beforeImageUrl: "",
     afterImageUrl: "",
     beforeLabel: "Before",
-    afterLabel: "After 3 sessions",
-    petName: "Bella, 4yr Chihuahua",
+    afterLabel: "After",
+    petName: "Placeholder pet one",
     caption:
-      "\"I cannot tell you how satisfying it was to see that hard plaque come off.\"",
+      "\"Lorem ipsum dolor sit amet, consectetur adipiscing elit — placeholder caption one.\"",
   },
   {
     beforeImageUrl: "",
     afterImageUrl: "",
     beforeLabel: "Before",
-    afterLabel: "After 1 session",
-    petName: "Cooper, 7yr Golden Retriever",
+    afterLabel: "After",
+    petName: "Placeholder pet two",
     caption:
-      "\"The brown line at his gums was gone in one sitting — I genuinely couldn't believe it.\"",
+      "\"Ut enim ad minim veniam, quis nostrud exercitation ullamco — placeholder caption two.\"",
   },
   {
     beforeImageUrl: "",
     afterImageUrl: "",
     beforeLabel: "Before",
-    afterLabel: "After 2 sessions",
-    petName: "Mochi, 9yr Persian Cat",
+    afterLabel: "After",
+    petName: "Placeholder pet three",
     caption:
-      "\"He used to bolt at the sight of the toothbrush. He fell asleep during the second pass.\"",
+      "\"Duis aute irure dolor in reprehenderit — placeholder caption three.\"",
   },
 ];
 
@@ -51,9 +53,9 @@ interface Props {
 
 export function BeforeAfterSlider({
   slides,
-  eyebrow = "Real results · drag to reveal",
-  heading = "The before-and-after pictures speak for themselves",
-  lead = "Real, un-retouched photos from pet parents — the only proof this audience trusts.",
+  eyebrow = "Lorem ipsum",
+  heading = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+  lead = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.",
 }: Props) {
   const data = slides && slides.length > 0 ? slides : DEFAULT_SLIDES;
   const [activeIdx, setActiveIdx] = useState(0);
@@ -66,12 +68,12 @@ export function BeforeAfterSlider({
   }
 
   return (
-    <section className="bg-cream py-14 md:py-20">
+    <section className="bg-card py-14 md:py-20">
       <div className="container mx-auto max-w-3xl px-4 md:px-6">
-        <span className="block text-center text-xs font-extrabold uppercase tracking-[0.14em] text-gold-deep mb-2.5">
+        <span className="block text-center text-xs font-bold uppercase tracking-[0.14em] text-gold-deep mb-2.5">
           {eyebrow}
         </span>
-        <h2 className="font-display mx-auto mb-3 max-w-2xl text-center text-3xl font-bold leading-tight tracking-tight text-cocoa md:text-[33px]">
+        <h2 className="font-display mx-auto mb-3 max-w-2xl text-center text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[33px]">
           {heading}
         </h2>
         <p className="mx-auto mb-10 max-w-xl text-center text-base text-brown">

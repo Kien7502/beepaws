@@ -3,6 +3,12 @@
 type Props = {
   from: string;
   to: string;
+  /** Optional override for the FRONT (opaque, fastest-scrolling) wave layer's
+   *  fill. The two background layers always fill with `to` at low opacity.
+   *  Use when you want the back ripples to differ in hue from the dominant
+   *  front curve — e.g. footer wave: sage ripples behind a moss front that
+   *  blends into the moss footer block. Defaults to `to`. */
+  frontColor?: string;
   flip?: boolean;
   simple?: boolean;
 };
@@ -17,9 +23,10 @@ const CSS = `
   }
 `;
 
-export function WaveDivider({ from, to, flip = false, simple = false }: Props) {
+export function WaveDivider({ from, to, frontColor, flip = false, simple = false }: Props) {
   const fwd = flip ? "reverse" : "normal";
   const rev = flip ? "normal" : "reverse";
+  const front = frontColor ?? to;
 
   const layer = (
     duration: string,
@@ -28,6 +35,7 @@ export function WaveDivider({ from, to, flip = false, simple = false }: Props) {
     opacity: number,
     height: string,
     dir: string,
+    fill: string,
   ) => (
     <div
       style={{
@@ -44,7 +52,7 @@ export function WaveDivider({ from, to, flip = false, simple = false }: Props) {
         style={{ display: "block", width: "100%", height }}
         xmlns="http://www.w3.org/2000/svg"
       >
-        <path d={path} fill={to} fillOpacity={opacity} />
+        <path d={path} fill={fill} fillOpacity={opacity} />
       </svg>
     </div>
   );
@@ -55,9 +63,9 @@ export function WaveDivider({ from, to, flip = false, simple = false }: Props) {
       {/* marginBottom:"-2px" ensures the next section physically overlaps this div,
           closing any 1px subpixel compositor gap at non-integer zoom levels */}
       <div style={{ background: from, position: "relative", height: "110px", overflow: "hidden", marginBottom: "-2px" }}>
-        {!simple && layer("32s", "-14s", PATH_B, 0.3, "80px",  fwd)}
-        {!simple && layer("22s", "-7s",  PATH_A, 0.6, "95px",  rev)}
-        {layer("15s", "0s",   PATH_A, 1.0, "110px", fwd)}
+        {!simple && layer("32s", "-14s", PATH_B, 0.3, "80px",  fwd, to)}
+        {!simple && layer("22s", "-7s",  PATH_A, 0.6, "95px",  rev, to)}
+        {layer("15s", "0s",   PATH_A, 1.0, "110px", fwd, front)}
       </div>
     </>
   );

@@ -1,26 +1,27 @@
 import type { PainPoint } from "@/types/metafields";
 
-// Plan §Phase 4: agitates the three real problems pet parents are hitting
-// before the buy moment. Defaults baked from the device reference; editors
-// override per-product via beepaws.pain_points metafield.
+// Defaults are intentional Lorem ipsum placeholders so an unedited product
+// reads as unedited at a glance. Per-product copy lives in the
+// beepaws.pain_points metafield (+ optional eyebrow/heading/lead override
+// props if a product needs more than per-item variation).
 const DEFAULT_PAIN_POINTS: PainPoint[] = [
   {
     number: "01",
-    title: "The breath you can't ignore",
+    title: "Lorem ipsum #1",
     description:
-      "It's not \"doggy breath\" anymore. You turn your face away when she yawns near you in bed — and you feel terrible for it.",
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
   },
   {
     number: "02",
-    title: "The $1,400 sticker shock",
+    title: "Lorem ipsum #2",
     description:
-      "The vet quote landed somewhere between $500 and $1,400+ — bloodwork, fluids, per-tooth extractions stacked on top.",
+      "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
   },
   {
     number: "03",
-    title: "The fear that won't quiet down",
+    title: "Lorem ipsum #3",
     description:
-      "A \"routine\" cleaning means general anesthesia. For a small breed or a senior dog, that's a risk you keep replaying at 2 a.m.",
+      "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
   },
 ];
 
@@ -35,19 +36,19 @@ interface Props {
 
 export function PainPoints({
   points,
-  eyebrow = "If this sounds like you",
-  heading = "You smelled it first. Then you saw the brown crust. Then you saw the bill.",
-  lead = "Three problems hit at once — and most pet parents feel stuck between all of them.",
+  eyebrow = "Lorem ipsum",
+  heading = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+  lead = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.",
 }: Props) {
   const data = points && points.length > 0 ? points : DEFAULT_PAIN_POINTS;
 
   return (
-    <section className="bg-cream py-14 md:py-20">
+    <section className="bg-paper py-14 md:py-20">
       <div className="container mx-auto max-w-6xl px-4 md:px-6">
-        <span className="block text-center text-xs font-extrabold uppercase tracking-[0.14em] text-gold-deep mb-2.5">
+        <span className="block text-center text-xs font-bold uppercase tracking-[0.14em] text-gold-deep mb-2.5">
           {eyebrow}
         </span>
-        <h2 className="font-display mx-auto mb-3 max-w-3xl text-center text-3xl font-bold leading-tight tracking-tight text-cocoa md:text-[33px]">
+        <h2 className="font-display mx-auto mb-3 max-w-3xl text-center text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[33px]">
           {heading}
         </h2>
         <p className="mx-auto mb-10 max-w-xl text-center text-base text-brown">
@@ -63,7 +64,7 @@ export function PainPoints({
               <div className="font-display mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-honey-tint text-[15px] font-bold text-gold-deep">
                 {p.number}
               </div>
-              <h3 className="font-display text-lg font-bold text-cocoa md:text-[19px] mb-1.5">
+              <h3 className="font-display text-lg font-semibold text-cocoa md:text-[19px] mb-1.5">
                 {p.title}
               </h3>
               <p className="text-[14.5px] leading-relaxed text-brown">

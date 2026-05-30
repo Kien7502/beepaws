@@ -88,7 +88,9 @@ export function ProductDetailsSections({
   }
 
   return (
-    <section className="mt-12 grid grid-cols-1 gap-4 border-t border-[var(--color-border)] pt-10 md:mt-16 md:gap-6 md:pt-12">
+    <section className="border-t border-line bg-sand py-14 md:py-20">
+      <div className="container mx-auto max-w-7xl px-4 md:px-6">
+        <div className="grid grid-cols-1 gap-4 md:gap-6">
       {normalized.usage_guide && (
         <article className="rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 md:p-7">
           <h2 className="text-xl font-extrabold tracking-tight text-[var(--color-foreground)] md:text-2xl">
@@ -147,6 +149,8 @@ export function ProductDetailsSections({
         </article>
       )}
 
+        </div>
+      </div>
     </section>
   );
 }

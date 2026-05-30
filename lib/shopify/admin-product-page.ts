@@ -255,8 +255,16 @@ function normalizeMetafields(metafields: AdminMetafield[]) {
     beforeAfterSlides: parseBeepaws("before_after_slides"),
     bundleTiers:      parseBeepaws("bundle_tiers"),
     painPoints:       parseBeepaws("pain_points"),
+    painPointsIntro:  parseBeepaws("pain_points_intro"),
     mechanismSteps:   parseBeepaws("mechanism_steps"),
+    mechanismIntro:   parseBeepaws("mechanism_intro"),
     guarantee:        parseBeepaws("guarantee"),
+    useCasesIntro:    parseBeepaws("use_cases_intro"),
+    comparisonIntro:  parseBeepaws("comparison_intro"),
+    faqIntro:         parseBeepaws("faq_intro"),
+    reviewsIntro:     parseBeepaws("reviews_intro"),
+    beforeAfterIntro: parseBeepaws("before_after_intro"),
+    finalCtaCopy:     parseBeepaws("final_cta_copy"),
   };
 
   return {

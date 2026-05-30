@@ -3,6 +3,12 @@ export interface ComparisonRow {
   beepaws: boolean;
   vet: boolean;
   other: boolean;
+  // Optional text values render in place of the ✓/✕ icon for that cell — used
+  // for rows like "One-time cost" ($59 / $500–$1,400+ / Ongoing). The boolean
+  // still drives the cell color (true = clay, false = rose). Blank = icon.
+  beepawsText?: string;
+  vetText?: string;
+  otherText?: string;
 }
 
 export interface UseCaseCard {
@@ -66,10 +72,35 @@ export interface PainPoint {
   description: string;
 }
 
+// Section-level intro copy for PainPoints — stored as a single-entry list
+// (index 0) like Guarantee. Empty/missing fields fall back to the component's
+// in-code defaults. Keeps the per-item PainPoint[] separate from the header.
+export interface PainPointsIntro {
+  eyebrow?: string;
+  heading?: string;
+  lead?: string;
+}
+
 export interface MechanismStep {
   number: string;
   title: string;
   description: string;
+}
+
+// Section-level intro copy for Mechanism — single-entry list (index 0).
+// paradoxParagraph1/2 map to the component's paradoxParagraphs[] (the page
+// reconstructs the array). Missing fields fall back to in-code defaults.
+export interface MechanismIntro {
+  introEyebrow?: string;
+  introHeading?: string;
+  introLead?: string;
+  paradoxHeading?: string;
+  paradoxParagraph1?: string;
+  paradoxParagraph2?: string;
+  paradoxPullQuote?: string;
+  stepsHeading?: string;
+  stepsLead?: string;
+  feelsBrokenHeading?: string;
 }
 
 export interface Guarantee {
@@ -77,6 +108,26 @@ export interface Guarantee {
   sealLabel: string;
   title: string;
   description: string;
+}
+
+// Generic section-header copy (eyebrow + heading + optional lead), stored as a
+// single-entry list (index 0) like Guarantee. Shared by UseCases, Comparison,
+// FAQ, Reviews, and Before/After. Empty/missing fields fall back to each
+// component's in-code Lorem default per-field.
+export interface SectionIntro {
+  eyebrow?: string;
+  heading?: string;
+  lead?: string;
+  // Comparison table only — small print rendered under the table.
+  footnote?: string;
+}
+
+// Final CTA section copy — heading + body + the small-print promise line.
+// The guarantee seal/copy is a separate metafield (Guarantee).
+export interface FinalCtaCopy {
+  heading?: string;
+  body?: string;
+  smallPrint?: string;
 }
 
 export interface BeepawsMetafields {
@@ -95,6 +146,15 @@ export interface BeepawsMetafields {
   beforeAfterSlides: BeforeAfterSlide[] | null;
   bundleTiers: BundleTierCopy[] | null;
   painPoints: PainPoint[] | null;
+  painPointsIntro: PainPointsIntro[] | null;
   mechanismSteps: MechanismStep[] | null;
+  mechanismIntro: MechanismIntro[] | null;
   guarantee: Guarantee[] | null;
+  // Section-header copy for the remaining sections (single-entry lists).
+  useCasesIntro: SectionIntro[] | null;
+  comparisonIntro: SectionIntro[] | null;
+  faqIntro: SectionIntro[] | null;
+  reviewsIntro: SectionIntro[] | null;
+  beforeAfterIntro: SectionIntro[] | null;
+  finalCtaCopy: FinalCtaCopy[] | null;
 }

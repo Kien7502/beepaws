@@ -1,27 +1,29 @@
 import type { UseCaseCard } from "@/types/metafields";
 
+// Lorem ipsum placeholders — set the beepaws.use_cases metafield to override.
+// Per-card emoji + gradient colors stay set so the layout reads correctly.
 const DEFAULT_USE_CASES: UseCaseCard[] = [
   {
-    emoji: "😴",
-    label: "Stress-free",
-    title: "For anxious dogs",
-    description: "Silent ultrasonic frequency — no scary whirring or vibration. Your dog stays calm from start to finish.",
+    emoji: "🟡",
+    label: "Placeholder",
+    title: "Lorem ipsum one",
+    description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
     from: "#f5a800",
     to: "#fff3dc",
   },
   {
-    emoji: "🦷",
-    label: "All sizes",
-    title: "Any breed, any age",
-    description: "From tiny Chihuahuas to large Labradors, BeePaws safely breaks down tartar on every dog.",
+    emoji: "🟡",
+    label: "Placeholder",
+    title: "Lorem ipsum two",
+    description: "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
     from: "#8b5e2a",
     to: "#fff3dc",
   },
   {
-    emoji: "🏠",
-    label: "At home",
-    title: "Skip the vet bill",
-    description: "Professional-grade tartar removal at home. Save up to $1,400 on anesthesia cleanings — no appointment needed.",
+    emoji: "🟡",
+    label: "Placeholder",
+    title: "Lorem ipsum three",
+    description: "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
     from: "#3d2400",
     to: "#fff3dc",
   },
@@ -29,9 +31,17 @@ const DEFAULT_USE_CASES: UseCaseCard[] = [
 
 interface Props {
   cards?: UseCaseCard[] | null;
+  eyebrow?: string;
+  heading?: string;
+  lead?: string;
 }
 
-export function UseCaseCards({ cards }: Props) {
+export function UseCaseCards({
+  cards,
+  eyebrow = "Lorem ipsum",
+  heading = "Lorem ipsum dolor sit amet, consectetur adipiscing.",
+  lead = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+}: Props) {
   const data = cards && cards.length > 0 ? cards : DEFAULT_USE_CASES;
 
   // Warm Honey: honey-tint section bg, white cards with hairline border.
@@ -39,16 +49,16 @@ export function UseCaseCards({ cards }: Props) {
   // and bookmark accent — the metafield contract is preserved so editors
   // can keep authoring colors. Headings use the display serif.
   return (
-    <section className="bg-honey-tint py-14 md:py-20">
+    <section className="bg-sand py-14 md:py-20">
       <div className="container mx-auto max-w-7xl px-4 md:px-6">
-        <span className="block text-center text-xs font-extrabold uppercase tracking-[0.14em] text-gold-deep mb-2">
-          Who it's for
+        <span className="block text-center text-xs font-bold uppercase tracking-[0.14em] text-gold-deep mb-2">
+          {eyebrow}
         </span>
-        <h2 className="font-display mb-2 text-center text-3xl font-bold tracking-tight text-cocoa md:text-4xl">
-          Made for every kind of pet parent
+        <h2 className="font-display mb-2 text-center text-3xl font-semibold tracking-tight text-cocoa md:text-4xl">
+          {heading}
         </h2>
         <p className="mb-10 text-center text-base text-brown">
-          Whether your dog is anxious, big, or just overdue for a cleaning.
+          {lead}
         </p>
 
         <div className="grid gap-6 sm:grid-cols-3">
@@ -76,7 +86,7 @@ export function UseCaseCards({ cards }: Props) {
               {/* Content */}
               <div className="flex flex-col gap-2 p-6">
                 <div className="h-1 w-8 rounded-full" style={{ background: c.from }} />
-                <h3 className="font-display text-xl font-bold text-cocoa">{c.title}</h3>
+                <h3 className="font-display text-xl font-semibold text-cocoa">{c.title}</h3>
                 <p className="text-[14.5px] leading-relaxed text-brown">{c.description}</p>
               </div>
             </div>

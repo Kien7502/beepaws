@@ -21,6 +21,9 @@
   --color-rose-soft:  var(--rose-soft);
   --color-sage:       var(--sage);
   --color-moss:       var(--moss);
+  --color-toffee:     var(--toffee);
+  --color-bark:       var(--bark);
+  --color-sand:       var(--sand);
 
   /* ─── Semantic tokens (existing component code uses these) ────────────────
      Each one points at a Warm Honey color, so swapping the palette here
@@ -67,6 +70,9 @@
   --rose-soft:  #BC5E38;   /* warm alert tone — never harsh red           */
   --sage:       #8CA081;   /* soft sage — fusion accent (footer stripe)   */
   --moss:       #2F3B2A;   /* deep sage — footer bg, plant-brand nod      */
+  --toffee:     #E5C58C;   /* mid toffee — Mechanism band, warm but not dark */
+  --bark:       #5E3C22;   /* warm-dark brown — Final CTA, softer than cocoa */
+  --sand:       #F2E7CC;   /* deepened cream — section bg paired w/ white      */
 
   /* ─── Semantic token values (referenced by @theme inline above) ──────── */
   --background: var(--paper);

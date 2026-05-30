@@ -91,23 +91,27 @@ function swatchBackground(colors: string[]): string {
 // IMPORTANT: tier totals here are raw sums (mainPrice * qty + addon prices).
 // Visual "savings" tags are placeholders; actual checkout discounts must be
 // configured as Shopify Automatic Discounts to take effect.
+// Tier structure (mainQty + addonRefs + popular/bestValue flags) is fixed
+// because the bundle UX depends on it. Names + descriptions are intentional
+// Lorem ipsum placeholders so an unedited product reads as unedited — set
+// the beepaws.bundle_tiers metafield to override per-product copy.
 const TIERS = [
   {
-    name: "Starter Kit",
-    description: "Just the essential — risk-free with our 30-day guarantee.",
+    name: "Lorem ipsum tier 1",
+    description: "Lorem ipsum dolor sit amet — placeholder tier description.",
     mainQty: 1,
     addonRefs: [] as { idx: number; qty: number }[],
   },
   {
-    name: "Complete Care Kit",
-    description: "The full at-home routine — main product plus a daily-care add-on.",
+    name: "Lorem ipsum tier 2",
+    description: "Consectetur adipiscing elit — placeholder tier description.",
     mainQty: 1,
     addonRefs: [{ idx: 0, qty: 1 }],
     popular: true,
   },
   {
-    name: "Family Pack",
-    description: "For households with 2+ pets — share the love.",
+    name: "Lorem ipsum tier 3",
+    description: "Sed do eiusmod tempor — placeholder tier description.",
     mainQty: 2,
     addonRefs: [{ idx: 1, qty: 1 }],
     bestValue: true,
@@ -239,11 +243,20 @@ export default function VariantSelector({
   // changes → this effect re-runs → sets gallery back to current variant's
   // image → user's click is undone). The setter itself is identity-stable via
   // a ref inside ProductMediaSync, so depending on it is loop-free.
-  const { setActiveByUrl } = useProductMedia();
+  const { setActiveByUrl, setActiveVariant } = useProductMedia();
 
   useEffect(() => {
     setActiveByUrl(selectedVariant?.image?.url ?? null);
-  }, [selectedVariant, setActiveByUrl]);
+    // Publish the selected variant's price + availability so DynamicHeroPrice
+    // can re-render the hero price when the user picks a different variant.
+    if (selectedVariant) {
+      setActiveVariant({
+        amount: selectedVariant.price.amount,
+        currencyCode: selectedVariant.price.currencyCode,
+        availableForSale: selectedVariant.availableForSale,
+      });
+    }
+  }, [selectedVariant, setActiveByUrl, setActiveVariant]);
 
   const tier = TIERS[tierIdx];
   const currencyCode = selectedVariant?.price?.currencyCode || "USD";
@@ -417,7 +430,7 @@ export default function VariantSelector({
                         type="button"
                         onClick={() => pickOptionValue(opt.name, value)}
                         title={value}
-                        className={`min-h-[44px] rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all ${
+                        className={`min-h-[44px] rounded-xl border-[1.8px] px-4 py-2.5 text-sm font-bold transition-all ${
                           active
                             ? "border-clay bg-[#FCFBF4] text-cocoa shadow-sm"
                             : "border-line text-cocoa hover:border-clay/60"
@@ -435,7 +448,7 @@ export default function VariantSelector({
                       title={value}
                       aria-label={value}
                       aria-pressed={active}
-                      className={`relative flex h-12 w-12 items-center justify-center rounded-xl border transition-all ${
+                      className={`relative flex h-12 w-12 items-center justify-center rounded-xl border-[1.8px] transition-all ${
                         active
                           ? "border-transparent bg-[#EFE6CF] ring-2 ring-clay"
                           : "border-line bg-[#EFE6CF] hover:border-clay/60"
@@ -455,7 +468,7 @@ export default function VariantSelector({
                     key={value}
                     type="button"
                     onClick={() => pickOptionValue(opt.name, value)}
-                    className={`w-full min-h-[44px] rounded-xl border-2 px-4 py-2.5 text-left text-sm font-bold transition-all ${
+                    className={`w-full min-h-[44px] rounded-xl border-[1.8px] px-4 py-2.5 text-left text-sm font-bold transition-all ${
                       active
                         ? "border-clay bg-[#FCFBF4] text-cocoa shadow-sm"
                         : "border-line text-cocoa hover:border-clay/60"
@@ -540,10 +553,10 @@ export default function VariantSelector({
                     reference — no uppercase, the floating flag carries the
                     visual emphasis. */}
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-[15.5px] font-extrabold text-cocoa">
+                  <span className="text-[15.5px] font-bold text-cocoa">
                     {tierCopy(i, "name")}
                   </span>
-                  <span className="text-[15.5px] font-extrabold tabular-nums text-cocoa">
+                  <span className="text-[15.5px] font-bold tabular-nums text-cocoa">
                     {formatMoney(tTotal, currencyCode)}
                   </span>
                 </div>
@@ -626,7 +639,7 @@ export default function VariantSelector({
                                           title={value}
                                           aria-label={value}
                                           aria-pressed={active}
-                                          className={`relative flex h-9 w-9 items-center justify-center rounded-lg border bg-[#EFE6CF] transition-all ${
+                                          className={`relative flex h-9 w-9 items-center justify-center rounded-lg border-[1.8px] bg-[#EFE6CF] transition-all ${
                                             active
                                               ? "border-transparent ring-2 ring-clay"
                                               : "border-line hover:border-clay/60"
@@ -649,7 +662,7 @@ export default function VariantSelector({
                                         e.stopPropagation();
                                         pickUnitOptionValue(j, opt.name, value);
                                       }}
-                                      className={`rounded-lg border-2 px-2.5 py-1 text-xs font-bold transition-all ${
+                                      className={`rounded-lg border-[1.8px] px-2.5 py-1 text-xs font-bold transition-all ${
                                         active
                                           ? "border-clay bg-[#FCFBF4] text-cocoa"
                                           : "border-line text-cocoa hover:border-clay/60"
@@ -676,7 +689,7 @@ export default function VariantSelector({
       <div>
 
         {educationNote && (
-          <div className="mb-3 flex items-start gap-2 rounded-xl border border-line bg-cream px-3 py-2.5 text-xs leading-relaxed text-brown">
+          <div className="mb-3 flex items-start gap-2 rounded-xl border-[1.8px] border-line bg-cream px-3 py-2.5 text-xs leading-relaxed text-brown">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-clay" aria-hidden />
             <span>{educationNote}</span>
           </div>
@@ -697,7 +710,7 @@ export default function VariantSelector({
           fullWidth
           disabled={!isAvailable}
           leftIcon={<ShoppingBag size={22} />}
-          className="min-h-[52px] rounded-xl text-base md:text-lg !bg-gold !text-white hover:!bg-gold-deep"
+          className="min-h-[52px] rounded-xl text-base md:text-lg !bg-gold !text-cocoa hover:!bg-gold-deep hover:!text-white"
           onClick={onAddToCart}
         >
           {isAvailable ? `Add to cart — ${formatMoney(totalPrice, currencyCode)}` : "Out of stock"}
@@ -710,7 +723,7 @@ export default function VariantSelector({
           type="button"
           disabled={!isAvailable || buyingNow}
           onClick={onBuyNow}
-          className="mt-2.5 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border-2 border-cocoa bg-transparent px-4 py-2.5 text-base font-extrabold text-cocoa transition-colors hover:bg-cocoa hover:text-white disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-cocoa md:text-lg"
+          className="mt-2.5 inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl border-[1.8px] border-cocoa bg-transparent px-4 py-2.5 text-base font-bold text-cocoa shadow-sm transition-all duration-300 hover:-translate-y-1 hover:bg-cocoa hover:text-white hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:bg-transparent disabled:hover:text-cocoa disabled:hover:shadow-sm md:text-lg"
         >
           {buyingNow && <Loader2 size={18} className="animate-spin" />}
           {buyingNow ? "Opening checkout…" : "Buy it now"}

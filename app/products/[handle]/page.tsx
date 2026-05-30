@@ -13,11 +13,10 @@ import { UGCReviews } from "@/components/product/UGCReviews";
 import { BeforeAfterSlider } from "@/components/product/BeforeAfterSlider";
 import { PainPoints } from "@/components/product/PainPoints";
 import { Mechanism } from "@/components/product/Mechanism";
-import { SilentReassurance } from "@/components/product/SilentReassurance";
-import { GuaranteeBlock } from "@/components/product/GuaranteeBlock";
 import { BundleBuyCard } from "@/components/product/BundleBuyCard";
 import { WaveDivider } from "@/components/ui/WaveDivider";
 import { ProductMediaSync } from "@/components/product/ProductMediaSync";
+import { DynamicHeroPrice } from "@/components/product/DynamicHeroPrice";
 
 // ISR: revalidate via webhook → revalidateTag("products")
 // Fallback: re-generate every 1 hour even without a webhook push
@@ -89,6 +88,23 @@ export default async function ProductPage({
 
   const beepaws = fullProduct?.normalized?.beepaws;
 
+  // Section-level intro copy (single-entry list metafields). We read [0] and
+  // coerce empty strings → undefined so partially-filled entries fall back to
+  // each component's in-code default per-field. The mechanism paradox is two
+  // flat metafield strings reconstructed into the component's paragraphs[].
+  const ppi = beepaws?.painPointsIntro?.[0];
+  const mi = beepaws?.mechanismIntro?.[0];
+  const uci = beepaws?.useCasesIntro?.[0];
+  const ci = beepaws?.comparisonIntro?.[0];
+  const fi = beepaws?.faqIntro?.[0];
+  const ri = beepaws?.reviewsIntro?.[0];
+  const bai = beepaws?.beforeAfterIntro?.[0];
+  const fcc = beepaws?.finalCtaCopy?.[0];
+  const blank = (s?: string) => (s && s.trim() ? s : undefined);
+  const mechParagraphs = [mi?.paradoxParagraph1, mi?.paradoxParagraph2].filter(
+    (p): p is string => Boolean(p && p.trim()),
+  );
+
   // Device-only sections (Mechanism + SilentReassurance) gate on the Shopify
   // product tag "device". The seed-product-metafields script auto-applies
   // this tag on each product run, so new device launches pick it up without
@@ -136,13 +152,17 @@ export default async function ProductPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
+      {/* Hero band — bg-paper to match the Header navbar (per user feedback
+          the bg-card white was too cold). Page base is also paper, so this
+          reads as the same continuous tone above and below the Header. */}
+      <div className="bg-paper">
       <div className="relative container mx-auto max-w-7xl px-4 pb-16 pt-8 md:px-6 md:pb-24 md:pt-10">
         {/* ProductMediaSync provides shared activeImage state between the
             gallery (left col) and the variant selector (right col), so picking
             a variant scrolls the gallery to the matching image. */}
         <ProductMediaSync imageUrls={product.images.edges.map((e) => e.node.url)}>
-        <div className="grid gap-10 lg:grid-cols-12 lg:gap-12 xl:gap-16">
-          <div className="lg:col-span-7">
+        <div className="grid gap-10 lg:grid-cols-[11fr_9fr] lg:gap-12 xl:gap-16">
+          <div>
             <div className="lg:sticky lg:top-[7.5rem]">
               <ProductGallery
                 productTitle={product.title}
@@ -152,11 +172,11 @@ export default async function ProductPage({
             </div>
           </div>
 
-          <div className="flex flex-col lg:col-span-5 lg:pb-16" style={{ overflowAnchor: "none" }}>
+          <div className="flex flex-col lg:pb-16" style={{ overflowAnchor: "none" }}>
             {/* Eyebrow pill — per device reference §PRODUCT HERO. Brand
                 anchor before the headline. Phase 5 will let editors swap
                 this via metafield. */}
-            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-honey-tint px-3 py-1.5 text-[12px] font-extrabold uppercase tracking-[0.07em] text-clay">
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-honey-tint px-3 py-1.5 text-[12px] font-bold uppercase tracking-[0.07em] text-clay">
               Vet-grade technology · At home
             </span>
 
@@ -179,46 +199,16 @@ export default async function ProductPage({
               </div>
             )}
 
-            {/* Price row — strikethrough + sale pill when compareAtPrice is set */}
-            <div className="mt-4 flex flex-wrap items-baseline gap-3">
-              <span className="font-display text-[33px] font-bold text-ink">
-                {new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: minVariantPrice.currencyCode,
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0,
-                }).format(parseFloat(minVariantPrice.amount))}
-              </span>
-              {product.compareAtPriceRange?.minVariantPrice &&
-                parseFloat(product.compareAtPriceRange.minVariantPrice.amount) >
-                  parseFloat(minVariantPrice.amount) && (
-                  <>
-                    <span className="text-lg text-brown/60 line-through">
-                      {new Intl.NumberFormat("en-US", {
-                        style: "currency",
-                        currency: product.compareAtPriceRange.minVariantPrice.currencyCode,
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0,
-                      }).format(parseFloat(product.compareAtPriceRange.minVariantPrice.amount))}
-                    </span>
-                    <span className="rounded-md bg-gold px-2 py-0.5 text-xs font-extrabold uppercase tracking-wider text-cocoa">
-                      Save{" "}
-                      {Math.round(
-                        ((parseFloat(product.compareAtPriceRange.minVariantPrice.amount) -
-                          parseFloat(minVariantPrice.amount)) /
-                          parseFloat(product.compareAtPriceRange.minVariantPrice.amount)) *
-                          100,
-                      )}
-                      %
-                    </span>
-                  </>
-                )}
-              {!product.availableForSale && (
-                <span className="rounded-full bg-cocoa/10 px-2.5 py-0.5 text-xs font-bold text-cocoa">
-                  Out of stock
-                </span>
-              )}
-            </div>
+            {/* Price row — strikethrough + sale pill + out-of-stock pill.
+                Lives inside ProductMediaSync; re-renders when VariantSelector
+                publishes the picked variant so the displayed price follows
+                color/accessory selection (just like the bundle picker total). */}
+            <DynamicHeroPrice
+              fallbackAmount={minVariantPrice.amount}
+              currencyCode={minVariantPrice.currencyCode}
+              compareAtAmount={product.compareAtPriceRange?.minVariantPrice?.amount ?? null}
+              fallbackAvailable={product.availableForSale}
+            />
 
             {/* Vet-bill anchor — frames the price against the $500-$1,400+ vet
                 quote per plan §"Anchoring rule". Always include the vet bill
@@ -262,6 +252,23 @@ export default async function ProductPage({
               />
             </div>
 
+            {/* Frequently Bought Together — moved into the hero under the buy
+                card per restructure plan §Task 2 (was a standalone section
+                between FAQ and Final CTA). Sits at the decision moment so the
+                cross-sell happens while the cart intent is still warm.
+                id="fbt" + scrollMarginTop are the scroll target for the Final
+                CTA's "Shop the bundle" button. scrollMarginTop matches the
+                gallery's sticky offset so the scrolled-to FBT clears the
+                sticky header. */}
+            {recommendedBundleProducts.length > 0 && (
+              <div id="fbt" style={{ scrollMarginTop: "7.5rem" }}>
+                <BundleBuyCard
+                  currentProduct={product}
+                  products={recommendedBundleProducts}
+                />
+              </div>
+            )}
+
             {/* Mini-trust 3-up — matches device reference .mini-trust. Smaller,
                 closer to the CTA than the previous full trust grid. */}
             <ul className="mt-5 grid grid-cols-3 gap-2 border-t border-line pt-4">
@@ -288,98 +295,133 @@ export default async function ProductPage({
         </div>
         </ProductMediaSync>
       </div>
+      </div>
 
       {/* ── Below-fold sections ─────────────────────────────────────────────────
-          Section order (matches device reference): gallery+bundle → PainPoints
-          → Mechanism → SilentReassurance → BeforeAfterSlider → ComparisonTable
-          → UseCaseCards → UGCReviews → FAQSection → GuaranteeBlock → FBT →
-          FinalCTASection.
+          Per web-rec Step 2 — section bg sequence: white, sand, toffee, white,
+          sand, white, sand, sand, bark, moss. Adjacent sections never share
+          the same hue except FAQ → ProductDetailsSections (intentional — they
+          read as one "more info" block).
 
-          Mechanism + SilentReassurance are device-only; they render only when
-          the Shopify product carries the "device" tag. The wave sequence
-          adapts to whichever path renders. WaveDivider takes hex literals —
-          SVG fill doesn't process var() — so we hand-maintain these against
-          globals.css. ──────────────────────────────────────────────────── */}
+          Three WaveDividers on device path (Hero→Pain dropped — both white,
+          wave was invisible; hairline border handles the seam):
+            1. UseCaseCards (sand) → Mechanism (toffee)    [problem → solution]
+            2. Mechanism (toffee)  → BeforeAfterSlider (card) [solution → proof]
+            3. ComparisonTable (card) → FAQ (sand)         [proof → close]
 
-      {/* paper → cream: into PainPoints */}
-      <WaveDivider from="#FDF8EC" to="#FBF3E1" />
-      <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
-        <PainPoints points={beepaws?.painPoints} />
+          FinalCTASection (bark) meets sand/cream above it directly — the bg
+          jump reads strongly on its own.
+
+          Mechanism is device-gated; non-device path drops both Mechanism-side
+          waves (non-device gets 1 wave total). WaveDivider takes hex literals
+          (SVG fill doesn't process var()) so colors are hand-maintained
+          against globals.css. ───────────────────────────────────────────── */}
+
+      {/* Hero (card) → PainPoints (card) — same bg, hairline border for the seam. */}
+      <div className="border-t border-line">
+        <PainPoints
+          points={beepaws?.painPoints}
+          eyebrow={blank(ppi?.eyebrow)}
+          heading={blank(ppi?.heading)}
+          lead={blank(ppi?.lead)}
+        />
+      </div>
+
+      {/* PainPoints → UseCaseCards — direct, hairline border. */}
+      <div className="border-t border-line">
+        <UseCaseCards
+          cards={beepaws?.useCases}
+          eyebrow={blank(uci?.eyebrow)}
+          heading={blank(uci?.heading)}
+          lead={blank(uci?.lead)}
+        />
       </div>
 
       {isDevice ? (
         <>
-          {/* cream → paper: into Mechanism (Reason + 3-step "how it works") */}
-          <WaveDivider from="#FBF3E1" to="#FDF8EC" />
+          {/* WAVE — sand → toffee: into Mechanism (Reason + 3-step + feels-
+              broken cocoa-inset callout, merged in per restructure §Task 1). */}
+          <WaveDivider from="#F2E7CC" to="#E5C58C" />
           <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
-            <Mechanism steps={beepaws?.mechanismSteps} />
-            {/* SilentReassurance shares the paper bg — they read as one arc. */}
-            <SilentReassurance note={beepaws?.educationNote} />
+            <Mechanism
+              steps={beepaws?.mechanismSteps}
+              feelsBrokenNote={beepaws?.educationNote}
+              introEyebrow={blank(mi?.introEyebrow)}
+              introHeading={blank(mi?.introHeading)}
+              introLead={blank(mi?.introLead)}
+              paradoxHeading={blank(mi?.paradoxHeading)}
+              paradoxParagraphs={mechParagraphs.length > 0 ? mechParagraphs : undefined}
+              paradoxPullQuote={blank(mi?.paradoxPullQuote)}
+              stepsHeading={blank(mi?.stepsHeading)}
+              stepsLead={blank(mi?.stepsLead)}
+              feelsBrokenHeading={blank(mi?.feelsBrokenHeading)}
+            />
           </div>
-          {/* paper → cream: into BeforeAfterSlider */}
-          <WaveDivider from="#FDF8EC" to="#FBF3E1" flip />
+          {/* WAVE — toffee → card: into BeforeAfterSlider */}
+          <WaveDivider from="#E5C58C" to="#FFFFFF" flip />
+          <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
+            <BeforeAfterSlider
+              slides={beepaws?.beforeAfterSlides}
+              eyebrow={blank(bai?.eyebrow)}
+              heading={blank(bai?.heading)}
+              lead={blank(bai?.lead)}
+            />
+          </div>
         </>
-      ) : null}
-      <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
-        <BeforeAfterSlider slides={beepaws?.beforeAfterSlides} />
-      </div>
-
-      {/* cream → honey-tint: into ComparisonTable + UseCaseCards */}
-      <WaveDivider from="#FBF3E1" to="#F6E6C6" />
-      <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
-        <ComparisonTable rows={beepaws?.comparisonRows} />
-        {/* UseCaseCards also lives on honey-tint — no wave between, the two
-            sections share the band visually. UseCaseCards isn't in the
-            reference template; kept as a generic "who it's for" moment. */}
-        <UseCaseCards cards={beepaws?.useCases} />
-      </div>
-
-      {/* honey-tint → paper: into testimonials (paper per reference) */}
-      <WaveDivider from="#F6E6C6" to="#FDF8EC" flip />
-      <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
-        <UGCReviews reviews={beepaws?.reviews} />
-      </div>
-
-      {/* paper → honey-tint: into FAQ (honey-tint per reference) */}
-      <WaveDivider from="#FDF8EC" to="#F6E6C6" />
-      <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
-        <FAQSection items={beepaws?.faqItems} />
-      </div>
-
-      {/* honey-tint → cream: into Guarantee + product details + FBT */}
-      <WaveDivider from="#F6E6C6" to="#FBF3E1" flip />
-      <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
-        {/* GuaranteeBlock, ProductDetailsSections, and the FBT cross-sell
-            share the cream band so they continue seamlessly into the cocoa
-            final-CTA below. */}
-        <GuaranteeBlock guarantee={beepaws?.guarantee} />
-        <div className="bg-cream">
-          {fullProduct?.normalized && (
-            <div className="container mx-auto max-w-7xl px-4 pb-12 md:px-6 md:pb-16">
-              <ProductDetailsSections normalized={fullProduct.normalized} />
-            </div>
-          )}
-          {recommendedBundleProducts.length > 0 && (
-            <section className="pb-14 md:pb-20">
-              <div className="container mx-auto max-w-3xl px-4 md:px-6">
-                <div className="mb-8 text-center">
-                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-clay">
-                    Frequently bought together
-                  </p>
-                  <h2 className="font-display mt-2 text-3xl font-bold text-cocoa md:text-[34px]">
-                    Complete the routine
-                  </h2>
-                </div>
-                <BundleBuyCard currentProduct={product} products={recommendedBundleProducts} />
-              </div>
-            </section>
-          )}
+      ) : (
+        /* Non-device: skip Mechanism + its waves. UseCaseCards meets
+           BeforeAfterSlider directly — hairline border separates. */
+        <div className="border-t border-line">
+          <BeforeAfterSlider
+            slides={beepaws?.beforeAfterSlides}
+            eyebrow={blank(bai?.eyebrow)}
+            heading={blank(bai?.heading)}
+            lead={blank(bai?.lead)}
+          />
         </div>
+      )}
+
+      {/* BeforeAfterSlider → UGCReviews — direct, hairline border. */}
+      <div className="border-t border-line">
+        <UGCReviews
+          reviews={beepaws?.reviews}
+          eyebrow={blank(ri?.eyebrow)}
+          heading={blank(ri?.heading)}
+          lead={blank(ri?.lead)}
+        />
       </div>
 
-      {/* cream → cocoa: lean final CTA — one button, one price, one push. */}
-      <WaveDivider from="#FBF3E1" to="#4A2E16" />
+      {/* UGCReviews → ComparisonTable — direct, hairline border. */}
+      <div className="border-t border-line">
+        <ComparisonTable
+          rows={beepaws?.comparisonRows}
+          eyebrow={blank(ci?.eyebrow)}
+          heading={blank(ci?.heading)}
+          lead={blank(ci?.lead)}
+        />
+      </div>
+
+      {/* WAVE — card → sand: into FAQ. The proof→close break. */}
+      <WaveDivider from="#FFFFFF" to="#F2E7CC" flip />
       <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
+        <FAQSection
+          items={beepaws?.faqItems}
+          eyebrow={blank(fi?.eyebrow)}
+          heading={blank(fi?.heading)}
+        />
+      </div>
+
+      {/* FAQ → ProductDetailsSections — component is self-contained (owns its
+          bg-sand, container, and border-t). Returns null when the product has
+          no usage_guide / qna / bundle_buy metafields, so no empty band
+          renders for products that don't have this content. */}
+      {fullProduct?.normalized && (
+        <ProductDetailsSections normalized={fullProduct.normalized} />
+      )}
+
+      {/* → FinalCTA (bark): direct meeting. Hairline border at the seam —
+          the bg jump from sand → bark already reads strongly. */}
+      <div className="border-t border-line" style={{ position: "relative", zIndex: 1 }}>
         <FinalCTASection
           fromPrice={new Intl.NumberFormat("en-US", {
             style: "currency",
@@ -387,6 +429,10 @@ export default async function ProductPage({
             minimumFractionDigits: 0,
             maximumFractionDigits: 0,
           }).format(parseFloat(minVariantPrice.amount))}
+          heading={blank(fcc?.heading)}
+          body={blank(fcc?.body)}
+          smallPrint={blank(fcc?.smallPrint)}
+          guarantee={beepaws?.guarantee}
         />
       </div>
 

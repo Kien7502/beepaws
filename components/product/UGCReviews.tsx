@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { Star, ThumbsUp, MessageCircle, Share2 } from "lucide-react";
+import { Star } from "lucide-react";
 import type { Review } from "@/types/metafields";
 
 const DEFAULT_REVIEWS: Review[] = [
@@ -97,11 +97,6 @@ const DEFAULT_REVIEWS: Review[] = [
   },
 ];
 
-function formatLikes(n: number): string {
-  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(".0", "")}k`;
-  return String(n);
-}
-
 function Stars({ rating }: { rating: number }) {
   // Warm Honey: gold stars filled, soft brown outlines for unfilled.
   return (
@@ -121,9 +116,17 @@ function Stars({ rating }: { rating: number }) {
 
 interface Props {
   reviews?: Review[] | null;
+  eyebrow?: string;
+  heading?: string;
+  lead?: string;
 }
 
-export function UGCReviews({ reviews }: Props) {
+export function UGCReviews({
+  reviews,
+  eyebrow = "Lorem ipsum",
+  heading = "Lorem ipsum dolor sit amet?",
+  lead = "Lorem ipsum dolor sit amet, consectetur →",
+}: Props) {
   const trackRef = useRef<HTMLDivElement>(null);
   const posRef = useRef(0);
   const drag = useRef({ active: false, startX: 0, startPos: 0 });
@@ -139,7 +142,7 @@ export function UGCReviews({ reviews }: Props) {
 
     const tick = () => {
       if (!paused.current) {
-        posRef.current += 0.5;
+        posRef.current += 0.3;
         const half = track.scrollWidth / 2;
         if (posRef.current >= half) posRef.current -= half;
         track.style.transform = `translateX(-${posRef.current}px)`;
@@ -176,16 +179,16 @@ export function UGCReviews({ reviews }: Props) {
   // paper as Mechanism/PainPoints, not in a dark moment). Cards have a
   // subtle line border and warm-brown shadow so they lift off the page.
   return (
-    <section className="bg-paper py-14 md:py-20 overflow-hidden">
+    <section className="bg-sand py-14 md:py-20 overflow-hidden">
       <div className="container mx-auto max-w-7xl px-4 md:px-6 mb-10">
-        <span className="block text-center text-xs font-extrabold uppercase tracking-[0.14em] text-gold-deep mb-2.5">
-          From dog moms like you
+        <span className="block text-center text-xs font-bold uppercase tracking-[0.14em] text-gold-deep mb-2.5">
+          {eyebrow}
         </span>
-        <h2 className="font-display mb-2 text-center text-3xl font-bold tracking-tight text-cocoa md:text-[33px]">
-          &ldquo;I guess I&apos;m a dentist now?!&rdquo;
+        <h2 className="font-display mb-2 text-center text-3xl font-semibold tracking-tight text-cocoa md:text-[33px]">
+          {heading}
         </h2>
         <p className="text-center text-base text-brown">
-          Real customer voices — drag to explore →
+          {lead}
         </p>
       </div>
 
@@ -206,6 +209,7 @@ export function UGCReviews({ reviews }: Props) {
               key={i}
               className="w-72 shrink-0 flex flex-col bg-card text-sm shadow-[0_4px_20px_-10px_rgba(74,46,22,0.12)] rounded-2xl overflow-hidden border border-line"
             >
+              {/* Reviewer identity + stars */}
               <div className="flex items-start gap-3 p-4">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-honey-tint text-sm font-extrabold text-clay">
                   {r.name[0]}
@@ -222,29 +226,16 @@ export function UGCReviews({ reviews }: Props) {
                 </div>
               </div>
 
+              {/* Review text */}
               <p className="flex-1 px-4 pb-3 leading-relaxed text-ink">{r.text}</p>
 
+              {/* BeePaws reply */}
               {r.reply && (
-                <div className="mx-4 mb-3 border-l-[3px] border-gold bg-cream px-3 py-2 rounded-r-md">
+                <div className="mx-4 mb-4 border-l-[3px] border-gold bg-cream px-3 py-2 rounded-r-md">
                   <p className="text-xs font-bold text-clay">BeePaws</p>
                   <p className="mt-0.5 text-xs leading-relaxed text-brown">{r.reply}</p>
                 </div>
               )}
-
-              <div className="flex items-center justify-between border-t border-line px-4 py-2.5 text-xs text-brown">
-                <span>👍 {formatLikes(r.likes)}</span>
-                <div className="flex gap-4">
-                  <button className="flex items-center gap-1 hover:text-gold-deep transition-colors">
-                    <ThumbsUp size={12} /> Like
-                  </button>
-                  <button className="flex items-center gap-1 hover:text-gold-deep transition-colors">
-                    <MessageCircle size={12} /> {r.comments}
-                  </button>
-                  <button className="flex items-center gap-1 hover:text-gold-deep transition-colors">
-                    <Share2 size={12} /> Share
-                  </button>
-                </div>
-              </div>
             </div>
           ))}
         </div>

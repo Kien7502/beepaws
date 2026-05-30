@@ -142,7 +142,7 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
       {/* Header */}
       <div className="flex items-center gap-2 border-b border-line bg-honey-tint/50 px-4 py-3">
         <Tag className="h-4 w-4 text-gold-deep" aria-hidden />
-        <p className="text-sm font-extrabold uppercase tracking-wider text-cocoa">
+        <p className="text-sm font-bold uppercase tracking-wider text-cocoa">
           Frequently Bought Together
         </p>
       </div>
@@ -283,7 +283,7 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
             fullWidth
             onClick={onAddBundle}
             disabled={!canAdd}
-            className="min-h-[44px] rounded-xl !bg-gold !text-cocoa hover:!bg-gold-deep hover:!text-white"
+            className="min-h-[52px] rounded-xl !bg-gold !text-cocoa hover:!bg-gold-deep hover:!text-white"
           >
             Add bundle to cart
           </Button>
@@ -293,7 +293,7 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
             variant="outline"
             onClick={onBuyNow}
             disabled={!canAdd || buyingNow}
-            className="min-h-[44px] w-full rounded-xl !border-cocoa !border-[1.8px] !text-cocoa hover:!bg-cocoa hover:!text-white !bg-transparent"
+            className="min-h-[52px] w-full rounded-xl !border-cocoa !border-[1.8px] !text-cocoa hover:!bg-cocoa hover:!text-white hover:!-translate-y-1 hover:!shadow-lg !bg-transparent"
           >
             {buyingNow ? "Redirecting…" : "Buy now"}
           </Button>

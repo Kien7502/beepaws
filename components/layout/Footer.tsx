@@ -6,14 +6,18 @@ import { WaveDivider } from '@/components/ui/WaveDivider';
 import titleIcon from '@/app/Title_icon.png';
 
 const Footer = () => {
-  // Warm Honey re-skin: footer is the green moment. The wave curve fills with
-  // moss (same as the footer block) so it blends in seamlessly at the bottom;
-  // the sage band sits behind the wave curve as the visible accent. Hard edge
-  // sits at the top between the cocoa final-CTA section and the sage band —
-  // intentional, sage frames the wave.
+  // Warm Honey re-skin: footer is the green moment, bridged from the bark
+  // Final CTA above.
+  // - Outer bg + wave container: bark (#5E3C22), matches Final CTA so the
+  //   marginTop:-16px overlap into the section above is seamless.
+  // - WaveDivider `to` = sage (#8CA081): the two slower BACK ripples fill
+  //   with sage at low opacity, giving the visible sage layer behind.
+  // - WaveDivider `frontColor` = moss (#2F3B2A): the front opaque curve
+  //   matches the moss footer block below, so the wave melts into the
+  //   footer with no visible seam at the bottom.
   return (
-    <footer style={{ marginTop: "-16px", position: "relative", zIndex: 1, background: "#4A2E16" }}>
-      <WaveDivider from="#8CA081" to="#2F3B2A" flip />
+    <footer style={{ marginTop: "-16px", position: "relative", zIndex: 1, background: "#5E3C22" }}>
+      <WaveDivider from="#5E3C22" to="#8CA081" frontColor="#2F3B2A" flip />
       <div
         className="bg-moss pb-24"
         style={{ marginTop: "-8px", position: "relative", zIndex: 1 }}
