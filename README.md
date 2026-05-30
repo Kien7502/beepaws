@@ -108,10 +108,15 @@ Idempotent. Existing definitions report `SKIP`. New ones report `OK`.
 ### 2. Per product — author the content interactively
 
 ```bash
-node scripts/edit-product-content.mjs <product-handle>
+node --env-file=.env.local scripts/edit-product-content.mjs [product-handle]
 ```
 
 Interactive CLI that reads/writes `scripts/products/<handle>.json`. Menu lets you add/edit/delete items in each list (FAQ, reviews, etc.) one field at a time — no JSON typing required. Auto-saves after every change.
+
+- **No handle?** The script lists existing product files in `scripts/products/` so you can pick one, or `n` to create a new one.
+- **Tags editor**: edit Shopify product tags inline. `s` queries `shop.productTags` so you can pick from the shop-wide pool instead of typing duplicates. New products default to `["device"]` so the PDP renders the device-template sections (Mechanism + SilentReassurance).
+- **Push from inside the editor**: `p` from the main menu pushes metafields + tags directly — no separate seed command needed (skip step 3 below if you use this).
+- `--env-file=.env.local` is only required for `s` (suggest tags) and `p` (push). Pure local editing works without it.
 
 ### 3. Push the content to Shopify
 
@@ -119,7 +124,15 @@ Interactive CLI that reads/writes `scripts/products/<handle>.json`. Menu lets yo
 node --env-file=.env.local scripts/seed-product-metafields.mjs <product-handle>
 ```
 
-If `scripts/products/<handle>.json` exists, that's the source. Otherwise the script falls back to built-in dental-scaler defaults (useful for first-time seeding before any JSON file exists).
+If `scripts/products/<handle>.json` exists, that's the source. Otherwise the script falls back to built-in dental-scaler defaults (useful for first-time seeding before any JSON file exists). Tags come from `content.tags` in the JSON; if missing, defaults to `["device"]`. `productUpdate` replaces the full tag list — the local JSON is authoritative.
+
+### 4. Fresh machine — pull existing product content from Shopify
+
+```bash
+node --env-file=.env.local scripts/pull-product-metafields.mjs <product-handle> [--force]
+```
+
+Reverse of step 3: fetches `beepaws.*` metafields + tags from Shopify and writes `scripts/products/<handle>.json`. Use when cloning the repo to a new machine, or when someone has edited a product directly in Shopify Admin and you want the local file to catch up. Refuses to overwrite an existing local file without `--force`.
 
 ### Alternative — Shopify Admin UI
 
@@ -147,9 +160,12 @@ lib/
 types/
   metafields.ts                   BeepawsMetafields and all typed interfaces
 scripts/
+  shopify-admin.mjs               Shared: auth, GraphQL, common product mutations
+  metafield-schemas.mjs           Single source of truth for the beepaws.* schema
   seed-metafield-definitions.mjs  One-time: create beepaws.* definitions
-  edit-product-content.mjs        Interactive editor for per-product JSON
-  seed-product-metafields.mjs     Push JSON content to Shopify
+  edit-product-content.mjs        Interactive editor (metafields + tags + push)
+  seed-product-metafields.mjs     Push JSON content to Shopify (metafields + tags)
+  pull-product-metafields.mjs     Pull metafields + tags FROM Shopify → local JSON
   products/                       Per-product content files (committed)
 ```
 
