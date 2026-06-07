@@ -46,3 +46,7 @@ next-env.d.ts
 
 # scripts — kept local while we polish the tooling; re-include later
 /scripts
+
+# claude code / agent tooling artifacts
+/.agents
+/skills-lock.json
