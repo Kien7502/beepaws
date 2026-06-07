@@ -1,151 +1,146 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import Button from '@/components/ui/Button';
 import ProductCard from '@/components/product/ProductCard';
-import { Sparkles, ShoppingBag, Shield, Truck, RefreshCcw, Star, ArrowRight, Scissors, Heart, Zap } from 'lucide-react';
+import { ShoppingBag, Shield, Truck, RefreshCcw, ArrowRight, Scissors, Bath, Dog, Cat, Bone, Wind, Star } from 'lucide-react';
 
 import { getProducts } from '@/lib/shopify/queries';
 
 // ISR: revalidate via webhook → revalidateTag("products")
 export const revalidate = 3600;
 
+// ── design-taste-frontend experiment (branch experiment/skill-design-taste) ──
+// Redesign-OVERHAUL of the homepage to contrast with the identity-preserving
+// redesign-existing-projects pass. Palette is page-scoped (CSS vars on the
+// wrapper) so the rest of the site stays Warm Honey. "Forest" palette: deep
+// green + cool off-white + a single amber accent (rotated off the banned
+// premium-consumer cream+brass default). Sans display (no Fraunces). Dials:
+// VARIANCE 8 / MOTION 3 (CSS only) / DENSITY 3.
+const ds: React.CSSProperties = {
+  // @ts-expect-error CSS custom properties
+  '--ds-bg': '#F3F5F1',       // cool off-white (not warm cream)
+  '--ds-surface': '#FFFFFF',
+  '--ds-green': '#1F3D2B',    // deep forest - dark sections
+  '--ds-green-deep': '#15241A',
+  '--ds-ink': '#1A1F18',      // near-black, faint green
+  '--ds-muted': '#56604F',    // muted body
+  '--ds-amber': '#E0892F',    // single accent
+  '--ds-amber-deep': '#C2731E',
+  '--ds-line': '#DDE0D7',
+};
+
 export default async function Home() {
-  // Homepage shows a curated trio for visual interest — the actual best-seller
-  // filtering happens on cards via the badge (driven by Shopify tags). The
-  // homepage isn't meant to be conversion-heavy; it's an editorial entry point.
   const products = await getProducts();
   const featuredProducts = products.slice(0, 3);
 
   return (
-    <div className="flex flex-col w-full pb-20">
+    <div
+      style={ds}
+      className="flex w-full flex-col bg-[var(--ds-bg)] text-[var(--ds-ink)] [font-family:var(--font-body)]"
+    >
+      {/* ───── Hero - full-bleed image, bottom-left anchored (asymmetric) ───── */}
+      <section className="relative min-h-[min(94dvh,920px)] w-full overflow-hidden">
+        <Image
+          src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?q=80&w=2000&auto=format&fit=crop"
+          alt="A relaxed dog resting in soft daylight"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+        {/* Green scrim, heavier bottom-left where the copy sits */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-[var(--ds-green-deep)] via-[var(--ds-green-deep)]/70 to-transparent" />
 
-      {/* ───── Hero ───── */}
-      <section className="relative w-full min-h-[min(92vh,900px)] overflow-hidden flex flex-col">
-        <div className="absolute inset-0 bg-slate-950 z-0">
-          <Image
-            src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?q=80&w=2000&auto=format&fit=crop"
-            alt="Happy pets"
-            fill
-            className="object-cover opacity-45 mix-blend-overlay"
-            sizes="100vw"
-            priority
-          />
-          <div className="absolute inset-0 hero-texture z-[1]" aria-hidden />
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-950/95 via-slate-900/70 to-[#1a3d14]/60 z-[2]" />
-        </div>
-
-        {/* Decorative floating paw prints */}
-        <div className="pointer-events-none absolute inset-0 z-[3] overflow-hidden" aria-hidden>
-          <span className="absolute left-[8%] top-[20%] text-5xl opacity-10 rotate-[-15deg]">🐾</span>
-          <span className="absolute right-[12%] top-[15%] text-6xl opacity-8 rotate-[20deg]">🐾</span>
-          <span className="absolute left-[5%] bottom-[25%] text-4xl opacity-10 rotate-[10deg]">🐾</span>
-          <span className="absolute right-[8%] bottom-[30%] text-5xl opacity-8 rotate-[-10deg]">🐾</span>
-        </div>
-
-        {/* Hero Content */}
-        <div className="relative z-10 container mx-auto px-4 sm:px-6 flex flex-1 min-h-0 items-center justify-center text-center py-20 md:py-28">
-          <div className="max-w-3xl w-full flex flex-col items-center">
-            <div className="inline-flex items-center space-x-2 bg-[var(--color-primary)]/25 backdrop-blur-md px-5 py-2 rounded-full text-[var(--color-primary)] font-bold text-sm mb-6 sm:mb-8 border border-[var(--color-primary)]/40 shadow-sm">
-              <Sparkles size={15} />
-              <span>Premium Pet Grooming & Care</span>
-            </div>
-            <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[1.08] mb-6 max-w-4xl mx-auto px-1 sm:px-0">
-              <span className="block">Your pet deserves</span>
-              <span className="hero-gradient-heading mt-1 block pb-2">the absolute best.</span>
+        <div className="relative z-10 mx-auto flex min-h-[min(94dvh,920px)] max-w-7xl flex-col justify-end px-5 pb-20 pt-24 md:px-8 md:pb-28">
+          <div className="max-w-2xl">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-white/90 backdrop-blur-sm">
+              Premium pet grooming
+            </span>
+            <h1 className="mt-5 text-[2.6rem] font-extrabold leading-[1.02] tracking-tight text-white sm:text-6xl lg:text-7xl">
+              Your pet deserves<br />the absolute best.
             </h1>
-            <p className="text-lg md:text-xl text-white/80 font-medium mb-10 max-w-2xl leading-relaxed">
-              Professional-grade grooming tools and pet care essentials — crafted for the comfort and happiness of your furry family.
+            <p className="mt-5 max-w-md text-lg leading-relaxed text-white/80">
+              Professional-grade grooming tools, built for the comfort and happiness of your furry family.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center w-full max-w-sm sm:max-w-none">
-              <Link href="/collections/all">
-                <Button size="lg" className="w-full sm:w-auto h-14 px-10 text-base font-bold" leftIcon={<ShoppingBag size={20} />}>
-                  Shop Now
-                </Button>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/collections/all"
+                className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-[var(--ds-amber)] px-9 text-base font-bold text-[var(--ds-green-deep)] shadow-lg transition-all duration-200 hover:bg-[var(--ds-amber-deep)] hover:text-white active:scale-[0.98]"
+              >
+                <ShoppingBag size={20} strokeWidth={2} /> Shop now
               </Link>
-              <Link href="/collections/all">
-                <Button variant="secondary" size="lg" className="w-full sm:w-auto h-14 px-10 text-base font-bold bg-white/10 text-white border-2 border-white/50 hover:bg-white/20 transition-all backdrop-blur-md">
-                  View Best Sellers
-                </Button>
+              <Link
+                href="/collections/all"
+                className="inline-flex h-14 items-center justify-center rounded-full border-2 border-white/40 px-9 text-base font-bold text-white backdrop-blur-sm transition-all duration-200 hover:bg-white/10 active:scale-[0.98]"
+              >
+                View best sellers
               </Link>
-            </div>
-
-            {/* Quick trust strip */}
-            <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-white/60 text-xs font-medium">
-              <span className="flex items-center gap-1.5"><Truck size={14} /> Free shipping over $50</span>
-              <span className="flex items-center gap-1.5"><Shield size={14} /> Safe &amp; vet-approved</span>
-              <span className="flex items-center gap-1.5"><RefreshCcw size={14} /> 30-day returns</span>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* Bottom wave divider */}
-        <div className="absolute bottom-0 left-0 right-0 z-[4]">
-          <svg viewBox="0 0 1440 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full block" preserveAspectRatio="none" style={{height: '48px'}}>
-            <path d="M0 64L1440 64L1440 32C1200 64 960 0 720 0C480 0 240 64 0 32L0 64Z" fill="var(--background)" />
-          </svg>
+      {/* ───── Trust band (moved out of the hero per skill) ───── */}
+      <section className="border-b border-[var(--ds-line)] bg-[var(--ds-surface)]">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-10 gap-y-3 px-5 py-5 text-sm font-semibold text-[var(--ds-muted)] md:px-8">
+          <span className="flex items-center gap-2"><Truck size={17} strokeWidth={2} className="text-[var(--ds-amber-deep)]" /> Free shipping over $50</span>
+          <span className="flex items-center gap-2"><Shield size={17} strokeWidth={2} className="text-[var(--ds-amber-deep)]" /> Safe &amp; vet-approved</span>
+          <span className="flex items-center gap-2"><RefreshCcw size={17} strokeWidth={2} className="text-[var(--ds-amber-deep)]" /> 30-day returns</span>
         </div>
       </section>
 
-      {/* ───── Category Pills ───── */}
-      <section className="container mx-auto px-4 md:px-6 max-w-7xl pt-12 pb-4">
-        <div className="flex flex-wrap gap-3 justify-center">
+      {/* ───── Category row (icons, not emoji) ───── */}
+      <section className="mx-auto w-full max-w-7xl px-5 pt-14 md:px-8">
+        <div className="flex flex-wrap justify-center gap-3">
           {[
-            { label: "Nail Care", icon: "✂️", href: "/collections/all" },
-            { label: "Hair Trimming", icon: "🪮", href: "/collections/all" },
-            { label: "Grooming Kits", icon: "🧴", href: "/collections/all" },
-            { label: "Dog Supplies", icon: "🐶", href: "/collections/all" },
-            { label: "Cat Supplies", icon: "🐱", href: "/collections/all" },
+            { label: "Nail care", icon: Scissors, href: "/collections/all" },
+            { label: "Hair trimming", icon: Wind, href: "/collections/all" },
+            { label: "Grooming kits", icon: Bath, href: "/collections/all" },
+            { label: "Dog supplies", icon: Dog, href: "/collections/all" },
+            { label: "Cat supplies", icon: Cat, href: "/collections/all" },
           ].map((cat) => (
             <Link
               key={cat.label}
               href={cat.href}
-              className="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-2.5 text-sm font-semibold text-[var(--color-foreground)] shadow-sm transition-all hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/8 hover:text-[var(--color-primary)]"
+              className="inline-flex items-center gap-2 rounded-full border border-[var(--ds-line)] bg-[var(--ds-surface)] px-5 py-2.5 text-sm font-semibold text-[var(--ds-ink)] transition-all duration-200 hover:border-[var(--ds-green)] hover:-translate-y-0.5"
             >
-              <span>{cat.icon}</span>
+              <cat.icon size={16} strokeWidth={2} className="text-[var(--ds-green)]" />
               {cat.label}
             </Link>
           ))}
         </div>
       </section>
 
-      {/* ───── Featured Products ───── */}
-      <section className="container mx-auto px-4 md:px-6 max-w-7xl pt-16 md:pt-20 pb-12">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10">
+      {/* ───── Featured products (real product grid) ───── */}
+      <section className="mx-auto w-full max-w-7xl px-5 pb-16 pt-16 md:px-8 md:pt-20">
+        <div className="mb-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
           <div className="max-w-2xl">
-            <span className="inline-block text-xs font-bold uppercase tracking-widest text-[var(--color-primary)] mb-3 px-3 py-1 rounded-full bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20">
-              Best Sellers
-
-            </span>
-            <h2 className="text-3xl md:text-4xl font-black text-[var(--color-foreground)] mb-3 leading-tight">
-              Pawsitively Perfect Picks
+            {/* eyebrow #2 of 3 */}
+            <span className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ds-amber-deep)]">Best sellers</span>
+            <h2 className="mt-2 text-3xl font-extrabold leading-tight tracking-tight text-[var(--ds-ink)] md:text-[2.6rem]">
+              Hand-picked favorites
             </h2>
-            <p className="text-[var(--color-accent)]/70 text-lg">
-              Hand-selected favorites that your pets will obsess over. Grooming, playing, and relaxing made better.
+            <p className="mt-3 text-lg text-[var(--ds-muted)]">
+              Favorites your pets keep coming back to.
             </p>
           </div>
-          <Link href="/collections/all" className="hidden md:inline-flex items-center gap-2 text-sm font-bold text-[var(--color-primary)] hover:underline">
-            View All Products <ArrowRight size={16} />
+          <Link href="/collections/all" className="hidden items-center gap-2 text-sm font-bold text-[var(--ds-green)] hover:gap-3 md:inline-flex transition-all">
+            View all products <ArrowRight size={16} strokeWidth={2} />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 md:gap-8">
           {featuredProducts.length === 0 ? (
-            <div className="col-span-full flex flex-col items-center justify-center py-24 px-4 bg-[var(--color-secondary)]/30 backdrop-blur-sm border-2 border-dashed border-[var(--color-primary)]/20 rounded-[2rem] text-center max-w-xl mx-auto">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--color-primary)]/10 text-[var(--color-primary)]" aria-hidden>
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 3c.5 2.5 2 4 4 4s3.5-1.5 4-4" />
-                  <path d="M12 21c-.5-2.5-2-4-4-4s-3.5 1.5-4 4" />
-                  <circle cx="8" cy="12" r="2" />
-                  <circle cx="16" cy="12" r="2" />
-                </svg>
+            <div className="col-span-full mx-auto flex max-w-xl flex-col items-center justify-center rounded-3xl border border-dashed border-[var(--ds-line)] bg-[var(--ds-surface)] px-4 py-24 text-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--ds-green)]/10 text-[var(--ds-green)]" aria-hidden>
+                <Bone size={30} strokeWidth={1.75} />
               </div>
-              <p className="text-[var(--color-foreground)] font-black text-xl mb-2">No featured products yet</p>
-              <p className="text-[var(--color-accent)]/70 font-medium mb-6">
-                Add Admin API credentials in env, then activate products and publish them to the Online Store sales channel to show them here.
+              <p className="text-xl font-bold text-[var(--ds-ink)]">No featured products yet</p>
+              <p className="mt-2 font-medium text-[var(--ds-muted)]">
+                Activate products and publish them to the Online Store sales channel to show them here.
               </p>
-              <Link href="/collections/all">
-                <Button variant="outline">Browse catalog</Button>
+              <Link href="/collections/all" className="mt-6 inline-flex h-12 items-center rounded-full border-2 border-[var(--ds-green)] px-6 font-bold text-[var(--ds-green)] transition-all hover:bg-[var(--ds-green)] hover:text-white">
+                Browse catalog
               </Link>
             </div>
           ) : (
@@ -155,7 +150,6 @@ export default async function Home() {
                 style: 'currency',
                 currency: product.priceRange.minVariantPrice.currencyCode,
               }).format(price);
-
               return (
                 <ProductCard
                   key={product.handle}
@@ -170,200 +164,157 @@ export default async function Home() {
             })
           )}
         </div>
-
-        <div className="mt-8 text-center md:hidden">
-          <Link href="/collections/all">
-            <Button variant="outline" fullWidth>View All Products</Button>
-          </Link>
-        </div>
       </section>
 
-      {/* ───── Why Beepaws ───── */}
-      <section className="container mx-auto px-4 md:px-6 max-w-7xl py-16 md:py-20">
-        <div className="text-center mb-12">
-          <span className="inline-block text-xs font-bold uppercase tracking-widest text-[var(--color-primary)] mb-3 px-3 py-1 rounded-full bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20">
-            Why Beepaws
-          </span>
-          <h2 className="text-3xl md:text-4xl font-black text-[var(--color-foreground)] leading-tight">
-            Grooming made easy, at home
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
-          {[
-            {
-              icon: <Scissors className="h-7 w-7" />,
-              title: "Pro-Grade Tools",
-              desc: "Stainless steel blades and precision-engineered clippers trusted by groomers.",
-            },
-            {
-              icon: <Heart className="h-7 w-7" />,
-              title: "Pet-Safe Design",
-              desc: "Rounded safety tips and low-vibration motors so even anxious pets stay calm.",
-            },
-            {
-              icon: <Zap className="h-7 w-7" />,
-              title: "USB Rechargeable",
-              desc: "No batteries needed — long-lasting charge for full grooming sessions.",
-            },
-            {
-              icon: <Star className="h-7 w-7" />,
-              title: "Loved by Thousands",
-              desc: "5-star reviewed products that pet parents come back to again and again.",
-            },
-          ].map((item) => (
-            <div
-              key={item.title}
-              className="flex flex-col items-start gap-4 rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-[var(--elev-shadow-card)] transition-all hover:shadow-[var(--elev-shadow-card-hover)] hover:-translate-y-0.5"
-            >
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-primary)]/12 text-[var(--color-primary)]">
-                {item.icon}
-              </div>
-              <div>
-                <p className="text-base font-extrabold text-[var(--color-foreground)] mb-1">{item.title}</p>
-                <p className="text-sm text-slate-500 leading-relaxed">{item.desc}</p>
-              </div>
+      {/* ───── Why Beepaws - asymmetric bento (breaks the 4-equal-card row) ───── */}
+      <section className="mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-20">
+        <h2 className="mb-10 max-w-xl text-3xl font-extrabold leading-tight tracking-tight text-[var(--ds-ink)] md:text-[2.6rem]">
+          Grooming made easy, at home
+        </h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:grid-rows-2 md:gap-5">
+          {/* Large feature cell - deep green, spans 2 rows */}
+          <article className="flex flex-col justify-between rounded-3xl bg-[var(--ds-green)] p-7 text-white md:row-span-2">
+            <Scissors size={30} strokeWidth={1.75} className="text-[var(--ds-amber)]" />
+            <div className="mt-10">
+              <h3 className="text-2xl font-bold">Pro-grade tools</h3>
+              <p className="mt-2 text-base leading-relaxed text-white/75">
+                Stainless steel blades and precision-engineered clippers trusted by working groomers, now sized for your living room.
+              </p>
             </div>
-          ))}
+          </article>
+          {/* Wide cell - amber tint */}
+          <article className="flex items-start gap-4 rounded-3xl bg-[var(--ds-amber)]/12 p-7 md:col-span-2">
+            <Shield size={26} strokeWidth={1.75} className="mt-0.5 shrink-0 text-[var(--ds-amber-deep)]" />
+            <div>
+              <h3 className="text-xl font-bold text-[var(--ds-ink)]">Pet-safe by design</h3>
+              <p className="mt-1.5 text-[var(--ds-muted)] leading-relaxed">
+                Rounded safety tips and low-vibration motors keep even anxious pets calm through the whole session.
+              </p>
+            </div>
+          </article>
+          {/* Two small cells */}
+          <article className="rounded-3xl border border-[var(--ds-line)] bg-[var(--ds-surface)] p-7">
+            <Bath size={24} strokeWidth={1.75} className="text-[var(--ds-green)]" />
+            <h3 className="mt-4 text-lg font-bold text-[var(--ds-ink)]">USB rechargeable</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-[var(--ds-muted)]">
+              No batteries. A long charge lasts through full grooming sessions.
+            </p>
+          </article>
+          <article className="rounded-3xl border border-[var(--ds-line)] bg-[var(--ds-surface)] p-7">
+            <Star size={24} strokeWidth={1.75} className="text-[var(--ds-green)]" />
+            <h3 className="mt-4 text-lg font-bold text-[var(--ds-ink)]">Loved by thousands</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-[var(--ds-muted)]">
+              5-star reviewed products pet parents come back to again and again.
+            </p>
+          </article>
         </div>
       </section>
 
-      {/* ───── Showcase Banner ───── */}
-      <section className="container mx-auto px-4 md:px-6 max-w-7xl py-4 md:py-8">
-        <div className="relative overflow-hidden rounded-[2.5rem] bg-[var(--color-accent)] shadow-2xl">
-          {/* Background image overlay */}
-          <div className="absolute inset-0 z-0">
+      {/* ───── Showcase - split image / text ───── */}
+      <section className="mx-auto w-full max-w-7xl px-5 py-8 md:px-8">
+        <div className="grid grid-cols-1 overflow-hidden rounded-[2rem] bg-[var(--ds-green-deep)] md:grid-cols-2">
+          <div className="flex flex-col justify-center p-8 md:p-14">
+            <h2 className="text-3xl font-extrabold leading-tight tracking-tight text-white md:text-4xl lg:text-5xl">
+              Complete grooming, right at home.
+            </h2>
+            <p className="mt-5 max-w-md text-lg leading-relaxed text-white/75">
+              From nail clippers to full-body trimmers, everything your pet needs for a spa day without leaving the house.
+            </p>
+            <Link
+              href="/collections/all"
+              className="mt-8 inline-flex h-13 w-fit items-center gap-2 rounded-full bg-[var(--ds-amber)] px-7 py-3.5 font-bold text-[var(--ds-green-deep)] transition-all duration-200 hover:bg-white active:scale-[0.98]"
+            >
+              Explore all products <ArrowRight size={18} strokeWidth={2} />
+            </Link>
+          </div>
+          <div className="relative min-h-[280px] md:min-h-[420px]">
             <Image
-              src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?q=80&w=1600&auto=format&fit=crop"
-              alt="Dog grooming"
+              src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?q=80&w=1000&auto=format&fit=crop"
+              alt="Two dogs playing together outdoors"
               fill
-              className="object-cover opacity-20"
-              sizes="(max-width: 1280px) 100vw, 1280px"
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-cover"
             />
           </div>
-          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 p-8 md:p-14 items-center">
-            <div>
-              <span className="inline-block text-xs font-bold uppercase tracking-widest text-[var(--color-primary)] mb-4 px-3 py-1 rounded-full bg-[var(--color-primary)]/20 border border-[var(--color-primary)]/30">
-                New Arrivals
-              </span>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-5 leading-tight">
-                Complete grooming, <br className="hidden md:block" />right at home.
-              </h2>
-              <p className="text-white/80 text-base md:text-lg mb-8 max-w-md leading-relaxed">
-                From nail clippers to full-body trimmers — everything your pet needs for a spa-day experience without leaving home.
-              </p>
-              <Link href="/collections/all">
-                <Button size="lg" className="h-13 px-8 font-bold bg-white text-[var(--color-accent)] hover:bg-slate-100 border-none shadow-xl">
-                  Explore All Products <ArrowRight size={18} className="ml-1" />
-                </Button>
-              </Link>
-            </div>
-            <div className="flex justify-center">
-              <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-3xl overflow-hidden border-4 border-white/20 shadow-2xl -rotate-2 hover:rotate-0 transition-transform duration-500">
-                <Image
-                  src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?q=80&w=800&auto=format&fit=crop"
-                  alt="Two dogs playing"
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 16rem, 20rem"
-                />
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
-      {/* ───── Social Proof / Reviews Strip ───── */}
-      <section className="container mx-auto px-4 md:px-6 max-w-5xl py-16 md:py-20">
-        <div className="text-center mb-10">
-          <div className="flex justify-center gap-1 mb-3">
-            {Array.from({length: 5}).map((_, i) => (
-              <Star key={i} size={20} className="fill-[var(--color-primary)] text-[var(--color-primary)]" />
+      {/* ───── Reviews - asymmetric: one lead quote + two stacked ───── */}
+      <section className="mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-20">
+        <div className="mb-10">
+          {/* eyebrow #3 of 3 */}
+          <span className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ds-amber-deep)]">From pet parents</span>
+          <h2 className="mt-2 text-3xl font-extrabold leading-tight tracking-tight text-[var(--ds-ink)] md:text-[2.6rem]">
+            Worth the switch
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          {/* Lead quote */}
+          <figure className="flex flex-col justify-between rounded-3xl bg-[var(--ds-green)] p-8 text-white md:p-10">
+            <blockquote className="text-xl font-medium leading-relaxed md:text-2xl">
+              &ldquo;The LED nail clipper changed how I groom at home. I can finally see exactly where to cut, so I never go too short, and my dog stays calm the whole time.&rdquo;
+            </blockquote>
+            <figcaption className="mt-8 flex items-center gap-3">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--ds-amber)] font-bold text-[var(--ds-green-deep)]">S</span>
+              <span>
+                <span className="block font-bold">Sarah M.</span>
+                <span className="block text-sm text-white/60">Labrador owner</span>
+              </span>
+            </figcaption>
+          </figure>
+          {/* Two stacked */}
+          <div className="grid grid-cols-1 gap-5">
+            {[
+              { name: "James T.", pet: "Persian cat owner", avatar: "J", text: "Whisper-quiet trimmer. My fluffy Persian barely notices it, which beats fighting her at the salon every month." },
+              { name: "Linh N.", pet: "Poodle owner", avatar: "L", text: "The 3-in-1 kit clips, trims nails, and cleans paws in one device. My poodle's weekly groom now takes 20 minutes." },
+            ].map((r) => (
+              <figure key={r.name} className="flex flex-col justify-between rounded-3xl border border-[var(--ds-line)] bg-[var(--ds-surface)] p-7">
+                <blockquote className="text-base leading-relaxed text-[var(--ds-ink)]">
+                  &ldquo;{r.text}&rdquo;
+                </blockquote>
+                <figcaption className="mt-6 flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--ds-green)]/12 font-bold text-[var(--ds-green)]">{r.avatar}</span>
+                  <span>
+                    <span className="block text-sm font-bold text-[var(--ds-ink)]">{r.name}</span>
+                    <span className="block text-xs text-[var(--ds-muted)]">{r.pet}</span>
+                  </span>
+                </figcaption>
+              </figure>
             ))}
           </div>
-          <p className="text-slate-500 text-sm font-medium">Loved by pet parents worldwide</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {[
-            {
-              name: "Sarah M.",
-              pet: "Labrador owner",
-              text: "The LED nail clipper is a game-changer! I used to be so scared of clipping too short — now I can see exactly where to cut. My dog is so much calmer too.",
-              avatar: "S",
-            },
-            {
-              name: "James T.",
-              pet: "Persian cat owner",
-              text: "Bought the electric trimmer for my fluffy Persian. It's whisper-quiet and she barely notices it. Way better than fighting her at the grooming salon.",
-              avatar: "J",
-            },
-            {
-              name: "Linh N.",
-              pet: "Poodle owner",
-              text: "The 3-in-1 grooming kit is incredible value. Clips, trims nails, and cleans paws all in one device. My poodle's weekly groom takes 20 minutes now!",
-              avatar: "L",
-            },
-          ].map((review) => (
-            <div
-              key={review.name}
-              className="rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-[var(--elev-shadow-card)]"
-            >
-              <div className="flex gap-0.5 mb-4">
-                {Array.from({length: 5}).map((_, i) => (
-                  <Star key={i} size={14} className="fill-[var(--color-primary)] text-[var(--color-primary)]" />
-                ))}
-              </div>
-              <p className="text-sm text-slate-600 leading-relaxed mb-5">
-                &ldquo;{review.text}&rdquo;
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/15 text-sm font-extrabold text-[var(--color-primary)]">
-                  {review.avatar}
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-[var(--color-foreground)]">{review.name}</p>
-                  <p className="text-xs text-slate-500">{review.pet}</p>
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
       </section>
 
-      {/* ───── Newsletter ───── */}
-      <section className="container mx-auto px-4 md:px-6 max-w-7xl pb-4">
-        <div className="bg-[#79BC6A] rounded-[2.5rem] p-8 md:p-14 flex flex-col md:flex-row items-center justify-between gap-10 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-72 h-72 bg-white/10 rounded-full blur-3xl -mr-24 -mt-24 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-black/10 rounded-full blur-3xl -ml-24 -mb-24 pointer-events-none" />
-
-          <div className="md:w-1/2 relative z-10 text-center md:text-left">
-            <div className="inline-flex items-center gap-2 bg-white/20 rounded-full px-4 py-1.5 text-white/90 text-xs font-bold mb-4 border border-white/30">
-              <Sparkles size={12} /> Beepaws Newsletter
+      {/* ───── Newsletter - full-width amber band ───── */}
+      <section className="mx-auto w-full max-w-7xl px-5 pb-16 md:px-8">
+        <div className="rounded-[2rem] bg-[var(--ds-amber)] p-8 md:p-14">
+          <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2">
+            <div>
+              <h2 className="text-3xl font-extrabold leading-tight tracking-tight text-[var(--ds-green-deep)] md:text-4xl lg:text-5xl">
+                Join the Beepaws family
+              </h2>
+              <p className="mt-4 max-w-md text-lg font-medium text-[var(--ds-green-deep)]/80">
+                Sign up and get <span className="font-extrabold">15% off</span> your first order, plus pet care tips every week.
+              </p>
             </div>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#2D6A2D] mb-4 leading-tight">
-              Join the <br className="hidden md:block" />Beepaws Family
-
-            </h2>
-            <p className="text-white/85 text-base md:text-lg font-medium max-w-md">
-              Sign up today and get <span className="font-extrabold text-white">15% off</span> your first order, plus expert pet care tips delivered weekly.
-            </p>
-          </div>
-
-          <div className="md:w-1/2 relative z-10 w-full max-w-md mx-auto">
-            <div className="flex flex-col sm:flex-row gap-2 bg-white/15 p-2 rounded-2xl sm:rounded-full border border-white/25 backdrop-blur-md">
-              <input
-                type="email"
-                placeholder="Your email address"
-                className="bg-transparent text-white placeholder-white/60 px-5 py-3 flex-grow outline-none font-medium rounded-xl sm:rounded-full min-h-[48px] border border-transparent"
-              />
-              <button
-                type="button"
-                className="bg-white text-amber-600 font-extrabold hover:bg-amber-50 transition-colors rounded-xl sm:rounded-full px-7 py-3 shrink-0 min-h-[48px] shadow-md"
-              >
-                Join now
-              </button>
-            </div>
-            <p className="text-center text-white/60 text-xs mt-3">No spam. Unsubscribe anytime.</p>
-
+            <form className="w-full max-w-md md:ml-auto">
+              <label htmlFor="nl-email" className="mb-2 block text-sm font-semibold text-[var(--ds-green-deep)]">Email address</label>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <input
+                  id="nl-email"
+                  type="email"
+                  placeholder="you@example.com"
+                  className="min-h-[52px] flex-grow rounded-full border border-[var(--ds-green-deep)]/20 bg-[var(--ds-surface)] px-5 font-medium text-[var(--ds-ink)] outline-none placeholder:text-[var(--ds-muted)] focus:border-[var(--ds-green-deep)] focus:ring-2 focus:ring-[var(--ds-green-deep)]/20"
+                />
+                <button
+                  type="submit"
+                  className="min-h-[52px] shrink-0 rounded-full bg-[var(--ds-green-deep)] px-7 font-bold text-white transition-all duration-200 hover:bg-[var(--ds-green)] active:scale-[0.98]"
+                >
+                  Join now
+                </button>
+              </div>
+              <p className="mt-3 text-xs text-[var(--ds-green-deep)]/70">No spam. Unsubscribe anytime.</p>
+            </form>
           </div>
         </div>
       </section>
