@@ -9,24 +9,33 @@ import { getProducts } from '@/lib/shopify/queries';
 // ISR: revalidate via webhook → revalidateTag("products")
 export const revalidate = 3600;
 
-// ── design-taste-frontend experiment (branch experiment/skill-design-taste) ──
-// Redesign-OVERHAUL of the homepage to contrast with the identity-preserving
-// redesign-existing-projects pass. Palette is page-scoped (CSS vars on the
-// wrapper) so the rest of the site stays Warm Honey. "Forest" palette: deep
-// green + cool off-white + a single amber accent (rotated off the banned
-// premium-consumer cream+brass default). Sans display (no Fraunces). Dials:
-// VARIANCE 8 / MOTION 3 (CSS only) / DENSITY 3.
+// ── Warm Honey + green (branch experiment/skill-design-taste) ──
+// Reconciled palette (redesign-existing-projects pass): the page sits on the
+// brand's Warm Honey base (cream bg, cocoa ink, gold/amber accent), so the
+// cream header and (green) footer frame finally belongs. The experiment's
+// forest green is KEPT as a deliberate, repeated SECONDARY: hero scrim,
+// showcase block, bento + review accents, footer. That makes it a green twist
+// ON the brand, not a cool palette fighting it. Per the skill's color rule:
+// one warm neutral family + amber as the primary/CTA accent + green as a
+// consistent structural color. Green was then dialed back to accents (hero
+// scrim, review quote, footer, icons); the two largest blocks (showcase + the
+// bento feature cell) became warm espresso and the newsletter a soft honey
+// band, not bright orange. Display headings use the brand serif (font-display /
+// Fraunces) site-wide to match the PDP; the hero keeps its composition, only
+// the headline typeface changes.
 const ds: React.CSSProperties = {
   // @ts-expect-error CSS custom properties
-  '--ds-bg': '#F3F5F1',       // cool off-white (not warm cream)
-  '--ds-surface': '#FFFFFF',
-  '--ds-green': '#1F3D2B',    // deep forest - dark sections
+  '--ds-bg': '#FBF3E1',       // brand cream - Warm Honey base
+  '--ds-surface': '#FDF8EC',  // brand paper - cards
+  '--ds-green': '#1F3D2B',    // forest - secondary accent (kept)
   '--ds-green-deep': '#15241A',
-  '--ds-ink': '#1A1F18',      // near-black, faint green
-  '--ds-muted': '#56604F',    // muted body
-  '--ds-amber': '#E0892F',    // single accent
+  '--ds-ink': '#4A2E16',      // brand cocoa - headings + body
+  '--ds-muted': '#6E5D44',    // warm taupe - secondary text
+  '--ds-amber': '#E0892F',    // primary accent / CTAs (kept - hero)
   '--ds-amber-deep': '#C2731E',
-  '--ds-line': '#DDE0D7',
+  '--ds-line': '#E8DCC0',     // warm sand line
+  '--ds-espresso': '#3A2616', // warm-dark feature blocks (showcase, bento cell)
+  '--ds-honey': '#E9CC8E',    // soft honey band (newsletter) - not bright orange
 };
 
 export default async function Home() {
@@ -56,7 +65,7 @@ export default async function Home() {
             <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-white/90 backdrop-blur-sm">
               Premium pet grooming
             </span>
-            <h1 className="mt-5 text-[2.6rem] font-extrabold leading-[1.02] tracking-tight text-white sm:text-6xl lg:text-7xl">
+            <h1 className="mt-5 font-display text-[2.6rem] font-bold leading-[1.02] tracking-tight text-white sm:text-6xl lg:text-7xl">
               Your pet deserves<br />the absolute best.
             </h1>
             <p className="mt-5 max-w-md text-lg leading-relaxed text-white/80">
@@ -91,6 +100,7 @@ export default async function Home() {
 
       {/* ───── Category row (icons, not emoji) ───── */}
       <section className="mx-auto w-full max-w-7xl px-5 pt-14 md:px-8">
+        <p className="mb-5 text-center text-sm font-semibold text-[var(--ds-muted)]">Shop by category</p>
         <div className="flex flex-wrap justify-center gap-3">
           {[
             { label: "Nail care", icon: Scissors, href: "/collections/all" },
@@ -117,7 +127,7 @@ export default async function Home() {
           <div className="max-w-2xl">
             {/* eyebrow #2 of 3 */}
             <span className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ds-amber-deep)]">Best sellers</span>
-            <h2 className="mt-2 text-3xl font-extrabold leading-tight tracking-tight text-[var(--ds-ink)] md:text-[2.6rem]">
+            <h2 className="mt-2 font-display text-3xl font-semibold leading-tight tracking-tight text-[var(--ds-ink)] md:text-[2.6rem]">
               Hand-picked favorites
             </h2>
             <p className="mt-3 text-lg text-[var(--ds-muted)]">
@@ -144,40 +154,90 @@ export default async function Home() {
               </Link>
             </div>
           ) : (
-            featuredProducts.map((product, index) => {
-              const price = parseFloat(product.priceRange.minVariantPrice.amount);
-              const formattedPrice = new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: product.priceRange.minVariantPrice.currencyCode,
-              }).format(price);
-              return (
-                <ProductCard
-                  key={product.handle}
-                  handle={product.handle}
-                  title={product.title}
-                  price={formattedPrice}
-                  imageUrl={product.images?.edges[0]?.node?.url || "/product-placeholder.svg"}
-                  product={product}
-                  priority={index === 0}
-                />
-              );
-            })
+            <>
+              {featuredProducts.map((product, index) => {
+                const price = parseFloat(product.priceRange.minVariantPrice.amount);
+                const formattedPrice = new Intl.NumberFormat('en-US', {
+                  style: 'currency',
+                  currency: product.priceRange.minVariantPrice.currencyCode,
+                }).format(price);
+                return (
+                  <ProductCard
+                    key={product.handle}
+                    handle={product.handle}
+                    title={product.title}
+                    price={formattedPrice}
+                    imageUrl={product.images?.edges[0]?.node?.url || "/product-placeholder.svg"}
+                    product={product}
+                    priority={index === 0}
+                  />
+                );
+              })}
+              {/* Editorial promo tiles fill the row when the catalog is small,
+                  so it's never a lone card beside blank columns. */}
+              {[
+                { title: "Shop the full range", sub: "Every tool for the at-home routine", img: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?q=80&w=800&auto=format&fit=crop", alt: "Two dogs playing outdoors" },
+                { title: "New for the season", sub: "Fresh picks for dogs and cats", img: "https://images.unsplash.com/photo-1450778869180-41d0601e046e?q=80&w=800&auto=format&fit=crop", alt: "A relaxed pet in soft daylight" },
+              ]
+                .slice(0, Math.max(0, 3 - featuredProducts.length))
+                .map((tile) => (
+                  <Link
+                    key={tile.title}
+                    href="/collections/all"
+                    className="group relative flex min-h-[380px] flex-col justify-end overflow-hidden rounded-3xl"
+                  >
+                    <Image src={tile.img} alt={tile.alt} fill sizes="(max-width: 1024px) 100vw, 33vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--ds-green-deep)] via-[var(--ds-green-deep)]/45 to-transparent" />
+                    <div className="relative p-6 text-white">
+                      <h3 className="font-display text-xl font-semibold">{tile.title}</h3>
+                      <p className="mt-1 text-sm text-white/80">{tile.sub}</p>
+                      <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-[var(--ds-amber)]">
+                        Shop now <ArrowRight size={15} strokeWidth={2.5} className="transition-transform group-hover:translate-x-0.5" />
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+            </>
           )}
+        </div>
+      </section>
+
+      {/* ───── Credibility band ───── */}
+      <section className="mx-auto w-full max-w-7xl px-5 md:px-8">
+        <div className="grid grid-cols-1 gap-px overflow-hidden rounded-3xl border border-[var(--ds-line)] bg-[var(--ds-line)] sm:grid-cols-3">
+          {[
+            { n: "12,000+", l: "pets groomed at home" },
+            { n: "4.8 / 5", l: "from 2,100+ reviews" },
+            { n: "30 days", l: "money-back guarantee" },
+          ].map((s) => (
+            <div key={s.l} className="bg-[var(--ds-surface)] px-6 py-8 text-center">
+              <p className="font-display text-3xl font-bold tracking-tight text-[var(--ds-green)] md:text-4xl">{s.n}</p>
+              <p className="mt-1 text-sm font-medium text-[var(--ds-muted)]">{s.l}</p>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* ───── Why Beepaws - asymmetric bento (breaks the 4-equal-card row) ───── */}
       <section className="mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-20">
-        <h2 className="mb-10 max-w-xl text-3xl font-extrabold leading-tight tracking-tight text-[var(--ds-ink)] md:text-[2.6rem]">
+        <h2 className="mb-10 max-w-xl font-display text-3xl font-semibold leading-tight tracking-tight text-[var(--ds-ink)] md:text-[2.6rem]">
           Grooming made easy, at home
         </h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:grid-rows-2 md:gap-5">
-          {/* Large feature cell - deep green, spans 2 rows */}
-          <article className="flex flex-col justify-between rounded-3xl bg-[var(--ds-green)] p-7 text-white md:row-span-2">
-            <Scissors size={30} strokeWidth={1.75} className="text-[var(--ds-amber)]" />
-            <div className="mt-10">
-              <h3 className="text-2xl font-bold">Pro-grade tools</h3>
-              <p className="mt-2 text-base leading-relaxed text-white/75">
+          {/* Large feature cell - deep green with image, spans 2 rows */}
+          <article className="relative flex min-h-[340px] flex-col justify-end overflow-hidden rounded-3xl bg-[var(--ds-espresso)] text-white md:row-span-2">
+            <Image
+              src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?q=80&w=900&auto=format&fit=crop"
+              alt="Close-up of a dog being groomed at home"
+              fill
+              sizes="(max-width: 768px) 100vw, 33vw"
+              className="object-cover opacity-60"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[var(--ds-espresso)] via-[var(--ds-espresso)]/85 to-[var(--ds-espresso)]/25" />
+            <div className="relative p-7">
+              <Scissors size={30} strokeWidth={1.75} className="text-[var(--ds-amber)]" />
+              <h3 className="mt-6 font-display text-2xl font-semibold">Pro-grade tools</h3>
+              <p className="mt-2 text-base leading-relaxed text-white/80">
                 Stainless steel blades and precision-engineered clippers trusted by working groomers, now sized for your living room.
               </p>
             </div>
@@ -186,7 +246,7 @@ export default async function Home() {
           <article className="flex items-start gap-4 rounded-3xl bg-[var(--ds-amber)]/12 p-7 md:col-span-2">
             <Shield size={26} strokeWidth={1.75} className="mt-0.5 shrink-0 text-[var(--ds-amber-deep)]" />
             <div>
-              <h3 className="text-xl font-bold text-[var(--ds-ink)]">Pet-safe by design</h3>
+              <h3 className="font-display text-xl font-semibold text-[var(--ds-ink)]">Pet-safe by design</h3>
               <p className="mt-1.5 text-[var(--ds-muted)] leading-relaxed">
                 Rounded safety tips and low-vibration motors keep even anxious pets calm through the whole session.
               </p>
@@ -195,14 +255,14 @@ export default async function Home() {
           {/* Two small cells */}
           <article className="rounded-3xl border border-[var(--ds-line)] bg-[var(--ds-surface)] p-7">
             <Bath size={24} strokeWidth={1.75} className="text-[var(--ds-green)]" />
-            <h3 className="mt-4 text-lg font-bold text-[var(--ds-ink)]">USB rechargeable</h3>
+            <h3 className="mt-4 font-display text-lg font-semibold text-[var(--ds-ink)]">USB rechargeable</h3>
             <p className="mt-1.5 text-sm leading-relaxed text-[var(--ds-muted)]">
               No batteries. A long charge lasts through full grooming sessions.
             </p>
           </article>
           <article className="rounded-3xl border border-[var(--ds-line)] bg-[var(--ds-surface)] p-7">
             <Star size={24} strokeWidth={1.75} className="text-[var(--ds-green)]" />
-            <h3 className="mt-4 text-lg font-bold text-[var(--ds-ink)]">Loved by thousands</h3>
+            <h3 className="mt-4 font-display text-lg font-semibold text-[var(--ds-ink)]">Loved by thousands</h3>
             <p className="mt-1.5 text-sm leading-relaxed text-[var(--ds-muted)]">
               5-star reviewed products pet parents come back to again and again.
             </p>
@@ -212,9 +272,9 @@ export default async function Home() {
 
       {/* ───── Showcase - split image / text ───── */}
       <section className="mx-auto w-full max-w-7xl px-5 py-8 md:px-8">
-        <div className="grid grid-cols-1 overflow-hidden rounded-[2rem] bg-[var(--ds-green-deep)] md:grid-cols-2">
+        <div className="grid grid-cols-1 overflow-hidden rounded-[2rem] bg-[var(--ds-espresso)] md:grid-cols-2">
           <div className="flex flex-col justify-center p-8 md:p-14">
-            <h2 className="text-3xl font-extrabold leading-tight tracking-tight text-white md:text-4xl lg:text-5xl">
+            <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-white md:text-4xl lg:text-5xl">
               Complete grooming, right at home.
             </h2>
             <p className="mt-5 max-w-md text-lg leading-relaxed text-white/75">
@@ -222,7 +282,7 @@ export default async function Home() {
             </p>
             <Link
               href="/collections/all"
-              className="mt-8 inline-flex h-13 w-fit items-center gap-2 rounded-full bg-[var(--ds-amber)] px-7 py-3.5 font-bold text-[var(--ds-green-deep)] transition-all duration-200 hover:bg-white active:scale-[0.98]"
+              className="mt-8 inline-flex h-13 w-fit items-center gap-2 rounded-full bg-[var(--ds-amber)] px-7 py-3.5 font-bold text-[var(--ds-espresso)] transition-all duration-200 hover:bg-white active:scale-[0.98]"
             >
               Explore all products <ArrowRight size={18} strokeWidth={2} />
             </Link>
@@ -244,7 +304,7 @@ export default async function Home() {
         <div className="mb-10">
           {/* eyebrow #3 of 3 */}
           <span className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ds-amber-deep)]">From pet parents</span>
-          <h2 className="mt-2 text-3xl font-extrabold leading-tight tracking-tight text-[var(--ds-ink)] md:text-[2.6rem]">
+          <h2 className="mt-2 font-display text-3xl font-semibold leading-tight tracking-tight text-[var(--ds-ink)] md:text-[2.6rem]">
             Worth the switch
           </h2>
         </div>
@@ -285,35 +345,35 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ───── Newsletter - full-width amber band ───── */}
+      {/* ───── Newsletter - soft honey band (not bright orange) ───── */}
       <section className="mx-auto w-full max-w-7xl px-5 pb-16 md:px-8">
-        <div className="rounded-[2rem] bg-[var(--ds-amber)] p-8 md:p-14">
+        <div className="rounded-[2rem] bg-[var(--ds-honey)] p-8 md:p-14">
           <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2">
             <div>
-              <h2 className="text-3xl font-extrabold leading-tight tracking-tight text-[var(--ds-green-deep)] md:text-4xl lg:text-5xl">
+              <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-[var(--ds-ink)] md:text-4xl lg:text-5xl">
                 Join the Beepaws family
               </h2>
-              <p className="mt-4 max-w-md text-lg font-medium text-[var(--ds-green-deep)]/80">
-                Sign up and get <span className="font-extrabold">15% off</span> your first order, plus pet care tips every week.
+              <p className="mt-4 max-w-md text-lg font-medium text-[var(--ds-ink)]/80">
+                Sign up and get <span className="font-bold">15% off</span> your first order, plus pet care tips every week.
               </p>
             </div>
             <form className="w-full max-w-md md:ml-auto">
-              <label htmlFor="nl-email" className="mb-2 block text-sm font-semibold text-[var(--ds-green-deep)]">Email address</label>
+              <label htmlFor="nl-email" className="mb-2 block text-sm font-semibold text-[var(--ds-ink)]">Email address</label>
               <div className="flex flex-col gap-2 sm:flex-row">
                 <input
                   id="nl-email"
                   type="email"
                   placeholder="you@example.com"
-                  className="min-h-[52px] flex-grow rounded-full border border-[var(--ds-green-deep)]/20 bg-[var(--ds-surface)] px-5 font-medium text-[var(--ds-ink)] outline-none placeholder:text-[var(--ds-muted)] focus:border-[var(--ds-green-deep)] focus:ring-2 focus:ring-[var(--ds-green-deep)]/20"
+                  className="min-h-[52px] flex-grow rounded-full border border-[var(--ds-ink)]/15 bg-[var(--ds-surface)] px-5 font-medium text-[var(--ds-ink)] outline-none placeholder:text-[var(--ds-muted)] focus:border-[var(--ds-amber-deep)] focus:ring-2 focus:ring-[var(--ds-amber-deep)]/25"
                 />
                 <button
                   type="submit"
-                  className="min-h-[52px] shrink-0 rounded-full bg-[var(--ds-green-deep)] px-7 font-bold text-white transition-all duration-200 hover:bg-[var(--ds-green)] active:scale-[0.98]"
+                  className="min-h-[52px] shrink-0 rounded-full bg-[var(--ds-amber)] px-7 font-bold text-white transition-all duration-200 hover:bg-[var(--ds-amber-deep)] active:scale-[0.98]"
                 >
                   Join now
                 </button>
               </div>
-              <p className="mt-3 text-xs text-[var(--ds-green-deep)]/70">No spam. Unsubscribe anytime.</p>
+              <p className="mt-3 text-xs text-[var(--ds-ink)]/70">No spam. Unsubscribe anytime.</p>
             </form>
           </div>
         </div>
