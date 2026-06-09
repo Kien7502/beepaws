@@ -70,7 +70,7 @@ export default async function Home() {
         <div className="absolute inset-0 bg-gradient-to-tr from-[var(--ds-green-deep)] via-[var(--ds-green-deep)]/70 to-transparent" />
 
         <div className="relative z-10 mx-auto flex min-h-[min(94dvh,920px)] max-w-7xl flex-col justify-end px-5 pb-20 pt-24 md:px-8 md:pb-28">
-          <div className="max-w-2xl">
+          <div className="ds-hero-stagger max-w-2xl">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-white/90 backdrop-blur-sm">
               Premium pet grooming
             </span>
@@ -228,11 +228,11 @@ export default async function Home() {
       </section>
 
       {/* ───── Why Beepaws - asymmetric bento (breaks the 4-equal-card row) ───── */}
-      <section className="ds-reveal mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-20">
-        <h2 className="mb-10 max-w-xl font-display text-3xl font-semibold leading-tight tracking-tight text-[var(--ds-ink)] md:text-[2.6rem]">
+      <section className="mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-20">
+        <h2 className="ds-reveal mb-10 max-w-xl font-display text-3xl font-semibold leading-tight tracking-tight text-[var(--ds-ink)] md:text-[2.6rem]">
           Grooming made easy, at home
         </h2>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:grid-rows-2 md:gap-5">
+        <div className="ds-stagger grid grid-cols-1 gap-4 md:grid-cols-3 md:grid-rows-2 md:gap-5">
           {/* Large feature cell - deep green with image, spans 2 rows */}
           <article className="relative flex min-h-[340px] flex-col justify-end overflow-hidden rounded-3xl bg-[var(--ds-espresso)] text-white md:row-span-2">
             <Image

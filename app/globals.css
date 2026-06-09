@@ -190,6 +190,26 @@ body {
 .ds-stagger.is-visible > *:nth-child(3) { transition-delay: 180ms, 0ms; }
 .ds-stagger.is-visible > *:nth-child(4) { transition-delay: 250ms, 0ms; }
 
+/* ─── Hero entrance ────────────────────────────────────────────────────────
+   The hero copy is above the fold, so it animates on load (not on scroll): its
+   direct children fade + rise in sequence. Keyframe + `both` fill holds the
+   hidden start during each delay, then the resting state, so there is no flash
+   and no JS. Buttons inside keep their own press transform (separate element). */
+.ds-hero-stagger > * {
+  animation: ds-hero-in 700ms var(--ds-ease-out) both;
+}
+.ds-hero-stagger > *:nth-child(1) { animation-delay: 100ms; }
+.ds-hero-stagger > *:nth-child(2) { animation-delay: 180ms; }
+.ds-hero-stagger > *:nth-child(3) { animation-delay: 260ms; }
+.ds-hero-stagger > *:nth-child(4) { animation-delay: 340ms; }
+@keyframes ds-hero-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-hero-stagger > * { animation: none; }
+}
+
 @layer base {
   /* ─── Universal press feedback ─────────────────────────────────────────────
      Every action button dips slightly when pressed, so the UI feels responsive
