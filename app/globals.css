@@ -88,6 +88,9 @@
   --elev-shadow-card-hover:  0 14px 40px -16px rgb(74 46 22 / 0.18);
   --elev-shadow-elevated:    0 8px 30px -14px rgb(74 46 22 / 0.14);
 
+  /* Strong ease-out for homepage motion (built-in curves are too weak) */
+  --ds-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
   /* ─── Legacy brand tokens ─────────────────────────────────────────────────
      Defined but not currently referenced by any component (verified via grep).
      Kept here remapped to Warm Honey so if anything reaches for them they
@@ -127,6 +130,84 @@ body {
 @keyframes waveScroll {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
+}
+
+/* ─── Homepage motion (Warm Honey experiment) ──────────────────────────────
+   .ds-reveal: sections fade + rise as they enter the viewport. Driven by a
+   small IntersectionObserver (components/RevealObserver) that toggles
+   .is-visible, NOT a view() scroll timeline — Tailwind v4's Lightning CSS can
+   strip `animation-timeline`, and support is uneven, so the observer is
+   reliable everywhere. Strong custom ease-out so the entrance has intent.
+   A <noscript> on the page restores visibility when JS is unavailable.
+   .ds-lift: soft hover lift for static cards (pointer devices only). */
+.ds-reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 660ms var(--ds-ease-out), transform 660ms var(--ds-ease-out);
+  will-change: opacity, transform;
+}
+.ds-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Keep the comprehension-aiding fade; drop the movement. */
+  .ds-reveal {
+    transform: none;
+    transition: opacity 400ms ease;
+  }
+}
+.ds-lift {
+  transition: transform 200ms var(--ds-ease-out), box-shadow 200ms var(--ds-ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .ds-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 36px -18px rgba(74, 46, 22, 0.25);
+  }
+}
+
+/* ─── Staggered reveal (featured product row) ──────────────────────────────
+   The grid container gets .is-visible from the same observer; its direct
+   children then cascade in with a short delay between them (~70ms apart).
+   Reveal is OPACITY-ONLY on purpose: setting a resting transform here would
+   override a child's own press/hover transform (unlayered CSS beats Tailwind's
+   layered active: utility), so the tiles could not dip on press. The short
+   transform leg of the transition exists only so that press feedback on the
+   button-styled tiles animates; its delay is pinned to 0 (second value) so the
+   press stays instant while the fade is what staggers.
+   A <noscript> on the page restores visibility when JS is unavailable. */
+.ds-stagger > * {
+  opacity: 0;
+  transition: opacity 520ms var(--ds-ease-out), transform 150ms var(--ds-ease-out);
+  will-change: opacity;
+}
+.ds-stagger.is-visible > * {
+  opacity: 1;
+}
+.ds-stagger.is-visible > *:nth-child(1) { transition-delay: 40ms, 0ms; }
+.ds-stagger.is-visible > *:nth-child(2) { transition-delay: 110ms, 0ms; }
+.ds-stagger.is-visible > *:nth-child(3) { transition-delay: 180ms, 0ms; }
+.ds-stagger.is-visible > *:nth-child(4) { transition-delay: 250ms, 0ms; }
+
+@layer base {
+  /* ─── Universal press feedback ─────────────────────────────────────────────
+     Every action button dips slightly when pressed, so the UI feels responsive
+     to click and tap (fires on :active, including touch). Excludes disabled
+     buttons and disclosure/menu toggles (accordions, dropdowns, popovers, which
+     use aria-expanded / aria-haspopup) where a press-scale looks wrong. In
+     @layer base so a component's own active:scale-* utility still wins. */
+  button {
+    transition: transform 140ms var(--ds-ease-out);
+  }
+  button:not(:disabled):not([aria-disabled="true"]):not([aria-expanded]):not([aria-haspopup]):active {
+    transform: scale(0.97);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  button:active {
+    transform: none;
+  }
 }
 
 

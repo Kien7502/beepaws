@@ -2,6 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import ProductCard from '@/components/product/ProductCard';
+import RevealObserver from '@/components/RevealObserver';
 import { ShoppingBag, Shield, Truck, RefreshCcw, ArrowRight, Scissors, Bath, Dog, Cat, Bone, Wind, Star } from 'lucide-react';
 
 import { getProducts } from '@/lib/shopify/queries';
@@ -47,6 +48,14 @@ export default async function Home() {
       style={ds}
       className="flex w-full flex-col bg-[var(--ds-bg)] text-[var(--ds-ink)] [font-family:var(--font-body)]"
     >
+      {/* Scroll-reveal driver + no-JS fallback so content is never hidden */}
+      <RevealObserver />
+      <noscript
+        dangerouslySetInnerHTML={{
+          __html: '<style>.ds-reveal,.ds-stagger>*{opacity:1!important;transform:none!important}</style>',
+        }}
+      />
+
       {/* ───── Hero - full-bleed image, bottom-left anchored (asymmetric) ───── */}
       <section className="relative min-h-[min(94dvh,920px)] w-full overflow-hidden">
         <Image
@@ -74,13 +83,13 @@ export default async function Home() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/collections/all"
-                className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-[var(--ds-amber)] px-9 text-base font-bold text-[var(--ds-green-deep)] shadow-lg transition-all duration-200 hover:bg-[var(--ds-amber-deep)] hover:text-white active:scale-[0.98]"
+                className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-[var(--ds-amber)] px-9 text-base font-bold text-[var(--ds-green-deep)] shadow-lg transition-all duration-200 hover:bg-[var(--ds-amber-deep)] hover:text-white active:scale-[0.97]"
               >
                 <ShoppingBag size={20} strokeWidth={2} /> Shop now
               </Link>
               <Link
                 href="/collections/all"
-                className="inline-flex h-14 items-center justify-center rounded-full border-2 border-white/40 px-9 text-base font-bold text-white backdrop-blur-sm transition-all duration-200 hover:bg-white/10 active:scale-[0.98]"
+                className="inline-flex h-14 items-center justify-center rounded-full border-2 border-white/40 px-9 text-base font-bold text-white backdrop-blur-sm transition-all duration-200 hover:bg-white/10 active:scale-[0.97]"
               >
                 View best sellers
               </Link>
@@ -99,7 +108,7 @@ export default async function Home() {
       </section>
 
       {/* ───── Category row (icons, not emoji) ───── */}
-      <section className="mx-auto w-full max-w-7xl px-5 pt-14 md:px-8">
+      <section className="ds-reveal mx-auto w-full max-w-7xl px-5 pt-14 md:px-8">
         <p className="mb-5 text-center text-sm font-semibold text-[var(--ds-muted)]">Shop by category</p>
         <div className="flex flex-wrap justify-center gap-3">
           {[
@@ -112,7 +121,7 @@ export default async function Home() {
             <Link
               key={cat.label}
               href={cat.href}
-              className="inline-flex items-center gap-2 rounded-full border border-[var(--ds-line)] bg-[var(--ds-surface)] px-5 py-2.5 text-sm font-semibold text-[var(--ds-ink)] transition-all duration-200 hover:border-[var(--ds-green)] hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 rounded-full border border-[var(--ds-line)] bg-[var(--ds-surface)] px-5 py-2.5 text-sm font-semibold text-[var(--ds-ink)] transition duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-[var(--ds-green)] hover:-translate-y-0.5 active:scale-[0.97]"
             >
               <cat.icon size={16} strokeWidth={2} className="text-[var(--ds-green)]" />
               {cat.label}
@@ -123,7 +132,7 @@ export default async function Home() {
 
       {/* ───── Featured products (real product grid) ───── */}
       <section className="mx-auto w-full max-w-7xl px-5 pb-16 pt-16 md:px-8 md:pt-20">
-        <div className="mb-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
+        <div className="ds-reveal mb-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
           <div className="max-w-2xl">
             {/* eyebrow #2 of 3 */}
             <span className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ds-amber-deep)]">Best sellers</span>
@@ -139,7 +148,7 @@ export default async function Home() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 md:gap-8">
+        <div className="ds-stagger grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 md:gap-8">
           {featuredProducts.length === 0 ? (
             <div className="col-span-full mx-auto flex max-w-xl flex-col items-center justify-center rounded-3xl border border-dashed border-[var(--ds-line)] bg-[var(--ds-surface)] px-4 py-24 text-center">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--ds-green)]/10 text-[var(--ds-green)]" aria-hidden>
@@ -149,7 +158,7 @@ export default async function Home() {
               <p className="mt-2 font-medium text-[var(--ds-muted)]">
                 Activate products and publish them to the Online Store sales channel to show them here.
               </p>
-              <Link href="/collections/all" className="mt-6 inline-flex h-12 items-center rounded-full border-2 border-[var(--ds-green)] px-6 font-bold text-[var(--ds-green)] transition-all hover:bg-[var(--ds-green)] hover:text-white">
+              <Link href="/collections/all" className="mt-6 inline-flex h-12 items-center rounded-full border-2 border-[var(--ds-green)] px-6 font-bold text-[var(--ds-green)] transition-all hover:bg-[var(--ds-green)] hover:text-white active:scale-[0.97]">
                 Browse catalog
               </Link>
             </div>
@@ -184,7 +193,7 @@ export default async function Home() {
                   <Link
                     key={tile.title}
                     href="/collections/all"
-                    className="group relative flex min-h-[380px] flex-col justify-end overflow-hidden rounded-3xl"
+                    className="group relative flex min-h-[380px] flex-col justify-end overflow-hidden rounded-3xl active:scale-[0.97]"
                   >
                     <Image src={tile.img} alt={tile.alt} fill sizes="(max-width: 1024px) 100vw, 33vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-[var(--ds-green-deep)] via-[var(--ds-green-deep)]/45 to-transparent" />
@@ -203,7 +212,7 @@ export default async function Home() {
       </section>
 
       {/* ───── Credibility band ───── */}
-      <section className="mx-auto w-full max-w-7xl px-5 md:px-8">
+      <section className="ds-reveal mx-auto w-full max-w-7xl px-5 md:px-8">
         <div className="grid grid-cols-1 gap-px overflow-hidden rounded-3xl border border-[var(--ds-line)] bg-[var(--ds-line)] sm:grid-cols-3">
           {[
             { n: "12,000+", l: "pets groomed at home" },
@@ -219,7 +228,7 @@ export default async function Home() {
       </section>
 
       {/* ───── Why Beepaws - asymmetric bento (breaks the 4-equal-card row) ───── */}
-      <section className="mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-20">
+      <section className="ds-reveal mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-20">
         <h2 className="mb-10 max-w-xl font-display text-3xl font-semibold leading-tight tracking-tight text-[var(--ds-ink)] md:text-[2.6rem]">
           Grooming made easy, at home
         </h2>
@@ -243,7 +252,7 @@ export default async function Home() {
             </div>
           </article>
           {/* Wide cell - amber tint */}
-          <article className="flex items-start gap-4 rounded-3xl bg-[var(--ds-amber)]/12 p-7 md:col-span-2">
+          <article className="ds-lift flex items-start gap-4 rounded-3xl bg-[var(--ds-amber)]/12 p-7 md:col-span-2">
             <Shield size={26} strokeWidth={1.75} className="mt-0.5 shrink-0 text-[var(--ds-amber-deep)]" />
             <div>
               <h3 className="font-display text-xl font-semibold text-[var(--ds-ink)]">Pet-safe by design</h3>
@@ -253,14 +262,14 @@ export default async function Home() {
             </div>
           </article>
           {/* Two small cells */}
-          <article className="rounded-3xl border border-[var(--ds-line)] bg-[var(--ds-surface)] p-7">
+          <article className="ds-lift rounded-3xl border border-[var(--ds-line)] bg-[var(--ds-surface)] p-7">
             <Bath size={24} strokeWidth={1.75} className="text-[var(--ds-green)]" />
             <h3 className="mt-4 font-display text-lg font-semibold text-[var(--ds-ink)]">USB rechargeable</h3>
             <p className="mt-1.5 text-sm leading-relaxed text-[var(--ds-muted)]">
               No batteries. A long charge lasts through full grooming sessions.
             </p>
           </article>
-          <article className="rounded-3xl border border-[var(--ds-line)] bg-[var(--ds-surface)] p-7">
+          <article className="ds-lift rounded-3xl border border-[var(--ds-line)] bg-[var(--ds-surface)] p-7">
             <Star size={24} strokeWidth={1.75} className="text-[var(--ds-green)]" />
             <h3 className="mt-4 font-display text-lg font-semibold text-[var(--ds-ink)]">Loved by thousands</h3>
             <p className="mt-1.5 text-sm leading-relaxed text-[var(--ds-muted)]">
@@ -271,7 +280,7 @@ export default async function Home() {
       </section>
 
       {/* ───── Showcase - split image / text ───── */}
-      <section className="mx-auto w-full max-w-7xl px-5 py-8 md:px-8">
+      <section className="ds-reveal mx-auto w-full max-w-7xl px-5 py-8 md:px-8">
         <div className="grid grid-cols-1 overflow-hidden rounded-[2rem] bg-[var(--ds-espresso)] md:grid-cols-2">
           <div className="flex flex-col justify-center p-8 md:p-14">
             <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-white md:text-4xl lg:text-5xl">
@@ -282,7 +291,7 @@ export default async function Home() {
             </p>
             <Link
               href="/collections/all"
-              className="mt-8 inline-flex h-13 w-fit items-center gap-2 rounded-full bg-[var(--ds-amber)] px-7 py-3.5 font-bold text-[var(--ds-espresso)] transition-all duration-200 hover:bg-white active:scale-[0.98]"
+              className="mt-8 inline-flex h-13 w-fit items-center gap-2 rounded-full bg-[var(--ds-amber)] px-7 py-3.5 font-bold text-[var(--ds-espresso)] transition-all duration-200 hover:bg-white active:scale-[0.97]"
             >
               Explore all products <ArrowRight size={18} strokeWidth={2} />
             </Link>
@@ -300,7 +309,7 @@ export default async function Home() {
       </section>
 
       {/* ───── Reviews - asymmetric: one lead quote + two stacked ───── */}
-      <section className="mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-20">
+      <section className="ds-reveal mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-20">
         <div className="mb-10">
           {/* eyebrow #3 of 3 */}
           <span className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ds-amber-deep)]">From pet parents</span>
@@ -310,12 +319,12 @@ export default async function Home() {
         </div>
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           {/* Lead quote */}
-          <figure className="flex flex-col justify-between rounded-3xl bg-[var(--ds-green)] p-8 text-white md:p-10">
+          <figure className="flex flex-col justify-between rounded-3xl bg-[var(--ds-espresso)] p-8 text-white md:p-10">
             <blockquote className="text-xl font-medium leading-relaxed md:text-2xl">
               &ldquo;The LED nail clipper changed how I groom at home. I can finally see exactly where to cut, so I never go too short, and my dog stays calm the whole time.&rdquo;
             </blockquote>
             <figcaption className="mt-8 flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--ds-amber)] font-bold text-[var(--ds-green-deep)]">S</span>
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--ds-amber)] font-bold text-[var(--ds-espresso)]">S</span>
               <span>
                 <span className="block font-bold">Sarah M.</span>
                 <span className="block text-sm text-white/60">Labrador owner</span>
@@ -328,7 +337,7 @@ export default async function Home() {
               { name: "James T.", pet: "Persian cat owner", avatar: "J", text: "Whisper-quiet trimmer. My fluffy Persian barely notices it, which beats fighting her at the salon every month." },
               { name: "Linh N.", pet: "Poodle owner", avatar: "L", text: "The 3-in-1 kit clips, trims nails, and cleans paws in one device. My poodle's weekly groom now takes 20 minutes." },
             ].map((r) => (
-              <figure key={r.name} className="flex flex-col justify-between rounded-3xl border border-[var(--ds-line)] bg-[var(--ds-surface)] p-7">
+              <figure key={r.name} className="ds-lift flex flex-col justify-between rounded-3xl border border-[var(--ds-line)] bg-[var(--ds-surface)] p-7">
                 <blockquote className="text-base leading-relaxed text-[var(--ds-ink)]">
                   &ldquo;{r.text}&rdquo;
                 </blockquote>
@@ -346,7 +355,7 @@ export default async function Home() {
       </section>
 
       {/* ───── Newsletter - soft honey band (not bright orange) ───── */}
-      <section className="mx-auto w-full max-w-7xl px-5 pb-16 md:px-8">
+      <section className="ds-reveal mx-auto w-full max-w-7xl px-5 pb-16 md:px-8">
         <div className="rounded-[2rem] bg-[var(--ds-honey)] p-8 md:p-14">
           <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2">
             <div>
@@ -368,7 +377,7 @@ export default async function Home() {
                 />
                 <button
                   type="submit"
-                  className="min-h-[52px] shrink-0 rounded-full bg-[var(--ds-amber)] px-7 font-bold text-white transition-all duration-200 hover:bg-[var(--ds-amber-deep)] active:scale-[0.98]"
+                  className="min-h-[52px] shrink-0 rounded-full bg-[var(--ds-amber)] px-7 font-bold text-white transition-all duration-200 hover:bg-[var(--ds-amber-deep)] active:scale-[0.97]"
                 >
                   Join now
                 </button>
