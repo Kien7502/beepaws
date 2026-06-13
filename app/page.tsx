@@ -77,14 +77,14 @@ export default function Home() {
               Keep your pet healthy,<br />on your own terms.
             </h1>
             <p className="mt-5 max-w-md text-lg leading-relaxed text-white/80">
-              Honest tools for the care you would rather do at home. We tell you what they do, and what they do not.
+              Honest tools for the care you would rather do at home. We don&rsquo;t claim to replace your vet — just to keep you out of the chair for the easy stuff.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/collections/all"
                 className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-[var(--ds-amber)] px-9 text-base font-bold text-[var(--ds-green-deep)] shadow-lg transition-all duration-200 hover:bg-[var(--ds-amber-deep)] hover:text-white active:scale-[0.97]"
               >
-                <ShoppingBag size={20} strokeWidth={2} /> Shop dental
+                <ShoppingBag size={20} strokeWidth={2} /> {SHOW_GROOMING ? "Shop the range" : "Shop dental"}
               </Link>
               <Link
                 href="#why"
@@ -110,9 +110,11 @@ export default function Home() {
           <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[2.4rem]">
             {SHOW_GROOMING ? "Shop by what your pet needs" : "Built first: dental"}
           </h2>
-          <p className="mb-10 mt-3 max-w-xl text-brown">
-            We start with what we make today, and add categories only when they are ready.
-          </p>
+          {!SHOW_GROOMING && (
+            <p className="mb-10 mt-3 max-w-xl text-brown">
+              We start with what we make today, and add categories only when they&rsquo;re ready.
+            </p>
+          )}
           {!SHOW_GROOMING ? (
             /* Launch: a single dental product spotlight (60/40) earns the full
                width. The price-anchor line (voice principle 4) makes it read as a
@@ -125,7 +127,7 @@ export default function Home() {
               <div className="flex flex-col justify-center p-8 md:col-span-2 md:p-10">
                 <h3 className="font-display text-3xl font-semibold text-cocoa">Dental</h3>
                 <p className="mt-3 leading-relaxed text-brown">
-                  Pearly whites, pink gums, fresh breath, without the anesthesia.
+                  Pearly whites, pink gums, fresh breath — without the anesthesia.
                 </p>
                 <p className="mt-4 font-display text-lg font-semibold text-clay">
                   A $40 device, or a $1,400 vet bill.
@@ -140,7 +142,7 @@ export default function Home() {
             </article>
           ) : (
             /* Grooming launch: revert to the blueprint's two-card grid. */
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="mt-10 grid gap-6 md:grid-cols-2">
               <article className="ds-lift overflow-hidden rounded-3xl border border-line bg-card shadow-[var(--elev-shadow-card)]">
                 <div className="flex aspect-[16/10] items-center justify-center bg-honey-tint">
                   <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Dental photo</span>
@@ -148,7 +150,7 @@ export default function Home() {
                 <div className="p-7">
                   <h3 className="font-display text-2xl font-semibold text-cocoa">Dental</h3>
                   <p className="mt-2 leading-relaxed text-brown">
-                    Pearly whites, pink gums, fresh breath, without the anesthesia.
+                    Pearly whites, pink gums, fresh breath — without the anesthesia.
                   </p>
                   <p className="mt-3 font-semibold text-clay">A $40 device, or a $1,400 vet bill.</p>
                   <Link
@@ -212,7 +214,7 @@ export default function Home() {
               <div>
                 <h3 className="font-display text-xl font-semibold text-cocoa">Honest about what it does</h3>
                 <p className="mt-1.5 leading-relaxed text-brown">
-                  Quiet, not silent. Results in weeks, not overnight. We tell you what to expect instead of promising a miracle.
+                  Results in weeks, not overnight. Quiet, not silent. We tell you what this does — and what it doesn&rsquo;t.
                 </p>
               </div>
             </article>
@@ -230,8 +232,8 @@ export default function Home() {
               <h3 className="mt-4 font-display text-lg font-semibold text-cocoa">Made for the pet you actually have</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-brown">
                 {SHOW_GROOMING
-                  ? "Small breeds, senior pets, long-haired cats with spicy opinions about brushes, anxious dogs. Real names, real breeds, real photos. Never stock fur."
-                  : "Small breeds. Senior pets. Anxious dogs. Cats whose mouths have been quietly ignored. Real names, real breeds, real photos. Never stock fur."}
+                  ? "Small breeds. Senior pets. Anxious dogs. Long-haired cats with spicy opinions about brushes. Real names, real breeds, real photos — never stock fur."
+                  : "Small breeds. Senior pets. Anxious dogs. Cats whose mouths have been quietly ignored. Real names, real breeds, real photos — never stock fur."}
               </p>
             </article>
           </div>
@@ -289,8 +291,8 @@ export default function Home() {
           </h2>
           <p className="mt-4 leading-relaxed text-brown">
             {SHOW_GROOMING
-              ? "Dental first, grooming now live. Supplements when we can do them honestly. We would rather ship a short, honest range than a long catalogue we cannot stand behind."
-              : "Right now BeePaws is one thing done well: at-home dental care. Grooming is next, and supplements after that, but only when we can do them honestly. We would rather ship a short, honest range than a long catalogue we cannot stand behind."}
+              ? "BeePaws started with at-home dental. Grooming is now live, and supplements will come when we can do them honestly. We would rather ship a tight, honest range than promise a catalogue we can't fully stand behind."
+              : "Right now BeePaws is one thing done well: at-home dental care. Grooming is next, and supplements only when we can do them honestly. We would rather ship a tight, honest range than promise a catalogue we can't fully stand behind."}
           </p>
         </div>
       </section>
@@ -311,7 +313,7 @@ export default function Home() {
             href="/collections/all"
             className="mt-7 inline-flex items-center justify-center rounded-xl bg-gold px-8 py-4 text-base font-bold text-cocoa shadow-sm transition-colors hover:bg-gold-deep hover:text-white active:scale-[0.97] md:text-lg"
           >
-            Shop dental
+            {SHOW_GROOMING ? "Shop the range" : "Shop dental"}
           </Link>
           {/* Guarantee card - paper island, gold seal (matches the product page) */}
           <div className="mx-auto mt-9 grid items-center gap-7 rounded-2xl border-2 border-gold bg-paper p-7 text-left shadow-[0_14px_40px_-16px_rgba(0,0,0,0.4)] md:mt-10 md:grid-cols-[auto_1fr] md:gap-9 md:p-9">
@@ -348,7 +350,7 @@ export default function Home() {
                 Join the BeePaws family
               </h2>
               <p className="mt-4 max-w-md text-lg font-medium text-[var(--ds-ink)]/80">
-                A <span className="font-bold">15% welcome code</span> and one short email a month. No spam, no daily deals.
+                Get <span className="font-bold">15% off your first order</span>, then one email a month — no spam, no daily deals, just a note when there&rsquo;s something genuinely new worth telling you about.
               </p>
             </div>
             <form className="w-full max-w-md md:ml-auto">
