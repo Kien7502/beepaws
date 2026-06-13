@@ -41,7 +41,7 @@ const Footer = () => {
                 <Image src={titleIcon} alt="Beepaws" className="h-9 w-auto" />
               </Link>
               <p className="text-[#A7B6A0] mb-6 max-w-sm leading-relaxed">
-                We provide the highest quality toys, beds, and grooming supplies to keep your pets happy and healthy.
+                BeePaws makes at-home pet wellness tools, dental and grooming, honestly priced against the real alternatives. No fake urgency, no hidden ingredients, no clinical trials we did not run.
               </p>
               <h4 className="font-bold text-[#EDF0E9] uppercase text-[13px] tracking-wider mb-3">
                 Subscribe to our newsletter

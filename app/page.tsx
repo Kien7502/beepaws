@@ -105,34 +105,60 @@ export default function Home() {
           ported motion (ds-reveal + ds-lift). DRAFT copy - needs the voice pass. */}
       <section className="bg-cream">
         <div className="ds-reveal mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-20">
+          {/* Heading reframes dental-only as a deliberate sequencing choice at
+              launch; reverts to the multi-category promise when grooming is live. */}
           <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[2.4rem]">
-            Shop by what your pet needs
+            {SHOW_GROOMING ? "Shop by what your pet needs" : "Built first: dental"}
           </h2>
           <p className="mb-10 mt-3 max-w-xl text-brown">
             We start with what we make today, and add categories only when they are ready.
           </p>
-          <div className={SHOW_GROOMING ? "grid gap-6 md:grid-cols-2" : "max-w-xl"}>
-            {/* Slot 1 - Dental (live at launch) */}
-            <article className="ds-lift overflow-hidden rounded-3xl border border-line bg-card shadow-[var(--elev-shadow-card)]">
-              <div className="flex aspect-[16/10] items-center justify-center bg-honey-tint">
-                {/* TODO: real dental category / product photo (no stock, no fur close-up) */}
-                <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Dental photo</span>
+          {!SHOW_GROOMING ? (
+            /* Launch: a single dental product spotlight (60/40) earns the full
+               width. The price-anchor line (voice principle 4) makes it read as a
+               real spotlight, not a placeholder card. Real product photo needed. */
+            <article className="ds-lift grid overflow-hidden rounded-3xl border border-line bg-card shadow-[var(--elev-shadow-card)] md:grid-cols-5">
+              <div className="relative flex min-h-[260px] items-center justify-center bg-honey-tint md:col-span-3 md:min-h-[380px]">
+                {/* TODO: real product photo - the ultrasonic device in a calm domestic setting (no stock) */}
+                <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Product photo</span>
               </div>
-              <div className="p-7">
-                <h3 className="font-display text-2xl font-semibold text-cocoa">Dental care</h3>
-                <p className="mt-2 leading-relaxed text-brown">
-                  Fresh breath, pearly whites, pink gums. The at-home dental routine.
+              <div className="flex flex-col justify-center p-8 md:col-span-2 md:p-10">
+                <h3 className="font-display text-3xl font-semibold text-cocoa">Dental</h3>
+                <p className="mt-3 leading-relaxed text-brown">
+                  Pearly whites, pink gums, fresh breath, without the anesthesia.
+                </p>
+                <p className="mt-4 font-display text-lg font-semibold text-clay">
+                  A $40 device, or a $1,400 vet bill.
                 </p>
                 <Link
                   href="/collections/all"
-                  className="mt-5 inline-flex h-12 items-center rounded-full bg-clay px-6 font-bold text-white transition-colors hover:bg-cocoa active:scale-[0.97]"
+                  className="mt-6 inline-flex h-12 w-fit items-center rounded-full bg-clay px-6 font-bold text-white transition-colors hover:bg-cocoa active:scale-[0.97]"
                 >
                   Shop dental
                 </Link>
               </div>
             </article>
-            {/* Slot 2 - Grooming (hidden until SKUs go live) */}
-            {SHOW_GROOMING && (
+          ) : (
+            /* Grooming launch: revert to the blueprint's two-card grid. */
+            <div className="grid gap-6 md:grid-cols-2">
+              <article className="ds-lift overflow-hidden rounded-3xl border border-line bg-card shadow-[var(--elev-shadow-card)]">
+                <div className="flex aspect-[16/10] items-center justify-center bg-honey-tint">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Dental photo</span>
+                </div>
+                <div className="p-7">
+                  <h3 className="font-display text-2xl font-semibold text-cocoa">Dental</h3>
+                  <p className="mt-2 leading-relaxed text-brown">
+                    Pearly whites, pink gums, fresh breath, without the anesthesia.
+                  </p>
+                  <p className="mt-3 font-semibold text-clay">A $40 device, or a $1,400 vet bill.</p>
+                  <Link
+                    href="/collections/all"
+                    className="mt-5 inline-flex h-12 items-center rounded-full bg-clay px-6 font-bold text-white transition-colors hover:bg-cocoa active:scale-[0.97]"
+                  >
+                    Shop dental
+                  </Link>
+                </div>
+              </article>
               <article className="ds-lift overflow-hidden rounded-3xl border border-line bg-card shadow-[var(--elev-shadow-card)]">
                 <div className="flex aspect-[16/10] items-center justify-center bg-honey-tint">
                   <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Grooming photo</span>
@@ -142,6 +168,7 @@ export default function Home() {
                   <p className="mt-2 leading-relaxed text-brown">
                     Quiet tools, calm pets, done at home. Trimmers sized for the pet you actually have.
                   </p>
+                  <p className="mt-3 font-semibold text-clay">Less than one professional groomer trip. Once.</p>
                   <Link
                     href="/collections/all"
                     className="mt-5 inline-flex h-12 items-center rounded-full bg-clay px-6 font-bold text-white transition-colors hover:bg-cocoa active:scale-[0.97]"
@@ -150,8 +177,8 @@ export default function Home() {
                   </Link>
                 </div>
               </article>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -202,48 +229,68 @@ export default function Home() {
               <PawPrint size={24} strokeWidth={1.75} className="text-clay" />
               <h3 className="mt-4 font-display text-lg font-semibold text-cocoa">Made for the pet you actually have</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-brown">
-                Small breeds, senior pets, long-haired cats, anxious dogs. Tuned for real pets, not a one-size catalog.
+                {SHOW_GROOMING
+                  ? "Small breeds, senior pets, long-haired cats with spicy opinions about brushes, anxious dogs. Real names, real breeds, real photos. Never stock fur."
+                  : "Small breeds. Senior pets. Anxious dogs. Cats whose mouths have been quietly ignored. Real names, real breeds, real photos. Never stock fur."}
               </p>
             </article>
           </div>
         </div>
       </section>
 
-      {/* ───── Section 5 · Real proof - testimonials ───────────────────────────
-          Blueprint §5. A trust band, not a sales section. Brand-level quotes
-          (the brand experience, not product specs). Each needs a REAL name, pet,
-          and unretouched photo - no "thousands of customers", no invented counts.
-          The cards below are clearly-marked placeholders for the VOC pass. */}
+      {/* ───── Section 5 · Real proof - testimonials (launch-bridge Rev 1) ───────
+          Strengthened to carry the brand weight an origin section would: larger
+          photo-led cards, more breathing room, breed-matched attribution, four
+          testimonials. Photos MUST be real customer-and-pet shots with permission
+          (owner content task) - NEVER stock. Quotes are brand-experience draft. */}
       <section className="bg-honey-tint">
-        <div className="ds-reveal mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-20">
+        <div className="ds-reveal mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-24">
           <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[2.6rem]">
-            In their own words
+            Real pets. Real moms. Real photos.
           </h2>
-          <p className="mb-10 mt-3 max-w-xl text-brown">
-            Real pet parents, real pets. No stock photos, no invented numbers.
-          </p>
-          <div className="ds-stagger grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="ds-stagger mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 md:gap-8">
             {[
-              "I never thought I'd be the kind of person who does this at home. Turns out I am, and I like it.",
-              "They told me it would take a few weeks, not a few days. It did. I trust a brand that levels with me.",
-              "I read every label before it goes near my cat. This is the first one I didn't put back.",
-            ].map((quote, i) => (
-              <figure key={i} className="ds-lift flex h-full flex-col rounded-3xl border border-line bg-card p-7">
-                <blockquote className="flex-1 text-base leading-relaxed text-cocoa">&ldquo;{quote}&rdquo;</blockquote>
-                <figcaption className="mt-6 flex items-center gap-3">
-                  {/* TODO: real customer photo (unretouched) */}
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-honey-tint text-[10px] font-semibold uppercase text-brown/60">Photo</span>
-                  <span className="text-sm text-brown">
-                    {/* TODO: real first name + pet (breed/age) from VOC */}
-                    <span className="block font-bold text-cocoa">Customer name</span>
-                    <span className="block text-xs text-brown/70">Pet, breed/age</span>
-                  </span>
-                </figcaption>
+              { quote: "I never thought I'd be the kind of person who does this at home. Turns out I am, and I like it.", breed: "Goldendoodle mom" },
+              { quote: "They told me it would take a few weeks, not a few days. It did. I trust a brand that levels with me.", breed: "Chihuahua mom" },
+              { quote: "I read every label before it goes near my pet. This is the first one I didn't put back.", breed: "Senior terrier mom" },
+              { quote: "No vet-office stress, no wrestling. We just do it on the couch now.", breed: "Cat mom" },
+            ].map((t, i) => (
+              <figure key={i} className="ds-lift overflow-hidden rounded-3xl border border-line bg-card">
+                {/* Photo is the hero element. TODO: real customer-and-pet photo
+                    (owner's hand/arm in frame), permission given. No stock, ever. */}
+                <div className="relative flex aspect-[4/3] items-center justify-center bg-honey-tint">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Customer + pet photo</span>
+                </div>
+                <div className="p-6 md:p-8">
+                  <blockquote className="text-lg leading-relaxed text-cocoa">&ldquo;{t.quote}&rdquo;</blockquote>
+                  <figcaption className="mt-5 text-sm">
+                    {/* TODO: real first name + breed (breed-matched proof converts hardest) */}
+                    <span className="font-bold text-cocoa">Name</span>
+                    <span className="text-brown"> · {t.breed}</span>
+                  </figcaption>
+                </div>
               </figure>
             ))}
           </div>
           <p className="mt-6 text-xs text-brown/60">
-            Placeholder testimonials. Replace with real customer quotes, names, pets, and unretouched photos before launch.
+            Placeholder proof. Replace with four real customer-and-pet photos (permission given) and verified, brand-experience testimonials before launch. Never stock.
+          </p>
+        </div>
+      </section>
+
+      {/* ───── Section 5.5 · What we're building (launch-bridge Rev 2b) ──────────
+          Honest-hedges at the brand level: names the dental-first state as a
+          deliberate choice, not a constraint. No specific timelines (guardrail).
+          Copy swaps on SHOW_GROOMING at grooming launch. DRAFT - voice pass. */}
+      <section className="bg-cream">
+        <div className="ds-reveal mx-auto max-w-2xl px-5 py-16 text-center md:px-8 md:py-20">
+          <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[2.4rem]">
+            Where we&rsquo;re starting
+          </h2>
+          <p className="mt-4 leading-relaxed text-brown">
+            {SHOW_GROOMING
+              ? "Dental first, grooming now live. Supplements when we can do them honestly. We would rather ship a short, honest range than a long catalogue we cannot stand behind."
+              : "Right now BeePaws is one thing done well: at-home dental care. Grooming is next, and supplements after that, but only when we can do them honestly. We would rather ship a short, honest range than a long catalogue we cannot stand behind."}
           </p>
         </div>
       </section>
