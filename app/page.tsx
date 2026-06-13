@@ -1,11 +1,8 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import ProductCard from '@/components/product/ProductCard';
 import RevealObserver from '@/components/RevealObserver';
-import { ShoppingBag, Shield, Truck, RefreshCcw, ArrowRight, Scissors, Bath, Dog, Cat, Bone, Wind, Star } from 'lucide-react';
-
-import { getProducts } from '@/lib/shopify/queries';
+import { ShoppingBag, ShieldCheck, Tag, HandHeart, PawPrint } from 'lucide-react';
 
 // ISR: revalidate via webhook → revalidateTag("products")
 export const revalidate = 3600;
@@ -39,10 +36,12 @@ const ds: React.CSSProperties = {
   '--ds-honey': '#E9CC8E',    // soft honey band (newsletter) - not bright orange
 };
 
-export default async function Home() {
-  const products = await getProducts();
-  const featuredProducts = products.slice(0, 3);
+// Grooming category goes live ~2 weeks after dental (blueprint "launch context").
+// Flip to true when grooming SKUs are published. Until then the grooming slot is
+// hidden entirely - never shown as "coming soon" (blueprint hard rule).
+const SHOW_GROOMING = false;
 
+export default function Home() {
   return (
     <div
       style={ds}
@@ -72,285 +71,224 @@ export default async function Home() {
         <div className="relative z-10 mx-auto flex min-h-[min(94dvh,920px)] max-w-7xl flex-col justify-end px-5 pb-20 pt-24 md:px-8 md:pb-28">
           <div className="ds-hero-stagger max-w-2xl">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-white/90 backdrop-blur-sm">
-              Premium pet grooming
+              At-home pet wellness · no hype
             </span>
             <h1 className="mt-5 font-display text-[2.6rem] font-bold leading-[1.02] tracking-tight text-white sm:text-6xl lg:text-7xl">
-              Your pet deserves<br />the absolute best.
+              Keep your pet healthy,<br />on your own terms.
             </h1>
             <p className="mt-5 max-w-md text-lg leading-relaxed text-white/80">
-              Professional-grade grooming tools, built for the comfort and happiness of your furry family.
+              Honest tools for the care you would rather do at home. We tell you what they do, and what they do not.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/collections/all"
                 className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-[var(--ds-amber)] px-9 text-base font-bold text-[var(--ds-green-deep)] shadow-lg transition-all duration-200 hover:bg-[var(--ds-amber-deep)] hover:text-white active:scale-[0.97]"
               >
-                <ShoppingBag size={20} strokeWidth={2} /> Shop now
+                <ShoppingBag size={20} strokeWidth={2} /> Shop dental
               </Link>
               <Link
-                href="/collections/all"
+                href="#why"
                 className="inline-flex h-14 items-center justify-center rounded-full border-2 border-white/40 px-9 text-base font-bold text-white backdrop-blur-sm transition-all duration-200 hover:bg-white/10 active:scale-[0.97]"
               >
-                View best sellers
+                Why BeePaws
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ───── Trust band (moved out of the hero per skill) ───── */}
-      <section className="border-b border-[var(--ds-line)] bg-[var(--ds-surface)]">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-10 gap-y-3 px-5 py-5 text-sm font-semibold text-[var(--ds-muted)] md:px-8">
-          <span className="flex items-center gap-2"><Truck size={17} strokeWidth={2} className="text-[var(--ds-amber-deep)]" /> Free shipping over $50</span>
-          <span className="flex items-center gap-2"><Shield size={17} strokeWidth={2} className="text-[var(--ds-amber-deep)]" /> Safe &amp; vet-approved</span>
-          <span className="flex items-center gap-2"><RefreshCcw size={17} strokeWidth={2} className="text-[var(--ds-amber-deep)]" /> 30-day returns</span>
-        </div>
-      </section>
-
-      {/* ───── Category row (icons, not emoji) ───── */}
-      <section className="ds-reveal mx-auto w-full max-w-7xl px-5 pt-14 md:px-8">
-        <p className="mb-5 text-center text-sm font-semibold text-[var(--ds-muted)]">Shop by category</p>
-        <div className="flex flex-wrap justify-center gap-3">
-          {[
-            { label: "Nail care", icon: Scissors, href: "/collections/all" },
-            { label: "Hair trimming", icon: Wind, href: "/collections/all" },
-            { label: "Grooming kits", icon: Bath, href: "/collections/all" },
-            { label: "Dog supplies", icon: Dog, href: "/collections/all" },
-            { label: "Cat supplies", icon: Cat, href: "/collections/all" },
-          ].map((cat) => (
-            <Link
-              key={cat.label}
-              href={cat.href}
-              className="inline-flex items-center gap-2 rounded-full border border-[var(--ds-line)] bg-[var(--ds-surface)] px-5 py-2.5 text-sm font-semibold text-[var(--ds-ink)] transition duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-[var(--ds-green)] hover:-translate-y-0.5 active:scale-[0.97]"
-            >
-              <cat.icon size={16} strokeWidth={2} className="text-[var(--ds-green)]" />
-              {cat.label}
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* ───── Featured products (real product grid) ───── */}
-      <section className="mx-auto w-full max-w-7xl px-5 pb-16 pt-16 md:px-8 md:pt-20">
-        <div className="ds-reveal mb-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
-          <div className="max-w-2xl">
-            {/* eyebrow #2 of 3 */}
-            <span className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ds-amber-deep)]">Best sellers</span>
-            <h2 className="mt-2 font-display text-3xl font-semibold leading-tight tracking-tight text-[var(--ds-ink)] md:text-[2.6rem]">
-              Hand-picked favorites
-            </h2>
-            <p className="mt-3 text-lg text-[var(--ds-muted)]">
-              Favorites your pets keep coming back to.
-            </p>
-          </div>
-          <Link href="/collections/all" className="hidden items-center gap-2 text-sm font-bold text-[var(--ds-green)] hover:gap-3 md:inline-flex transition-all">
-            View all products <ArrowRight size={16} strokeWidth={2} />
-          </Link>
-        </div>
-
-        <div className="ds-stagger grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 md:gap-8">
-          {featuredProducts.length === 0 ? (
-            <div className="col-span-full mx-auto flex max-w-xl flex-col items-center justify-center rounded-3xl border border-dashed border-[var(--ds-line)] bg-[var(--ds-surface)] px-4 py-24 text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--ds-green)]/10 text-[var(--ds-green)]" aria-hidden>
-                <Bone size={30} strokeWidth={1.75} />
-              </div>
-              <p className="text-xl font-bold text-[var(--ds-ink)]">No featured products yet</p>
-              <p className="mt-2 font-medium text-[var(--ds-muted)]">
-                Activate products and publish them to the Online Store sales channel to show them here.
-              </p>
-              <Link href="/collections/all" className="mt-6 inline-flex h-12 items-center rounded-full border-2 border-[var(--ds-green)] px-6 font-bold text-[var(--ds-green)] transition-all hover:bg-[var(--ds-green)] hover:text-white active:scale-[0.97]">
-                Browse catalog
-              </Link>
-            </div>
-          ) : (
-            <>
-              {featuredProducts.map((product, index) => {
-                const price = parseFloat(product.priceRange.minVariantPrice.amount);
-                const formattedPrice = new Intl.NumberFormat('en-US', {
-                  style: 'currency',
-                  currency: product.priceRange.minVariantPrice.currencyCode,
-                }).format(price);
-                return (
-                  <ProductCard
-                    key={product.handle}
-                    handle={product.handle}
-                    title={product.title}
-                    price={formattedPrice}
-                    imageUrl={product.images?.edges[0]?.node?.url || "/product-placeholder.svg"}
-                    product={product}
-                    priority={index === 0}
-                  />
-                );
-              })}
-              {/* Editorial promo tiles fill the row when the catalog is small,
-                  so it's never a lone card beside blank columns. */}
-              {[
-                { title: "Shop the full range", sub: "Every tool for the at-home routine", img: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?q=80&w=800&auto=format&fit=crop", alt: "Two dogs playing outdoors" },
-                { title: "New for the season", sub: "Fresh picks for dogs and cats", img: "https://images.unsplash.com/photo-1450778869180-41d0601e046e?q=80&w=800&auto=format&fit=crop", alt: "A relaxed pet in soft daylight" },
-              ]
-                .slice(0, Math.max(0, 3 - featuredProducts.length))
-                .map((tile) => (
-                  <Link
-                    key={tile.title}
-                    href="/collections/all"
-                    className="group relative flex min-h-[380px] flex-col justify-end overflow-hidden rounded-3xl active:scale-[0.97]"
-                  >
-                    <Image src={tile.img} alt={tile.alt} fill sizes="(max-width: 1024px) 100vw, 33vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--ds-green-deep)] via-[var(--ds-green-deep)]/45 to-transparent" />
-                    <div className="relative p-6 text-white">
-                      <h3 className="font-display text-xl font-semibold">{tile.title}</h3>
-                      <p className="mt-1 text-sm text-white/80">{tile.sub}</p>
-                      <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-[var(--ds-amber)]">
-                        Shop now <ArrowRight size={15} strokeWidth={2.5} className="transition-transform group-hover:translate-x-0.5" />
-                      </span>
-                    </div>
-                  </Link>
-                ))}
-            </>
-          )}
-        </div>
-      </section>
-
-      {/* ───── Credibility band ───── */}
-      <section className="ds-reveal mx-auto w-full max-w-7xl px-5 md:px-8">
-        <div className="grid grid-cols-1 gap-px overflow-hidden rounded-3xl border border-[var(--ds-line)] bg-[var(--ds-line)] sm:grid-cols-3">
-          {[
-            { n: "12,000+", l: "pets groomed at home" },
-            { n: "4.8 / 5", l: "from 2,100+ reviews" },
-            { n: "30 days", l: "money-back guarantee" },
-          ].map((s) => (
-            <div key={s.l} className="bg-[var(--ds-surface)] px-6 py-8 text-center">
-              <p className="font-display text-3xl font-bold tracking-tight text-[var(--ds-green)] md:text-4xl">{s.n}</p>
-              <p className="mt-1 text-sm font-medium text-[var(--ds-muted)]">{s.l}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ───── Why Beepaws - asymmetric bento (breaks the 4-equal-card row) ───── */}
-      <section className="mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-20">
-        <h2 className="ds-reveal mb-10 max-w-xl font-display text-3xl font-semibold leading-tight tracking-tight text-[var(--ds-ink)] md:text-[2.6rem]">
-          Grooming made easy, at home
-        </h2>
-        <div className="ds-stagger grid grid-cols-1 gap-4 md:grid-cols-3 md:grid-rows-2 md:gap-5">
-          {/* Large feature cell - deep green with image, spans 2 rows */}
-          <article className="relative flex min-h-[340px] flex-col justify-end overflow-hidden rounded-3xl bg-[var(--ds-espresso)] text-white md:row-span-2">
-            <Image
-              src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?q=80&w=900&auto=format&fit=crop"
-              alt="Close-up of a dog being groomed at home"
-              fill
-              sizes="(max-width: 768px) 100vw, 33vw"
-              className="object-cover opacity-60"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[var(--ds-espresso)] via-[var(--ds-espresso)]/85 to-[var(--ds-espresso)]/25" />
-            <div className="relative p-7">
-              <Scissors size={30} strokeWidth={1.75} className="text-[var(--ds-amber)]" />
-              <h3 className="mt-6 font-display text-2xl font-semibold">Pro-grade tools</h3>
-              <p className="mt-2 text-base leading-relaxed text-white/80">
-                Stainless steel blades and precision-engineered clippers trusted by working groomers, now sized for your living room.
-              </p>
-            </div>
-          </article>
-          {/* Wide cell - amber tint */}
-          <article className="ds-lift flex items-start gap-4 rounded-3xl bg-[var(--ds-amber)]/12 p-7 md:col-span-2">
-            <Shield size={26} strokeWidth={1.75} className="mt-0.5 shrink-0 text-[var(--ds-amber-deep)]" />
-            <div>
-              <h3 className="font-display text-xl font-semibold text-[var(--ds-ink)]">Pet-safe by design</h3>
-              <p className="mt-1.5 text-[var(--ds-muted)] leading-relaxed">
-                Rounded safety tips and low-vibration motors keep even anxious pets calm through the whole session.
-              </p>
-            </div>
-          </article>
-          {/* Two small cells */}
-          <article className="ds-lift rounded-3xl border border-[var(--ds-line)] bg-[var(--ds-surface)] p-7">
-            <Bath size={24} strokeWidth={1.75} className="text-[var(--ds-green)]" />
-            <h3 className="mt-4 font-display text-lg font-semibold text-[var(--ds-ink)]">USB rechargeable</h3>
-            <p className="mt-1.5 text-sm leading-relaxed text-[var(--ds-muted)]">
-              No batteries. A long charge lasts through full grooming sessions.
-            </p>
-          </article>
-          <article className="ds-lift rounded-3xl border border-[var(--ds-line)] bg-[var(--ds-surface)] p-7">
-            <Star size={24} strokeWidth={1.75} className="text-[var(--ds-green)]" />
-            <h3 className="mt-4 font-display text-lg font-semibold text-[var(--ds-ink)]">Loved by thousands</h3>
-            <p className="mt-1.5 text-sm leading-relaxed text-[var(--ds-muted)]">
-              5-star reviewed products pet parents come back to again and again.
-            </p>
-          </article>
-        </div>
-      </section>
-
-      {/* ───── Showcase - split image / text ───── */}
-      <section className="ds-reveal mx-auto w-full max-w-7xl px-5 py-8 md:px-8">
-        <div className="grid grid-cols-1 overflow-hidden rounded-[2rem] bg-[var(--ds-espresso)] md:grid-cols-2">
-          <div className="flex flex-col justify-center p-8 md:p-14">
-            <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-white md:text-4xl lg:text-5xl">
-              Complete grooming, right at home.
-            </h2>
-            <p className="mt-5 max-w-md text-lg leading-relaxed text-white/75">
-              From nail clippers to full-body trimmers, everything your pet needs for a spa day without leaving the house.
-            </p>
-            <Link
-              href="/collections/all"
-              className="mt-8 inline-flex h-13 w-fit items-center gap-2 rounded-full bg-[var(--ds-amber)] px-7 py-3.5 font-bold text-[var(--ds-espresso)] transition-all duration-200 hover:bg-white active:scale-[0.97]"
-            >
-              Explore all products <ArrowRight size={18} strokeWidth={2} />
-            </Link>
-          </div>
-          <div className="relative min-h-[280px] md:min-h-[420px]">
-            <Image
-              src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?q=80&w=1000&auto=format&fit=crop"
-              alt="Two dogs playing together outdoors"
-              fill
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* ───── Reviews - asymmetric: one lead quote + two stacked ───── */}
-      <section className="ds-reveal mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-20">
-        <div className="mb-10">
-          {/* eyebrow #3 of 3 */}
-          <span className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ds-amber-deep)]">From pet parents</span>
-          <h2 className="mt-2 font-display text-3xl font-semibold leading-tight tracking-tight text-[var(--ds-ink)] md:text-[2.6rem]">
-            Worth the switch
+      {/* ───── Section 3 · Category routing band - dental-first ─────────────────
+          Blueprint §3. The page's primary routing job. Two-slot grid built from
+          day one; the grooming slot is hidden (SHOW_GROOMING) until SKUs are
+          live - never shown as "coming soon". Dental line uses the VOC glossary
+          (fresh breath / pearly whites / pink gums). Real tokens (bg-cream band),
+          ported motion (ds-reveal + ds-lift). DRAFT copy - needs the voice pass. */}
+      <section className="bg-cream">
+        <div className="ds-reveal mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-20">
+          <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[2.4rem]">
+            Shop by what your pet needs
           </h2>
+          <p className="mb-10 mt-3 max-w-xl text-brown">
+            We start with what we make today, and add categories only when they are ready.
+          </p>
+          <div className={SHOW_GROOMING ? "grid gap-6 md:grid-cols-2" : "max-w-xl"}>
+            {/* Slot 1 - Dental (live at launch) */}
+            <article className="ds-lift overflow-hidden rounded-3xl border border-line bg-card shadow-[var(--elev-shadow-card)]">
+              <div className="flex aspect-[16/10] items-center justify-center bg-honey-tint">
+                {/* TODO: real dental category / product photo (no stock, no fur close-up) */}
+                <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Dental photo</span>
+              </div>
+              <div className="p-7">
+                <h3 className="font-display text-2xl font-semibold text-cocoa">Dental care</h3>
+                <p className="mt-2 leading-relaxed text-brown">
+                  Fresh breath, pearly whites, pink gums. The at-home dental routine.
+                </p>
+                <Link
+                  href="/collections/all"
+                  className="mt-5 inline-flex h-12 items-center rounded-full bg-clay px-6 font-bold text-white transition-colors hover:bg-cocoa active:scale-[0.97]"
+                >
+                  Shop dental
+                </Link>
+              </div>
+            </article>
+            {/* Slot 2 - Grooming (hidden until SKUs go live) */}
+            {SHOW_GROOMING && (
+              <article className="ds-lift overflow-hidden rounded-3xl border border-line bg-card shadow-[var(--elev-shadow-card)]">
+                <div className="flex aspect-[16/10] items-center justify-center bg-honey-tint">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Grooming photo</span>
+                </div>
+                <div className="p-7">
+                  <h3 className="font-display text-2xl font-semibold text-cocoa">Grooming</h3>
+                  <p className="mt-2 leading-relaxed text-brown">
+                    Quiet tools, calm pets, done at home. Trimmers sized for the pet you actually have.
+                  </p>
+                  <Link
+                    href="/collections/all"
+                    className="mt-5 inline-flex h-12 items-center rounded-full bg-clay px-6 font-bold text-white transition-colors hover:bg-cocoa active:scale-[0.97]"
+                  >
+                    Shop grooming
+                  </Link>
+                </div>
+              </article>
+            )}
+          </div>
         </div>
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-          {/* Lead quote */}
-          <figure className="flex flex-col justify-between rounded-3xl bg-[var(--ds-espresso)] p-8 text-white md:p-10">
-            <blockquote className="text-xl font-medium leading-relaxed md:text-2xl">
-              &ldquo;The LED nail clipper changed how I groom at home. I can finally see exactly where to cut, so I never go too short, and my dog stays calm the whole time.&rdquo;
-            </blockquote>
-            <figcaption className="mt-8 flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--ds-amber)] font-bold text-[var(--ds-espresso)]">S</span>
-              <span>
-                <span className="block font-bold">Sarah M.</span>
-                <span className="block text-sm text-white/60">Labrador owner</span>
-              </span>
-            </figcaption>
-          </figure>
-          {/* Two stacked */}
-          <div className="grid grid-cols-1 gap-5">
+      </section>
+
+      {/* ───── Section 4 · Why BeePaws - brand pillars ─────────────────────────
+          Blueprint §4. The homepage's real conversion work: four pillars drawn
+          from the synthesis voice principles. Light tonal bento (no mid-page dark
+          slab); pillar 3 (owner agency, the emotional anchor) is the feature cell.
+          Real tokens (bg-card band), ported motion. DRAFT copy - voice pass needed. */}
+      <section id="why" className="bg-card scroll-mt-24">
+        <div className="mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-20">
+          <h2 className="ds-reveal font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[2.6rem]">
+            Why BeePaws
+          </h2>
+          <p className="ds-reveal mb-10 mt-3 max-w-xl text-brown">
+            Plain-spoken about what our tools do, and what they do not.
+          </p>
+          <div className="ds-stagger grid grid-cols-1 gap-4 md:grid-cols-3 md:grid-rows-2 md:gap-5">
+            {/* Feature cell - Pillar 3: owner agency (emotional anchor), spans 2 rows */}
+            <article className="ds-lift flex flex-col justify-between rounded-3xl bg-honey-tint p-7 md:row-span-2">
+              <HandHeart size={30} strokeWidth={1.75} className="text-clay" />
+              <div className="mt-10">
+                <h3 className="font-display text-2xl font-semibold text-cocoa">She decides what touches her pet</h3>
+                <p className="mt-2 leading-relaxed text-brown">
+                  You read the label and keep your pet healthy on your own terms. We make tools for that, not shortcuts that ask you to hand your pet to a stranger.
+                </p>
+              </div>
+            </article>
+            {/* Wide cell - Pillar 1: honest about what it does */}
+            <article className="ds-lift flex items-start gap-4 rounded-3xl bg-cream p-7 md:col-span-2">
+              <ShieldCheck size={26} strokeWidth={1.75} className="mt-0.5 shrink-0 text-clay" />
+              <div>
+                <h3 className="font-display text-xl font-semibold text-cocoa">Honest about what it does</h3>
+                <p className="mt-1.5 leading-relaxed text-brown">
+                  Quiet, not silent. Results in weeks, not overnight. We tell you what to expect instead of promising a miracle.
+                </p>
+              </div>
+            </article>
+            {/* Pillar 2: read the label */}
+            <article className="ds-lift rounded-3xl border border-line bg-card p-7">
+              <Tag size={24} strokeWidth={1.75} className="text-clay" />
+              <h3 className="mt-4 font-display text-lg font-semibold text-cocoa">Read-the-label transparency</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-brown">
+                Every ingredient in plain English. Xylitol-free, and cat-safe wherever the label says so.
+              </p>
+            </article>
+            {/* Pillar 4: made for the pet you have */}
+            <article className="ds-lift rounded-3xl border border-line bg-card p-7">
+              <PawPrint size={24} strokeWidth={1.75} className="text-clay" />
+              <h3 className="mt-4 font-display text-lg font-semibold text-cocoa">Made for the pet you actually have</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-brown">
+                Small breeds, senior pets, long-haired cats, anxious dogs. Tuned for real pets, not a one-size catalog.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      {/* ───── Section 5 · Real proof - testimonials ───────────────────────────
+          Blueprint §5. A trust band, not a sales section. Brand-level quotes
+          (the brand experience, not product specs). Each needs a REAL name, pet,
+          and unretouched photo - no "thousands of customers", no invented counts.
+          The cards below are clearly-marked placeholders for the VOC pass. */}
+      <section className="bg-honey-tint">
+        <div className="ds-reveal mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-20">
+          <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[2.6rem]">
+            In their own words
+          </h2>
+          <p className="mb-10 mt-3 max-w-xl text-brown">
+            Real pet parents, real pets. No stock photos, no invented numbers.
+          </p>
+          <div className="ds-stagger grid grid-cols-1 gap-6 md:grid-cols-3">
             {[
-              { name: "James T.", pet: "Persian cat owner", avatar: "J", text: "Whisper-quiet trimmer. My fluffy Persian barely notices it, which beats fighting her at the salon every month." },
-              { name: "Linh N.", pet: "Poodle owner", avatar: "L", text: "The 3-in-1 kit clips, trims nails, and cleans paws in one device. My poodle's weekly groom now takes 20 minutes." },
-            ].map((r) => (
-              <figure key={r.name} className="ds-lift flex flex-col justify-between rounded-3xl border border-[var(--ds-line)] bg-[var(--ds-surface)] p-7">
-                <blockquote className="text-base leading-relaxed text-[var(--ds-ink)]">
-                  &ldquo;{r.text}&rdquo;
-                </blockquote>
+              "I never thought I'd be the kind of person who does this at home. Turns out I am, and I like it.",
+              "They told me it would take a few weeks, not a few days. It did. I trust a brand that levels with me.",
+              "I read every label before it goes near my cat. This is the first one I didn't put back.",
+            ].map((quote, i) => (
+              <figure key={i} className="ds-lift flex h-full flex-col rounded-3xl border border-line bg-card p-7">
+                <blockquote className="flex-1 text-base leading-relaxed text-cocoa">&ldquo;{quote}&rdquo;</blockquote>
                 <figcaption className="mt-6 flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--ds-green)]/12 font-bold text-[var(--ds-green)]">{r.avatar}</span>
-                  <span>
-                    <span className="block text-sm font-bold text-[var(--ds-ink)]">{r.name}</span>
-                    <span className="block text-xs text-[var(--ds-muted)]">{r.pet}</span>
+                  {/* TODO: real customer photo (unretouched) */}
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-honey-tint text-[10px] font-semibold uppercase text-brown/60">Photo</span>
+                  <span className="text-sm text-brown">
+                    {/* TODO: real first name + pet (breed/age) from VOC */}
+                    <span className="block font-bold text-cocoa">Customer name</span>
+                    <span className="block text-xs text-brown/70">Pet, breed/age</span>
                   </span>
                 </figcaption>
               </figure>
             ))}
           </div>
+          <p className="mt-6 text-xs text-brown/60">
+            Placeholder testimonials. Replace with real customer quotes, names, pets, and unretouched photos before launch.
+          </p>
+        </div>
+      </section>
+
+      {/* ───── Section 6 · The promise - guarantee band ────────────────────────
+          Blueprint §6. Risk reversal as a brand commitment. Bark closing band,
+          matching the product page's final-CTA tone (gold seal on a paper island).
+          The honest hedge - what we will NOT do - is the conversion. DRAFT copy. */}
+      <section className="bg-bark">
+        <div className="ds-reveal mx-auto max-w-4xl px-5 py-16 text-center md:px-6 md:py-20">
+          <h2 className="font-display text-3xl font-semibold leading-tight text-white md:text-[34px]">
+            Try it for 30 days. If it is not for your pet, send it back.
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-[#CFCBBA] md:text-base">
+            A full refund, no restocking fee, no hassle. We would rather you keep what works than keep what does not.
+          </p>
+          <Link
+            href="/collections/all"
+            className="mt-7 inline-flex items-center justify-center rounded-xl bg-gold px-8 py-4 text-base font-bold text-cocoa shadow-sm transition-colors hover:bg-gold-deep hover:text-white active:scale-[0.97] md:text-lg"
+          >
+            Shop dental
+          </Link>
+          {/* Guarantee card - paper island, gold seal (matches the product page) */}
+          <div className="mx-auto mt-9 grid items-center gap-7 rounded-2xl border-2 border-gold bg-paper p-7 text-left shadow-[0_14px_40px_-16px_rgba(0,0,0,0.4)] md:mt-10 md:grid-cols-[auto_1fr] md:gap-9 md:p-9">
+            <div className="mx-auto md:mx-0">
+              <div
+                className="flex h-28 w-28 flex-col items-center justify-center rounded-full text-cocoa shadow-[0_8px_24px_-8px_rgba(74,46,22,0.45)]"
+                style={{ background: "radial-gradient(circle at 38% 32%, #E7A92F, #C8901C)" }}
+              >
+                <span className="font-display text-[34px] font-bold leading-none">30</span>
+                <span className="mt-1 text-[10px] font-extrabold uppercase tracking-[0.08em]">Day Promise</span>
+              </div>
+            </div>
+            <div className="text-center md:text-left">
+              <h3 className="font-display text-xl font-semibold leading-tight text-cocoa md:text-2xl">
+                What we won&rsquo;t do
+              </h3>
+              <p className="mt-2 text-[14.5px] leading-relaxed text-brown md:text-[15px]">
+                We won&rsquo;t claim to replace your vet, hide an ingredient, or invent a review. The honest version is the only version we sell.
+              </p>
+            </div>
+          </div>
+          <p className="mt-7 text-xs font-bold uppercase tracking-[0.08em] text-[#A8A48F]">
+            Free shipping over $50 · 30-day refund · Real human support
+          </p>
         </div>
       </section>
 
@@ -360,10 +298,10 @@ export default async function Home() {
           <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2">
             <div>
               <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-[var(--ds-ink)] md:text-4xl lg:text-5xl">
-                Join the Beepaws family
+                Join the BeePaws family
               </h2>
               <p className="mt-4 max-w-md text-lg font-medium text-[var(--ds-ink)]/80">
-                Sign up and get <span className="font-bold">15% off</span> your first order, plus pet care tips every week.
+                A <span className="font-bold">15% welcome code</span> and one short email a month. No spam, no daily deals.
               </p>
             </div>
             <form className="w-full max-w-md md:ml-auto">
