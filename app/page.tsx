@@ -1,8 +1,8 @@
 import React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import RevealObserver from '@/components/RevealObserver';
-import { ShoppingBag, ShieldCheck, Tag, HandHeart, PawPrint } from 'lucide-react';
+import NewsletterPopup from '@/components/NewsletterPopup';
+import { ShoppingBag, ShieldCheck, Tag, HandHeart, PawPrint, CalendarCheck, Heart, Search, Shield } from 'lucide-react';
 
 // ISR: revalidate via webhook → revalidateTag("products")
 export const revalidate = 3600;
@@ -49,66 +49,110 @@ export default function Home() {
     >
       {/* Scroll-reveal driver + no-JS fallback so content is never hidden */}
       <RevealObserver />
+      {/* Scroll-triggered newsletter popup (replaces the inline newsletter section) */}
+      <NewsletterPopup />
       <noscript
         dangerouslySetInnerHTML={{
           __html: '<style>.ds-reveal,.ds-stagger>*{opacity:1!important;transform:none!important}</style>',
         }}
       />
 
-      {/* ───── Hero - full-bleed image, bottom-left anchored (asymmetric) ───── */}
-      <section className="relative min-h-[min(94dvh,920px)] w-full overflow-hidden">
-        <Image
-          src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?q=80&w=2000&auto=format&fit=crop"
-          alt="A relaxed dog resting in soft daylight"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-        />
-        {/* Green scrim, heavier bottom-left where the copy sits */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-[var(--ds-green-deep)] via-[var(--ds-green-deep)]/70 to-transparent" />
-
-        <div className="relative z-10 mx-auto flex min-h-[min(94dvh,920px)] max-w-7xl flex-col justify-end px-5 pb-20 pt-24 md:px-8 md:pb-28">
-          <div className="ds-hero-stagger max-w-2xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-white/90 backdrop-blur-sm">
+      {/* ───── Section 2 · Hero - light two-column lifestyle (consolidated spec §2)
+          Brand-level, no product. Real Warm Honey tokens (off the old --ds-* vars).
+          Left: eyebrow / headline / honest-hedge subhead / CTA pair / trust strip.
+          Right: a real lifestyle SCENE (pet in lap, warm light, no product) - a
+          labeled placeholder until the shoot/AI lands. Entrance motion kept. */}
+      <section className="bg-paper">
+        <div className="mx-auto grid w-full max-w-7xl items-center gap-10 px-5 py-16 md:grid-cols-2 md:gap-14 md:px-8 md:py-24">
+          <div className="ds-hero-stagger">
+            <span className="inline-flex items-center rounded-full border border-line bg-card px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-clay">
               At-home pet wellness · no hype
             </span>
-            <h1 className="mt-5 font-display text-[2.6rem] font-bold leading-[1.02] tracking-tight text-white sm:text-6xl lg:text-7xl">
+            <h1 className="mt-5 font-display text-4xl font-bold leading-[1.05] tracking-tight text-cocoa sm:text-5xl lg:text-6xl">
               Keep your pet healthy,<br />on your own terms.
             </h1>
-            <p className="mt-5 max-w-md text-lg leading-relaxed text-white/80">
+            <p className="mt-5 max-w-md text-lg leading-relaxed text-brown">
               Honest tools for the care you would rather do at home. We don&rsquo;t claim to replace your vet — just to keep you out of the chair for the easy stuff.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/collections/all"
-                className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-[var(--ds-amber)] px-9 text-base font-bold text-[var(--ds-green-deep)] shadow-lg transition-all duration-200 hover:bg-[var(--ds-amber-deep)] hover:text-white active:scale-[0.97]"
+                className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-clay px-9 text-base font-bold text-white shadow-sm transition-colors duration-200 hover:bg-cocoa active:scale-[0.97]"
               >
                 <ShoppingBag size={20} strokeWidth={2} /> {SHOW_GROOMING ? "Shop the range" : "Shop dental"}
               </Link>
               <Link
                 href="#why"
-                className="inline-flex h-14 items-center justify-center rounded-full border-2 border-white/40 px-9 text-base font-bold text-white backdrop-blur-sm transition-all duration-200 hover:bg-white/10 active:scale-[0.97]"
+                className="inline-flex h-14 items-center justify-center rounded-full border-2 border-cocoa px-9 text-base font-bold text-cocoa transition-colors duration-200 hover:bg-cocoa hover:text-white active:scale-[0.97]"
               >
                 Why BeePaws
               </Link>
+            </div>
+            {/* Trust strip - real, verifiable facts only (spec §8: confirm these +
+                optionally add "Made in [country]" once verified). */}
+            <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-semibold text-brown">
+              {["Xylitol-free", "30-day guarantee", "Free shipping over $50"].map((fact, i) => (
+                <span key={fact} className="flex items-center gap-x-3">
+                  {i > 0 && <span aria-hidden className="text-line">·</span>}
+                  {fact}
+                </span>
+              ))}
+            </div>
+          </div>
+          {/* Right: lifestyle scene. Illustrative (AI ok later); NO product, NO stock
+              fur close-up. TODO: real warm at-home scene (pet in lap, hands visible). */}
+          <div className="relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-[2rem] bg-honey-tint md:min-h-[460px]">
+            <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Lifestyle scene</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ───── Section 3 · Why at-home care works (consolidated spec §3) ──────────
+          LEADS the page: converts the "is at-home care even legit?" skeptic before
+          the product. 2-zone: warm outcome image (illustrative) + 2x2 grid of four
+          category-agnostic wellness principles. Persuasion copy (DRAFT, voice pass). */}
+      <section className="bg-honey-tint">
+        <div className="ds-reveal mx-auto grid w-full max-w-7xl items-center gap-10 px-5 py-16 md:grid-cols-[45fr_55fr] md:gap-14 md:px-8 md:py-24">
+          {/* Left: warm outcome image (illustrative; AI ok later; no attribution) */}
+          <div className="relative flex min-h-[300px] items-center justify-center overflow-hidden rounded-[2rem] bg-cream md:min-h-[440px]">
+            <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Warm outcome scene</span>
+          </div>
+          {/* Right: the argument (must convert the skeptic, not just list nice ideas) */}
+          <div>
+            <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[2.6rem]">
+              Why at-home care works
+            </h2>
+            <p className="mt-3 max-w-xl text-brown">
+              The vet is for the big stuff. Most of what keeps a pet healthy is small, regular, and yours to do.
+            </p>
+            <div className="ds-stagger mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+              {[
+                { icon: CalendarCheck, title: "Consistency beats intensity", body: "A little, often, beats a big production once in a while. The routines that work are the ones small enough to actually keep." },
+                { icon: Heart, title: "Calm matters", body: "A calm pet lets you do more, and a calm routine is one you will not quit. Stress is what makes people give up halfway." },
+                { icon: Search, title: "You catch things early", body: "Handle your pet regularly and you notice the sore gum, the lump, the limp while it is still small and cheap to fix." },
+                { icon: Shield, title: "Prevention over treatment", body: "The kindest, cheapest fix is the one that stops a problem before it ever becomes a vet visit." },
+              ].map((p) => (
+                <article key={p.title} className="rounded-2xl bg-card p-6">
+                  <p.icon size={26} strokeWidth={1.75} className="text-clay" />
+                  <h3 className="mt-3 font-display text-lg font-semibold text-cocoa">{p.title}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-brown">{p.body}</p>
+                </article>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* ───── Section 3 · Category routing band - dental-first ─────────────────
-          Blueprint §3. The page's primary routing job. Two-slot grid built from
-          day one; the grooming slot is hidden (SHOW_GROOMING) until SKUs are
-          live - never shown as "coming soon". Dental line uses the VOC glossary
-          (fresh breath / pearly whites / pink gums). Real tokens (bg-cream band),
-          ported motion (ds-reveal + ds-lift). DRAFT copy - needs the voice pass. */}
+      {/* ───── Section 4 · Routing band - "Start with their teeth" (spec §4) ──────
+          Full-width dental outcome spotlight. Grooming slot hidden (SHOW_GROOMING)
+          until live - never "coming soon". The sub-line carries the honest-
+          sequencing message the cut 5.5 section used to hold. DRAFT - voice pass. */}
       <section className="bg-cream">
         <div className="ds-reveal mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-20">
           {/* Heading reframes dental-only as a deliberate sequencing choice at
               launch; reverts to the multi-category promise when grooming is live. */}
           <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[2.4rem]">
-            {SHOW_GROOMING ? "Shop by what your pet needs" : "Built first: dental"}
+            {SHOW_GROOMING ? "Shop by what your pet needs" : "Start with their teeth"}
           </h2>
           {!SHOW_GROOMING && (
             <p className="mb-10 mt-3 max-w-xl text-brown">
@@ -121,17 +165,20 @@ export default function Home() {
                real spotlight, not a placeholder card. Real product photo needed. */
             <article className="ds-lift grid overflow-hidden rounded-3xl border border-line bg-card shadow-[var(--elev-shadow-card)] md:grid-cols-5">
               <div className="relative flex min-h-[260px] items-center justify-center bg-honey-tint md:col-span-3 md:min-h-[380px]">
-                {/* TODO: real product photo - the ultrasonic device in a calm domestic setting (no stock) */}
-                <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Product photo</span>
+                {/* TODO: real OUTCOME photo - a happy, relaxed pet (pink gums as part of a
+                    natural expression, NOT a clinical teeth shot). No stock. */}
+                <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Outcome photo (happy pet)</span>
               </div>
               <div className="flex flex-col justify-center p-8 md:col-span-2 md:p-10">
                 <h3 className="font-display text-3xl font-semibold text-cocoa">Dental</h3>
                 <p className="mt-3 leading-relaxed text-brown">
                   Pearly whites, pink gums, fresh breath — without the anesthesia.
                 </p>
-                <p className="mt-4 font-display text-lg font-semibold text-clay">
+                <p className="mt-4 font-display text-xl font-bold text-clay">
                   A $40 device, or a $1,400 vet bill.
                 </p>
+                {/* TODO: confirm real specs */}
+                <p className="mt-2 text-sm text-brown/70">Ultrasonic · cordless · USB-C · 3 cleaning modes</p>
                 <Link
                   href="/collections/all"
                   className="mt-6 inline-flex h-12 w-fit items-center rounded-full bg-clay px-6 font-bold text-white transition-colors hover:bg-cocoa active:scale-[0.97]"
@@ -184,76 +231,58 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ───── Section 4 · Why BeePaws - brand pillars ─────────────────────────
-          Blueprint §4. The homepage's real conversion work: four pillars drawn
-          from the synthesis voice principles. Light tonal bento (no mid-page dark
-          slab); pillar 3 (owner agency, the emotional anchor) is the feature cell.
-          Real tokens (bg-card band), ported motion. DRAFT copy - voice pass needed. */}
+      {/* ───── Section 5 · Why BeePaws - brand pillars (consolidated spec §5) ──────
+          EQUAL-WEIGHT manifesto (Option 3, horizontal bands) - fixes the prior
+          pillar-3 feature-cell hierarchy bug. Four pillars, same size; copy + icons
+          constant. (Spec wants sibling layout variants A/B'd later; this is the
+          recommended default.) Pillar 4 body swaps on SHOW_GROOMING. */}
       <section id="why" className="bg-card scroll-mt-24">
-        <div className="mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-20">
+        <div className="mx-auto max-w-4xl px-5 py-16 md:px-8 md:py-24">
           <h2 className="ds-reveal font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[2.6rem]">
             Why BeePaws
           </h2>
-          <p className="ds-reveal mb-10 mt-3 max-w-xl text-brown">
+          <p className="ds-reveal mt-3 max-w-xl text-brown">
             Plain-spoken about what our tools do, and what they do not.
           </p>
-          <div className="ds-stagger grid grid-cols-1 gap-4 md:grid-cols-3 md:grid-rows-2 md:gap-5">
-            {/* Feature cell - Pillar 3: owner agency (emotional anchor), spans 2 rows */}
-            <article className="ds-lift flex flex-col justify-between rounded-3xl bg-honey-tint p-7 md:row-span-2">
-              <HandHeart size={30} strokeWidth={1.75} className="text-clay" />
-              <div className="mt-10">
-                <h3 className="font-display text-2xl font-semibold text-cocoa">She decides what touches her pet</h3>
-                <p className="mt-2 leading-relaxed text-brown">
-                  You read the label and keep your pet healthy on your own terms. We make tools for that, not shortcuts that ask you to hand your pet to a stranger.
-                </p>
-              </div>
-            </article>
-            {/* Wide cell - Pillar 1: honest about what it does */}
-            <article className="ds-lift flex items-start gap-4 rounded-3xl bg-cream p-7 md:col-span-2">
-              <ShieldCheck size={26} strokeWidth={1.75} className="mt-0.5 shrink-0 text-clay" />
-              <div>
-                <h3 className="font-display text-xl font-semibold text-cocoa">Honest about what it does</h3>
-                <p className="mt-1.5 leading-relaxed text-brown">
-                  Results in weeks, not overnight. Quiet, not silent. We tell you what this does — and what it doesn&rsquo;t.
-                </p>
-              </div>
-            </article>
-            {/* Pillar 2: read the label */}
-            <article className="ds-lift rounded-3xl border border-line bg-card p-7">
-              <Tag size={24} strokeWidth={1.75} className="text-clay" />
-              <h3 className="mt-4 font-display text-lg font-semibold text-cocoa">Read-the-label transparency</h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-brown">
-                Every ingredient in plain English. Xylitol-free, and cat-safe wherever the label says so.
-              </p>
-            </article>
-            {/* Pillar 4: made for the pet you have */}
-            <article className="ds-lift rounded-3xl border border-line bg-card p-7">
-              <PawPrint size={24} strokeWidth={1.75} className="text-clay" />
-              <h3 className="mt-4 font-display text-lg font-semibold text-cocoa">Made for the pet you actually have</h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-brown">
-                {SHOW_GROOMING
+          <div className="ds-stagger mt-10 divide-y divide-line border-y border-line">
+            {[
+              { icon: ShieldCheck, title: "Honest about what it does", body: "Results in weeks, not overnight. Quiet, not silent. We tell you what this does — and what it doesn't." },
+              { icon: Tag, title: "Read-the-label transparency", body: "Every ingredient in plain English. Xylitol-free, and cat-safe wherever the label says so." },
+              { icon: HandHeart, title: "She decides what touches her pet", body: "You read the label and keep your pet healthy on your own terms. We make tools for that, not shortcuts that ask you to hand your pet to a stranger." },
+              {
+                icon: PawPrint,
+                title: "Made for the pet you actually have",
+                body: SHOW_GROOMING
                   ? "Small breeds. Senior pets. Anxious dogs. Long-haired cats with spicy opinions about brushes. Real names, real breeds, real photos — never stock fur."
-                  : "Small breeds. Senior pets. Anxious dogs. Cats whose mouths have been quietly ignored. Real names, real breeds, real photos — never stock fur."}
-              </p>
-            </article>
+                  : "Small breeds. Senior pets. Anxious dogs. Cats whose mouths have been quietly ignored. Real names, real breeds, real photos — never stock fur.",
+              },
+            ].map((p) => (
+              <article key={p.title} className="flex items-start gap-5 py-7 md:gap-8 md:py-9">
+                <p.icon size={32} strokeWidth={1.75} className="mt-1 shrink-0 text-clay" />
+                <div>
+                  <h3 className="font-display text-xl font-semibold text-cocoa md:text-2xl">{p.title}</h3>
+                  <p className="mt-2 max-w-2xl leading-relaxed text-brown">{p.body}</p>
+                </div>
+              </article>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ───── Section 5 · Real proof - testimonials (launch-bridge Rev 1) ───────
-          Strengthened to carry the brand weight an origin section would: larger
-          photo-led cards, more breathing room, breed-matched attribution, four
-          testimonials. Photos MUST be real customer-and-pet shots with permission
-          (owner content task) - NEVER stock. Quotes are brand-experience draft. */}
+      {/* ───── Section 6 · Real proof - testimonials (consolidated spec §6) ───────
+          Path B (testimonial-led): photo is the hero of each card, THREE large cards
+          in a row, breed-matched attribution. Photos MUST be real customer-and-pet
+          shots with permission - NEVER stock. Quotes are brand-experience draft.
+          Path A (guarantee-forward + founder note) is a later funnel A/B - see the
+          founder-note placeholder before Promise. */}
       <section className="bg-honey-tint">
         <div className="ds-reveal mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-24">
           <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[2.6rem]">
             Real pets. Real moms. Real photos.
           </h2>
-          <div className="ds-stagger mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 md:gap-8">
+          <div className="ds-stagger mt-10 grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
             {[
               { quote: "I never thought I'd be the kind of person who does this at home. Turns out I am, and I like it.", breed: "Goldendoodle mom" },
-              { quote: "They told me it would take a few weeks, not a few days. It did. I trust a brand that levels with me.", breed: "Chihuahua mom" },
               { quote: "I read every label before it goes near my pet. This is the first one I didn't put back.", breed: "Senior terrier mom" },
               { quote: "No vet-office stress, no wrestling. We just do it on the couch now.", breed: "Cat mom" },
             ].map((t, i) => (
@@ -275,29 +304,18 @@ export default function Home() {
             ))}
           </div>
           <p className="mt-6 text-xs text-brown/60">
-            Placeholder proof. Replace with four real customer-and-pet photos (permission given) and verified, brand-experience testimonials before launch. Never stock.
+            Placeholder proof. Replace with three real customer-and-pet photos (permission given) and verified, brand-experience testimonials before launch. Never stock.
           </p>
         </div>
       </section>
 
-      {/* ───── Section 5.5 · What we're building (launch-bridge Rev 2b) ──────────
-          Honest-hedges at the brand level: names the dental-first state as a
-          deliberate choice, not a constraint. No specific timelines (guardrail).
-          Copy swaps on SHOW_GROOMING at grooming launch. DRAFT - voice pass. */}
-      <section className="bg-cream">
-        <div className="ds-reveal mx-auto max-w-2xl px-5 py-16 text-center md:px-8 md:py-20">
-          <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[2.4rem]">
-            Where we&rsquo;re starting
-          </h2>
-          <p className="mt-4 leading-relaxed text-brown">
-            {SHOW_GROOMING
-              ? "BeePaws started with at-home dental. Grooming is now live, and supplements will come when we can do them honestly. We would rather ship a tight, honest range than promise a catalogue we can't fully stand behind."
-              : "Right now BeePaws is one thing done well: at-home dental care. Grooming is next, and supplements only when we can do them honestly. We would rather ship a tight, honest range than promise a catalogue we can't fully stand behind."}
-          </p>
-        </div>
-      </section>
+      {/* ───── Section 7 · Founder note - DEFERRED (Path A only, consolidated spec §7)
+          Not built: Path B (chosen for launch) has no founder note, and Path A needs
+          a REAL founder photo + statement (never AI). When testing Path A, add here a
+          bg-cream band: real founder photo + name + 2-3 honest sentences on why
+          BeePaws exists and starts small. */}
 
-      {/* ───── Section 6 · The promise - guarantee band ────────────────────────
+      {/* ───── Section 8 · The promise - guarantee band ────────────────────────
           Blueprint §6. Risk reversal as a brand commitment. Bark closing band,
           matching the product page's final-CTA tone (gold seal on a paper island).
           The honest hedge - what we will NOT do - is the conversion. DRAFT copy. */}
@@ -315,22 +333,31 @@ export default function Home() {
           >
             {SHOW_GROOMING ? "Shop the range" : "Shop dental"}
           </Link>
-          {/* Guarantee card - paper island, gold seal (matches the product page) */}
-          <div className="mx-auto mt-9 grid items-center gap-7 rounded-2xl border-2 border-gold bg-paper p-7 text-left shadow-[0_14px_40px_-16px_rgba(0,0,0,0.4)] md:mt-10 md:grid-cols-[auto_1fr] md:gap-9 md:p-9">
-            <div className="mx-auto md:mx-0">
+          {/* Guarantee card - two NEAR-EQUAL halves (spec §8): the guarantee and
+              "what we won't do" carry the same weight, since the "we won't invent a
+              review" line is the Amazon-comparison inoculation and is strategically
+              central. Paper island, gold seal (matches the product page tone). */}
+          <div className="mx-auto mt-10 grid gap-7 rounded-2xl border-2 border-gold bg-paper p-7 text-left shadow-[0_14px_40px_-16px_rgba(0,0,0,0.4)] md:grid-cols-2 md:gap-0 md:p-0">
+            {/* Half 1 - the guarantee */}
+            <div className="flex items-center gap-5 md:p-9">
               <div
-                className="flex h-28 w-28 flex-col items-center justify-center rounded-full text-cocoa shadow-[0_8px_24px_-8px_rgba(74,46,22,0.45)]"
+                className="flex h-24 w-24 shrink-0 flex-col items-center justify-center rounded-full text-cocoa shadow-[0_8px_24px_-8px_rgba(74,46,22,0.45)]"
                 style={{ background: "radial-gradient(circle at 38% 32%, #E7A92F, #C8901C)" }}
               >
-                <span className="font-display text-[34px] font-bold leading-none">30</span>
-                <span className="mt-1 text-[10px] font-extrabold uppercase tracking-[0.08em]">Day Promise</span>
+                <span className="font-display text-[30px] font-bold leading-none">30</span>
+                <span className="mt-1 text-[9px] font-extrabold uppercase tracking-[0.08em]">Day Promise</span>
+              </div>
+              <div>
+                <h3 className="font-display text-xl font-semibold leading-tight text-cocoa">Money-back guarantee</h3>
+                <p className="mt-2 text-[14.5px] leading-relaxed text-brown">
+                  Send it back within 30 days for a full refund. No restocking fee, no hassle.
+                </p>
               </div>
             </div>
-            <div className="text-center md:text-left">
-              <h3 className="font-display text-xl font-semibold leading-tight text-cocoa md:text-2xl">
-                What we won&rsquo;t do
-              </h3>
-              <p className="mt-2 text-[14.5px] leading-relaxed text-brown md:text-[15px]">
+            {/* Half 2 - what we won't do (co-equal; the inoculation line) */}
+            <div className="border-t border-line pt-7 md:border-l md:border-t-0 md:p-9 md:pt-9">
+              <h3 className="font-display text-xl font-semibold leading-tight text-cocoa">What we won&rsquo;t do</h3>
+              <p className="mt-2 text-[14.5px] leading-relaxed text-brown">
                 We won&rsquo;t claim to replace your vet, hide an ingredient, or invent a review. The honest version is the only version we sell.
               </p>
             </div>
@@ -341,40 +368,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ───── Newsletter - soft honey band (not bright orange) ───── */}
-      <section className="ds-reveal mx-auto w-full max-w-7xl px-5 pb-16 md:px-8">
-        <div className="rounded-[2rem] bg-[var(--ds-honey)] p-8 md:p-14">
-          <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2">
-            <div>
-              <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-[var(--ds-ink)] md:text-4xl lg:text-5xl">
-                Join the BeePaws family
-              </h2>
-              <p className="mt-4 max-w-md text-lg font-medium text-[var(--ds-ink)]/80">
-                Get <span className="font-bold">15% off your first order</span>, then one email a month — no spam, no daily deals, just a note when there&rsquo;s something genuinely new worth telling you about.
-              </p>
-            </div>
-            <form className="w-full max-w-md md:ml-auto">
-              <label htmlFor="nl-email" className="mb-2 block text-sm font-semibold text-[var(--ds-ink)]">Email address</label>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <input
-                  id="nl-email"
-                  type="email"
-                  placeholder="you@example.com"
-                  className="min-h-[52px] flex-grow rounded-full border border-[var(--ds-ink)]/15 bg-[var(--ds-surface)] px-5 font-medium text-[var(--ds-ink)] outline-none placeholder:text-[var(--ds-muted)] focus:border-[var(--ds-amber-deep)] focus:ring-2 focus:ring-[var(--ds-amber-deep)]/25"
-                />
-                <button
-                  type="submit"
-                  className="min-h-[52px] shrink-0 rounded-full bg-[var(--ds-amber)] px-7 font-bold text-white transition-all duration-200 hover:bg-[var(--ds-amber-deep)] active:scale-[0.97]"
-                >
-                  Join now
-                </button>
-              </div>
-              <p className="mt-3 text-xs text-[var(--ds-ink)]/70">No spam. Unsubscribe anytime.</p>
-            </form>
-          </div>
-        </div>
-      </section>
-
+      {/* Inline newsletter section removed (consolidated spec): the passive footer
+          subscribe stays; active capture is the scroll-triggered popup below. */}
     </div>
   );
 }
