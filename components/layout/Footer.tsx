@@ -1,9 +1,6 @@
-'use client';
-
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
 import { Instagram, Facebook, Twitter } from 'lucide-react';
 import { WaveDivider } from '@/components/ui/WaveDivider';
 import titleIcon from '@/app/Title_icon.png';
@@ -15,15 +12,13 @@ const Footer = () => {
   //
   // The wave's CAP (the band above the crest + the -16px overlap strip) must
   // match the section ABOVE the footer so the wave reads as a transition INTO
-  // the footer, not a hard seam. That section differs by page and the footer is
-  // shared, so the cap is route-aware: the Forest homepage ends on the off-white
-  // page bg; every other (Warm Honey) page ends on the bark Final CTA. The
-  // slower back ripples (#2E5440) tint the transition; the front curve (#15241A)
-  // melts into the forest block.
+  // the footer, not a hard seam. Every page now ends on a bark band before the
+  // footer - the homepage on its Promise section (bg-bark), every other page on
+  // the bark Final CTA - so the cap is bark on all of them. The slower back
+  // ripples (#2E5440) tint the transition; the front curve (#15241A) melts into
+  // the forest block.
   const FOREST = '#15241A';
-  const pathname = usePathname();
-  // Homepage now sits on the Warm Honey cream base (#FBF3E1); match the cap to it.
-  const cap = pathname === '/' ? '#FBF3E1' : '#5E3C22';
+  const cap = '#5E3C22'; // bark - matches the Promise / Final-CTA band above
   return (
     <footer style={{ marginTop: "-16px", position: "relative", zIndex: 1, background: cap }}>
       <WaveDivider from={cap} to="#2E5440" frontColor={FOREST} flip />
