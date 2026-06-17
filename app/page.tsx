@@ -1,40 +1,16 @@
-import React from 'react';
 import Link from 'next/link';
 import RevealObserver from '@/components/RevealObserver';
 import NewsletterPopup from '@/components/NewsletterPopup';
-import { ShoppingBag, ShieldCheck, Tag, HandHeart, PawPrint, CalendarCheck, Heart, Search, Shield } from 'lucide-react';
+import { ShieldCheck, Tag, HandHeart, PawPrint, CalendarCheck, Heart, Search, Shield } from 'lucide-react';
 
 // ISR: revalidate via webhook → revalidateTag("products")
 export const revalidate = 3600;
 
-// ── Warm Honey + green (branch experiment/skill-design-taste) ──
-// Reconciled palette (redesign-existing-projects pass): the page sits on the
-// brand's Warm Honey base (cream bg, cocoa ink, gold/amber accent), so the
-// cream header and (green) footer frame finally belongs. The experiment's
-// forest green is KEPT as a deliberate, repeated SECONDARY: hero scrim,
-// showcase block, bento + review accents, footer. That makes it a green twist
-// ON the brand, not a cool palette fighting it. Per the skill's color rule:
-// one warm neutral family + amber as the primary/CTA accent + green as a
-// consistent structural color. Green was then dialed back to accents (hero
-// scrim, review quote, footer, icons); the two largest blocks (showcase + the
-// bento feature cell) became warm espresso and the newsletter a soft honey
-// band, not bright orange. Display headings use the brand serif (font-display /
-// Fraunces) site-wide to match the PDP; the hero keeps its composition, only
-// the headline typeface changes.
-const ds: React.CSSProperties = {
-  // @ts-expect-error CSS custom properties
-  '--ds-bg': '#FBF3E1',       // brand cream - Warm Honey base
-  '--ds-surface': '#FDF8EC',  // brand paper - cards
-  '--ds-green': '#1F3D2B',    // forest - secondary accent (kept)
-  '--ds-green-deep': '#15241A',
-  '--ds-ink': '#4A2E16',      // brand cocoa - headings + body
-  '--ds-muted': '#6E5D44',    // warm taupe - secondary text
-  '--ds-amber': '#E0892F',    // primary accent / CTAs (kept - hero)
-  '--ds-amber-deep': '#C2731E',
-  '--ds-line': '#E8DCC0',     // warm sand line
-  '--ds-espresso': '#3A2616', // warm-dark feature blocks (showcase, bento cell)
-  '--ds-honey': '#E9CC8E',    // soft honey band (newsletter) - not bright orange
-};
+// Palette is the brand Warm Honey system via real @theme tokens (bg-cream /
+// paper / card / honey-tint / bark, text-cocoa / brown, bg-clay / gold). The
+// page-scoped --ds-* vars from the design experiment are fully retired. Display
+// headings use the brand serif (font-display / Fraunces). Forest green lives in
+// the footer anchor. Grooming launch is one SHOW_GROOMING flip.
 
 // Grooming category goes live ~2 weeks after dental (blueprint "launch context").
 // Flip to true when grooming SKUs are published. Until then the grooming slot is
@@ -43,10 +19,7 @@ const SHOW_GROOMING = false;
 
 export default function Home() {
   return (
-    <div
-      style={ds}
-      className="flex w-full flex-col bg-[var(--ds-bg)] text-[var(--ds-ink)] [font-family:var(--font-body)]"
-    >
+    <div className="flex w-full flex-col bg-cream text-cocoa [font-family:var(--font-body)]">
       {/* Scroll-reveal driver + no-JS fallback so content is never hidden */}
       <RevealObserver />
       {/* Scroll-triggered newsletter popup (replaces the inline newsletter section) */}
@@ -57,62 +30,56 @@ export default function Home() {
         }}
       />
 
-      {/* ───── Section 2 · Hero - light two-column lifestyle (consolidated spec §2)
-          Brand-level, no product. Real Warm Honey tokens (off the old --ds-* vars).
-          Left: eyebrow / headline / honest-hedge subhead / CTA pair / trust strip.
-          Right: a real lifestyle SCENE (pet in lap, warm light, no product) - a
-          labeled placeholder until the shoot/AI lands. Entrance motion kept. */}
-      <section className="bg-paper">
-        <div className="mx-auto grid w-full max-w-7xl items-center gap-10 px-5 py-16 md:grid-cols-2 md:gap-14 md:px-8 md:py-24">
-          <div className="ds-hero-stagger">
-            <span className="inline-flex items-center rounded-full border border-line bg-card px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-clay">
+      {/* ───── Section 2 · Hero - full-bleed banner (consolidated spec §2) ─────────
+          Editorial lifestyle banner (NOT two-column - that read as product-
+          marketing): a full-bleed warm SCENE (pet in lap, no product) with
+          overlaid text + a warm scrim for legibility. CTA "Start now" is
+          category-neutral and PERMANENT (no grooming swap). No trust strip (it
+          duplicated the shipping bar + Promise). Real Warm Honey tokens. */}
+      <section className="relative min-h-[min(86dvh,800px)] w-full overflow-hidden">
+        {/* Full-bleed lifestyle SCENE. Illustrative (AI ok later); NO product, NO
+            stock fur close-up. TODO: real warm at-home scene (pet in lap, hands). */}
+        <div className="absolute inset-0 flex items-center justify-center bg-honey-tint">
+          <span className="text-xs font-semibold uppercase tracking-wider text-brown/50">Lifestyle scene (full-bleed)</span>
+        </div>
+        {/* Warm scrim, heavier on the left where the copy sits, for legibility */}
+        <div className="absolute inset-0 bg-gradient-to-r from-cocoa/85 via-cocoa/45 to-transparent" />
+
+        <div className="relative z-10 mx-auto flex min-h-[min(86dvh,800px)] max-w-7xl flex-col justify-center px-5 py-20 md:px-8">
+          <div className="ds-hero-stagger max-w-xl">
+            <span className="inline-flex items-center rounded-full border border-white/25 bg-white/10 px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-white/90 backdrop-blur-sm">
               At-home pet wellness · no hype
             </span>
-            <h1 className="mt-5 font-display text-4xl font-bold leading-[1.05] tracking-tight text-cocoa sm:text-5xl lg:text-6xl">
+            <h1 className="mt-5 font-display text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl">
               Keep your pet healthy,<br />on your own terms.
             </h1>
-            <p className="mt-5 max-w-md text-lg leading-relaxed text-brown">
+            <p className="mt-5 max-w-md text-lg leading-relaxed text-white/85">
               Honest tools for the care you would rather do at home. We don&rsquo;t claim to replace your vet — just to keep you out of the chair for the easy stuff.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/collections/all"
-                className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-clay px-9 text-base font-bold text-white shadow-sm transition-colors duration-200 hover:bg-cocoa active:scale-[0.97]"
+                className="inline-flex h-14 items-center justify-center rounded-full bg-clay px-9 text-base font-bold text-white shadow-lg transition-colors duration-200 hover:bg-cocoa active:scale-[0.97]"
               >
-                <ShoppingBag size={20} strokeWidth={2} /> {SHOW_GROOMING ? "Shop the range" : "Shop dental"}
+                Start now
               </Link>
               <Link
                 href="#why"
-                className="inline-flex h-14 items-center justify-center rounded-full border-2 border-cocoa px-9 text-base font-bold text-cocoa transition-colors duration-200 hover:bg-cocoa hover:text-white active:scale-[0.97]"
+                className="inline-flex h-14 items-center justify-center rounded-full border-2 border-white/40 px-9 text-base font-bold text-white backdrop-blur-sm transition-colors duration-200 hover:bg-white/10 active:scale-[0.97]"
               >
                 Why BeePaws
               </Link>
             </div>
-            {/* Trust strip - real, verifiable facts only (spec §8: confirm these +
-                optionally add "Made in [country]" once verified). */}
-            <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-semibold text-brown">
-              {["Xylitol-free", "30-day guarantee", "Free shipping over $50"].map((fact, i) => (
-                <span key={fact} className="flex items-center gap-x-3">
-                  {i > 0 && <span aria-hidden className="text-line">·</span>}
-                  {fact}
-                </span>
-              ))}
-            </div>
-          </div>
-          {/* Right: lifestyle scene. Illustrative (AI ok later); NO product, NO stock
-              fur close-up. TODO: real warm at-home scene (pet in lap, hands visible). */}
-          <div className="relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-[2rem] bg-honey-tint md:min-h-[460px]">
-            <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Lifestyle scene</span>
           </div>
         </div>
       </section>
 
-      {/* ───── Section 3 · Why at-home care works (consolidated spec §3) ──────────
+      {/* ───── Section 3 · Healthy pets start at home (consolidated spec §3) ───────
           LEADS the page: converts the "is at-home care even legit?" skeptic before
-          the product. 2-zone: warm outcome image (illustrative) + 2x2 grid of four
-          category-agnostic wellness principles. Persuasion copy (DRAFT, voice pass). */}
+          the product. 2-zone: a WIDER warm outcome image (illustrative) + 2x2 grid
+          of four wellness principles. Persuasion copy (DRAFT, voice pass). */}
       <section className="bg-honey-tint">
-        <div className="ds-reveal mx-auto grid w-full max-w-7xl items-center gap-10 px-5 py-16 md:grid-cols-[45fr_55fr] md:gap-14 md:px-8 md:py-24">
+        <div className="ds-reveal mx-auto grid w-full max-w-7xl items-center gap-10 px-5 py-16 md:grid-cols-[55fr_45fr] md:gap-14 md:px-8 md:py-24">
           {/* Left: warm outcome image (illustrative; AI ok later; no attribution) */}
           <div className="relative flex min-h-[300px] items-center justify-center overflow-hidden rounded-[2rem] bg-cream md:min-h-[440px]">
             <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Warm outcome scene</span>
@@ -120,7 +87,7 @@ export default function Home() {
           {/* Right: the argument (must convert the skeptic, not just list nice ideas) */}
           <div>
             <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[2.6rem]">
-              Why at-home care works
+              Healthy pets start at home
             </h2>
             <p className="mt-3 max-w-xl text-brown">
               The vet is for the big stuff. Most of what keeps a pet healthy is small, regular, and yours to do.
@@ -331,7 +298,7 @@ export default function Home() {
             href="/collections/all"
             className="mt-7 inline-flex items-center justify-center rounded-xl bg-gold px-8 py-4 text-base font-bold text-cocoa shadow-sm transition-colors hover:bg-gold-deep hover:text-white active:scale-[0.97] md:text-lg"
           >
-            {SHOW_GROOMING ? "Shop the range" : "Shop dental"}
+            Start now
           </Link>
           {/* Guarantee card - two NEAR-EQUAL halves (spec §8): the guarantee and
               "what we won't do" carry the same weight, since the "we won't invent a
