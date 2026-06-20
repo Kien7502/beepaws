@@ -1,4 +1,5 @@
 import { getFullProductForPage, getPaymentMethods, getProduct, getProducts } from "@/lib/shopify/queries";
+import { getBundleContents } from "@/lib/shopify/bundle-contents";
 import { notFound } from "next/navigation";
 import VariantSelector from "@/components/product/VariantSelector";
 import { ProductGallery } from "@/components/product/ProductGallery";
@@ -14,6 +15,8 @@ import { BeforeAfterSlider } from "@/components/product/BeforeAfterSlider";
 import { PainPoints } from "@/components/product/PainPoints";
 import { Mechanism } from "@/components/product/Mechanism";
 import { BundleBuyCard } from "@/components/product/BundleBuyCard";
+import { BundleContents } from "@/components/product/BundleContents";
+import { BundleOffer } from "@/components/product/BundleOffer";
 import { WaveDivider } from "@/components/ui/WaveDivider";
 import { ProductMediaSync } from "@/components/product/ProductMediaSync";
 import { DynamicHeroPrice } from "@/components/product/DynamicHeroPrice";
@@ -111,6 +114,22 @@ export default async function ProductPage({
   // a manual Admin step. Consumables stay untagged → those sections skip.
   const isDevice = product.tags?.includes("device") ?? false;
 
+  // Bundle products (Shopify Bundles / productBundleCreate) are tagged `bundle`
+  // and carry component variants. Fetch the "what's included" list only for
+  // bundles so normal products skip the extra query. See docs/bundles-from-admin.md.
+  const isBundle = product.tags?.includes("bundle") ?? false;
+  const bundleItems = isBundle
+    ? await getBundleContents(resolvedParams.handle)
+    : [];
+
+  // `beepaws.related_bundle` → feature that bundle on this product's PDP: the
+  // price row is replaced by a bundle offer. undefined if unset, or if the
+  // bundle is unpublished (getProduct returns nothing) → normal price shows.
+  const relatedBundleRef = fullProduct?.normalized?.related_bundle ?? null;
+  const relatedBundle = relatedBundleRef
+    ? await getProduct(relatedBundleRef.handle)
+    : undefined;
+
   const primaryCollectionHandle = fullProduct?.collections?.edges?.[0]?.node?.handle;
   const collectionRecommendations = primaryCollectionHandle
     ? (await getProducts({ collectionHandle: primaryCollectionHandle }))
@@ -203,21 +222,29 @@ export default async function ProductPage({
                 Lives inside ProductMediaSync; re-renders when VariantSelector
                 publishes the picked variant so the displayed price follows
                 color/accessory selection (just like the bundle picker total). */}
-            <DynamicHeroPrice
-              fallbackAmount={minVariantPrice.amount}
-              currencyCode={minVariantPrice.currencyCode}
-              compareAtAmount={product.compareAtPriceRange?.minVariantPrice?.amount ?? null}
-              fallbackAvailable={product.availableForSale}
-            />
+            {relatedBundle ? (
+              /* Product has a related bundle → replace the price row with a
+                 bundle offer that steers to the bundle PDP (per spec). */
+              <BundleOffer bundle={relatedBundle} />
+            ) : (
+              <>
+                <DynamicHeroPrice
+                  fallbackAmount={minVariantPrice.amount}
+                  currencyCode={minVariantPrice.currencyCode}
+                  compareAtAmount={product.compareAtPriceRange?.minVariantPrice?.amount ?? null}
+                  fallbackAvailable={product.availableForSale}
+                />
 
-            {/* Vet-bill anchor — frames the price against the $500-$1,400+ vet
-                quote per plan §"Anchoring rule". Always include the vet bill
-                comparison, never undercut against cheaper competitor devices. */}
-            <div className="mt-3 rounded-r-md border-l-[3px] border-gold bg-cream px-3 py-2.5 text-[13.5px] leading-snug text-brown">
-              The same ultrasonic technology your vet uses in the operatory —
-              the one they charge <b className="text-rose-soft">$500–$1,400+</b>{" "}
-              to use. Now it lives in your hand.
-            </div>
+                {/* Vet-bill anchor — frames the price against the $500-$1,400+ vet
+                    quote per plan §"Anchoring rule". Always include the vet bill
+                    comparison, never undercut against cheaper competitor devices. */}
+                <div className="mt-3 rounded-r-md border-l-[3px] border-gold bg-cream px-3 py-2.5 text-[13.5px] leading-snug text-brown">
+                  The same ultrasonic technology your vet uses in the operatory —
+                  the one they charge <b className="text-rose-soft">$500–$1,400+</b>{" "}
+                  to use. Now it lives in your hand.
+                </div>
+              </>
+            )}
 
             {beepaws?.bullets && beepaws.bullets.length > 0 && (
               <ul className="mt-5 space-y-2.5">
@@ -251,6 +278,9 @@ export default async function ProductPage({
                 bundleTiers={beepaws?.bundleTiers}
               />
             </div>
+
+            {/* What's included — bundle products only (renders null otherwise) */}
+            <BundleContents items={bundleItems} />
 
             {/* Frequently Bought Together — moved into the hero under the buy
                 card per restructure plan §Task 2 (was a standalone section

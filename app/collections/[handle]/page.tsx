@@ -29,7 +29,10 @@ export default async function CollectionPage({
 }) {
   const resolvedParams = await params;
   const collectionHandle = resolvedParams.handle;
-  const products = await getProducts({ collectionHandle });
+  // Hide Shopify bundle products (tagged `bundle`) from collection grids.
+  const products = (await getProducts({ collectionHandle })).filter(
+    (p) => !p.tags?.includes("bundle"),
+  );
 
   const title = formatCollectionTitle(collectionHandle);
   const subtitle =

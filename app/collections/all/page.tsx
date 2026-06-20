@@ -64,7 +64,12 @@ export default async function ShopAllPage({
     sortKey: fetchSortKey,
     reverse: fetchReverse,
   });
-  const products = sortProducts(rawProducts, sort);
+  // Hide Shopify bundle products (tagged `bundle`) from the catalog grid - they
+  // sell via their own page / a cross-sell on component PDPs, not mixed in here.
+  const products = sortProducts(
+    rawProducts.filter((p) => !p.tags?.includes("bundle")),
+    sort,
+  );
 
   return (
     <div className="container mx-auto px-4 md:px-6 max-w-7xl section-y">

@@ -214,7 +214,11 @@ function normalizeMetafields(metafields: AdminMetafield[]) {
     byKey["custom.usage"];
   const qna = byKey["custom.qna"] || byKey["custom.faq"] || byKey["custom.qa"];
 
-  const bundleCandidates = metafields.filter((mf) => looksLikeBundleKey(mf.key));
+  // Exclude `related_bundle` — it's a single product reference to a real Shopify
+  // bundle (featured on this product's PDP), NOT a frequently-bought-together item.
+  const bundleCandidates = metafields.filter(
+    (mf) => looksLikeBundleKey(mf.key) && mf.key !== "related_bundle",
+  );
   const bundleProducts = bundleCandidates.flatMap((mf) => {
     const referenced = mf.references?.nodes ?? [];
     const productsFromRefs = referenced
@@ -267,6 +271,13 @@ function normalizeMetafields(metafields: AdminMetafield[]) {
     finalCtaCopy:     parseBeepaws("final_cta_copy"),
   };
 
+  // `beepaws.related_bundle` — a single product reference to the bundle to
+  // feature on this product's PDP (replaces the price row with a bundle offer).
+  const relatedBundleRef = byKey["beepaws.related_bundle"]?.reference;
+  const related_bundle = isProductReference(relatedBundleRef)
+    ? { id: relatedBundleRef.id, handle: relatedBundleRef.handle, title: relatedBundleRef.title }
+    : null;
+
   return {
     usage_guide: usage
       ? {
@@ -283,6 +294,7 @@ function normalizeMetafields(metafields: AdminMetafield[]) {
         }
       : null,
     bundle_buy: bundleProducts,
+    related_bundle,
     beepaws,
   };
 }
