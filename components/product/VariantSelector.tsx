@@ -744,16 +744,16 @@ export default function VariantSelector({
                     Off-reference but kept because customers benefit from seeing
                     the actual items per tier, especially when add-ons differ. */}
                 {tb ? (
-                  <ul className="mt-2 space-y-1.5 text-[13.5px] text-brown">
+                  <ul className="mt-2 space-y-1 text-[12px] text-brown">
                     {tb.components.map((c, ci) => (
                       <li key={c.handle} className="flex items-center gap-2">
-                        <span className="relative h-7 w-7 shrink-0 overflow-hidden rounded-md border border-line bg-cream">
+                        <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded-md border border-line bg-cream">
                           <Image
                             src={c.imageUrl || "/product-placeholder.svg"}
                             alt=""
                             fill
                             className="object-cover"
-                            sizes="28px"
+                            sizes="24px"
                           />
                         </span>
                         <span className="min-w-0 truncate">
@@ -892,7 +892,7 @@ export default function VariantSelector({
                     {bGroups.map((grp, gi) => (
                       <div key={grp.product ?? `g${gi}`} className="space-y-1.5">
                         {grp.product && (
-                          <p className="text-[13px] font-bold text-cocoa">{grp.product}</p>
+                          <p className="text-[14.5px] font-bold text-cocoa">{grp.product}</p>
                         )}
                         {grp.opts.map((opt) => {
                           const colorMode = opt.label.toLowerCase().includes("color");
