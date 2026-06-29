@@ -179,7 +179,7 @@ export function CartDrawer() {
                 return (
                   <li
                     key={item.merchandiseId}
-                    className="flex gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--background)] p-3 transition-shadow hover:shadow-sm"
+                    className="flex items-center gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--background)] p-3 transition-shadow hover:shadow-sm"
                   >
                     <Link
                       href={`/products/${item.productHandle}`}
@@ -206,9 +206,13 @@ export function CartDrawer() {
                           >
                             {item.productTitle}
                           </Link>
-                          {item.variantTitle && item.variantTitle !== "Default Title" && (
-                            <p className="mt-0.5 text-xs text-slate-500">{item.variantTitle}</p>
-                          )}
+                          {/* For a bundle, the variant value is shown under its
+                              own component below — not here on the bundle line. */}
+                          {!item.bundleComponents?.length &&
+                            item.variantTitle &&
+                            item.variantTitle !== "Default Title" && (
+                              <p className="mt-0.5 text-xs text-slate-500">{item.variantTitle}</p>
+                            )}
                         </div>
                         <button
                           type="button"
@@ -219,6 +223,40 @@ export function CartDrawer() {
                           <Trash2 size={15} />
                         </button>
                       </div>
+
+                      {/* Bundle components — list what a bundle line expands
+                          into (Shopify expands them at checkout; we show them
+                          here for parity with the product page). */}
+                      {item.bundleComponents && item.bundleComponents.length > 0 && (
+                        <ul className="mt-1.5 space-y-1">
+                          {item.bundleComponents.map((c, ci) => (
+                            <li
+                              key={ci}
+                              className="flex items-center gap-1.5 text-[11px] text-slate-500"
+                            >
+                              <span className="relative h-5 w-5 shrink-0 overflow-hidden rounded border border-[var(--color-border)] bg-[var(--color-surface-2)]">
+                                <Image
+                                  src={c.imageUrl || "/product-placeholder.svg"}
+                                  alt=""
+                                  fill
+                                  className="object-cover"
+                                  sizes="20px"
+                                />
+                              </span>
+                              <span className="min-w-0">
+                                <span className="block truncate">
+                                  <span className="font-semibold">{c.quantity}×</span> {c.title}
+                                </span>
+                                {c.options && c.options.length > 0 && (
+                                  <span className="block truncate text-[10.5px] text-slate-400">
+                                    {c.options.join(", ")}
+                                  </span>
+                                )}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
 
                       <div className="mt-2 flex items-center justify-between gap-2">
                         <div className="inline-flex items-center rounded-xl border border-[var(--color-border)] text-sm">

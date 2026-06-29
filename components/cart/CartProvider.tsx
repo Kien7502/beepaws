@@ -23,9 +23,19 @@ import {
 
 const CART_ID_KEY = "beepaws_shopify_cart_id";
 const LEGACY_KEY = "beepaws_local_cart_v1";
+const BUNDLE_COMPONENTS_KEY = "beepaws_bundle_components_v1";
 const DEBOUNCE_MS = 600;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+export type BundleComponentLite = {
+  quantity: number;
+  title: string;
+  imageUrl: string | null;
+  /** Chosen option value(s) for this component (e.g. ["Green"]) — shown under
+   * the component in the cart so the variant reads against its own product. */
+  options?: string[];
+};
 
 export type LocalCartItem = {
   merchandiseId: string;
@@ -37,6 +47,10 @@ export type LocalCartItem = {
   unitPriceAmount: string;
   quantity: number;
   lineId?: string; // Shopify cart line GID — present when synced
+  /** For a real Shopify bundle: the components it expands into. Kept in a
+   * side-map keyed by merchandiseId (see bundleComponentsById) so it survives
+   * cart syncs that rebuild lines from Shopify (which omit this metadata). */
+  bundleComponents?: BundleComponentLite[];
 };
 
 type CartContextValue = {
@@ -158,6 +172,12 @@ function mergeLocalItem(prev: LocalCartItem[], next: LocalCartItem): LocalCartIt
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [shopifyCart, setShopifyCart] = useState<ShopifyCart | null>(null);
   const [localItems, setLocalItems] = useState<LocalCartItem[]>([]);
+  // Bundle components keyed by merchandiseId. Stored separately from the cart
+  // lines so they survive Shopify syncs (mapShopifyToLocal rebuilds lines and
+  // can't recover our component metadata). Persisted to localStorage.
+  const [bundleComponentsById, setBundleComponentsById] = useState<
+    Record<string, BundleComponentLite[]>
+  >({});
   const [hydrated, setHydrated] = useState(false);
   const [isCartLoading, setIsCartLoading] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -174,6 +194,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   localItemsRef.current = localItems;
 
   const debounceTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  // Per-line sequence guard: each updateQuantity bumps the line's seq. A
+  // debounced sync only commits its Shopify response if its captured seq is
+  // still the latest — so a slow response for an old quantity can't override a
+  // newer one the user has since set (the 1→2→1 "jump back" bug).
+  const quantityOpSeq = useRef<Map<string, number>>(new Map());
 
   // Operation queue — serializes cart API mutations so add/remove/update
   // can't race each other. Without this, removing an item mid-add could
@@ -208,11 +233,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const pendingAddsRef = useRef<{ merchandiseId: string; quantity: number }[]>([]);
   const flushScheduledRef = useRef(false);
 
-  // Derived: use Shopify cart items when available, else localStorage items
-  const items = useMemo<LocalCartItem[]>(
-    () => (shopifyCart ? mapShopifyToLocal(shopifyCart) : localItems),
-    [shopifyCart, localItems],
-  );
+  // Derived: use Shopify cart items when available, else localStorage items.
+  // Decorate each with its bundle components (if any) from the side-map so the
+  // drawer can list what's inside a bundle line even after a Shopify sync.
+  const items = useMemo<LocalCartItem[]>(() => {
+    const base = shopifyCart ? mapShopifyToLocal(shopifyCart) : localItems;
+    return base.map((it) => {
+      const bc = bundleComponentsById[it.merchandiseId];
+      return bc ? { ...it, bundleComponents: bc } : it;
+    });
+  }, [shopifyCart, localItems, bundleComponentsById]);
 
   // ── Hydration: restore cart on mount ────────────────────────────────────
 
@@ -246,12 +276,32 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [hydrated, localItems]);
 
+  // Load the bundle-components side-map once on mount, persist it on change.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(BUNDLE_COMPONENTS_KEY);
+      if (raw) setBundleComponentsById(JSON.parse(raw) as Record<string, BundleComponentLite[]>);
+    } catch {}
+  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem(BUNDLE_COMPONENTS_KEY, JSON.stringify(bundleComponentsById));
+    } catch {}
+  }, [bundleComponentsById]);
+
   // ── addItem ───────────────────────────────────────────────────────────────
 
   const addItem = useCallback((next: LocalCartItem) => {
     setLastAddedAt(Date.now());
     setLastAddedQuantity(Math.max(1, next.quantity || 1));
     setDrawerOpen(true);
+
+    // Remember a bundle line's components (keyed by merchandiseId) so the cart
+    // can list them; survives the Shopify sync that rebuilds the lines.
+    if (next.bundleComponents?.length) {
+      const components = next.bundleComponents;
+      setBundleComponentsById((prev) => ({ ...prev, [next.merchandiseId]: components }));
+    }
 
     // Optimistic local update — visible immediately regardless of sync mode.
     setLocalItems((prev) => mergeLocalItem(prev, next));
@@ -387,6 +437,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         );
       }
 
+      // Invalidate any in-flight sync for this line — the user just changed it,
+      // so an earlier op's response (if still pending) must not be committed.
+      const seq = (quantityOpSeq.current.get(merchandiseId) ?? 0) + 1;
+      quantityOpSeq.current.set(merchandiseId, seq);
+
       // Debounced Shopify sync
       const cartId = readCartId();
       if (!cartId || !hasStorefrontConfig()) return;
@@ -411,6 +466,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               quantity <= 0
                 ? await removeCartLine(cartId, lineId)
                 : await updateCartLine(cartId, lineId, quantity);
+            // Skip a stale response: a newer updateQuantity for this line has
+            // superseded us (its own op commits the latest state). Without this,
+            // an old quantity's response briefly overrides the user's new value.
+            if (quantityOpSeq.current.get(merchandiseId) !== seq) return;
             if (inFlightCount.current <= 1) {
               const ordered = reorderLikePrev(updated, shopifyCartRef.current);
               setShopifyCart(ordered);
@@ -432,6 +491,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const removeItem = useCallback((merchandiseId: string) => {
     // Optimistic removal — local state is the user's intent, applied immediately.
     setLocalItems((prev) => prev.filter((i) => i.merchandiseId !== merchandiseId));
+    setBundleComponentsById((prev) => {
+      if (!(merchandiseId in prev)) return prev;
+      const next = { ...prev };
+      delete next[merchandiseId];
+      return next;
+    });
     setShopifyCart((prev) =>
       prev
         ? { ...prev, lines: prev.lines.filter((l) => l.merchandiseId !== merchandiseId) }
@@ -485,6 +550,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const clearCart = useCallback(() => {
     setLocalItems([]);
     setShopifyCart(null);
+    setBundleComponentsById({});
     clearCartId();
   }, []);
 

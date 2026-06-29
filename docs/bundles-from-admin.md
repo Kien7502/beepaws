@@ -41,6 +41,31 @@ A bundle is just a product, so the **existing PDP + cart already handle it**:
    - ⚠ Verify at checkout when possible. The store is currently password-locked with payments
      disabled, so end-to-end checkout expansion hasn't been exercised yet.
 
+### "Let the customer choose" = standard variant selection (no special picker)
+
+When a component was set to **"Let the customer choose"** in the admin, the bundle copies **all**
+of that component product's option values onto the **bundle product itself**. So the bundle gets a
+real Shopify **option per choosable component option** (named `"<Product Title> <Option Name>"`,
+prefixed to avoid two "Color" options clashing), and one **variant per combination** — each wired
+to the matching component variants and expanded at checkout.
+
+Example — device (Color: Black/White) + scaler (Color: Green/Black/Pink/White), both choosable →
+the bundle product has:
+```
+options:  "…Scaler…Tool Color": [Black, White]      "Pawspik…Scaler Color": [Green, Black, Pink, White]
+variants: 8 (every combination), requiresComponents=true
+          e.g. "Black / Green" → device Black/1Pcs + scaler Green
+```
+
+**Storefront implication: render it with your normal `VariantSelector`.** There is no separate
+per-component widget — the choosable options ARE the bundle product's `options` / `variants`
+(`variants[].selectedOptions`), exactly like any multi-variant product. The shopper picks a
+variant; add that variant's id to cart; Shopify expands the components. Notes:
+- A **fixed-variant** component adds **no** option (locked); only choosable components add options.
+- Option names carry the component product's title prefix — **relabel in the theme** if too verbose.
+- Shopify caps a fixed bundle at **≤3 options total**, so only a few components can be choosable.
+- Each variant defaults to the **summed** component price unless an override was set.
+
 ## What you may want to add (optional)
 
 - **"What's included" on the bundle PDP.** A bundle PDP is sparse. Consider rendering the
@@ -84,6 +109,31 @@ Every admin bundle is tagged **`bundle`**. Use it to:
 > `../beepaws-admin/docs/bundles-usage.md` and `../beepaws-admin/docs/shopify-bundles-build-brief.md`.
 
 ---
+
+## Bundle links inside `bundle_tiers` (new)
+
+The admin tool now lets editors link a **bundle product to each bundle tier**, stored *inside*
+the existing `beepaws.bundle_tiers` JSON metafield (no separate metafield). Each tier entry may
+now carry an optional `bundle`:
+
+```ts
+// types/metafields.ts — extend BundleTierCopy
+export interface BundleTierCopy {
+  name?: string;
+  description?: string;
+  bundle?: { id: string; handle: string; title: string } | null; // NEW (optional)
+}
+```
+
+- `id` is the bundle product's GID (stable source of truth); `handle` is for linking
+  (`/products/<handle>`); `title` is a human-readable snapshot (may lag if the bundle is renamed —
+  the editor re-picks to refresh). Tiers without a link omit `bundle` / set it null.
+- It's plain JSON data, **not** a native Shopify reference (a metafield has one type, and
+  `bundle_tiers` is JSON) — so resolve/link it yourself from the id/handle. No extra fetch needed
+  to *link* (use `handle`); fetch by `id` if you want live title/price.
+- Backward compatible: existing tiers without `bundle` are unaffected; `VariantSelector` can read
+  `tier.bundle?.handle` to point a tier at its real bundle (e.g. an "Add this bundle" action or a
+  link), or ignore it.
 
 ## Appendix — "What's included" component spec
 

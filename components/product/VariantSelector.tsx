@@ -129,6 +129,26 @@ function getPrimaryVariant(product: Product) {
   return product.variants.edges[0]?.node;
 }
 
+export type TierBundleVariant = {
+  id: string;
+  priceAmount: string;
+  availableForSale: boolean;
+  selectedOptions: { name: string; value: string }[];
+};
+// A bundle linked from a tier (`beepaws.bundle_tiers[i].bundle`), resolved by the
+// page. A customer-choose bundle is a normal multi-variant product, so we carry
+// ALL its variants (picked inline in the tier) + its components (shown as
+// "what's included"). Add / Buy adds the CHOSEN bundle variant (one line; Shopify
+// expands it at checkout).
+export type TierBundle = {
+  handle: string;
+  title: string;
+  currencyCode: string;
+  imageUrl: string;
+  components: { quantity: number; title: string; handle: string; imageUrl: string | null }[];
+  variants: TierBundleVariant[];
+};
+
 type Props = {
   product: Product;
   /** Pool of products eligible as cross-sell add-ons in higher tiers. Typically
@@ -147,6 +167,9 @@ type Props = {
    * or empty strings fall back to the in-code TIERS defaults so structure
    * (qty/addons/badges) stays separate from editable text. */
   bundleTiers?: BundleTierCopy[] | null;
+  /** Per-tier resolved bundle (aligned by index with bundleTiers). When the
+   * selected tier has one, Add/Buy adds the bundle product instead of items. */
+  tierBundles?: (TierBundle | null)[] | null;
 };
 
 export default function VariantSelector({
@@ -155,6 +178,7 @@ export default function VariantSelector({
   paymentMethods = { cards: [], wallets: [] },
   educationNote,
   bundleTiers,
+  tierBundles,
 }: Props) {
   // Resolve tier copy: metafield wins when set, else default. We do this
   // here rather than mutating TIERS so the structural shape (and the
@@ -169,6 +193,11 @@ export default function VariantSelector({
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant>(variants[0]);
   // Default to the "Most Popular" tier (Complete Care Kit) — common conversion pattern.
   const [tierIdx, setTierIdx] = useState(1);
+  // When a tier links a (customer-choose) bundle, this is the chosen bundle
+  // variant. Init to the default tier's bundle's first variant; reset on tier change.
+  const [bundleVariantId, setBundleVariantId] = useState<string | null>(
+    () => tierBundles?.[1]?.variants[0]?.id ?? null,
+  );
 
   // Derive the option structure from variants. Each entry is one Shopify option
   // (e.g. "Color", "Size") and its ordered unique values. When the merchant
@@ -259,6 +288,71 @@ export default function VariantSelector({
   }, [selectedVariant, setActiveByUrl, setActiveVariant]);
 
   const tier = TIERS[tierIdx];
+  // When the selected tier links a real bundle, the buy actions add the bundle
+  // product (not the tier's separate items) and the price reflects the bundle.
+  const selectedTierBundle = tierBundles?.[tierIdx] ?? null;
+  const chosenBundleVariant =
+    selectedTierBundle?.variants.find((v) => v.id === bundleVariantId) ??
+    selectedTierBundle?.variants[0] ??
+    null;
+  const chosenBundleOptionValues: Record<string, string> = Object.fromEntries(
+    chosenBundleVariant?.selectedOptions.map((o) => [o.name, o.value]) ?? [],
+  );
+
+  // Derive a bundle's option groups from its variants' selectedOptions (same
+  // shape as the main product's optionGroups — a customer-choose bundle IS a
+  // normal multi-variant product).
+  function bundleOptionGroups(b: TierBundle) {
+    const map = new Map<string, string[]>();
+    for (const v of b.variants) {
+      for (const opt of v.selectedOptions) {
+        if (!map.has(opt.name)) map.set(opt.name, []);
+        const arr = map.get(opt.name)!;
+        if (!arr.includes(opt.value)) arr.push(opt.value);
+      }
+    }
+    return Array.from(map.entries()).map(([name, values]) => ({ name, values }));
+  }
+
+  function pickBundleOption(b: TierBundle, optName: string, optValue: string) {
+    const next = { ...chosenBundleOptionValues, [optName]: optValue };
+    let matched = b.variants.find((v) =>
+      v.selectedOptions.every((o) => next[o.name] === o.value),
+    );
+    if (!matched) {
+      matched = b.variants.find((v) =>
+        v.selectedOptions.some((o) => o.name === optName && o.value === optValue),
+      );
+    }
+    if (matched) setBundleVariantId(matched.id);
+  }
+
+  // Group a bundle's options by the component product they belong to. Shopify
+  // names a choosable option "<Component Title> <Option Name>" (e.g. "Pawspik
+  // Ultrasonic Dental Scaler Color"), so we strip the matching component-title
+  // prefix to get a clean per-product header + short label ("Color"). Options
+  // with no matching component prefix fall into a headerless group.
+  function bundleOptionGroupsByProduct(b: TierBundle) {
+    const titles = b.components
+      .map((c) => c.title)
+      .sort((a, z) => z.length - a.length); // longest first → most specific prefix wins
+    const enriched = bundleOptionGroups(b).map((o) => {
+      const product = titles.find((t) => o.name.toLowerCase().startsWith(t.toLowerCase())) ?? null;
+      const label = (product ? o.name.slice(product.length).trim() : o.name) || o.name;
+      return { name: o.name, values: o.values, product, label };
+    });
+    const groups: { product: string | null; opts: typeof enriched }[] = [];
+    for (const e of enriched) {
+      let g = groups.find((x) => x.product === e.product);
+      if (!g) {
+        g = { product: e.product, opts: [] };
+        groups.push(g);
+      }
+      g.opts.push(e);
+    }
+    return groups;
+  }
+
   const currencyCode = selectedVariant?.price?.currencyCode || "USD";
 
   // Resolve tier's addon references to actual products + their primary variants.
@@ -291,7 +385,10 @@ export default function VariantSelector({
     const v = variants.find((vv) => vv.id === vid) ?? selectedVariant;
     mainTotal += parseFloat(v.price.amount);
   }
-  const totalPrice = mainTotal + addonsTotal;
+  const totalPrice = selectedTierBundle
+    ? parseFloat(chosenBundleVariant?.priceAmount ?? selectedTierBundle.variants[0].priceAmount)
+    : mainTotal + addonsTotal;
+  const displayCurrency = selectedTierBundle?.currencyCode || currencyCode;
 
   function selectTier(idx: number) {
     setTierIdx(idx);
@@ -301,6 +398,9 @@ export default function VariantSelector({
     // makes the displayed bundle total look wrong vs the visible unit pickers.
     const fallbackId = selectedVariant?.id ?? "";
     setUnitVariantIds((prev) => prev.map(() => fallbackId));
+    // Reset the bundle variant to the new tier's bundle default (or clear it).
+    const b = tierBundles?.[idx] ?? null;
+    setBundleVariantId(b ? b.variants[0]?.id ?? null : null);
   }
 
   function selectTopVariant(variant: ProductVariant) {
@@ -320,6 +420,47 @@ export default function VariantSelector({
 
 
   function onAddToCart() {
+    // Tier linked to a real Shopify bundle → add the bundle product (one line;
+    // Shopify expands it into components at checkout), not the tier's items.
+    if (selectedTierBundle) {
+      if (!chosenBundleVariant?.availableForSale) return;
+      // Map each chosen option value to the component it belongs to (Shopify
+      // prefixes the option name with the component title), so the cart shows
+      // e.g. "Green" under the scaler rather than on the bundle line.
+      const compTitles = selectedTierBundle.components
+        .map((c) => c.title)
+        .sort((a, z) => z.length - a.length);
+      const valuesByTitle: Record<string, string[]> = {};
+      for (const o of chosenBundleVariant.selectedOptions) {
+        const owner = compTitles.find((t) => o.name.toLowerCase().startsWith(t.toLowerCase()));
+        if (owner) {
+          if (!valuesByTitle[owner]) valuesByTitle[owner] = [];
+          valuesByTitle[owner].push(o.value);
+        }
+      }
+      addItem({
+        merchandiseId: chosenBundleVariant.id,
+        productHandle: selectedTierBundle.handle,
+        productTitle: selectedTierBundle.title,
+        variantTitle:
+          chosenBundleVariant.selectedOptions.map((o) => o.value).join(" / ") || "Bundle",
+        imageUrl: selectedTierBundle.imageUrl,
+        currencyCode: selectedTierBundle.currencyCode,
+        unitPriceAmount: chosenBundleVariant.priceAmount,
+        quantity: 1,
+        // Carry the components so the cart line can list what's inside the bundle.
+        bundleComponents: selectedTierBundle.components.map((c) => ({
+          quantity: c.quantity,
+          title: c.title,
+          imageUrl: c.imageUrl,
+          options: valuesByTitle[c.title],
+        })),
+      });
+      setAdded(true);
+      window.setTimeout(() => setAdded(false), 1800);
+      return;
+    }
+
     if (!selectedVariant?.availableForSale) return;
 
     // Add main product units (with per-unit variant picks when applicable)
@@ -365,7 +506,32 @@ export default function VariantSelector({
   // straight to /api/shopify/cart/checkout, then redirect to Shopify checkout.
   // Same pattern as BundleBuyCard.onBuyNow so behavior stays consistent.
   async function onBuyNow() {
-    if (!selectedVariant?.availableForSale || buyingNow) return;
+    if (buyingNow) return;
+
+    // Bundle tier → checkout with just the bundle line (Shopify expands it).
+    if (selectedTierBundle) {
+      if (!chosenBundleVariant?.availableForSale) return;
+      setBuyingNow(true);
+      try {
+        const res = await fetch("/api/shopify/cart/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lines: [{ merchandiseId: chosenBundleVariant.id, quantity: 1 }],
+          }),
+        });
+        const data = (await res.json()) as { checkoutUrl?: string; error?: string };
+        if (!res.ok || !data.checkoutUrl) {
+          throw new Error(data.error || "Couldn't open checkout");
+        }
+        window.location.href = data.checkoutUrl;
+      } catch {
+        setBuyingNow(false);
+      }
+      return;
+    }
+
+    if (!selectedVariant?.availableForSale) return;
     setBuyingNow(true);
     try {
       const counts = new Map<string, number>();
@@ -395,7 +561,9 @@ export default function VariantSelector({
     }
   }
 
-  const isAvailable = selectedVariant?.availableForSale;
+  const isAvailable = selectedTierBundle
+    ? (chosenBundleVariant?.availableForSale ?? false)
+    : selectedVariant?.availableForSale;
 
   return (
     <div className="flex flex-col gap-6">
@@ -495,6 +663,7 @@ export default function VariantSelector({
         <div className="space-y-3">
           {TIERS.map((t, i) => {
             const selected = tierIdx === i;
+            const tb = tierBundles?.[i] ?? null;
             const tAddons = resolveAddons(t);
             // For the selected tier, use the actual per-unit picks (matches the
             // top-level "Your selection" total). For other tiers, the user
@@ -507,9 +676,15 @@ export default function VariantSelector({
               const v = variants.find((vv) => vv.id === vid) ?? selectedVariant;
               tMainTotal += parseFloat(v.price.amount);
             }
-            const tTotal =
-              tMainTotal +
-              tAddons.reduce((sum, a) => sum + parseFloat(a.variant.price.amount) * a.qty, 0);
+            // For a bundle tier, price reflects the chosen variant when this tier
+            // is selected, else its first variant. Otherwise the composed total.
+            const tbVariant = tb ? (selected ? chosenBundleVariant : tb.variants[0]) : null;
+            const tTotal = tb
+              ? parseFloat(tbVariant?.priceAmount ?? tb.variants[0].priceAmount)
+              : tMainTotal +
+                tAddons.reduce((sum, a) => sum + parseFloat(a.variant.price.amount) * a.qty, 0);
+            const tCurrency = tb ? tb.currencyCode : currencyCode;
+            const bGroups = tb ? bundleOptionGroupsByProduct(tb) : [];
 
             return (
               <div
@@ -557,7 +732,7 @@ export default function VariantSelector({
                     {tierCopy(i, "name")}
                   </span>
                   <span className="text-[15.5px] font-bold tabular-nums text-cocoa">
-                    {formatMoney(tTotal, currencyCode)}
+                    {formatMoney(tTotal, tCurrency)}
                   </span>
                 </div>
 
@@ -568,26 +743,36 @@ export default function VariantSelector({
                 {/* What's included — main qty + resolved addons with thumbnails.
                     Off-reference but kept because customers benefit from seeing
                     the actual items per tier, especially when add-ons differ. */}
-                <ul className="mt-2 space-y-1 text-[12px] text-brown">
-                  <li className="flex items-center gap-2">
-                    <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded-md border border-line bg-cream">
-                      <Image
-                        src={product.images.edges[0]?.node?.url || "/product-placeholder.svg"}
-                        alt=""
-                        fill
-                        className="object-cover"
-                        sizes="24px"
-                      />
-                    </span>
-                    <span className="min-w-0 truncate">
-                      <span className="font-bold">{t.mainQty}×</span> {product.title}
-                    </span>
-                  </li>
-                  {tAddons.map((a) => (
-                    <li key={a.product.id} className="flex items-center gap-2">
+                {tb ? (
+                  <ul className="mt-2 space-y-1.5 text-[13.5px] text-brown">
+                    {tb.components.map((c, ci) => (
+                      <li key={c.handle} className="flex items-center gap-2">
+                        <span className="relative h-7 w-7 shrink-0 overflow-hidden rounded-md border border-line bg-cream">
+                          <Image
+                            src={c.imageUrl || "/product-placeholder.svg"}
+                            alt=""
+                            fill
+                            className="object-cover"
+                            sizes="28px"
+                          />
+                        </span>
+                        <span className="min-w-0 truncate">
+                          {c.quantity}× <span className="text-cocoa">{c.title}</span>
+                        </span>
+                        {ci === 0 && (
+                          <span className="ml-auto shrink-0 rounded-full bg-honey-tint px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-gold-deep">
+                            Bundle
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <ul className="mt-2 space-y-1 text-[12px] text-brown">
+                    <li className="flex items-center gap-2">
                       <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded-md border border-line bg-cream">
                         <Image
-                          src={a.product.images.edges[0]?.node?.url || "/product-placeholder.svg"}
+                          src={product.images.edges[0]?.node?.url || "/product-placeholder.svg"}
                           alt=""
                           fill
                           className="object-cover"
@@ -595,17 +780,33 @@ export default function VariantSelector({
                         />
                       </span>
                       <span className="min-w-0 truncate">
-                        <span className="font-bold">{a.qty}×</span> {a.product.title}
+                        <span className="font-bold">{t.mainQty}×</span> {product.title}
                       </span>
                     </li>
-                  ))}
-                </ul>
+                    {tAddons.map((a) => (
+                      <li key={a.product.id} className="flex items-center gap-2">
+                        <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded-md border border-line bg-cream">
+                          <Image
+                            src={a.product.images.edges[0]?.node?.url || "/product-placeholder.svg"}
+                            alt=""
+                            fill
+                            className="object-cover"
+                            sizes="24px"
+                          />
+                        </span>
+                        <span className="min-w-0 truncate">
+                          <span className="font-bold">{a.qty}×</span> {a.product.title}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
 
                 {/* Per-unit pickers (Family Pack: pick color per device). Not in
                     the reference template but kept as a real feature for multi-
                     pet bundles — only renders when the user has selected this
                     tier AND it has more than one main unit. */}
-                {selected && multi && t.mainQty > 1 && (
+                {selected && multi && t.mainQty > 1 && !tb && (
                   <div className="mt-3 space-y-3 border-t border-line pt-3">
                     {Array.from({ length: t.mainQty }, (_, j) => {
                       const uid = unitVariantIds[j] ?? variants[0]?.id ?? "";
@@ -680,6 +881,86 @@ export default function VariantSelector({
                     })}
                   </div>
                 )}
+
+                {/* Bundle option pickers — a customer-choose bundle is a normal
+                    multi-variant product, so pick its options inline (reusing the
+                    swatch/chip UI). Grouped by component product: product name as
+                    a header, then each option as a "Label: [swatches]" row (mirrors
+                    the per-unit picker layout). Picking updates the chosen variant. */}
+                {selected && tb && bGroups.length > 0 && (
+                  <div className="mt-3 space-y-3 border-t border-line pt-3">
+                    {bGroups.map((grp, gi) => (
+                      <div key={grp.product ?? `g${gi}`} className="space-y-1.5">
+                        {grp.product && (
+                          <p className="text-[13px] font-bold text-cocoa">{grp.product}</p>
+                        )}
+                        {grp.opts.map((opt) => {
+                          const colorMode = opt.label.toLowerCase().includes("color");
+                          const sel = chosenBundleOptionValues[opt.name];
+                          return (
+                            <div
+                              key={opt.name}
+                              className="flex flex-wrap items-center gap-x-2 gap-y-1.5"
+                            >
+                              <span className="text-[11px] font-semibold text-brown">
+                                {opt.label}:
+                              </span>
+                              {opt.values.map((value) => {
+                                const active = sel === value;
+                                if (colorMode) {
+                                  const colors = resolveSwatchColors(value);
+                                  if (colors) {
+                                    return (
+                                      <button
+                                        key={value}
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          pickBundleOption(tb, opt.name, value);
+                                        }}
+                                        title={value}
+                                        aria-label={value}
+                                        aria-pressed={active}
+                                        className={`relative flex h-9 w-9 items-center justify-center rounded-lg border-[1.8px] bg-[#EFE6CF] transition-all ${
+                                          active
+                                            ? "border-transparent ring-2 ring-clay"
+                                            : "border-line hover:border-clay/60"
+                                        }`}
+                                      >
+                                        <span
+                                          className="block h-6 w-6 rounded-full border border-black/25 shadow-[inset_0_-1px_2px_rgb(0_0_0_/_0.08)]"
+                                          style={{ background: swatchBackground(colors) }}
+                                        />
+                                      </button>
+                                    );
+                                  }
+                                }
+                                // Non-color option, or unknown color → compact text chip
+                                return (
+                                  <button
+                                    key={value}
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      pickBundleOption(tb, opt.name, value);
+                                    }}
+                                    className={`rounded-lg border-[1.8px] px-2.5 py-1 text-xs font-bold transition-all ${
+                                      active
+                                        ? "border-clay bg-[#FCFBF4] text-cocoa"
+                                        : "border-line text-cocoa hover:border-clay/60"
+                                    }`}
+                                  >
+                                    {value}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -713,7 +994,7 @@ export default function VariantSelector({
           className="min-h-[52px] rounded-xl text-base md:text-lg !bg-gold !text-cocoa hover:!bg-gold-deep hover:!text-white"
           onClick={onAddToCart}
         >
-          {isAvailable ? `Add to cart — ${formatMoney(totalPrice, currencyCode)}` : "Out of stock"}
+          {isAvailable ? `Add to cart — ${formatMoney(totalPrice, displayCurrency)}` : "Out of stock"}
         </Button>
 
         {/* Buy It Now — outline secondary CTA per device reference. Skips the

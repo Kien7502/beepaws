@@ -64,6 +64,12 @@ export interface BeforeAfterSlide {
 export interface BundleTierCopy {
   name?: string;
   description?: string;
+  /** Optional link to a real Shopify bundle product, stored inside the
+   * `beepaws.bundle_tiers` JSON by beepaws-admin (plain data, NOT a Shopify
+   * reference — resolve via handle/id storefront-side). When present, selecting
+   * this tier adds the bundle product to the cart (one line; Shopify expands it)
+   * instead of the tier's separate items. */
+  bundle?: { id: string; handle: string; title: string } | null;
 }
 
 export interface PainPoint {
