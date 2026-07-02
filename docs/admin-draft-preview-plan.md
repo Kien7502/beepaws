@@ -1,5 +1,18 @@
 # Plan: live draft preview from beepaws-admin (Phase B)
 
+> **STATUS: BUILT (2026-07-02).** `components/product/ProductPageView.tsx` (shared PDP render,
+> async), `lib/shopify/draft-preview.ts` (`beepawsFromDraft` + `fetchAdminDraft`), and
+> `app/preview/products/[handle]/page.tsx` (guarded, `force-dynamic`) all exist; `next build`
+> (webpack) passes. **How to run the live preview:** start BOTH locally — admin `npm run dev`
+> (:3000) + this storefront `npm run dev` (:3001) — then in the admin's Connection settings set
+> the Storefront preview URL to `http://localhost:3001/preview/products/{handle}`. Edit in the
+> admin → it debounce-saves the draft + reloads the preview → this route re-fetches the draft.
+> **Caveat:** the storefront fetches the admin draft at `BEEPAWS_ADMIN_URL` (default
+> `http://localhost:3000`). The **desktop** admin app picks a *random* port, so for desktop live
+> preview you must set `BEEPAWS_ADMIN_URL` to that port (or run the admin via `npm run dev` on
+> :3000). Follow-up: have the desktop expose its port.
+
+
 > For whoever works in **this** (`beepaws` storefront) repo. Goal: let the **beepaws-admin**
 > tool (sibling repo `../beepaws-admin`) show this storefront rendering its **unsaved draft**
 > content — "as you type" — in its desktop preview pane.
