@@ -1,11 +1,31 @@
+// Comparison table — dynamic columns + rows. Authored by beepaws-admin and
+// stored as a ComparisonData object; each row carries one cell per column,
+// positionally aligned to `columns`. normalizeComparison (in ComparisonTable)
+// migrates the legacy array shape below.
+export interface ComparisonColumn {
+  label: string;
+  icon: string; // lucide name — see COLUMN_ICONS in ComparisonTable
+}
+export interface ComparisonCell {
+  on: boolean; // drives the ✓/✕ + color (true = clay, false = rose)
+  text?: string | null; // optional text override (replaces the icon)
+}
 export interface ComparisonRow {
+  label: string;
+  cells: ComparisonCell[];
+}
+export interface ComparisonData {
+  columns: ComparisonColumn[];
+  rows: ComparisonRow[];
+}
+
+// Legacy shape (pre-dynamic-columns): a flat array of rows keyed BeePaws/Vet/
+// Other. Still read for products authored before the migration.
+export interface LegacyComparisonRow {
   label: string;
   beepaws: boolean;
   vet: boolean;
   other: boolean;
-  // Optional text values render in place of the ✓/✕ icon for that cell — used
-  // for rows like "One-time cost" ($59 / $500–$1,400+ / Ongoing). The boolean
-  // still drives the cell color (true = clay, false = rose). Blank = icon.
   beepawsText?: string;
   vetText?: string;
   otherText?: string;
@@ -137,7 +157,8 @@ export interface FinalCtaCopy {
 }
 
 export interface BeepawsMetafields {
-  comparisonRows: ComparisonRow[] | null;
+  // The dynamic { columns, rows } object, or the legacy array (migrated on read).
+  comparisonRows: ComparisonData | LegacyComparisonRow[] | null;
   useCases: UseCaseCard[] | null;
   faqItems: FaqItem[] | null;
   reviews: Review[] | null;

@@ -1,28 +1,71 @@
-import type { ComparisonRow } from "@/types/metafields";
-import { Check, X, PawPrint, Stethoscope, Leaf } from "lucide-react";
+import type { ComparisonData, ComparisonColumn } from "@/types/metafields";
+import {
+  Check, X,
+  PawPrint, Stethoscope, Leaf, Shield, Star, Heart, DollarSign, Clock, Zap, Package,
+  type LucideIcon,
+} from "lucide-react";
 
-// Lorem ipsum row labels — set beepaws.comparison_rows to override.
-// The true/false check pattern stays representative so the table reads
-// correctly while waiting for real copy.
-const DEFAULT_ROWS: ComparisonRow[] = [
-  { label: "Lorem ipsum feature 1", beepaws: true,  vet: true,  other: false },
-  { label: "Lorem ipsum feature 2", beepaws: true,  vet: false, other: true  },
-  { label: "Lorem ipsum feature 3", beepaws: true,  vet: false, other: true  },
-  { label: "Lorem ipsum feature 4", beepaws: true,  vet: false, other: false },
-  { label: "Lorem ipsum feature 5", beepaws: true,  vet: true,  other: false },
-  { label: "Lorem ipsum feature 6", beepaws: true,  vet: true,  other: false },
+// Column icons the editor (beepaws-admin) can assign, keyed by lucide name.
+const COLUMN_ICONS: Record<string, LucideIcon> = {
+  PawPrint, Stethoscope, Leaf, Shield, Star, Heart, DollarSign, Clock, Zap, Package,
+};
+
+const DEFAULT_COLUMNS: ComparisonColumn[] = [
+  { label: "BeePaws", icon: "PawPrint" },
+  { label: "Vet Cleaning", icon: "Stethoscope" },
+  { label: "Chews & Additives", icon: "Leaf" },
 ];
 
+// Lorem ipsum placeholders — set beepaws.comparison_rows to override. The check
+// pattern stays representative so the table reads correctly before real copy.
+const DEFAULT_DATA: ComparisonData = {
+  columns: DEFAULT_COLUMNS,
+  rows: [
+    { label: "Lorem ipsum feature 1", cells: [{ on: true }, { on: true }, { on: false }] },
+    { label: "Lorem ipsum feature 2", cells: [{ on: true }, { on: false }, { on: true }] },
+    { label: "Lorem ipsum feature 3", cells: [{ on: true }, { on: false }, { on: true }] },
+    { label: "Lorem ipsum feature 4", cells: [{ on: true }, { on: false }, { on: false }] },
+    { label: "Lorem ipsum feature 5", cells: [{ on: true }, { on: true }, { on: false }] },
+    { label: "Lorem ipsum feature 6", cells: [{ on: true }, { on: true }, { on: false }] },
+  ],
+};
+
+// Accept the new { columns, rows } object, the legacy row array, or null, and
+// return a normalized ComparisonData (mirrors beepaws-admin's normalizeComparison).
+function normalizeComparison(value: unknown): ComparisonData {
+  if (value && typeof value === "object" && !Array.isArray(value) && Array.isArray((value as { rows?: unknown }).rows)) {
+    const v = value as { columns?: ComparisonColumn[]; rows?: { label?: string; cells?: { on?: boolean; text?: string | null }[] }[] };
+    const columns = Array.isArray(v.columns) && v.columns.length ? v.columns : DEFAULT_COLUMNS;
+    return {
+      columns,
+      rows: (v.rows ?? []).map((r) => ({
+        label: r.label ?? "",
+        cells: columns.map((_, i) => ({ on: !!r.cells?.[i]?.on, text: r.cells?.[i]?.text ?? null })),
+      })),
+    };
+  }
+  if (Array.isArray(value)) {
+    return {
+      columns: DEFAULT_COLUMNS,
+      rows: (value as Record<string, unknown>[]).map((r) => ({
+        label: (r.label as string) ?? "",
+        cells: [
+          { on: !!r.beepaws, text: (r.beepawsText as string | null) ?? null },
+          { on: !!r.vet, text: (r.vetText as string | null) ?? null },
+          { on: !!r.other, text: (r.otherText as string | null) ?? null },
+        ],
+      })),
+    };
+  }
+  return { columns: DEFAULT_COLUMNS, rows: [] };
+}
+
 interface Props {
-  rows?: ComparisonRow[] | null;
+  // Raw beepaws.comparison_rows value (object, legacy array, or null).
+  rows?: unknown;
   eyebrow?: string;
   heading?: string;
   lead?: string;
-  // Column headers — brand-stable, default to the reference copy. Editable as
-  // props if a product needs different competitor framing.
-  columnUs?: string;
-  columnVet?: string;
-  columnOther?: string;
 }
 
 export function ComparisonTable({
@@ -30,21 +73,18 @@ export function ComparisonTable({
   eyebrow = "Lorem ipsum",
   heading = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
   lead = "Lorem ipsum dolor sit amet, consectetur adipiscing elit sed do.",
-  columnUs = "BeePaws",
-  columnVet = "Vet Cleaning",
-  columnOther = "Chews & Additives",
 }: Props) {
-  const data = rows && rows.length > 0 ? rows : DEFAULT_ROWS;
+  const norm = normalizeComparison(rows);
+  const data = norm.rows.length ? norm : DEFAULT_DATA;
+  const { columns, rows: dataRows } = data;
+  // First column (index 0) is the "us" column — highlighted like the reference.
+  const gridCols = `1.5fr repeat(${columns.length}, 1fr)`;
 
   // Render a comparison cell. When text is present (e.g. the cost row) it
   // renders in place of the ✓/✕ icon; the boolean still drives the color.
   function cell(active: boolean, text?: string | null) {
     if (text) {
-      return (
-        <span className={`text-sm font-bold ${active ? "text-clay" : "text-rose-soft"}`}>
-          {text}
-        </span>
-      );
+      return <span className={`text-sm font-bold ${active ? "text-clay" : "text-rose-soft"}`}>{text}</span>;
     }
     return active ? (
       <Check className="h-5 w-5 text-clay" strokeWidth={3} />
@@ -53,9 +93,9 @@ export function ComparisonTable({
     );
   }
 
-  // Warm Honey: white section, heading on the left, table on the right. "Us"
-  // (BeePaws) column header is a cocoa badge; competitor columns use cream
-  // badges. Check icons in clay, X in rose-soft. Display font on the heading.
+  // Warm Honey: white section, heading on the left, table on the right. The first
+  // column header is a cocoa badge; the rest use cream badges. Check icons in
+  // clay, X in rose-soft. Display font on the heading.
   return (
     <section className="bg-card py-14 md:py-20">
       <div className="container mx-auto max-w-7xl px-4 md:px-6">
@@ -77,50 +117,45 @@ export function ComparisonTable({
           {/* Right — table */}
           <div className="w-full md:flex-1">
 
-            {/* Column header badges — sit OUTSIDE the table card, above it.
-                Grid template matches the rows below so badges line up over
-                their columns (wider first column for the row labels). */}
-            <div className="mb-4 grid grid-cols-[1.5fr_1fr_1fr_1fr] items-end gap-2 text-center">
+            {/* Column header badges — sit above the table card, aligned over their
+                columns (wider first column for the row labels). */}
+            <div className="mb-4 grid items-end gap-2 text-center" style={{ gridTemplateColumns: gridCols }}>
               <div />
-              <div className="flex flex-col items-center gap-1.5">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cocoa">
-                  <PawPrint size={20} className="text-gold" />
-                </div>
-                <span className="text-xs font-extrabold uppercase tracking-wider text-cocoa">{columnUs}</span>
-              </div>
-              <div className="flex flex-col items-center gap-1.5">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cream">
-                  <Stethoscope size={20} className="text-brown" />
-                </div>
-                <span className="text-xs font-bold uppercase tracking-wider text-brown">{columnVet}</span>
-              </div>
-              <div className="flex flex-col items-center gap-1.5">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cream">
-                  <Leaf size={20} className="text-brown" />
-                </div>
-                <span className="text-xs font-bold uppercase tracking-wider text-brown">{columnOther}</span>
-              </div>
+              {columns.map((col, i) => {
+                const Icon = COLUMN_ICONS[col.icon] ?? PawPrint;
+                const isUs = i === 0;
+                return (
+                  <div key={i} className="flex flex-col items-center gap-1.5">
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-full ${isUs ? "bg-cocoa" : "bg-cream"}`}>
+                      <Icon size={20} className={isUs ? "text-gold" : "text-brown"} />
+                    </div>
+                    <span className={`text-xs uppercase tracking-wider ${isUs ? "font-extrabold text-cocoa" : "font-bold text-brown"}`}>
+                      {col.label}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Rows — white card with line dividers */}
             <div className="overflow-hidden rounded-2xl border border-line bg-card shadow-[0_18px_50px_-12px_rgba(74,46,22,0.30)]">
-              {data.map((row, i) => (
+              {dataRows.map((row, i) => (
                 <div
-                  key={row.label}
-                  className={`grid grid-cols-[1.5fr_1fr_1fr_1fr] items-stretch ${i < data.length - 1 ? "border-b border-line" : ""}`}
+                  key={i}
+                  className={`grid items-stretch ${i < dataRows.length - 1 ? "border-b border-line" : ""}`}
+                  style={{ gridTemplateColumns: gridCols }}
                 >
                   <div className="flex items-center px-5 py-4 text-sm font-semibold text-cocoa">
                     {row.label}
                   </div>
-                  <div className="flex items-center justify-center py-3.5 bg-[#FCF2DD]">
-                    {cell(row.beepaws, row.beepawsText)}
-                  </div>
-                  <div className="flex items-center justify-center py-3.5">
-                    {cell(row.vet, row.vetText)}
-                  </div>
-                  <div className="flex items-center justify-center py-3.5">
-                    {cell(row.other, row.otherText)}
-                  </div>
+                  {columns.map((_, ci) => {
+                    const c = row.cells[ci] ?? { on: false, text: null };
+                    return (
+                      <div key={ci} className={`flex items-center justify-center py-3.5 ${ci === 0 ? "bg-[#FCF2DD]" : ""}`}>
+                        {cell(c.on, c.text)}
+                      </div>
+                    );
+                  })}
                 </div>
               ))}
             </div>
