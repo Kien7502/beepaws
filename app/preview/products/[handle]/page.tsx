@@ -10,18 +10,21 @@ export const dynamic = "force-dynamic"; // never cache a draft
 
 export default async function PreviewProductPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ handle: string }>;
+  searchParams: Promise<{ admin?: string }>;
 }) {
   if (process.env.NODE_ENV === "production" && process.env.BEEPAWS_PREVIEW_ENABLED !== "1") {
     notFound();
   }
   const { handle } = await params;
+  const { admin } = await searchParams;
   const [fullProduct, product, paymentMethods, draft] = await Promise.all([
     getFullProductForPage(handle),
     getProduct(handle),
     getPaymentMethods(),
-    fetchAdminDraft(handle),
+    fetchAdminDraft(handle, admin),
   ]);
   if (!product || !fullProduct) return notFound();
 

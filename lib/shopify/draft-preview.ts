@@ -35,12 +35,18 @@ export function beepawsFromDraft(content: Record<string, unknown>): BeepawsMetaf
 }
 
 // Fetch the current draft from the local beepaws-admin tool. Server-side only
-// (no CORS). Returns null if the admin isn't running or has no draft, so the
+// (no CORS). `adminPort` (from the preview URL's ?admin=… — the admin passes its
+// own port there) wins over BEEPAWS_ADMIN_URL, so it works whatever port the admin
+// ended up on. Returns null if the admin isn't running or has no draft, so the
 // preview route falls back to pushed Shopify content.
 export async function fetchAdminDraft(
   handle: string,
+  adminPort?: string,
 ): Promise<{ content: Record<string, unknown>; exists: boolean } | null> {
-  const base = process.env.BEEPAWS_ADMIN_URL ?? "http://localhost:3000";
+  const base =
+    adminPort && /^\d+$/.test(adminPort)
+      ? `http://localhost:${adminPort}`
+      : process.env.BEEPAWS_ADMIN_URL ?? "http://localhost:3000";
   try {
     const res = await fetch(`${base}/api/products/${handle}`, { cache: "no-store" });
     if (!res.ok) return null;
