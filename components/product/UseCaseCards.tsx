@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { UseCaseCard } from "@/types/metafields";
 
 // Lorem ipsum placeholders — set the beepaws.use_cases metafield to override.
@@ -67,20 +68,32 @@ export function UseCaseCards({
               key={c.title}
               className="group flex flex-col overflow-hidden rounded-3xl border border-line bg-card shadow-[0_4px_20px_-10px_rgba(74,46,22,0.10)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_40px_-16px_rgba(74,46,22,0.20)]"
             >
-              {/* Gradient emoji area — uses per-card metafield colors */}
+              {/* Card header — a per-card image when set (beepaws.use_cases[].image),
+                  otherwise the emoji on the per-card gradient. The label badge sits
+                  on top of either. */}
               <div
-                className="relative flex h-44 items-center justify-center text-6xl"
+                className="relative flex h-44 items-center justify-center overflow-hidden text-6xl"
                 style={{ background: `linear-gradient(135deg, ${c.from}25 0%, ${c.to} 100%)` }}
               >
                 <span
-                  className="absolute left-4 top-4 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white"
+                  className="absolute left-4 top-4 z-10 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white"
                   style={{ background: c.from }}
                 >
                   {c.label}
                 </span>
-                <span className="drop-shadow-sm transition-transform duration-300 group-hover:scale-110">
-                  {c.emoji}
-                </span>
+                {c.image ? (
+                  <Image
+                    src={c.image}
+                    alt={c.title}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
+                ) : (
+                  <span className="drop-shadow-sm transition-transform duration-300 group-hover:scale-110">
+                    {c.emoji}
+                  </span>
+                )}
               </div>
 
               {/* Content */}
