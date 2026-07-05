@@ -263,7 +263,7 @@ export function BundleBuyCard({ currentProduct, products }: Props) {
       <div className="border-t border-line bg-cream/60 px-4 py-4">
         {/* Phase 4 anchor — always frame against the $1,400+ vet bill, never
             against cheaper competitor devices (plan §"Anchoring rule"). */}
-        <div className="mb-3 rounded-md border-l-[3px] border-gold bg-cream/80 px-3 py-2 text-[13px] leading-snug text-brown">
+        <div className="mb-3 rounded-lg bg-honey-tint px-3 py-2 text-[13px] leading-snug text-brown">
           A single vet cleaning runs <b className="text-rose-soft">$500–$1,400+</b>{" "}
           with anesthesia and bloodwork. This bundle replaces it.
         </div>

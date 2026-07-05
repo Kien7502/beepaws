@@ -220,7 +220,7 @@ export async function ProductPageView({
             {/* Vet-bill anchor — frames the price against the $500-$1,400+ vet
                 quote per plan §"Anchoring rule". Always include the vet bill
                 comparison, never undercut against cheaper competitor devices. */}
-            <div className="mt-3 rounded-r-md border-l-[3px] border-gold bg-cream px-3 py-2.5 text-[13.5px] leading-snug text-brown">
+            <div className="mt-3 rounded-lg bg-honey-tint px-3.5 py-2.5 text-[13.5px] leading-snug text-brown">
               The same ultrasonic technology your vet uses in the operatory —
               the one they charge <b className="text-rose-soft">$500–$1,400+</b>{" "}
               to use. Now it lives in your hand.

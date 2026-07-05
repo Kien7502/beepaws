@@ -116,7 +116,7 @@ export default async function Home({
       <section className="bg-honey-tint">
         <div className="ds-reveal mx-auto grid w-full max-w-7xl items-center gap-10 px-5 py-16 md:grid-cols-[55fr_45fr] md:gap-14 md:px-8 md:py-24">
           {/* Left: warm outcome image (illustrative; AI ok later; no attribution) */}
-          <div className="relative flex min-h-[300px] items-center justify-center overflow-hidden rounded-[2rem] bg-cream md:min-h-[440px]">
+          <div className="relative flex min-h-[300px] items-center justify-center overflow-hidden rounded-2xl bg-cream md:min-h-[440px]">
             <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Warm outcome scene</span>
           </div>
           {/* Right: the argument (must convert the skeptic, not just list nice ideas) */}
@@ -163,7 +163,7 @@ export default async function Home({
             /* Launch: a single dental product spotlight (60/40) earns the full
                width. The price-anchor line (voice principle 4) makes it read as a
                real spotlight, not a placeholder card. Real product photo needed. */
-            <article className="ds-lift grid overflow-hidden rounded-3xl border border-line bg-card shadow-[var(--elev-shadow-card)] md:grid-cols-5">
+            <article className="ds-lift grid overflow-hidden rounded-2xl border border-line bg-card shadow-[var(--elev-shadow-card)] md:grid-cols-5">
               <div className="relative flex min-h-[260px] items-center justify-center bg-honey-tint md:col-span-3 md:min-h-[380px]">
                 {/* TODO: real OUTCOME photo - a happy, relaxed pet (pink gums as part of a
                     natural expression, NOT a clinical teeth shot). No stock. */}
@@ -190,7 +190,7 @@ export default async function Home({
           ) : (
             /* Grooming launch: revert to the blueprint's two-card grid. */
             <div className="mt-10 grid gap-6 md:grid-cols-2">
-              <article className="ds-lift overflow-hidden rounded-3xl border border-line bg-card shadow-[var(--elev-shadow-card)]">
+              <article className="ds-lift overflow-hidden rounded-2xl border border-line bg-card shadow-[var(--elev-shadow-card)]">
                 <div className="flex aspect-[16/10] items-center justify-center bg-honey-tint">
                   <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Dental photo</span>
                 </div>
@@ -208,7 +208,7 @@ export default async function Home({
                   </Link>
                 </div>
               </article>
-              <article className="ds-lift overflow-hidden rounded-3xl border border-line bg-card shadow-[var(--elev-shadow-card)]">
+              <article className="ds-lift overflow-hidden rounded-2xl border border-line bg-card shadow-[var(--elev-shadow-card)]">
                 <div className="flex aspect-[16/10] items-center justify-center bg-honey-tint">
                   <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Grooming photo</span>
                 </div>
@@ -270,7 +270,7 @@ export default async function Home({
                 {PILLARS.map((p, i) => (
                   <article
                     key={p.title}
-                    className={`rounded-3xl border border-line bg-paper p-7 shadow-[0_10px_30px_-18px_rgba(74,46,22,0.35)] transition-[box-shadow,border-color] duration-200 hover:border-clay/40 hover:shadow-[0_18px_44px_-20px_rgba(74,46,22,0.45)] md:p-8 ${
+                    className={`rounded-2xl border border-line bg-paper p-7 shadow-[0_10px_30px_-18px_rgba(74,46,22,0.35)] transition-[box-shadow,border-color] duration-200 hover:border-clay/40 hover:shadow-[0_18px_44px_-20px_rgba(74,46,22,0.45)] md:p-8 ${
                       i % 2 === 0 ? "md:-translate-y-8" : "md:translate-y-8"
                     }`}
                   >
@@ -317,7 +317,7 @@ export default async function Home({
               { quote: "I read every label before it goes near my pet. This is the first one I didn't put back.", breed: "Senior terrier mom" },
               { quote: "No vet-office stress, no wrestling. We just do it on the couch now.", breed: "Cat mom" },
             ].map((t, i) => (
-              <figure key={i} className="ds-lift overflow-hidden rounded-3xl border border-line bg-card">
+              <figure key={i} className="ds-lift overflow-hidden rounded-2xl border border-line bg-card">
                 {/* Photo is the hero element. TODO: real customer-and-pet photo
                     (owner's hand/arm in frame), permission given. No stock, ever. */}
                 <div className="relative flex aspect-[4/3] items-center justify-center bg-honey-tint">

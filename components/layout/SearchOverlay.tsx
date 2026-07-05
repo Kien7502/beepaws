@@ -40,7 +40,7 @@ export function SearchOverlay() {
           onClick={() => setOpen(false)}
         >
           <div
-            className="w-full max-w-lg rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-elevated"
+            className="w-full max-w-lg rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-elevated"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-2 border-b border-[var(--color-border)] pb-3 mb-3">

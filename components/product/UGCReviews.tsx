@@ -229,7 +229,7 @@ export function UGCReviews({
 
               {/* BeePaws reply */}
               {r.reply && (
-                <div className="mx-4 mb-4 border-l-[3px] border-gold bg-cream px-3 py-2 rounded-r-md">
+                <div className="mx-4 mb-4 rounded-lg bg-honey-tint px-3 py-2">
                   <p className="text-xs font-bold text-clay">BeePaws</p>
                   <p className="mt-0.5 text-xs leading-relaxed text-brown">{r.reply}</p>
                 </div>

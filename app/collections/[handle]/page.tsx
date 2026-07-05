@@ -51,7 +51,7 @@ export default async function CollectionPage({
       </div>
 
       {products.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 px-4 bg-[var(--color-secondary)]/30 border-2 border-dashed border-[var(--color-primary)]/25 rounded-[2rem] text-center max-w-xl mx-auto">
+        <div className="flex flex-col items-center justify-center py-24 px-4 bg-[var(--color-secondary)]/30 border-2 border-dashed border-[var(--color-primary)]/25 rounded-2xl text-center max-w-xl mx-auto">
           <span className="text-6xl mb-6 opacity-80" aria-hidden>
             🐾
           </span>

@@ -92,7 +92,7 @@ export function ProductDetailsSections({
       <div className="container mx-auto max-w-7xl px-4 md:px-6">
         <div className="grid grid-cols-1 gap-4 md:gap-6">
       {normalized.usage_guide && (
-        <article className="rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 md:p-7">
+        <article className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 md:p-7">
           <h2 className="text-xl font-extrabold tracking-tight text-[var(--color-foreground)] md:text-2xl">
             How to use
           </h2>
@@ -107,7 +107,7 @@ export function ProductDetailsSections({
       )}
 
       {qnaList.length > 0 && (
-        <article className="rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 md:p-7">
+        <article className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 md:p-7">
           <h2 className="text-xl font-extrabold tracking-tight text-[var(--color-foreground)] md:text-2xl">
             Q&amp;A
           </h2>
@@ -130,7 +130,7 @@ export function ProductDetailsSections({
       )}
 
       {hasBundle && (
-        <article className="rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 md:p-7">
+        <article className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 md:p-7">
           <h2 className="text-xl font-extrabold tracking-tight text-[var(--color-foreground)] md:text-2xl">
             More from this collection
           </h2>

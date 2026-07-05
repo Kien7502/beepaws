@@ -12,7 +12,7 @@ export default function ShopAllError({
 }) {
   return (
     <div className="container mx-auto px-4 md:px-6 max-w-7xl section-y">
-      <div className="text-center py-20 px-4 bg-[var(--color-surface)] rounded-3xl border border-[var(--color-border)] max-w-xl mx-auto">
+      <div className="text-center py-20 px-4 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] max-w-xl mx-auto">
         <h2 className="text-2xl font-bold mb-2 text-[var(--color-foreground)]">
           Something went wrong
         </h2>
