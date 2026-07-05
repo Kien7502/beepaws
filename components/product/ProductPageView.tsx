@@ -18,6 +18,7 @@ import { BundleContents } from "@/components/product/BundleContents";
 import { WaveDivider } from "@/components/ui/WaveDivider";
 import { ProductMediaSync } from "@/components/product/ProductMediaSync";
 import { DynamicHeroPrice } from "@/components/product/DynamicHeroPrice";
+import RevealObserver from "@/components/RevealObserver";
 
 type FullProduct = Awaited<ReturnType<typeof getFullProductForPage>>;
 type Product = NonNullable<Awaited<ReturnType<typeof getProduct>>>;
@@ -145,6 +146,17 @@ export async function ProductPageView({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
+      {/* Below-fold sections fade/rise in as they enter the viewport (same
+          IntersectionObserver + .ds-reveal system as the homepage). The hero
+          stays static — it's the LCP + the buy controls, which must be instant.
+          <noscript> keeps everything visible when JS is off. */}
+      <RevealObserver />
+      <noscript
+        dangerouslySetInnerHTML={{
+          __html: "<style>.ds-reveal,.ds-stagger>*,.ds-reveal-in>*{opacity:1!important;transform:none!important}</style>",
+        }}
       />
 
       {/* Hero band — bg-paper to match the Header navbar (per user feedback

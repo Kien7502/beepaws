@@ -56,7 +56,7 @@ export function FAQSection({
   // with hairline border, cocoa question text, gold-deep "+" rotating on
   // open, brown answer text. Copy from device reference template.
   return (
-    <section className="bg-sand py-14 md:py-20">
+    <section className="ds-reveal-in bg-sand py-14 md:py-20">
       <div className="container mx-auto max-w-3xl px-4 md:px-6">
 
         <div className="mb-12 text-center">
@@ -90,11 +90,15 @@ export function FAQSection({
                   />
                 </button>
                 <div
-                  className="grid transition-[grid-template-rows] duration-300 ease-in-out"
+                  className="grid transition-[grid-template-rows] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]"
                   style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
                 >
                   <div className="overflow-hidden">
-                    <p className="pb-5 pl-14 pr-5 text-[14.5px] leading-relaxed text-brown">
+                    <p
+                      className={`pb-5 pl-14 pr-5 text-[14.5px] leading-relaxed text-brown transition-opacity duration-200 ${
+                        isOpen ? "opacity-100" : "opacity-0"
+                      }`}
+                    >
                       {faq.a}
                     </p>
                   </div>

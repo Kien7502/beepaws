@@ -50,7 +50,7 @@ export function UseCaseCards({
   // and bookmark accent — the metafield contract is preserved so editors
   // can keep authoring colors. Headings use the display serif.
   return (
-    <section className="bg-sand py-14 md:py-20">
+    <section className="ds-reveal-in bg-sand py-14 md:py-20">
       <div className="container mx-auto max-w-7xl px-4 md:px-6">
         <span className="block text-center text-xs font-bold uppercase tracking-[0.14em] text-gold-deep mb-2">
           {eyebrow}
@@ -66,7 +66,7 @@ export function UseCaseCards({
           {data.map((c) => (
             <div
               key={c.title}
-              className="group flex flex-col overflow-hidden rounded-3xl border border-line bg-card shadow-[0_4px_20px_-10px_rgba(74,46,22,0.10)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_40px_-16px_rgba(74,46,22,0.20)]"
+              className="group flex flex-col overflow-hidden rounded-3xl border border-line bg-card shadow-[0_4px_20px_-10px_rgba(74,46,22,0.10)] transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-1 hover:shadow-[0_14px_40px_-16px_rgba(74,46,22,0.20)]"
             >
               {/* Card header — a per-card image when set (beepaws.use_cases[].image),
                   otherwise the emoji on the per-card gradient. The label badge sits

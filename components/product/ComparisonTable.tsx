@@ -97,7 +97,7 @@ export function ComparisonTable({
   // column header is a cocoa badge; the rest use cream badges. Check icons in
   // clay, X in rose-soft. Display font on the heading.
   return (
-    <section className="bg-card py-14 md:py-20">
+    <section className="ds-reveal-in bg-card py-14 md:py-20">
       <div className="container mx-auto max-w-7xl px-4 md:px-6">
         <div className="flex flex-col items-center gap-12 md:flex-row md:items-start md:gap-12">
 

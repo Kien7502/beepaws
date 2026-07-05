@@ -57,7 +57,7 @@ export function FinalCTASection({
   }
 
   return (
-    <section className="bg-bark py-14 md:py-20">
+    <section className="ds-reveal-in bg-bark py-14 md:py-20">
       <div className="container mx-auto max-w-4xl px-4 md:px-6">
         <div className="text-center">
           <h2 className="font-display text-3xl font-semibold leading-tight text-white md:text-[34px]">

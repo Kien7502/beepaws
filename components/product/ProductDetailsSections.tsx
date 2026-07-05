@@ -88,7 +88,7 @@ export function ProductDetailsSections({
   }
 
   return (
-    <section className="border-t border-line bg-sand py-14 md:py-20">
+    <section className="ds-reveal-in border-t border-line bg-sand py-14 md:py-20">
       <div className="container mx-auto max-w-7xl px-4 md:px-6">
         <div className="grid grid-cols-1 gap-4 md:gap-6">
       {normalized.usage_guide && (

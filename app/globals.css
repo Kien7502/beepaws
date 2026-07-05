@@ -157,6 +157,27 @@ body {
     transition: opacity 400ms ease;
   }
 }
+/* Content-only reveal: put this on a <section> whose background must stay solid
+   (strong bg like toffee / bark / sand). The section itself never fades — only
+   its direct children (heading, cards, body) fade + rise as it enters. Also
+   keeps the WaveDivider seam intact, since the section bg is painted the whole
+   time. Observed by RevealObserver alongside .ds-reveal. */
+.ds-reveal-in > * {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 640ms var(--ds-ease-out), transform 640ms var(--ds-ease-out);
+  will-change: opacity, transform;
+}
+.ds-reveal-in.is-visible > * {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-reveal-in > * {
+    transform: none;
+    transition: opacity 400ms ease;
+  }
+}
 .ds-lift {
   transition: transform 200ms var(--ds-ease-out), box-shadow 200ms var(--ds-ease-out);
 }

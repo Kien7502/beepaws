@@ -179,7 +179,7 @@ export function UGCReviews({
   // paper as Mechanism/PainPoints, not in a dark moment). Cards have a
   // subtle line border and warm-brown shadow so they lift off the page.
   return (
-    <section className="bg-sand py-14 md:py-20 overflow-hidden">
+    <section className="ds-reveal-in bg-sand py-14 md:py-20 overflow-hidden">
       <div className="container mx-auto max-w-7xl px-4 md:px-6 mb-10">
         <span className="block text-center text-xs font-bold uppercase tracking-[0.14em] text-gold-deep mb-2.5">
           {eyebrow}
@@ -198,6 +198,8 @@ export function UGCReviews({
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
+        onPointerEnter={() => { paused.current = true; }}
+        onPointerLeave={() => { if (!drag.current.active) paused.current = false; }}
       >
         <div
           ref={trackRef}

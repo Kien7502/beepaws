@@ -43,7 +43,7 @@ export function PainPoints({
   const data = points && points.length > 0 ? points : DEFAULT_PAIN_POINTS;
 
   return (
-    <section className="bg-paper py-14 md:py-20">
+    <section className="ds-reveal-in bg-paper py-14 md:py-20">
       <div className="container mx-auto max-w-6xl px-4 md:px-6">
         <span className="block text-center text-xs font-bold uppercase tracking-[0.14em] text-gold-deep mb-2.5">
           {eyebrow}

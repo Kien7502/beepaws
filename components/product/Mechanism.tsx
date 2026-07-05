@@ -72,7 +72,7 @@ export function Mechanism({
   const feelsBrokenBody = feelsBrokenNote?.trim() || DEFAULT_FEELS_BROKEN_NOTE;
 
   return (
-    <section className="bg-toffee py-14 md:py-20">
+    <section className="ds-reveal-in bg-toffee py-14 md:py-20">
       <div className="container mx-auto max-w-6xl px-4 md:px-6">
         <span className="block text-center text-xs font-bold uppercase tracking-[0.14em] text-gold-deep mb-2.5">
           {introEyebrow}

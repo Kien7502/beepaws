@@ -70,7 +70,7 @@ export function StickyAddToCart({ product }: { product: Product }) {
     <div
       // Warm Honey re-skin per plan: paper bg, hairline line border,
       // warm-brown shadow. Hides while the cart drawer is open.
-      className={`fixed bottom-0 left-0 right-0 z-50 border-t border-line bg-paper shadow-[0_-6px_22px_-4px_rgba(74,46,22,0.12)] transition-transform duration-300 ease-in-out ${
+      className={`fixed bottom-0 left-0 right-0 z-50 border-t border-line bg-paper shadow-[0_-6px_22px_-4px_rgba(74,46,22,0.12)] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
         visible && !drawerOpen ? "translate-y-0" : "translate-y-full"
       }`}
     >
@@ -92,7 +92,7 @@ export function StickyAddToCart({ product }: { product: Product }) {
           type="button"
           onClick={onAdd}
           disabled={!isAvailable}
-          className="flex shrink-0 items-center gap-2 rounded-xl bg-gold px-5 py-3 md:px-7 text-[15px] font-extrabold text-cocoa transition-all hover:bg-gold-deep hover:text-white hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          className="flex shrink-0 items-center gap-2 rounded-xl bg-gold px-5 py-3 md:px-7 text-[15px] font-extrabold text-cocoa transition-[transform,background-color,color] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-gold-deep hover:text-white hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         >
           <ShoppingBag size={18} />
           {added ? "Added!" : isAvailable ? "Add to cart" : "Out of stock"}
