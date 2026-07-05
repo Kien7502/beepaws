@@ -70,7 +70,6 @@ interface Props {
 
 export function ComparisonTable({
   rows,
-  eyebrow = "Lorem ipsum",
   heading = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
   lead = "Lorem ipsum dolor sit amet, consectetur adipiscing elit sed do.",
 }: Props) {
@@ -103,9 +102,6 @@ export function ComparisonTable({
 
           {/* Left — heading */}
           <div className="shrink-0 text-center md:w-1/3 md:text-left">
-            <span className="block text-xs font-bold uppercase tracking-[0.14em] text-gold-deep mb-2.5">
-              {eyebrow}
-            </span>
             <h2 className="font-display mb-4 text-4xl font-semibold leading-tight tracking-tight text-cocoa md:text-[33px]">
               {heading}
             </h2>

@@ -53,7 +53,6 @@ interface Props {
 
 export function Mechanism({
   steps,
-  introEyebrow = "Lorem ipsum",
   introHeading = "Lorem ipsum dolor sit amet",
   introLead = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
   paradoxHeading = "Lorem ipsum subheading",
@@ -74,9 +73,6 @@ export function Mechanism({
   return (
     <section className="ds-reveal-in bg-toffee py-14 md:py-20">
       <div className="container mx-auto max-w-6xl px-4 md:px-6">
-        <span className="block text-center text-xs font-bold uppercase tracking-[0.14em] text-gold-deep mb-2.5">
-          {introEyebrow}
-        </span>
         <h2 className="font-display mx-auto mb-3 max-w-3xl text-center text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[33px]">
           {introHeading}
         </h2>

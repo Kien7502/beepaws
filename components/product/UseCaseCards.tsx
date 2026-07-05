@@ -39,7 +39,6 @@ interface Props {
 
 export function UseCaseCards({
   cards,
-  eyebrow = "Lorem ipsum",
   heading = "Lorem ipsum dolor sit amet, consectetur adipiscing.",
   lead = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
 }: Props) {
@@ -52,9 +51,6 @@ export function UseCaseCards({
   return (
     <section className="ds-reveal-in bg-sand py-14 md:py-20">
       <div className="container mx-auto max-w-7xl px-4 md:px-6">
-        <span className="block text-center text-xs font-bold uppercase tracking-[0.14em] text-gold-deep mb-2">
-          {eyebrow}
-        </span>
         <h2 className="font-display mb-2 text-center text-3xl font-semibold tracking-tight text-cocoa md:text-4xl">
           {heading}
         </h2>

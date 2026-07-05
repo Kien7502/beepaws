@@ -46,7 +46,6 @@ interface Props {
 
 export function FAQSection({
   items,
-  eyebrow = "Lorem ipsum",
   heading = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
 }: Props) {
   const [open, setOpen] = useState<number | null>(null);
@@ -60,9 +59,6 @@ export function FAQSection({
       <div className="container mx-auto max-w-3xl px-4 md:px-6">
 
         <div className="mb-12 text-center">
-          <span className="block text-xs font-bold uppercase tracking-[0.14em] text-gold-deep mb-2.5">
-            {eyebrow}
-          </span>
           <h2 className="font-display text-3xl md:text-[33px] font-semibold tracking-tight text-cocoa leading-tight">
             {heading}
           </h2>

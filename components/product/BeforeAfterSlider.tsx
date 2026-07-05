@@ -53,7 +53,6 @@ interface Props {
 
 export function BeforeAfterSlider({
   slides,
-  eyebrow = "Lorem ipsum",
   heading = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
   lead = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.",
 }: Props) {
@@ -70,9 +69,6 @@ export function BeforeAfterSlider({
   return (
     <section className="ds-reveal-in bg-card py-14 md:py-20">
       <div className="container mx-auto max-w-3xl px-4 md:px-6">
-        <span className="block text-center text-xs font-bold uppercase tracking-[0.14em] text-gold-deep mb-2.5">
-          {eyebrow}
-        </span>
         <h2 className="font-display mx-auto mb-3 max-w-2xl text-center text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[33px]">
           {heading}
         </h2>

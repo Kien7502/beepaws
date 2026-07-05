@@ -123,7 +123,6 @@ interface Props {
 
 export function UGCReviews({
   reviews,
-  eyebrow = "Lorem ipsum",
   heading = "Lorem ipsum dolor sit amet?",
   lead = "Lorem ipsum dolor sit amet, consectetur →",
 }: Props) {
@@ -181,9 +180,6 @@ export function UGCReviews({
   return (
     <section className="ds-reveal-in bg-sand py-14 md:py-20 overflow-hidden">
       <div className="container mx-auto max-w-7xl px-4 md:px-6 mb-10">
-        <span className="block text-center text-xs font-bold uppercase tracking-[0.14em] text-gold-deep mb-2.5">
-          {eyebrow}
-        </span>
         <h2 className="font-display mb-2 text-center text-3xl font-semibold tracking-tight text-cocoa md:text-[33px]">
           {heading}
         </h2>
