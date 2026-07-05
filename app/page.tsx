@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import RevealObserver from '@/components/RevealObserver';
 import NewsletterPopup from '@/components/NewsletterPopup';
 import { ShieldCheck, Tag, HandHeart, PawPrint, CalendarCheck, Heart, Search, Shield } from 'lucide-react';
@@ -17,7 +18,41 @@ export const revalidate = 3600;
 // hidden entirely - never shown as "coming soon" (blueprint hard rule).
 const SHOW_GROOMING = false;
 
-export default function Home() {
+// The four brand pillars (consolidated spec §5). Copy + icons stay CONSTANT
+// across every layout variant; only the arrangement changes. Pillar 4 body swaps
+// on SHOW_GROOMING. Shared by Option 3 (shipped default) and the experimental
+// Option 5 (?variant=5).
+const PILLARS = [
+  { icon: ShieldCheck, title: "Honest about what it does", body: "Results in weeks, not overnight. Quiet, not silent. We tell you what this does — and what it doesn't." },
+  { icon: Tag, title: "Read-the-label transparency", body: "Every ingredient in plain English. Xylitol-free, and cat-safe wherever the label says so." },
+  { icon: HandHeart, title: "She decides what touches her pet", body: "You read the label and keep your pet healthy on your own terms. We make tools for that, not shortcuts that ask you to hand your pet to a stranger." },
+  {
+    icon: PawPrint,
+    title: "Made for the pet you actually have",
+    body: SHOW_GROOMING
+      ? "Small breeds. Senior pets. Anxious dogs. Long-haired cats with spicy opinions about brushes. Real names, real breeds, real photos — never stock fur."
+      : "Small breeds. Senior pets. Anxious dogs. Cats whose mouths have been quietly ignored. Real names, real breeds, real photos — never stock fur.",
+  },
+] as const;
+
+// The four at-home-wellness principles in §3 ("Healthy pets start at home").
+const PRINCIPLES = [
+  { icon: CalendarCheck, title: "Consistency beats intensity", body: "A little, often, beats a big production once in a while. The routines that work are the ones small enough to actually keep." },
+  { icon: Heart, title: "Calm matters", body: "A calm pet lets you do more, and a calm routine is one you will not quit. Stress is what makes people give up halfway." },
+  { icon: Search, title: "You catch things early", body: "Handle your pet regularly and you notice the sore gum, the lump, the limp while it is still small and cheap to fix." },
+  { icon: Shield, title: "Prevention over treatment", body: "The kindest, cheapest fix is the one that stops a problem before it ever becomes a vet visit." },
+] as const;
+
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ variant?: string }>;
+}) {
+  // Temporary eval switch: ?variant=5 renders the experimental pillar layout
+  // (Option 5) to compare against the shipped Option 3. Remove once a variant is
+  // chosen. (Reading searchParams opts this page into dynamic rendering.)
+  const { variant } = await searchParams;
+  const pillarVariant = variant === "5" ? 5 : 3;
   return (
     <div className="flex w-full flex-col bg-cream text-cocoa [font-family:var(--font-body)]">
       {/* Scroll-reveal driver + no-JS fallback so content is never hidden */}
@@ -92,18 +127,16 @@ export default function Home() {
             <p className="mt-3 max-w-xl text-brown">
               The vet is for the big stuff. Most of what keeps a pet healthy is small, regular, and yours to do.
             </p>
-            <div className="ds-stagger mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
-              {[
-                { icon: CalendarCheck, title: "Consistency beats intensity", body: "A little, often, beats a big production once in a while. The routines that work are the ones small enough to actually keep." },
-                { icon: Heart, title: "Calm matters", body: "A calm pet lets you do more, and a calm routine is one you will not quit. Stress is what makes people give up halfway." },
-                { icon: Search, title: "You catch things early", body: "Handle your pet regularly and you notice the sore gum, the lump, the limp while it is still small and cheap to fix." },
-                { icon: Shield, title: "Prevention over treatment", body: "The kindest, cheapest fix is the one that stops a problem before it ever becomes a vet visit." },
-              ].map((p) => (
-                <article key={p.title} className="rounded-2xl bg-card p-6">
-                  <p.icon size={26} strokeWidth={1.75} className="text-clay" />
+            {/* De-carded blocks: no card backgrounds, so the four read as
+                considered points separated by space rather than a template card
+                grid (kept distinct from the full-width Why-BeePaws bands below). */}
+            <div className="ds-stagger mt-8 grid grid-cols-1 gap-x-8 gap-y-7 sm:grid-cols-2">
+              {PRINCIPLES.map((p) => (
+                <div key={p.title}>
+                  <p.icon size={24} strokeWidth={1.75} className="text-clay" />
                   <h3 className="mt-3 font-display text-lg font-semibold text-cocoa">{p.title}</h3>
                   <p className="mt-1.5 text-sm leading-relaxed text-brown">{p.body}</p>
-                </article>
+                </div>
               ))}
             </div>
           </div>
@@ -211,28 +244,59 @@ export default function Home() {
           <p className="ds-reveal mt-3 max-w-xl text-brown">
             Plain-spoken about what our tools do, and what they do not.
           </p>
-          <div className="ds-stagger mt-10 divide-y divide-line border-y border-line">
-            {[
-              { icon: ShieldCheck, title: "Honest about what it does", body: "Results in weeks, not overnight. Quiet, not silent. We tell you what this does — and what it doesn't." },
-              { icon: Tag, title: "Read-the-label transparency", body: "Every ingredient in plain English. Xylitol-free, and cat-safe wherever the label says so." },
-              { icon: HandHeart, title: "She decides what touches her pet", body: "You read the label and keep your pet healthy on your own terms. We make tools for that, not shortcuts that ask you to hand your pet to a stranger." },
-              {
-                icon: PawPrint,
-                title: "Made for the pet you actually have",
-                body: SHOW_GROOMING
-                  ? "Small breeds. Senior pets. Anxious dogs. Long-haired cats with spicy opinions about brushes. Real names, real breeds, real photos — never stock fur."
-                  : "Small breeds. Senior pets. Anxious dogs. Cats whose mouths have been quietly ignored. Real names, real breeds, real photos — never stock fur.",
-              },
-            ].map((p) => (
-              <article key={p.title} className="flex items-start gap-5 py-7 md:gap-8 md:py-9">
-                <p.icon size={32} strokeWidth={1.75} className="mt-1 shrink-0 text-clay" />
-                <div>
-                  <h3 className="font-display text-xl font-semibold text-cocoa md:text-2xl">{p.title}</h3>
-                  <p className="mt-2 max-w-2xl leading-relaxed text-brown">{p.body}</p>
-                </div>
-              </article>
-            ))}
-          </div>
+          {/* Layout variant switch (spec §5). Option 3 = shipped default
+              (horizontal manifesto bands). Option 5 = experimental, via ?variant=5.
+              Copy + icons identical across variants; only the arrangement differs. */}
+          {pillarVariant === 5 ? (
+            /* Option 5 — four EQUAL cards around a restrained connective hub;
+               asymmetric on desktop (columns step in opposite directions), clean
+               single-column stack on mobile. The center is a quiet compositional
+               anchor, never a featured 5th element. */
+            <div className="relative mt-14">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute left-1/2 top-1/2 z-0 hidden -translate-x-1/2 -translate-y-1/2 md:block"
+              >
+                <Image
+                  src="/logo.png"
+                  alt=""
+                  width={1233}
+                  height={1613}
+                  className="h-auto w-44 select-none drop-shadow-[0_12px_28px_rgba(74,46,22,0.20)]"
+                />
+              </div>
+
+              <div className="ds-stagger relative z-10 grid grid-cols-1 items-start gap-6 md:grid-cols-2 md:gap-x-48 md:gap-y-8">
+                {PILLARS.map((p, i) => (
+                  <article
+                    key={p.title}
+                    className={`rounded-3xl border border-line bg-paper p-7 shadow-[0_10px_30px_-18px_rgba(74,46,22,0.35)] transition-[box-shadow,border-color] duration-200 hover:border-clay/40 hover:shadow-[0_18px_44px_-20px_rgba(74,46,22,0.45)] md:p-8 ${
+                      i % 2 === 0 ? "md:-translate-y-8" : "md:translate-y-8"
+                    }`}
+                  >
+                    <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-honey-tint text-clay">
+                      <p.icon size={26} strokeWidth={1.9} />
+                    </span>
+                    <h3 className="mt-5 font-display text-xl font-semibold text-cocoa md:text-2xl">{p.title}</h3>
+                    <p className="mt-2 leading-relaxed text-brown">{p.body}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+          ) : (
+            /* Option 3 — shipped default: equal-weight horizontal manifesto bands. */
+            <div className="ds-stagger mt-10 divide-y divide-line border-y border-line">
+              {PILLARS.map((p) => (
+                <article key={p.title} className="flex items-start gap-5 py-7 md:gap-8 md:py-9">
+                  <p.icon size={32} strokeWidth={1.75} className="mt-1 shrink-0 text-clay" />
+                  <div>
+                    <h3 className="font-display text-xl font-semibold text-cocoa md:text-2xl">{p.title}</h3>
+                    <p className="mt-2 max-w-2xl leading-relaxed text-brown">{p.body}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
