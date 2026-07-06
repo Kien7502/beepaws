@@ -102,7 +102,7 @@ export function ComparisonTable({
 
           {/* Left — heading */}
           <div className="shrink-0 text-center md:w-1/3 md:text-left">
-            <h2 className="font-display mb-4 text-4xl font-semibold leading-tight tracking-tight text-cocoa md:text-[33px]">
+            <h2 className="font-display mb-4 text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[33px]">
               {heading}
             </h2>
             <p className="mx-auto max-w-xs leading-relaxed text-brown md:mx-0">
@@ -111,7 +111,22 @@ export function ComparisonTable({
           </div>
 
           {/* Right — table */}
-          <div className="w-full md:flex-1">
+          <div className="relative w-full md:flex-1">
+
+            {/* The wrapper's own scrollbar sits below the fold on phones, so
+                without this line the cut-off columns read as a bug, not as
+                something swipeable. */}
+            <p className="mb-2 text-xs font-semibold text-brown/70 md:hidden">
+              Swipe the table sideways to see all three columns.
+            </p>
+
+            {/* Below md the 4-column grid can't compress under ~540px and stay
+                readable, so badges + rows share one horizontal-scroll container
+                (they must scroll together to keep columns aligned). The
+                pb/-mb pair reserves room for the card's drop shadow, which the
+                scroll container would otherwise clip. ≥md the wrapper is inert. */}
+            <div className="max-md:-mb-10 max-md:overflow-x-auto max-md:overscroll-x-contain max-md:pb-10">
+            <div className="max-md:min-w-[540px]">
 
             {/* Column header badges — sit above the table card, aligned over their
                 columns (wider first column for the row labels). */}
@@ -155,6 +170,15 @@ export function ComparisonTable({
                 </div>
               ))}
             </div>
+
+            </div>
+            </div>
+
+            {/* Right-edge fade — mobile-only cue that the table continues. */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-card to-transparent md:hidden"
+            />
           </div>
 
         </div>

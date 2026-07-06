@@ -9,10 +9,11 @@ import type { Guarantee } from "@/types/metafields";
 // text alignment. Matches the standalone GuaranteeBlock visual we had before
 // the restructure plan merged it into this section.
 //
-// "use client" — the button does an onClick scrollIntoView to the FBT card
-// up in the hero pinfo (id="fbt"). Using an in-page `<Link href="#fbt">`
-// changes the URL fragment and stops re-scrolling on repeat clicks; an
-// imperative scroll fires every time and leaves the URL alone.
+// "use client" — the button does an onClick scrollIntoView to the hero buy
+// box (id="buy-box", the tier picker — the actual bundle offer). Using an
+// in-page `<Link href="#buy-box">` changes the URL fragment and stops
+// re-scrolling on repeat clicks; an imperative scroll fires every time and
+// leaves the URL alone.
 
 // Lorem ipsum placeholder — set the beepaws.guarantee metafield (single-entry
 // list) to override with the real promise copy. Seal number/label stay
@@ -28,9 +29,9 @@ const DEFAULT_GUARANTEE: Guarantee = {
 interface Props {
   /** Pre-formatted "from" price for the button label, e.g. "$59". */
   fromPrice: string;
-  /** DOM id the button scrolls to — defaults to "fbt" (the Frequently Bought
-   *  Together card in the hero pinfo). Target element should set
-   *  scrollMarginTop to clear the sticky header. */
+  /** DOM id the button scrolls to — defaults to "buy-box" (the hero buy
+   *  column's tier picker, i.e. the actual bundle offer). Target element
+   *  should set scrollMarginTop to clear the sticky header. */
   scrollTargetId?: string;
   heading?: string;
   body?: string;
@@ -42,7 +43,7 @@ interface Props {
 
 export function FinalCTASection({
   fromPrice,
-  scrollTargetId = "fbt",
+  scrollTargetId = "buy-box",
   heading = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
   body = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
   smallPrint = "Lorem ipsum · Dolor sit amet · Consectetur adipiscing",
@@ -57,13 +58,15 @@ export function FinalCTASection({
   }
 
   return (
-    <section className="ds-reveal-in bg-bark py-14 md:py-20">
+    // Inset top vignette — same ink-edge treatment as the homepage promise
+    // band, so both light→dark drops read as depth, not a pasted slab.
+    <section className="ds-reveal-in bg-bark py-14 md:py-20 shadow-[inset_0_28px_44px_-28px_rgba(0,0,0,0.45)]">
       <div className="container mx-auto max-w-4xl px-4 md:px-6">
         <div className="text-center">
           <h2 className="font-display text-3xl font-semibold leading-tight text-white md:text-[34px]">
             {heading}
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-[15px] text-[#CFCBBA] md:text-base">
+          <p className="mx-auto mt-4 max-w-xl text-[15px] text-cream/80 md:text-base">
             {body}
           </p>
 
@@ -103,7 +106,9 @@ export function FinalCTASection({
 
           {/* Small print mirrors the mini-trust 3-up in the hero pinfo so the
               page opens and closes on the same three promises. */}
-          <p className="mt-7 text-xs font-bold uppercase tracking-[0.08em] text-[#A8A48F]">
+          {/* cream/70 (not the old #A8A48F) — that hex sat at ~3.9:1 on bark,
+              under the 4.5:1 AA floor for text this small. */}
+          <p className="mt-7 text-xs font-bold uppercase tracking-[0.08em] text-cream/70">
             {smallPrint}
           </p>
         </div>

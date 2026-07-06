@@ -253,3 +253,23 @@ Notes:
 - Component links go to each component's own PDP — handy for shoppers wanting details.
 - If you also want quantity-aware pricing or stock, extend the query (`productVariant { price
   availableForSale }`), but for a fixed bundle the bundle's own price already covers it.
+
+## `beepaws.discovery_products` — curated "More from BeePaws" picks (2026-07-07)
+
+The PDP's closing discovery band ("More from BeePaws", between details and the bark
+final-CTA band) shows catalog products as ProductCards. By default the storefront picks
+them automatically (catalog minus whatever the tier picker already covers). To curate
+per product, author a JSON list metafield:
+
+- **Key:** `beepaws.discovery_products` (json)
+- **Shape:** `[{ "product": { "id", "handle", "title" } }, ...]` — same nesting as
+  `bundle_tiers[i].bundle`: plain JSON refs, NOT native Shopify references.
+- **Storefront behavior:** a non-empty list REPLACES the automatic pick. Refs are
+  deduped and resolved by handle; unresolvable refs (draft/deleted), the current
+  product itself, and `bundle`-tagged products (their PDPs 404 by design) are dropped.
+  Max 6 shown. Empty/unset → automatic fallback.
+
+Admin-side (to build, mirrors `bundle_ref`): a `product_ref` field type (SchemaField
+dropdown fed by `/api/products` instead of `/api/bundles`), a `discovery_products`
+list_of_objects schema entry with one `product` item field, and the definition added
+to the seeder.

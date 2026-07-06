@@ -139,6 +139,10 @@ export function UGCReviews({
     const track = trackRef.current;
     if (!track) return;
 
+    // Respect prefers-reduced-motion: the global CSS animation kill can't stop
+    // a JS rAF loop, so skip the auto-scroll entirely. The row stays draggable.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
     const tick = () => {
       if (!paused.current) {
         posRef.current += 0.3;
@@ -189,7 +193,9 @@ export function UGCReviews({
       </div>
 
       <div
-        className="cursor-grab active:cursor-grabbing select-none"
+        // pan-y: horizontal drags scrub the marquee, vertical swipes keep
+        // scrolling the page (a full-width row must not trap touch scroll).
+        className="cursor-grab active:cursor-grabbing select-none [touch-action:pan-y]"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}

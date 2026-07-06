@@ -44,12 +44,14 @@ export function UseCaseCards({
 }: Props) {
   const data = cards && cards.length > 0 ? cards : DEFAULT_USE_CASES;
 
-  // Warm Honey: honey-tint section bg, white cards with hairline border.
+  // Warm Honey: cream section bg — sits between the sand UGC band and the
+  // white comparison band after the 2026-07-06 narrative reorder, and cream
+  // keeps the adjacent-bands-differ rule intact. White cards w/ hairline.
   // Per-card accent colors (c.from / c.to) still drive the gradient header
   // and bookmark accent — the metafield contract is preserved so editors
   // can keep authoring colors. Headings use the display serif.
   return (
-    <section className="ds-reveal-in bg-sand py-14 md:py-20">
+    <section className="ds-reveal-in bg-cream py-14 md:py-20">
       <div className="container mx-auto max-w-7xl px-4 md:px-6">
         <h2 className="font-display mb-2 text-center text-3xl font-semibold tracking-tight text-cocoa md:text-4xl">
           {heading}
@@ -58,7 +60,9 @@ export function UseCaseCards({
           {lead}
         </p>
 
-        <div className="grid gap-6 sm:grid-cols-3">
+        {/* md, not sm: three columns at 640px are ~200px each — too narrow for
+            the image header + copy. Cards stack full-width until tablet. */}
+        <div className="grid gap-6 md:grid-cols-3">
           {data.map((c) => (
             <div
               key={c.title}

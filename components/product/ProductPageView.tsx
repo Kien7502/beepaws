@@ -13,7 +13,7 @@ import { UGCReviews } from "@/components/product/UGCReviews";
 import { BeforeAfterSlider } from "@/components/product/BeforeAfterSlider";
 import { PainPoints } from "@/components/product/PainPoints";
 import { Mechanism } from "@/components/product/Mechanism";
-import { BundleBuyCard } from "@/components/product/BundleBuyCard";
+import ProductCard from "@/components/product/ProductCard";
 import { BundleContents } from "@/components/product/BundleContents";
 import { WaveDivider } from "@/components/ui/WaveDivider";
 import { ProductMediaSync } from "@/components/product/ProductMediaSync";
@@ -120,6 +120,41 @@ export async function ProductPageView({
       ? collectionRecommendations
       : (await getProducts()).filter((p) => p.handle !== product.handle).slice(0, 3);
 
+  // "More from BeePaws" discovery band. Curated picks first: when
+  // beepaws.discovery_products is authored (admin tool / raw JSON), it decides
+  // exactly what shows — deduped, resolved by handle; unresolvable refs
+  // (draft/deleted), this product itself, and bundle-tagged products (whose
+  // PDPs 404 by design) are dropped; capped at 6. Otherwise automatic: the
+  // rest of the catalog minus anything the tier picker already offers, so no
+  // product appears both inside a discounted tier and à la carte below it.
+  // Automatic coverage mirrors VariantSelector's fixed TIERS: tier 2 composes
+  // with recommendation[0], tier 3 with recommendation[1] (only when that
+  // tier is NOT bundle-backed); bundle-backed tiers cover their components.
+  const curatedHandles = [
+    ...new Set(
+      (beepaws?.discoveryProducts ?? [])
+        .map((d) => d?.product?.handle)
+        .filter((h): h is string => Boolean(h && h !== product.handle)),
+    ),
+  ];
+  const curated = curatedHandles.length
+    ? (await Promise.all(curatedHandles.map((h) => getProduct(h)))).filter(
+        (p): p is Product => Boolean(p && !p.tags?.includes("bundle")),
+      )
+    : [];
+  let discoveryProducts = curated.slice(0, 6);
+  if (discoveryProducts.length === 0) {
+    const tierCovered = new Set<string>();
+    if (!tierBundles?.[1] && recommendedBundleProducts[0]) tierCovered.add(recommendedBundleProducts[0].handle);
+    if (!tierBundles?.[2] && recommendedBundleProducts[1]) tierCovered.add(recommendedBundleProducts[1].handle);
+    for (const tb of tierBundles ?? []) {
+      for (const c of tb?.components ?? []) tierCovered.add(c.handle);
+    }
+    discoveryProducts = (await getProducts())
+      .filter((p) => p.handle !== product.handle && !tierCovered.has(p.handle))
+      .slice(0, 3);
+  }
+
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
   const jsonLd = {
     "@context": "https://schema.org",
@@ -168,8 +203,12 @@ export async function ProductPageView({
             gallery (left col) and the variant selector (right col), so picking
             a variant scrolls the gallery to the matching image. */}
         <ProductMediaSync imageUrls={product.images.edges.map((e) => e.node.url)}>
+        {/* min-w-0 on BOTH grid children: grid items default to min-width:auto,
+            so one unshrinkable element in either column pushes the shared track
+            (and the gallery card with it) past the viewport on phones — seen
+            live as the hero rendering off-frame. */}
         <div className="grid gap-10 lg:grid-cols-[11fr_9fr] lg:gap-12 xl:gap-16">
-          <div>
+          <div className="min-w-0">
             <div className="lg:sticky lg:top-[7.5rem]">
               <ProductGallery
                 productTitle={product.title}
@@ -179,7 +218,7 @@ export async function ProductPageView({
             </div>
           </div>
 
-          <div className="flex flex-col lg:pb-16" style={{ overflowAnchor: "none" }}>
+          <div className="flex min-w-0 flex-col lg:pb-16" style={{ overflowAnchor: "none" }}>
             {/* Eyebrow pill — per device reference §PRODUCT HERO. Brand
                 anchor before the headline. Phase 5 will let editors swap
                 this via metafield. */}
@@ -249,7 +288,7 @@ export async function ProductPageView({
                 StickyAddToCart bar reveals the moment that button's bottom
                 edge scrolls past viewport top (scroll listener, matches the
                 reference HTML's addBtn.getBoundingClientRect().bottom check). */}
-            <div className="mt-6">
+            <div className="mt-6" id="buy-box" style={{ scrollMarginTop: "7.5rem" }}>
               <VariantSelector
                 product={product}
                 addonProducts={recommendedBundleProducts}
@@ -263,37 +302,22 @@ export async function ProductPageView({
             {/* What's included — bundle products only (renders null otherwise) */}
             <BundleContents items={bundleItems} />
 
-            {/* Frequently Bought Together — moved into the hero under the buy
-                card per restructure plan §Task 2 (was a standalone section
-                between FAQ and Final CTA). Sits at the decision moment so the
-                cross-sell happens while the cart intent is still warm.
-                id="fbt" + scrollMarginTop are the scroll target for the Final
-                CTA's "Shop the bundle" button. scrollMarginTop matches the
-                gallery's sticky offset so the scrolled-to FBT clears the
-                sticky header. */}
-            {recommendedBundleProducts.length > 0 && (
-              <div id="fbt" style={{ scrollMarginTop: "7.5rem" }}>
-                <BundleBuyCard
-                  currentProduct={product}
-                  products={recommendedBundleProducts}
-                />
-              </div>
-            )}
-
             {/* Mini-trust 3-up — matches device reference .mini-trust. Smaller,
                 closer to the CTA than the previous full trust grid. */}
             <ul className="mt-5 grid grid-cols-3 gap-2 border-t border-line pt-4">
+              {/* No forced <br/> — the columns get ~100px on a 320px phone and
+                  the hard breaks doubled up with natural wrapping there. */}
               <li className="flex flex-col items-center gap-1 text-center text-[11.5px] font-bold text-brown">
                 <ShieldCheck className="h-5 w-5 text-clay" aria-hidden />
-                <span>Silent — won&apos;t scare<br />skittish pets</span>
+                <span>Silent — won&apos;t scare skittish pets</span>
               </li>
               <li className="flex flex-col items-center gap-1 text-center text-[11.5px] font-bold text-brown">
                 <Truck className="h-5 w-5 text-clay" aria-hidden />
-                <span>Free shipping<br />over $50</span>
+                <span>Free shipping over $50</span>
               </li>
               <li className="flex flex-col items-center gap-1 text-center text-[11.5px] font-bold text-brown">
                 <RefreshCcw className="h-5 w-5 text-clay" aria-hidden />
-                <span>30-day money-back<br />guarantee</span>
+                <span>30-day money-back guarantee</span>
               </li>
             </ul>
 
@@ -309,13 +333,17 @@ export async function ProductPageView({
       </div>
 
       {/* ── Below-fold sections ─────────────────────────────────────────────────
-          Per web-rec Step 2 — section bg sequence: white, sand, toffee, white,
-          sand, white, sand, sand, bark, moss. Adjacent sections never share
-          the same hue except FAQ → ProductDetailsSections (intentional — they
-          read as one "more info" block). ───────────────────────────────────── */}
+          Narrative order (reordered 2026-07-06/07): problem → mechanism →
+          proof (visual, then social) → fit → comparison → FAQ → details →
+          catalog discovery ("More from BeePaws", the exit ramp) → close.
+          Band sequence: paper, paper, toffee, white, sand, cream, white,
+          sand, sand, cream, bark — adjacent sections never share a hue except
+          Hero → PainPoints (continuous paper drift out of the hero) and
+          FAQ → ProductDetailsSections (they read as one "more info" block). ── */}
 
-      {/* Hero (card) → PainPoints (card) — same bg, hairline border for the seam. */}
-      <div className="border-t border-line">
+      {/* Hero → PainPoints — same paper on purpose; the story starts without a
+          seam. (FBT used to sit here; it moved below the persuasion stack.) */}
+      <div>
         <PainPoints
           points={beepaws?.painPoints}
           eyebrow={blank(ppi?.eyebrow)}
@@ -324,21 +352,11 @@ export async function ProductPageView({
         />
       </div>
 
-      {/* PainPoints → UseCaseCards — direct, hairline border. */}
-      <div className="border-t border-line">
-        <UseCaseCards
-          cards={beepaws?.useCases}
-          eyebrow={blank(uci?.eyebrow)}
-          heading={blank(uci?.heading)}
-          lead={blank(uci?.lead)}
-        />
-      </div>
-
       {isDevice ? (
         <>
-          {/* WAVE — sand → toffee: into Mechanism (Reason + 3-step + feels-
-              broken cocoa-inset callout, merged in per restructure §Task 1). */}
-          <WaveDivider from="#F2E7CC" to="#E5C58C" />
+          {/* WAVE — paper → toffee: the agitation resolves straight into
+              Mechanism (Reason + 3-step + feels-broken cocoa-inset callout). */}
+          <WaveDivider from="#FDF8EC" to="#E5C58C" />
           <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
             <Mechanism
               steps={beepaws?.mechanismSteps}
@@ -366,7 +384,7 @@ export async function ProductPageView({
           </div>
         </>
       ) : (
-        /* Non-device: skip Mechanism + its waves. UseCaseCards meets
+        /* Non-device: skip Mechanism + its waves. PainPoints meets
            BeforeAfterSlider directly — hairline border separates. */
         <div className="border-t border-line">
           <BeforeAfterSlider
@@ -388,7 +406,18 @@ export async function ProductPageView({
         />
       </div>
 
-      {/* UGCReviews → ComparisonTable — direct, hairline border. */}
+      {/* UGCReviews → UseCaseCards — proof lands first, then "made for the pet
+          you actually have" answers the fit question the proof raises. */}
+      <div className="border-t border-line">
+        <UseCaseCards
+          cards={beepaws?.useCases}
+          eyebrow={blank(uci?.eyebrow)}
+          heading={blank(uci?.heading)}
+          lead={blank(uci?.lead)}
+        />
+      </div>
+
+      {/* UseCaseCards → ComparisonTable — direct, hairline border. */}
       <div className="border-t border-line">
         <ComparisonTable
           rows={beepaws?.comparisonRows}
@@ -416,10 +445,47 @@ export async function ProductPageView({
         <ProductDetailsSections normalized={fullProduct.normalized} />
       )}
 
-      {/* → FinalCTA (bark): direct meeting. Hairline border at the seam —
-          the bg jump from sand → bark already reads strongly. */}
+      {/* "More from BeePaws" — catalog discovery, not an offer (2026-07-07).
+          The tier picker owns "what goes with this product" (with real bundle
+          pricing); this band only shows catalog items the tiers DON'T cover,
+          each card linking to its own PDP so a shopper can read the full story
+          before buying. Positioned as the EXIT RAMP at the end of the product
+          story — after FAQ/details, before the promise close — so it never
+          invites navigation away mid-argument, and the bark band stays the
+          page's full-stop (the footer wave cap assumes bark above it).
+          Renders nothing when the tiers cover the whole catalog; grooming
+          products feed in automatically once live. Replaces the checkbox FBT
+          card — that duplicated the tier offer without its discount, and
+          "Frequently bought together" claimed purchase data we don't have. */}
+      {discoveryProducts.length > 0 && (
+        <div className="ds-reveal-in border-t border-line bg-cream">
+          <div className="mx-auto max-w-5xl px-4 py-14 md:px-6 md:py-16">
+            <h2 className="font-display mb-8 text-center text-2xl font-semibold tracking-tight text-cocoa md:text-3xl">
+              More from BeePaws
+            </h2>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {discoveryProducts.map((p) => (
+                <ProductCard
+                  key={p.id}
+                  handle={p.handle}
+                  title={p.title}
+                  price={new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: p.priceRange.minVariantPrice.currencyCode,
+                  }).format(parseFloat(p.priceRange.minVariantPrice.amount))}
+                  imageUrl={p.images.edges[0]?.node?.url ?? fallbackUrl}
+                  product={p}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Discovery (or details) → FinalCTA — hairline into the dark closing band. */}
       <div className="border-t border-line" style={{ position: "relative", zIndex: 1 }}>
         <FinalCTASection
+          scrollTargetId="buy-box"
           fromPrice={new Intl.NumberFormat("en-US", {
             style: "currency",
             currency: minVariantPrice.currencyCode,

@@ -176,36 +176,55 @@ export function CartDrawer() {
             <ul className="space-y-3">
               {items.map((item) => {
                 const lineTotal = parseFloat(item.unitPriceAmount || "0") * item.quantity;
+                // Bundle lines don't link anywhere: bundles are offers, not
+                // destinations — their PDPs 404 by design (route guard), so a
+                // link here would dead-end mid-purchase.
+                const isBundleLine = (item.bundleComponents?.length ?? 0) > 0;
+                const thumb = (
+                  <Image
+                    src={item.imageUrl || "/product-placeholder.svg"}
+                    alt={item.productTitle}
+                    fill
+                    className="object-cover"
+                    sizes="80px"
+                  />
+                );
                 return (
                   <li
                     key={item.merchandiseId}
                     className="flex items-center gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--background)] p-3 transition-shadow hover:shadow-sm"
                   >
-                    <Link
-                      href={`/products/${item.productHandle}`}
-                      onClick={closeDrawer}
-                      className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-[var(--color-border)]"
-                      tabIndex={-1}
-                    >
-                      <Image
-                        src={item.imageUrl || "/product-placeholder.svg"}
-                        alt={item.productTitle}
-                        fill
-                        className="object-cover"
-                        sizes="80px"
-                      />
-                    </Link>
+                    {isBundleLine ? (
+                      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-[var(--color-border)]">
+                        {thumb}
+                      </div>
+                    ) : (
+                      <Link
+                        href={`/products/${item.productHandle}`}
+                        onClick={closeDrawer}
+                        className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-[var(--color-border)]"
+                        tabIndex={-1}
+                      >
+                        {thumb}
+                      </Link>
+                    )}
 
                     <div className="flex min-w-0 flex-1 flex-col">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <Link
-                            href={`/products/${item.productHandle}`}
-                            onClick={closeDrawer}
-                            className="block truncate text-sm font-bold text-[var(--color-foreground)] hover:text-[var(--color-primary)]"
-                          >
-                            {item.productTitle}
-                          </Link>
+                          {isBundleLine ? (
+                            <p className="truncate text-sm font-bold text-[var(--color-foreground)]">
+                              {item.productTitle}
+                            </p>
+                          ) : (
+                            <Link
+                              href={`/products/${item.productHandle}`}
+                              onClick={closeDrawer}
+                              className="block truncate text-sm font-bold text-[var(--color-foreground)] hover:text-[var(--color-primary)]"
+                            >
+                              {item.productTitle}
+                            </Link>
+                          )}
                           {/* For a bundle, the variant value is shown under its
                               own component below — not here on the bundle line. */}
                           {!item.bundleComponents?.length &&

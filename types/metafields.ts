@@ -92,6 +92,15 @@ export interface BundleTierCopy {
   bundle?: { id: string; handle: string; title: string } | null;
 }
 
+/** One curated pick for the "More from BeePaws" discovery band
+ * (`beepaws.discovery_products`). Mirrors the admin tool's list_of_objects
+ * shape: the ref nests under `product` (same nesting as
+ * bundle_tiers[i].bundle) and is plain JSON, NOT a native Shopify
+ * reference — the storefront resolves it by handle. */
+export interface DiscoveryPick {
+  product?: { id?: string; handle?: string; title?: string } | null;
+}
+
 export interface PainPoint {
   number: string;
   title: string;
@@ -172,6 +181,8 @@ export interface BeepawsMetafields {
   educationNote: string | null;
   beforeAfterSlides: BeforeAfterSlide[] | null;
   bundleTiers: BundleTierCopy[] | null;
+  // Curated picks for the "More from BeePaws" band; null/empty → automatic.
+  discoveryProducts: DiscoveryPick[] | null;
   painPoints: PainPoint[] | null;
   painPointsIntro: PainPointsIntro[] | null;
   mechanismSteps: MechanismStep[] | null;

@@ -68,15 +68,38 @@ export function BeforeAfterSlider({
 
   return (
     <section className="ds-reveal-in bg-card py-14 md:py-20">
-      <div className="container mx-auto max-w-3xl px-4 md:px-6">
-        <h2 className="font-display mx-auto mb-3 max-w-2xl text-center text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[33px]">
-          {heading}
-        </h2>
-        <p className="mx-auto mb-10 max-w-xl text-center text-base text-brown">
-          {lead}
-        </p>
+      <div className="container mx-auto grid max-w-6xl items-center gap-10 px-4 md:grid-cols-[43fr_57fr] md:gap-14 md:px-6">
+        {/* Left: the argument, the current pet's story, and how to read it. The
+            quote tracks the active slide, so the copy earns its column. */}
+        <div>
+          <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[33px]">
+            {heading}
+          </h2>
+          <p className="mt-3 max-w-md text-base leading-relaxed text-brown">
+            {lead}
+          </p>
 
-        <div className="mx-auto max-w-[620px]">
+          {activeSlide.caption && (
+            <figure className="mt-6 border-t border-line pt-5">
+              <blockquote className="font-display text-lg italic leading-snug text-cocoa">
+                {activeSlide.caption}
+              </blockquote>
+              {activeSlide.petName && (
+                <figcaption className="mt-2 text-sm font-semibold text-brown">
+                  — {activeSlide.petName}
+                </figcaption>
+              )}
+            </figure>
+          )}
+
+          <p className="mt-6 inline-flex items-center gap-2 text-sm text-brown/70">
+            <ArrowLeftRight size={16} className="text-clay" aria-hidden />
+            Drag the handle to compare.
+          </p>
+        </div>
+
+        {/* Right: the drag-to-reveal slider, filling the column. */}
+        <div>
           {/* Track viewport: clips overflow so the off-screen slides stay
               hidden, and rounds + shadows the visible image area. */}
           <div className="overflow-hidden rounded-2xl border border-line shadow-[0_14px_40px_-16px_rgba(74,46,22,0.22)]">
@@ -91,13 +114,6 @@ export function BeforeAfterSlider({
               ))}
             </div>
           </div>
-
-          {activeSlide.caption && (
-            <p className="mt-4 text-center text-sm italic text-brown md:text-[13.5px]">
-              {activeSlide.caption}
-              {activeSlide.petName && <span className="not-italic"> — {activeSlide.petName}</span>}
-            </p>
-          )}
 
           {multi && (
             <div
@@ -122,12 +138,17 @@ export function BeforeAfterSlider({
                     aria-selected={i === activeIdx}
                     aria-label={`Go to slide ${i + 1}`}
                     onClick={() => goToSlide(i)}
-                    className={`h-2.5 rounded-full transition-all ${
-                      i === activeIdx
-                        ? "w-7 bg-clay"
-                        : "w-2.5 bg-line hover:bg-brown/40"
-                    }`}
-                  />
+                    className="group flex h-10 min-w-[1.75rem] items-center justify-center"
+                  >
+                    {/* Visual dot stays small; the button provides the ~40px hit area. */}
+                    <span
+                      className={`h-2.5 rounded-full transition-all ${
+                        i === activeIdx
+                          ? "w-7 bg-clay"
+                          : "w-2.5 bg-line group-hover:bg-brown/40"
+                      }`}
+                    />
+                  </button>
                 ))}
               </div>
               <button
@@ -175,14 +196,39 @@ function BeforeAfterPanel({ slide }: { slide: BeforeAfterSlide }) {
     dragging.current = false;
   }
 
+  // Keyboard path for the divider — the drag handle is otherwise pointer-only,
+  // which locks out keyboard/AT users entirely. Arrow keys nudge, Shift jumps,
+  // Home/End snap to the clamp extremes (4/96, same as the pointer clamp).
+  function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    const step = e.shiftKey ? 10 : 4;
+    let next: number | null = null;
+    if (e.key === "ArrowLeft") next = pct - step;
+    else if (e.key === "ArrowRight") next = pct + step;
+    else if (e.key === "Home") next = 4;
+    else if (e.key === "End") next = 96;
+    if (next === null) return;
+    e.preventDefault();
+    setPct(Math.max(4, Math.min(96, next)));
+  }
+
   return (
     <div
       ref={wrapRef}
+      role="slider"
+      tabIndex={0}
+      aria-label="Before-and-after comparison. Arrow keys move the divider."
+      aria-valuemin={4}
+      aria-valuemax={96}
+      aria-valuenow={Math.round(pct)}
+      onKeyDown={onKeyDown}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
-      className="relative aspect-[4/3] cursor-ew-resize overflow-hidden select-none touch-none"
+      // pan-y (not touch-none): horizontal drags drive the divider, but a
+      // vertical swipe starting on the image still scrolls the page — with
+      // touch-none a near-full-width panel became a scroll trap on phones.
+      className="relative aspect-[4/3] cursor-ew-resize overflow-hidden select-none [touch-action:pan-y] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay focus-visible:ring-inset"
     >
       {/* BEFORE (full background) */}
       {slide.beforeImageUrl ? (

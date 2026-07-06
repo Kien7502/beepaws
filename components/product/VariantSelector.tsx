@@ -504,7 +504,7 @@ export default function VariantSelector({
 
   // Buy It Now — bypass the local cart and POST the current bundle composition
   // straight to /api/shopify/cart/checkout, then redirect to Shopify checkout.
-  // Same pattern as BundleBuyCard.onBuyNow so behavior stays consistent.
+  // Same checkout-route pattern the retired BundleBuyCard used.
   async function onBuyNow() {
     if (buyingNow) return;
 
@@ -742,8 +742,11 @@ export default function VariantSelector({
 
                 {/* What's included — main qty + resolved addons with thumbnails.
                     Off-reference but kept because customers benefit from seeing
-                    the actual items per tier, especially when add-ons differ. */}
-                {tb ? (
+                    the actual items per tier, especially when add-ons differ.
+                    Rendered only for the SELECTED tier so unselected tiers stay
+                    a scannable name + price + description row and the buy
+                    column keeps its height in check. */}
+                {selected && (tb ? (
                   <ul className="mt-2 space-y-1 text-[12px] text-brown">
                     {tb.components.map((c, ci) => (
                       <li key={c.handle} className="flex items-center gap-2">
@@ -757,7 +760,19 @@ export default function VariantSelector({
                           />
                         </span>
                         <span className="min-w-0 truncate">
-                          {c.quantity}× <span className="text-cocoa">{c.title}</span>
+                          {c.quantity}×{" "}
+                          {/* New tab so the configured tier/variant state
+                              survives; stopPropagation so the card's
+                              selectTier onClick doesn't also fire. */}
+                          <a
+                            href={`/products/${c.handle}`}
+                            target="_blank"
+                            rel="noopener"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-cocoa underline decoration-line underline-offset-2 hover:text-clay"
+                          >
+                            {c.title}
+                          </a>
                         </span>
                         {ci === 0 && (
                           <span className="ml-auto shrink-0 rounded-full bg-honey-tint px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-gold-deep">
@@ -795,12 +810,21 @@ export default function VariantSelector({
                           />
                         </span>
                         <span className="min-w-0 truncate">
-                          <span className="font-bold">{a.qty}×</span> {a.product.title}
+                          <span className="font-bold">{a.qty}×</span>{" "}
+                          <a
+                            href={`/products/${a.product.handle}`}
+                            target="_blank"
+                            rel="noopener"
+                            onClick={(e) => e.stopPropagation()}
+                            className="underline decoration-line underline-offset-2 hover:text-clay"
+                          >
+                            {a.product.title}
+                          </a>
                         </span>
                       </li>
                     ))}
                   </ul>
-                )}
+                ))}
 
                 {/* Per-unit pickers (Family Pack: pick color per device). Not in
                     the reference template but kept as a real feature for multi-
@@ -863,7 +887,7 @@ export default function VariantSelector({
                                         e.stopPropagation();
                                         pickUnitOptionValue(j, opt.name, value);
                                       }}
-                                      className={`rounded-lg border-[1.8px] px-2.5 py-1 text-xs font-bold transition-all ${
+                                      className={`rounded-lg border-[1.8px] px-3 py-1.5 text-xs font-bold transition-all ${
                                         active
                                           ? "border-clay bg-[#FCFBF4] text-cocoa"
                                           : "border-line text-cocoa hover:border-clay/60"
@@ -944,7 +968,7 @@ export default function VariantSelector({
                                       e.stopPropagation();
                                       pickBundleOption(tb, opt.name, value);
                                     }}
-                                    className={`rounded-lg border-[1.8px] px-2.5 py-1 text-xs font-bold transition-all ${
+                                    className={`rounded-lg border-[1.8px] px-3 py-1.5 text-xs font-bold transition-all ${
                                       active
                                         ? "border-clay bg-[#FCFBF4] text-cocoa"
                                         : "border-line text-cocoa hover:border-clay/60"

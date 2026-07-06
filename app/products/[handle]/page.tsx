@@ -62,6 +62,12 @@ export default async function ProductPage({
 
   if (!product) return notFound();
 
+  // Bundles are offers, not destinations: they're hidden from listings and
+  // carry no authored beepaws.* content, so this shared view would render its
+  // lorem placeholder sections for them. Direct URLs 404 instead (cart bundle
+  // lines deliberately don't link here).
+  if (product.tags?.includes("bundle")) return notFound();
+
   return (
     <ProductPageView product={product} fullProduct={fullProduct} paymentMethods={paymentMethods} handle={handle} />
   );

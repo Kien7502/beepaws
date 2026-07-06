@@ -70,7 +70,9 @@ export function StickyAddToCart({ product }: { product: Product }) {
     <div
       // Warm Honey re-skin per plan: paper bg, hairline line border,
       // warm-brown shadow. Hides while the cart drawer is open.
-      className={`fixed bottom-0 left-0 right-0 z-50 border-t border-line bg-paper shadow-[0_-6px_22px_-4px_rgba(74,46,22,0.12)] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+      // pb-[env(safe-area-inset-bottom)] keeps the bar clear of the iPhone
+      // home indicator when the page is installed / viewed edge-to-edge.
+      className={`fixed bottom-0 left-0 right-0 z-50 border-t border-line bg-paper pb-[env(safe-area-inset-bottom)] shadow-[0_-6px_22px_-4px_rgba(74,46,22,0.12)] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
         visible && !drawerOpen ? "translate-y-0" : "translate-y-full"
       }`}
     >
