@@ -127,6 +127,16 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Page-level guard: nothing may pan the page sideways on any route. `clip`
+   (not `hidden`) because clip doesn't create a scroll container, so
+   position: sticky (Header, PDP gallery column) keeps working. Sections that
+   genuinely scroll sideways (PDP comparison table, FBT strip) own their own
+   overflow-x-auto containers. */
+html,
+body {
+  overflow-x: clip;
+}
+
 @keyframes waveScroll {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
@@ -262,20 +272,6 @@ body {
   }
 }
 
-/* Gradient headline — pink/purple, off-palette. Likely dead code; verify
-   before Phase 2 polish and either retheme to clay/gold or remove. */
-.hero-gradient-heading {
-  color: rgb(244 114 182);
-  background-image: linear-gradient(
-    90deg,
-    rgb(196 181 253),
-    rgb(244 114 182)
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
 /* Subtle dot texture on hero */
 .hero-texture {
   pointer-events: none;
@@ -328,13 +324,6 @@ body {
 
   .shadow-elevated {
     box-shadow: var(--elev-shadow-elevated);
-  }
-
-  /* Off-palette purple focus ring — flag for Phase 2 re-skin (Newsletter
-     lives in the Footer). Replace with clay/gold ring on the next pass. */
-  .newsletter-input-focus:focus {
-    outline: none;
-    box-shadow: 0 0 0 4px rgb(147 51 234 / 0.25);
   }
 
   /* Rich HTML from Shopify Admin product description */

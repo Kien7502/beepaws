@@ -3,6 +3,7 @@ import Image from 'next/image';
 import RevealObserver from '@/components/RevealObserver';
 import NewsletterPopup from '@/components/NewsletterPopup';
 import { ShieldCheck, Tag, HandHeart, PawPrint, CalendarCheck, Heart, Search, Shield } from 'lucide-react';
+import type { CSSProperties } from 'react';
 
 // ISR: revalidate via webhook → revalidateTag("products")
 export const revalidate = 3600;
@@ -46,15 +47,35 @@ const PRINCIPLES = [
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ variant?: string }>;
+  searchParams: Promise<{ variant?: string; ground?: string }>;
 }) {
   // Temporary eval switch: ?variant=5 renders the experimental pillar layout
   // (Option 5) to compare against the shipped Option 3. Remove once a variant is
   // chosen. (Reading searchParams opts this page into dynamic rendering.)
-  const { variant } = await searchParams;
+  const { variant, ground } = await searchParams;
   const pillarVariant = variant === "5" ? 5 : 3;
+
+  // Option-3 ground prototype (compare on the homepage only). Overrides the RAW
+  // Warm Honey surface tokens on the page wrapper, so every bg-cream / paper /
+  // honey-tint / sand / card / line utility on the homepage re-skins to the new
+  // ground, while warm accents (clay/gold), ink (cocoa/brown), and the dark bark
+  // band stay put. Header / footer / PDP are outside this wrapper, so they're
+  // untouched until a ground wins and gets promoted into globals.css :root.
+  //   ?ground=clean — refined near-neutral off-white (the "Refined light" option)
+  //   ?ground=sage  — soft brand-tinted sage off-white (the "Brand-tinted" option)
+  const GROUNDS: Record<string, Record<string, string>> = {
+    clean: {
+      "--paper": "#FAF9F6", "--cream": "#F4F3EE", "--honey-tint": "#EAE7DF",
+      "--sand": "#E4E0D6", "--card": "#FFFFFF", "--line": "#E5E2D9",
+    },
+    sage: {
+      "--paper": "#F5F7F2", "--cream": "#EDF0E9", "--honey-tint": "#E2E8DC",
+      "--sand": "#DAE1D3", "--card": "#FBFCFA", "--line": "#DCE1D5",
+    },
+  };
+  const groundVars = ground ? GROUNDS[ground] : undefined;
   return (
-    <div className="flex w-full flex-col bg-cream text-cocoa [font-family:var(--font-body)]">
+    <div className="flex w-full flex-col bg-cream text-cocoa [font-family:var(--font-body)]" style={groundVars as CSSProperties | undefined}>
       {/* Scroll-reveal driver + no-JS fallback so content is never hidden */}
       <RevealObserver />
       {/* Scroll-triggered newsletter popup (replaces the inline newsletter section) */}
@@ -85,8 +106,11 @@ export default async function Home({
             <span className="inline-flex items-center rounded-full border border-white/25 bg-white/10 px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-white/90 backdrop-blur-sm">
               At-home pet wellness · no hype
             </span>
+            {/* The hard break only helps once the line fits whole (≥md); on a
+                narrow phone it stacked with natural wrapping into ragged 3-4
+                line output, so let mobile wrap on its own. */}
             <h1 className="mt-5 font-display text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl">
-              Keep your pet healthy,<br />on your own terms.
+              Keep your pet healthy,<br className="hidden md:inline" /> on your own terms.
             </h1>
             <p className="mt-5 max-w-md text-lg leading-relaxed text-white/85">
               Honest tools for the care you would rather do at home. We don&rsquo;t claim to replace your vet — just to keep you out of the chair for the easy stuff.
@@ -350,12 +374,15 @@ export default async function Home({
           Blueprint §6. Risk reversal as a brand commitment. Bark closing band,
           matching the product page's final-CTA tone (gold seal on a paper island).
           The honest hedge - what we will NOT do - is the conversion. DRAFT copy. */}
-      <section className="bg-bark">
+      {/* Inset top vignette: the light→dark drop read as a flat pasted slab
+          (crisp edge alone was "still a bit weird"); a soft ink edge at the
+          band's top makes the drop feel like depth instead of a color swap. */}
+      <section className="bg-bark shadow-[inset_0_28px_44px_-28px_rgba(0,0,0,0.45)]">
         <div className="ds-reveal mx-auto max-w-4xl px-5 py-16 text-center md:px-6 md:py-20">
           <h2 className="font-display text-3xl font-semibold leading-tight text-white md:text-[34px]">
             Try it for 30 days. If it is not for your pet, send it back.
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-[#CFCBBA] md:text-base">
+          <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-cream/80 md:text-base">
             A full refund, no restocking fee, no hassle. We would rather you keep what works than keep what does not.
           </p>
           <Link
@@ -369,8 +396,9 @@ export default async function Home({
               review" line is the Amazon-comparison inoculation and is strategically
               central. Paper island, gold seal (matches the product page tone). */}
           <div className="mx-auto mt-10 grid gap-7 rounded-2xl border-2 border-gold bg-paper p-7 text-left shadow-[0_14px_40px_-16px_rgba(0,0,0,0.4)] md:grid-cols-2 md:gap-0 md:p-0">
-            {/* Half 1 - the guarantee */}
-            <div className="flex items-center gap-5 md:p-9">
+            {/* Half 1 - the guarantee. Stacks centered under ~640px: the 96px
+                seal + text side-by-side left ~150px of copy width on a phone. */}
+            <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:text-left md:p-9">
               <div
                 className="flex h-24 w-24 shrink-0 flex-col items-center justify-center rounded-full text-cocoa shadow-[0_8px_24px_-8px_rgba(74,46,22,0.45)]"
                 style={{ background: "radial-gradient(circle at 38% 32%, #E7A92F, #C8901C)" }}
@@ -393,7 +421,9 @@ export default async function Home({
               </p>
             </div>
           </div>
-          <p className="mt-7 text-xs font-bold uppercase tracking-[0.08em] text-[#A8A48F]">
+          {/* cream/70 (not the old #A8A48F) — that hex sat at ~3.9:1 on bark,
+              under the 4.5:1 AA floor for text this small. */}
+          <p className="mt-7 text-xs font-bold uppercase tracking-[0.08em] text-cream/70">
             Free shipping over $50 · 30-day refund · Real human support
           </p>
         </div>
