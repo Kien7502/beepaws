@@ -336,14 +336,15 @@ export async function ProductPageView({
           Narrative order (reordered 2026-07-06/07): problem → mechanism →
           proof (visual, then social) → fit → comparison → FAQ → details →
           catalog discovery ("More from BeePaws", the exit ramp) → close.
-          Band sequence: paper, paper, toffee, white, sand, cream, white,
+          Band sequence: paper, cream, toffee, white, sand, cream, white,
           sand, sand, cream, bark — adjacent sections never share a hue except
-          Hero → PainPoints (continuous paper drift out of the hero) and
-          FAQ → ProductDetailsSections (they read as one "more info" block). ── */}
+          FAQ → ProductDetailsSections (they read as one "more info" block).
+          WaveDividers are a KEPT design decision (user, 2026-07-08). ─────── */}
 
-      {/* Hero → PainPoints — same paper on purpose; the story starts without a
-          seam. (FBT used to sit here; it moved below the persuasion stack.) */}
-      <div>
+      {/* Hero → PainPoints — cream band + hairline so the buy area visibly
+          ends and the story begins (the same-paper drift read as one
+          unseparated blob; user feedback). */}
+      <div className="border-t border-line">
         <PainPoints
           points={beepaws?.painPoints}
           eyebrow={blank(ppi?.eyebrow)}
@@ -354,9 +355,9 @@ export async function ProductPageView({
 
       {isDevice ? (
         <>
-          {/* WAVE — paper → toffee: the agitation resolves straight into
+          {/* WAVE — cream → toffee: the agitation resolves straight into
               Mechanism (Reason + 3-step + feels-broken cocoa-inset callout). */}
-          <WaveDivider from="#FDF8EC" to="#E5C58C" />
+          <WaveDivider from="#FBF3E1" to="#E5C58C" />
           <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
             <Mechanism
               steps={beepaws?.mechanismSteps}

@@ -42,7 +42,9 @@ export function PainPoints({
   const data = points && points.length > 0 ? points : DEFAULT_PAIN_POINTS;
 
   return (
-    <section className="ds-reveal-in bg-paper py-14 md:py-20">
+    // bg-cream (not paper): the hero band above is paper, and same-paper
+    // drift made the buy area and the story read as one unseparated blob.
+    <section className="ds-reveal-in bg-cream py-14 md:py-20">
       <div className="container mx-auto max-w-6xl px-4 md:px-6">
         <h2 className="font-display mx-auto mb-3 max-w-3xl text-center text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[33px]">
           {heading}

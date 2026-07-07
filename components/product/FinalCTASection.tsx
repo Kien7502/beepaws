@@ -60,7 +60,8 @@ export function FinalCTASection({
   return (
     // Inset top vignette — same ink-edge treatment as the homepage promise
     // band, so both light→dark drops read as depth, not a pasted slab.
-    <section className="ds-reveal-in bg-bark py-14 md:py-20 shadow-[inset_0_28px_44px_-28px_rgba(0,0,0,0.45)]">
+    // Strengthened from 28/44/0.45, which was imperceptible on the dark ground.
+    <section className="ds-reveal-in bg-bark py-14 md:py-20 shadow-[inset_0_36px_56px_-28px_rgba(0,0,0,0.55)]">
       <div className="container mx-auto max-w-4xl px-4 md:px-6">
         <div className="text-center">
           <h2 className="font-display text-3xl font-semibold leading-tight text-white md:text-[34px]">

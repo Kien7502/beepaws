@@ -11,9 +11,11 @@ import { useEffect } from 'react';
 //   • `.ds-reveal` / `.ds-stagger` (whole element fades) — trigger as it just
 //     enters, so the motion reads while the section is arriving.
 //   • `.ds-reveal-in` (background stays solid, only the inner content animates) —
-//     trigger LATER, once the section's top has climbed past ~60% of the viewport,
-//     so you actually catch the content animate in instead of finding it already
-//     settled. (Used on the PDP's tall, strongly-colored sections.)
+//     trigger once the section's top clears the bottom ~28% of the viewport.
+//     Tuned by bisection (2026-07-08): -40% (60% line) made fast scrollers
+//     arrive and WAIT for the fade; -15% (85% line) finished the animation
+//     before the section was properly in view. -28% ≈ the 72% line is the
+//     middle. Durations live in globals.css and were tuned alongside.
 export default function RevealObserver() {
   useEffect(() => {
     const early = Array.from(
@@ -37,21 +39,22 @@ export default function RevealObserver() {
 
     const ioEarly = new IntersectionObserver(
       (entries, obs) => entries.forEach((e) => reveal(e, obs)),
-      { threshold: 0.15, rootMargin: '0px 0px -8% 0px' },
+      { threshold: 0.1, rootMargin: '0px 0px -5% 0px' },
     );
     early.forEach((el) => ioEarly.observe(el));
 
-    // threshold 0 + a large negative bottom margin fires the moment the element's
-    // top edge crosses the (viewport * 0.60) line — height-independent, so it
+    // threshold 0 + a negative bottom margin fires the moment the element's
+    // top edge crosses the (viewport * 0.72) line — height-independent, so it
     // behaves the same for short and tall sections.
     const ioLate = new IntersectionObserver(
       (entries, obs) => entries.forEach((e) => reveal(e, obs)),
-      { threshold: 0, rootMargin: '0px 0px -40% 0px' },
+      { threshold: 0, rootMargin: '0px 0px -28% 0px' },
     );
     late.forEach((el) => ioLate.observe(el));
 
-    // Safety net: the late trigger needs a section's top to climb past ~60% of
-    // the viewport, which a very last section can't do if the footer is short.
+    // Safety net: the late trigger needs a section's top to clear the bottom
+    // ~28% of the viewport, which a very last section can't do if the footer
+    // is short.
     // At the page bottom, reveal anything still hidden so content is never stuck.
     const onScrollBottom = () => {
       if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 4) {

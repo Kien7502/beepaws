@@ -150,10 +150,13 @@ body {
    reliable everywhere. Strong custom ease-out so the entrance has intent.
    A <noscript> on the page restores visibility when JS is unavailable.
    .ds-lift: soft hover lift for static cards (pointer devices only). */
+/* Timing tuned by bisection 2026-07-08: 660ms + late triggers = arrive and
+   wait; 480ms + earliest triggers = animation over before you look. Current
+   values are the middle; trigger lines live in RevealObserver. */
 .ds-reveal {
   opacity: 0;
-  transform: translateY(28px);
-  transition: opacity 660ms var(--ds-ease-out), transform 660ms var(--ds-ease-out);
+  transform: translateY(18px);
+  transition: opacity 560ms var(--ds-ease-out), transform 560ms var(--ds-ease-out);
   will-change: opacity, transform;
 }
 .ds-reveal.is-visible {
@@ -174,8 +177,8 @@ body {
    time. Observed by RevealObserver alongside .ds-reveal. */
 .ds-reveal-in > * {
   opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 640ms var(--ds-ease-out), transform 640ms var(--ds-ease-out);
+  transform: translateY(16px);
+  transition: opacity 540ms var(--ds-ease-out), transform 540ms var(--ds-ease-out);
   will-change: opacity, transform;
 }
 .ds-reveal-in.is-visible > * {
@@ -210,16 +213,16 @@ body {
    A <noscript> on the page restores visibility when JS is unavailable. */
 .ds-stagger > * {
   opacity: 0;
-  transition: opacity 520ms var(--ds-ease-out), transform 150ms var(--ds-ease-out);
+  transition: opacity 460ms var(--ds-ease-out), transform 150ms var(--ds-ease-out);
   will-change: opacity;
 }
 .ds-stagger.is-visible > * {
   opacity: 1;
 }
-.ds-stagger.is-visible > *:nth-child(1) { transition-delay: 40ms, 0ms; }
-.ds-stagger.is-visible > *:nth-child(2) { transition-delay: 110ms, 0ms; }
-.ds-stagger.is-visible > *:nth-child(3) { transition-delay: 180ms, 0ms; }
-.ds-stagger.is-visible > *:nth-child(4) { transition-delay: 250ms, 0ms; }
+.ds-stagger.is-visible > *:nth-child(1) { transition-delay: 30ms, 0ms; }
+.ds-stagger.is-visible > *:nth-child(2) { transition-delay: 90ms, 0ms; }
+.ds-stagger.is-visible > *:nth-child(3) { transition-delay: 150ms, 0ms; }
+.ds-stagger.is-visible > *:nth-child(4) { transition-delay: 210ms, 0ms; }
 
 /* ─── Hero entrance ────────────────────────────────────────────────────────
    The hero copy is above the fold, so it animates on load (not on scroll): its

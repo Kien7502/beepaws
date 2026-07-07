@@ -376,8 +376,10 @@ export default async function Home({
           The honest hedge - what we will NOT do - is the conversion. DRAFT copy. */}
       {/* Inset top vignette: the light→dark drop read as a flat pasted slab
           (crisp edge alone was "still a bit weird"); a soft ink edge at the
-          band's top makes the drop feel like depth instead of a color swap. */}
-      <section className="bg-bark shadow-[inset_0_28px_44px_-28px_rgba(0,0,0,0.45)]">
+          band's top makes the drop feel like depth instead of a color swap.
+          Strengthened from 28/44/0.45 — that version was imperceptible on the
+          dark ground (user couldn't spot it). */}
+      <section className="bg-bark shadow-[inset_0_36px_56px_-28px_rgba(0,0,0,0.55)]">
         <div className="ds-reveal mx-auto max-w-4xl px-5 py-16 text-center md:px-6 md:py-20">
           <h2 className="font-display text-3xl font-semibold leading-tight text-white md:text-[34px]">
             Try it for 30 days. If it is not for your pet, send it back.
