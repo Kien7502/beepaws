@@ -53,7 +53,7 @@ export default async function Home({
   // (Option 5) to compare against the shipped Option 3. Remove once a variant is
   // chosen. (Reading searchParams opts this page into dynamic rendering.)
   const { variant, ground } = await searchParams;
-  const pillarVariant = variant === "5" ? 5 : 3;
+  const pillarVariant = variant === "5" ? 5 : variant === "6" ? 6 : 3;
 
   // Option-3 ground prototype (compare on the homepage only). Overrides the RAW
   // Warm Honey surface tokens on the page wrapper, so every bg-cream / paper /
@@ -261,7 +261,8 @@ export default async function Home({
           constant. (Spec wants sibling layout variants A/B'd later; this is the
           recommended default.) Pillar 4 body swaps on SHOW_GROOMING. */}
       <section id="why" className="bg-card scroll-mt-24">
-        <div className="mx-auto max-w-4xl px-5 py-16 md:px-8 md:py-24">
+        {/* Option 6 needs the extra width for its 3-column flank layout. */}
+        <div className={`mx-auto px-5 py-16 md:px-8 md:py-24 ${pillarVariant === 6 ? "max-w-6xl" : "max-w-4xl"}`}>
           <h2 className="ds-reveal font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[2.6rem]">
             Why BeePaws
           </h2>
@@ -306,6 +307,47 @@ export default async function Home({
                   </article>
                 ))}
               </div>
+            </div>
+          ) : pillarVariant === 6 ? (
+            /* Option 6 — Shrine-inspired (benefits-flank-a-photo pattern from
+               the shrine-pro demo): two pillars each side of a CENTRAL WARM
+               SCENE. The Shrine original works because its center is an
+               emotional photograph — so the center here is an ILLUSTRATIVE
+               image slot (AI ok, quality-inspected; never evidentiary), NOT
+               the logo (Option 5's mistake). Pillars stay de-carded, same
+               grammar as §3's principles. Mobile: heading → image → pillars
+               stacked (DOM order: image first).
+
+               Layout: ONE 2×3 grid — scene spans both rows in the center
+               column, pillars sit in the four corner cells, so both sides
+               share row heights and stay symmetric regardless of copy length
+               (independent flex columns drifted; user screenshot). Center
+               column gets the LARGEST share so the scene dominates.
+               items-start: row-mates align at their TOPS — center-alignment
+               staggers the titles when copy lengths differ. */
+            <div className="ds-reveal mt-12 grid items-start gap-x-8 gap-y-10 md:grid-cols-[4fr_5fr_4fr] md:grid-rows-2 lg:gap-x-12">
+              <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl bg-honey-tint md:col-start-2 md:row-start-1 md:row-span-2 md:aspect-[3/4]">
+                {/* TODO: warm at-home moment (owner + pet, hands-on care).
+                    Illustrative slot — AI ok later, never stock fur. */}
+                <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Warm scene (illustrative)</span>
+              </div>
+              {PILLARS.map((p, i) => (
+                <article
+                  key={p.title}
+                  className={
+                    [
+                      "md:col-start-1 md:row-start-1",
+                      "md:col-start-1 md:row-start-2",
+                      "md:col-start-3 md:row-start-1",
+                      "md:col-start-3 md:row-start-2",
+                    ][i]
+                  }
+                >
+                  <p.icon size={26} strokeWidth={1.75} className="text-clay" />
+                  <h3 className="mt-3 font-display text-xl font-semibold text-cocoa">{p.title}</h3>
+                  <p className="mt-2 leading-relaxed text-brown">{p.body}</p>
+                </article>
+              ))}
             </div>
           ) : (
             /* Option 3 — shipped default: equal-weight horizontal manifesto bands. */

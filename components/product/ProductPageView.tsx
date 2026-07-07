@@ -120,16 +120,13 @@ export async function ProductPageView({
       ? collectionRecommendations
       : (await getProducts()).filter((p) => p.handle !== product.handle).slice(0, 3);
 
-  // "More from BeePaws" discovery band. Curated picks first: when
-  // beepaws.discovery_products is authored (admin tool / raw JSON), it decides
-  // exactly what shows — deduped, resolved by handle; unresolvable refs
-  // (draft/deleted), this product itself, and bundle-tagged products (whose
-  // PDPs 404 by design) are dropped; capped at 6. Otherwise automatic: the
-  // rest of the catalog minus anything the tier picker already offers, so no
-  // product appears both inside a discounted tier and à la carte below it.
-  // Automatic coverage mirrors VariantSelector's fixed TIERS: tier 2 composes
-  // with recommendation[0], tier 3 with recommendation[1] (only when that
-  // tier is NOT bundle-backed); bundle-backed tiers cover their components.
+  // "More from BeePaws" discovery band — CURATED ONLY (user decision
+  // 2026-07-08): the band renders solely from beepaws.discovery_products
+  // picks, and an empty/unset metafield means the section does not render at
+  // all. (The earlier automatic catalog-fallback was removed — it put
+  // uncontrolled output on the page.) Picks are deduped and resolved by
+  // handle; unresolvable refs (draft/deleted), this product itself, and
+  // bundle-tagged products (whose PDPs 404 by design) are dropped; capped at 6.
   const curatedHandles = [
     ...new Set(
       (beepaws?.discoveryProducts ?? [])
@@ -137,23 +134,13 @@ export async function ProductPageView({
         .filter((h): h is string => Boolean(h && h !== product.handle)),
     ),
   ];
-  const curated = curatedHandles.length
-    ? (await Promise.all(curatedHandles.map((h) => getProduct(h)))).filter(
-        (p): p is Product => Boolean(p && !p.tags?.includes("bundle")),
+  const discoveryProducts = curatedHandles.length
+    ? (
+        await Promise.all(curatedHandles.map((h) => getProduct(h)))
       )
+        .filter((p): p is Product => Boolean(p && !p.tags?.includes("bundle")))
+        .slice(0, 6)
     : [];
-  let discoveryProducts = curated.slice(0, 6);
-  if (discoveryProducts.length === 0) {
-    const tierCovered = new Set<string>();
-    if (!tierBundles?.[1] && recommendedBundleProducts[0]) tierCovered.add(recommendedBundleProducts[0].handle);
-    if (!tierBundles?.[2] && recommendedBundleProducts[1]) tierCovered.add(recommendedBundleProducts[1].handle);
-    for (const tb of tierBundles ?? []) {
-      for (const c of tb?.components ?? []) tierCovered.add(c.handle);
-    }
-    discoveryProducts = (await getProducts())
-      .filter((p) => p.handle !== product.handle && !tierCovered.has(p.handle))
-      .slice(0, 3);
-  }
 
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
   const jsonLd = {
@@ -446,18 +433,17 @@ export async function ProductPageView({
         <ProductDetailsSections normalized={fullProduct.normalized} />
       )}
 
-      {/* "More from BeePaws" — catalog discovery, not an offer (2026-07-07).
-          The tier picker owns "what goes with this product" (with real bundle
-          pricing); this band only shows catalog items the tiers DON'T cover,
-          each card linking to its own PDP so a shopper can read the full story
-          before buying. Positioned as the EXIT RAMP at the end of the product
-          story — after FAQ/details, before the promise close — so it never
-          invites navigation away mid-argument, and the bark band stays the
-          page's full-stop (the footer wave cap assumes bark above it).
-          Renders nothing when the tiers cover the whole catalog; grooming
-          products feed in automatically once live. Replaces the checkbox FBT
-          card — that duplicated the tier offer without its discount, and
-          "Frequently bought together" claimed purchase data we don't have. */}
+      {/* "More from BeePaws" — curated catalog discovery, not an offer.
+          Renders ONLY when beepaws.discovery_products has picks (empty
+          metafield = no section; user decision 2026-07-08). Each card links
+          to its own PDP so a shopper can read the full story before buying.
+          Positioned as the EXIT RAMP at the end of the product story — after
+          FAQ/details, before the promise close — so it never invites
+          navigation away mid-argument, and the bark band stays the page's
+          full-stop (the footer wave cap assumes bark above it). Replaces the
+          checkbox FBT card — that duplicated the tier offer without its
+          discount, and "Frequently bought together" claimed purchase data we
+          don't have. */}
       {discoveryProducts.length > 0 && (
         <div className="ds-reveal-in border-t border-line bg-cream">
           <div className="mx-auto max-w-5xl px-4 py-14 md:px-6 md:py-16">

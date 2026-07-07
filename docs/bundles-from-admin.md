@@ -257,19 +257,18 @@ Notes:
 ## `beepaws.discovery_products` — curated "More from BeePaws" picks (2026-07-07)
 
 The PDP's closing discovery band ("More from BeePaws", between details and the bark
-final-CTA band) shows catalog products as ProductCards. By default the storefront picks
-them automatically (catalog minus whatever the tier picker already covers). To curate
-per product, author a JSON list metafield:
+final-CTA band) shows catalog products as ProductCards. The band is **curated only**:
+it renders exclusively from this metafield, and when the metafield is empty/unset the
+section does not render at all (decided 2026-07-08 — no automatic fallback, so
+nothing uncontrolled reaches the page).
 
 - **Key:** `beepaws.discovery_products` (json)
 - **Shape:** `[{ "product": { "id", "handle", "title" } }, ...]` — same nesting as
   `bundle_tiers[i].bundle`: plain JSON refs, NOT native Shopify references.
-- **Storefront behavior:** a non-empty list REPLACES the automatic pick. Refs are
-  deduped and resolved by handle; unresolvable refs (draft/deleted), the current
-  product itself, and `bundle`-tagged products (their PDPs 404 by design) are dropped.
-  Max 6 shown. Empty/unset → automatic fallback.
+- **Storefront behavior:** refs are deduped and resolved by handle; unresolvable refs
+  (draft/deleted), the current product itself, and `bundle`-tagged products (their
+  PDPs 404 by design) are dropped. Max 6 shown. Empty/unset → section omitted.
 
-Admin-side (to build, mirrors `bundle_ref`): a `product_ref` field type (SchemaField
-dropdown fed by `/api/products` instead of `/api/bundles`), a `discovery_products`
-list_of_objects schema entry with one `product` item field, and the definition added
-to the seeder.
+Admin-side: DONE 2026-07-08 (`product_ref` field type + `discovery_products`
+list_of_objects entry, beepaws-admin `cdd68a9`) — the editor shows
+"More from BeePaws — curated picks" with a product dropdown per entry.
