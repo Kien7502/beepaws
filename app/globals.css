@@ -91,33 +91,12 @@
   /* Strong ease-out for homepage motion (built-in curves are too weak) */
   --ds-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
-  /* ─── Legacy brand tokens ─────────────────────────────────────────────────
-     Defined but not currently referenced by any component (verified via grep).
-     Kept here remapped to Warm Honey so if anything reaches for them they
-     stay brand-aligned. Candidates for removal — see flag list in chat. */
-  --color-bg-primary:       var(--paper);
-  --color-bg-secondary:     var(--honey-tint);
-  --color-bg-dark:          var(--cocoa);
-  --color-bg-footer:        var(--moss);
-
-  --color-brand-orange:     var(--clay);
-  --color-brand-gold:       var(--gold);
-  --color-brand-gold-light: var(--amber);
-
-  --color-on-dark:          var(--cream);
-  --color-body:             var(--ink);
-
-  /* Sky/coral category accents — kept literal; reassess in Phase 5 polish */
-  --color-dog:              #5BB8F5;
-  --color-cat:              #FF7F6B;
-
-  /* Green palette — used for "vet-safe / no anesthesia" badges (Phase 5).
-     Footer green now maps to moss per the plan. */
-  --color-green-whisper:    #F7FAF5;
-  --color-green-badge-bg:   #E8F2E4;
-  --color-green-badge-tx:   #2A5A1A;
-  --color-green-icon:       #4A7C3F;
-  --color-green-footer:     var(--moss);
+  /* Legacy brand tokens, the sky/coral category accents, and the green badge
+     palette were REMOVED 2026-07-09 (palette review): zero references across
+     app/components/lib, and the off-palette literals (#5BB8F5 / #FF7F6B)
+     were a standing invitation to drift. If a future feature needs a
+     category accent or a "vet-safe" badge tone, mint it deliberately from
+     the Warm Honey ramp above. */
 }
 
 
@@ -135,11 +114,6 @@ body {
 html,
 body {
   overflow-x: clip;
-}
-
-@keyframes waveScroll {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
 }
 
 /* ─── Homepage motion (Warm Honey experiment) ──────────────────────────────
@@ -273,16 +247,6 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-}
-
-/* Subtle dot texture on hero */
-.hero-texture {
-  pointer-events: none;
-  background-image: radial-gradient(
-    rgba(255, 255, 255, 0.06) 1px,
-    transparent 1px
-  );
-  background-size: 5px 5px;
 }
 
 @layer utilities {

@@ -110,7 +110,11 @@ export default function Home() {
           LEADS the page: converts the "is at-home care even legit?" skeptic before
           the product. 2-zone: a WIDER warm outcome image (illustrative) + 2x2 grid
           of four wellness principles. Persuasion copy (DRAFT, voice pass). */}
-      <section className="bg-honey-tint">
+      {/* Hairline top: the hero's placeholder ground is honey-tint too, so
+          without it hero and §3 fused into one band (interim issue — the real
+          hero photo will separate them naturally; the hairline stays correct
+          either way). */}
+      <section className="border-t border-line bg-honey-tint">
         <div className="ds-reveal mx-auto grid w-full max-w-7xl items-center gap-10 px-5 py-16 md:grid-cols-[55fr_45fr] md:gap-14 md:px-8 md:py-24">
           {/* Left: warm outcome image (illustrative; AI ok later; no attribution) */}
           <div className="relative flex min-h-[300px] items-center justify-center overflow-hidden rounded-2xl bg-cream md:min-h-[440px]">
@@ -148,7 +152,7 @@ export default function Home() {
         <div className="ds-reveal mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-20">
           {/* Heading reframes dental-only as a deliberate sequencing choice at
               launch; reverts to the multi-category promise when grooming is live. */}
-          <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[2.4rem]">
+          <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[2.6rem]">
             {SHOW_GROOMING ? "Shop by what your pet needs" : "Start with their teeth"}
           </h2>
           {!SHOW_GROOMING && (
@@ -175,7 +179,8 @@ export default function Home() {
                   A $40 device, or a $1,400 vet bill.
                 </p>
                 {/* TODO: confirm real specs */}
-                <p className="mt-2 text-sm text-brown/70">Ultrasonic · cordless · USB-C · 3 cleaning modes</p>
+                {/* Solid brown: /70 sat at ~4.2:1 on cream — under AA for 14px. */}
+                <p className="mt-2 text-sm text-brown">Ultrasonic · cordless · USB-C · 3 cleaning modes</p>
                 <Link
                   href="/collections/all"
                   className="mt-6 inline-flex h-12 w-fit items-center rounded-full bg-clay px-6 font-bold text-white transition-colors hover:bg-cocoa active:scale-[0.97]"
@@ -353,7 +358,7 @@ export default function Home() {
           </p>
           <Link
             href="/collections/all"
-            className="mt-7 inline-flex items-center justify-center rounded-xl bg-gold px-8 py-4 text-base font-bold text-cocoa shadow-sm transition-colors hover:bg-gold-deep hover:text-white active:scale-[0.97] md:text-lg"
+            className="mt-7 inline-flex items-center justify-center rounded-full bg-gold px-8 py-4 text-base font-bold text-cocoa shadow-sm transition-colors hover:bg-gold-deep hover:text-white active:scale-[0.97] md:text-lg"
           >
             Start now
           </Link>

@@ -77,7 +77,7 @@ export function FinalCTASection({
           <button
             type="button"
             onClick={onShopClick}
-            className="mt-7 inline-flex items-center justify-center rounded-xl bg-gold px-8 py-4 text-base font-bold text-cocoa shadow-sm transition-colors hover:bg-gold-deep hover:text-white md:text-lg"
+            className="mt-7 inline-flex items-center justify-center rounded-full bg-gold px-8 py-4 text-base font-bold text-cocoa shadow-sm transition-colors hover:bg-gold-deep hover:text-white md:text-lg"
           >
             Shop the bundle — From {fromPrice}
           </button>
