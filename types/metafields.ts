@@ -92,6 +92,17 @@ export interface BundleTierCopy {
   bundle?: { id: string; handle: string; title: string } | null;
 }
 
+/** One "What's inside" formula group (`beepaws.ingredient_groups`). A product
+ * with one formula authors a single (optionally unlabeled) group; a
+ * multi-formula product (e.g. the dental spray's Unflavored vs Beef) authors
+ * one group per formula and the section shows a local toggle. `items` is
+ * authored one-ingredient-per-line as "Name — what it's for"; the storefront
+ * splits on a SPACED dash, so hyphenated ingredient names survive. */
+export interface IngredientGroup {
+  label?: string;
+  items?: string;
+}
+
 /** One curated pick for the "More from BeePaws" discovery band
  * (`beepaws.discovery_products`). Mirrors the admin tool's list_of_objects
  * shape: the ref nests under `product` (same nesting as
@@ -174,7 +185,12 @@ export interface BeepawsMetafields {
   stats: StatItem[] | null;
   techSpecs: TechSpec[] | null;
   bullets: string[] | null;
+  // Legacy flat list — superseded by ingredientGroups; still renders as a
+  // single unlabeled group when groups are unset.
   ingredients: string[] | null;
+  // "What's inside" formula groups + the section's intro copy.
+  ingredientGroups: IngredientGroup[] | null;
+  ingredientsIntro: SectionIntro[] | null;
   // Short one-line tagline shown on product cards (and reserved for PDP).
   // When null, ProductCard falls back to the first sentence of descriptionHtml.
   tagline: string | null;

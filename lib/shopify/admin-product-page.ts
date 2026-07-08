@@ -250,6 +250,8 @@ function normalizeMetafields(metafields: AdminMetafield[]) {
     techSpecs:        parseBeepaws("tech_specs"),
     bullets:          parseBeepaws("product_bullets"),
     ingredients:      parseBeepaws("ingredients"),
+    ingredientGroups: parseBeepaws("ingredient_groups"),
+    ingredientsIntro: parseBeepaws("ingredients_intro"),
     tagline:          byKey["beepaws.tagline"]?.value ?? null,
     educationNote:    byKey["beepaws.education_note"]?.value ?? null,
     beforeAfterSlides: parseBeepaws("before_after_slides"),

@@ -13,6 +13,7 @@ import { UGCReviews } from "@/components/product/UGCReviews";
 import { BeforeAfterSlider } from "@/components/product/BeforeAfterSlider";
 import { PainPoints } from "@/components/product/PainPoints";
 import { Mechanism } from "@/components/product/Mechanism";
+import { IngredientsSection } from "@/components/product/IngredientsSection";
 import ProductCard from "@/components/product/ProductCard";
 import { BundleContents } from "@/components/product/BundleContents";
 import { WaveDivider } from "@/components/ui/WaveDivider";
@@ -57,6 +58,7 @@ export async function ProductPageView({
   const ri = beepaws?.reviewsIntro?.[0];
   const bai = beepaws?.beforeAfterIntro?.[0];
   const fcc = beepaws?.finalCtaCopy?.[0];
+  const ii = beepaws?.ingredientsIntro?.[0];
   const blank = (s?: string) => (s && s.trim() ? s : undefined);
   const mechParagraphs = [mi?.paradoxParagraph1, mi?.paradoxParagraph2].filter(
     (p): p is string => Boolean(p && p.trim()),
@@ -73,6 +75,13 @@ export async function ProductPageView({
   // bundles so normal products skip the extra query. See docs/bundles-from-admin.md.
   const isBundle = product.tags?.includes("bundle") ?? false;
   const bundleItems = isBundle ? await getBundleContents(handle) : [];
+
+  // Consumables: the "What's inside" section renders only when ingredient
+  // content is authored (data-gated like ProductDetailsSections — no lorem
+  // band for products that never author ingredients).
+  const hasIngredients =
+    (beepaws?.ingredientGroups?.length ?? 0) > 0 ||
+    (beepaws?.ingredients?.length ?? 0) > 0;
 
   // Resolve any bundle linked from a tier (beepaws.bundle_tiers[i].bundle) to its
   // cart-ready variant + price/image, aligned by tier index, so the tier picker
@@ -206,12 +215,15 @@ export async function ProductPageView({
           </div>
 
           <div className="flex min-w-0 flex-col lg:pb-16" style={{ overflowAnchor: "none" }}>
-            {/* Eyebrow pill — per device reference §PRODUCT HERO. Brand
-                anchor before the headline. Phase 5 will let editors swap
-                this via metafield. */}
-            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-honey-tint px-3 py-1.5 text-[12px] font-bold uppercase tracking-[0.07em] text-clay">
-              Vet-grade technology · At home
-            </span>
+            {/* Eyebrow pill — DEVICE ONLY: the copy is scaler-specific and a
+                consumable hero claiming "Vet-grade technology" would be
+                wrong. Consumables run without an eyebrow until a metafield
+                makes it authorable per product. */}
+            {isDevice && (
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-honey-tint px-3 py-1.5 text-[12px] font-bold uppercase tracking-[0.07em] text-clay">
+                Vet-grade technology · At home
+              </span>
+            )}
 
             <h1 className="font-display mt-3 text-balance text-[33px] font-bold leading-[1.1] tracking-tight text-cocoa md:text-[40px]">
               {product.title}
@@ -243,14 +255,18 @@ export async function ProductPageView({
               fallbackAvailable={product.availableForSale}
             />
 
-            {/* Vet-bill anchor — frames the price against the $500-$1,400+ vet
-                quote per plan §"Anchoring rule". Always include the vet bill
-                comparison, never undercut against cheaper competitor devices. */}
-            <div className="mt-3 rounded-lg bg-honey-tint px-3.5 py-2.5 text-[13.5px] leading-snug text-brown">
-              The same ultrasonic technology your vet uses in the operatory —
-              the one they charge <b className="text-rose-soft">$500–$1,400+</b>{" "}
-              to use. Now it lives in your hand.
-            </div>
+            {/* Vet-bill anchor — DEVICE ONLY (the copy literally claims
+                ultrasonic hardware; it was hardcoded and rendered on every
+                product, so a consumable PDP lied). Frames the price against
+                the $500-$1,400+ vet quote per plan §"Anchoring rule"; never
+                undercut against cheaper competitor devices. */}
+            {isDevice && (
+              <div className="mt-3 rounded-lg bg-honey-tint px-3.5 py-2.5 text-[13.5px] leading-snug text-brown">
+                The same ultrasonic technology your vet uses in the operatory —
+                the one they charge <b className="text-rose-soft">$500–$1,400+</b>{" "}
+                to use. Now it lives in your hand.
+              </div>
+            )}
 
             {beepaws?.bullets && beepaws.bullets.length > 0 && (
               <ul className="mt-5 space-y-2.5">
@@ -371,8 +387,34 @@ export async function ProductPageView({
             />
           </div>
         </>
+      ) : hasIngredients ? (
+        <>
+          {/* Non-device with authored ingredients: "What's inside" takes the
+              Mechanism slot — same toffee band, same wave act-breaks, so
+              consumable PDPs keep the device pages' rhythm. */}
+          <WaveDivider from="#FBF3E1" to="#E5C58C" />
+          <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
+            <IngredientsSection
+              groups={beepaws?.ingredientGroups}
+              legacyIngredients={beepaws?.ingredients}
+              imageUrl={product.images.edges[0]?.node?.url ?? fallbackUrl}
+              imageAlt={product.title}
+              heading={blank(ii?.heading)}
+              lead={blank(ii?.lead)}
+            />
+          </div>
+          <WaveDivider from="#E5C58C" to="#FFFFFF" flip />
+          <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
+            <BeforeAfterSlider
+              slides={beepaws?.beforeAfterSlides}
+              eyebrow={blank(bai?.eyebrow)}
+              heading={blank(bai?.heading)}
+              lead={blank(bai?.lead)}
+            />
+          </div>
+        </>
       ) : (
-        /* Non-device: skip Mechanism + its waves. PainPoints meets
+        /* Non-device, no ingredient content: PainPoints meets
            BeforeAfterSlider directly — hairline border separates. */
         <div className="border-t border-line">
           <BeforeAfterSlider
