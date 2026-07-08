@@ -228,11 +228,61 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ───── Section 5 · Why BeePaws - brand pillars (consolidated spec §5) ──────
-          EQUAL-WEIGHT manifesto (Option 3, horizontal bands) - fixes the prior
-          pillar-3 feature-cell hierarchy bug. Four pillars, same size; copy + icons
-          constant. (Spec wants sibling layout variants A/B'd later; this is the
-          recommended default.) Pillar 4 body swaps on SHOW_GROOMING. */}
+      {/* ───── Section 5 · Real proof - testimonials (consolidated spec §6) ───────
+          MOVED ABOVE THE PILLARS (§5↔§6 swap, 2026-07-09): evidence lands
+          right after the product pitch (claim→evidence adjacency), and the
+          pillars' brand voice then crescendos directly into the Promise band.
+          Path B (testimonial-led): photo is the hero of each card, THREE large
+          cards in a row, breed-matched attribution. Photos MUST be real
+          customer-and-pet shots with permission - NEVER stock. Quotes are
+          brand-experience draft. Path A (guarantee-forward + founder note) is
+          a later funnel A/B - see the founder-note placeholder below. */}
+      <section className="bg-honey-tint">
+        <div className="ds-reveal mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-24">
+          <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[2.6rem]">
+            Real pets. Real moms. Real photos.
+          </h2>
+          <div className="ds-stagger mt-10 grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
+            {[
+              { quote: "I never thought I'd be the kind of person who does this at home. Turns out I am, and I like it.", breed: "Goldendoodle mom" },
+              { quote: "I read every label before it goes near my pet. This is the first one I didn't put back.", breed: "Senior terrier mom" },
+              { quote: "No vet-office stress, no wrestling. We just do it on the couch now.", breed: "Cat mom" },
+            ].map((t, i) => (
+              <figure key={i} className="ds-lift overflow-hidden rounded-2xl border border-line bg-card">
+                {/* Photo is the hero element. TODO: real customer-and-pet photo
+                    (owner's hand/arm in frame), permission given. No stock, ever. */}
+                <div className="relative flex aspect-[4/3] items-center justify-center bg-honey-tint">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Customer + pet photo</span>
+                </div>
+                <div className="p-6 md:p-8">
+                  <blockquote className="text-lg leading-relaxed text-cocoa">&ldquo;{t.quote}&rdquo;</blockquote>
+                  <figcaption className="mt-5 text-sm">
+                    {/* TODO: real first name + breed (breed-matched proof converts hardest) */}
+                    <span className="font-bold text-cocoa">Name</span>
+                    <span className="text-brown"> · {t.breed}</span>
+                  </figcaption>
+                </div>
+              </figure>
+            ))}
+          </div>
+          <p className="mt-6 text-xs text-brown/60">
+            Placeholder proof. Replace with three real customer-and-pet photos (permission given) and verified, brand-experience testimonials before launch. Never stock.
+          </p>
+        </div>
+      </section>
+
+      {/* ───── Founder note - DEFERRED (Path A only, consolidated spec §7) ─────
+          Not built: Path B (chosen for launch) has no founder note, and Path A
+          needs a REAL founder photo + statement (never AI). When testing Path A,
+          add here a bg-cream band: real founder photo + name + 2-3 honest
+          sentences on why BeePaws exists and starts small. Stays proof-adjacent
+          after the §5↔§6 swap. */}
+
+      {/* ───── Section 6 · Why BeePaws - brand pillars (consolidated spec §5;
+          Option 6 flanked-scene layout, decided 2026-07-09). NOW FOLLOWS PROOF
+          (§5↔§6 swap): the brand-voice pillars sit directly before the Promise
+          band, whose "what we won't do" half continues their register. Pillar 4
+          body swaps on SHOW_GROOMING. */}
       <section id="why" className="bg-card scroll-mt-24">
         {/* max-w-6xl: the 3-column flank layout needs the extra width. */}
         <div className="mx-auto max-w-6xl px-5 py-16 md:px-8 md:py-24">
@@ -283,52 +333,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* ───── Section 6 · Real proof - testimonials (consolidated spec §6) ───────
-          Path B (testimonial-led): photo is the hero of each card, THREE large cards
-          in a row, breed-matched attribution. Photos MUST be real customer-and-pet
-          shots with permission - NEVER stock. Quotes are brand-experience draft.
-          Path A (guarantee-forward + founder note) is a later funnel A/B - see the
-          founder-note placeholder before Promise. */}
-      <section className="bg-honey-tint">
-        <div className="ds-reveal mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-24">
-          <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[2.6rem]">
-            Real pets. Real moms. Real photos.
-          </h2>
-          <div className="ds-stagger mt-10 grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
-            {[
-              { quote: "I never thought I'd be the kind of person who does this at home. Turns out I am, and I like it.", breed: "Goldendoodle mom" },
-              { quote: "I read every label before it goes near my pet. This is the first one I didn't put back.", breed: "Senior terrier mom" },
-              { quote: "No vet-office stress, no wrestling. We just do it on the couch now.", breed: "Cat mom" },
-            ].map((t, i) => (
-              <figure key={i} className="ds-lift overflow-hidden rounded-2xl border border-line bg-card">
-                {/* Photo is the hero element. TODO: real customer-and-pet photo
-                    (owner's hand/arm in frame), permission given. No stock, ever. */}
-                <div className="relative flex aspect-[4/3] items-center justify-center bg-honey-tint">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Customer + pet photo</span>
-                </div>
-                <div className="p-6 md:p-8">
-                  <blockquote className="text-lg leading-relaxed text-cocoa">&ldquo;{t.quote}&rdquo;</blockquote>
-                  <figcaption className="mt-5 text-sm">
-                    {/* TODO: real first name + breed (breed-matched proof converts hardest) */}
-                    <span className="font-bold text-cocoa">Name</span>
-                    <span className="text-brown"> · {t.breed}</span>
-                  </figcaption>
-                </div>
-              </figure>
-            ))}
-          </div>
-          <p className="mt-6 text-xs text-brown/60">
-            Placeholder proof. Replace with three real customer-and-pet photos (permission given) and verified, brand-experience testimonials before launch. Never stock.
-          </p>
-        </div>
-      </section>
-
-      {/* ───── Section 7 · Founder note - DEFERRED (Path A only, consolidated spec §7)
-          Not built: Path B (chosen for launch) has no founder note, and Path A needs
-          a REAL founder photo + statement (never AI). When testing Path A, add here a
-          bg-cream band: real founder photo + name + 2-3 honest sentences on why
-          BeePaws exists and starts small. */}
 
       {/* ───── Section 8 · The promise - guarantee band ────────────────────────
           Blueprint §6. Risk reversal as a brand commitment. Bark closing band,
