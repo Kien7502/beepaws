@@ -1,9 +1,7 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import RevealObserver from '@/components/RevealObserver';
 import NewsletterPopup from '@/components/NewsletterPopup';
 import { ShieldCheck, Tag, HandHeart, PawPrint, CalendarCheck, Heart, Search, Shield } from 'lucide-react';
-import type { CSSProperties } from 'react';
 
 // ISR: revalidate via webhook → revalidateTag("products")
 export const revalidate = 3600;
@@ -19,10 +17,10 @@ export const revalidate = 3600;
 // hidden entirely - never shown as "coming soon" (blueprint hard rule).
 const SHOW_GROOMING = false;
 
-// The four brand pillars (consolidated spec §5). Copy + icons stay CONSTANT
-// across every layout variant; only the arrangement changes. Pillar 4 body swaps
-// on SHOW_GROOMING. Shared by Option 3 (shipped default) and the experimental
-// Option 5 (?variant=5).
+// The four brand pillars (consolidated spec §5). Layout = Option 6, the
+// flanked-scene arrangement — CHOSEN 2026-07-09 over row-manifesto Option 3
+// and card-grid Option 5 (both deleted with the ?variant switch). Pillar 4
+// body swaps on SHOW_GROOMING.
 const PILLARS = [
   { icon: ShieldCheck, title: "Honest about what it does", body: "Results in weeks, not overnight. Quiet, not silent. We tell you what this does — and what it doesn't." },
   { icon: Tag, title: "Read-the-label transparency", body: "Every ingredient in plain English. Xylitol-free, and cat-safe wherever the label says so." },
@@ -44,38 +42,13 @@ const PRINCIPLES = [
   { icon: Shield, title: "Prevention over treatment", body: "The kindest, cheapest fix is the one that stops a problem before it ever becomes a vet visit." },
 ] as const;
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Promise<{ variant?: string; ground?: string }>;
-}) {
-  // Temporary eval switch: ?variant=5 renders the experimental pillar layout
-  // (Option 5) to compare against the shipped Option 3. Remove once a variant is
-  // chosen. (Reading searchParams opts this page into dynamic rendering.)
-  const { variant, ground } = await searchParams;
-  const pillarVariant = variant === "5" ? 5 : variant === "6" ? 6 : 3;
-
-  // Option-3 ground prototype (compare on the homepage only). Overrides the RAW
-  // Warm Honey surface tokens on the page wrapper, so every bg-cream / paper /
-  // honey-tint / sand / card / line utility on the homepage re-skins to the new
-  // ground, while warm accents (clay/gold), ink (cocoa/brown), and the dark bark
-  // band stay put. Header / footer / PDP are outside this wrapper, so they're
-  // untouched until a ground wins and gets promoted into globals.css :root.
-  //   ?ground=clean — refined near-neutral off-white (the "Refined light" option)
-  //   ?ground=sage  — soft brand-tinted sage off-white (the "Brand-tinted" option)
-  const GROUNDS: Record<string, Record<string, string>> = {
-    clean: {
-      "--paper": "#FAF9F6", "--cream": "#F4F3EE", "--honey-tint": "#EAE7DF",
-      "--sand": "#E4E0D6", "--card": "#FFFFFF", "--line": "#E5E2D9",
-    },
-    sage: {
-      "--paper": "#F5F7F2", "--cream": "#EDF0E9", "--honey-tint": "#E2E8DC",
-      "--sand": "#DAE1D3", "--card": "#FBFCFA", "--line": "#DCE1D5",
-    },
-  };
-  const groundVars = ground ? GROUNDS[ground] : undefined;
+// No searchParams read: the ?variant pillar switch and the ?ground palette
+// experiment are both retired (Option 6 + the default Warm Honey ground won,
+// 2026-07-09), so the page statically renders again and the ISR revalidate
+// above is live. A palette review, if ever wanted, is a deliberate later pass.
+export default function Home() {
   return (
-    <div className="flex w-full flex-col bg-cream text-cocoa [font-family:var(--font-body)]" style={groundVars as CSSProperties | undefined}>
+    <div className="flex w-full flex-col bg-cream text-cocoa [font-family:var(--font-body)]">
       {/* Scroll-reveal driver + no-JS fallback so content is never hidden */}
       <RevealObserver />
       {/* Scroll-triggered newsletter popup (replaces the inline newsletter section) */}
@@ -261,108 +234,53 @@ export default async function Home({
           constant. (Spec wants sibling layout variants A/B'd later; this is the
           recommended default.) Pillar 4 body swaps on SHOW_GROOMING. */}
       <section id="why" className="bg-card scroll-mt-24">
-        {/* Option 6 needs the extra width for its 3-column flank layout. */}
-        <div className={`mx-auto px-5 py-16 md:px-8 md:py-24 ${pillarVariant === 6 ? "max-w-6xl" : "max-w-4xl"}`}>
+        {/* max-w-6xl: the 3-column flank layout needs the extra width. */}
+        <div className="mx-auto max-w-6xl px-5 py-16 md:px-8 md:py-24">
           <h2 className="ds-reveal font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[2.6rem]">
             Why BeePaws
           </h2>
           <p className="ds-reveal mt-3 max-w-xl text-brown">
             Plain-spoken about what our tools do, and what they do not.
           </p>
-          {/* Layout variant switch (spec §5). Option 3 = shipped default
-              (horizontal manifesto bands). Option 5 = experimental, via ?variant=5.
-              Copy + icons identical across variants; only the arrangement differs. */}
-          {pillarVariant === 5 ? (
-            /* Option 5 — four EQUAL cards around a restrained connective hub;
-               asymmetric on desktop (columns step in opposite directions), clean
-               single-column stack on mobile. The center is a quiet compositional
-               anchor, never a featured 5th element. */
-            <div className="relative mt-14">
-              <div
-                aria-hidden
-                className="pointer-events-none absolute left-1/2 top-1/2 z-0 hidden -translate-x-1/2 -translate-y-1/2 md:block"
+          {/* Option 6 — CHOSEN 2026-07-09 (beat row-manifesto Option 3 and
+              card-grid Option 5; both deleted with the ?variant switch).
+              Shrine-inspired benefits-flank-a-photo: two de-carded pillars
+              each side of a CENTRAL WARM SCENE — the pattern's engine is an
+              emotional image in the center (ILLUSTRATIVE slot: AI ok,
+              quality-inspected; never evidentiary), which is why Option 5's
+              logo-center never landed. Mobile: heading → image → pillars
+              stacked (DOM order: image first).
+
+              Layout: ONE 2×3 grid — the scene spans both rows in the center
+              column, pillars sit in the four corner cells, so both sides
+              share row heights and stay symmetric regardless of copy length.
+              Center column gets the LARGEST share so the scene dominates.
+              items-start: row-mates align at their TOPS — center-alignment
+              staggers the titles when copy lengths differ. */}
+          <div className="ds-reveal mt-12 grid items-start gap-x-8 gap-y-10 md:grid-cols-[4fr_5fr_4fr] md:grid-rows-2 lg:gap-x-12">
+            <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl bg-honey-tint md:col-start-2 md:row-start-1 md:row-span-2 md:aspect-[3/4]">
+              {/* TODO: warm at-home moment (owner + pet, hands-on care).
+                  Illustrative slot — AI ok later, never stock fur. */}
+              <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Warm scene (illustrative)</span>
+            </div>
+            {PILLARS.map((p, i) => (
+              <article
+                key={p.title}
+                className={
+                  [
+                    "md:col-start-1 md:row-start-1",
+                    "md:col-start-1 md:row-start-2",
+                    "md:col-start-3 md:row-start-1",
+                    "md:col-start-3 md:row-start-2",
+                  ][i]
+                }
               >
-                <Image
-                  src="/logo.png"
-                  alt=""
-                  width={1233}
-                  height={1613}
-                  className="h-auto w-44 select-none drop-shadow-[0_12px_28px_rgba(74,46,22,0.20)]"
-                />
-              </div>
-
-              <div className="ds-stagger relative z-10 grid grid-cols-1 items-start gap-6 md:grid-cols-2 md:gap-x-48 md:gap-y-8">
-                {PILLARS.map((p, i) => (
-                  <article
-                    key={p.title}
-                    className={`rounded-2xl border border-line bg-paper p-7 shadow-[0_10px_30px_-18px_rgba(74,46,22,0.35)] transition-[box-shadow,border-color] duration-200 hover:border-clay/40 hover:shadow-[0_18px_44px_-20px_rgba(74,46,22,0.45)] md:p-8 ${
-                      i % 2 === 0 ? "md:-translate-y-8" : "md:translate-y-8"
-                    }`}
-                  >
-                    <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-honey-tint text-clay">
-                      <p.icon size={26} strokeWidth={1.9} />
-                    </span>
-                    <h3 className="mt-5 font-display text-xl font-semibold text-cocoa md:text-2xl">{p.title}</h3>
-                    <p className="mt-2 leading-relaxed text-brown">{p.body}</p>
-                  </article>
-                ))}
-              </div>
-            </div>
-          ) : pillarVariant === 6 ? (
-            /* Option 6 — Shrine-inspired (benefits-flank-a-photo pattern from
-               the shrine-pro demo): two pillars each side of a CENTRAL WARM
-               SCENE. The Shrine original works because its center is an
-               emotional photograph — so the center here is an ILLUSTRATIVE
-               image slot (AI ok, quality-inspected; never evidentiary), NOT
-               the logo (Option 5's mistake). Pillars stay de-carded, same
-               grammar as §3's principles. Mobile: heading → image → pillars
-               stacked (DOM order: image first).
-
-               Layout: ONE 2×3 grid — scene spans both rows in the center
-               column, pillars sit in the four corner cells, so both sides
-               share row heights and stay symmetric regardless of copy length
-               (independent flex columns drifted; user screenshot). Center
-               column gets the LARGEST share so the scene dominates.
-               items-start: row-mates align at their TOPS — center-alignment
-               staggers the titles when copy lengths differ. */
-            <div className="ds-reveal mt-12 grid items-start gap-x-8 gap-y-10 md:grid-cols-[4fr_5fr_4fr] md:grid-rows-2 lg:gap-x-12">
-              <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl bg-honey-tint md:col-start-2 md:row-start-1 md:row-span-2 md:aspect-[3/4]">
-                {/* TODO: warm at-home moment (owner + pet, hands-on care).
-                    Illustrative slot — AI ok later, never stock fur. */}
-                <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Warm scene (illustrative)</span>
-              </div>
-              {PILLARS.map((p, i) => (
-                <article
-                  key={p.title}
-                  className={
-                    [
-                      "md:col-start-1 md:row-start-1",
-                      "md:col-start-1 md:row-start-2",
-                      "md:col-start-3 md:row-start-1",
-                      "md:col-start-3 md:row-start-2",
-                    ][i]
-                  }
-                >
-                  <p.icon size={26} strokeWidth={1.75} className="text-clay" />
-                  <h3 className="mt-3 font-display text-xl font-semibold text-cocoa">{p.title}</h3>
-                  <p className="mt-2 leading-relaxed text-brown">{p.body}</p>
-                </article>
-              ))}
-            </div>
-          ) : (
-            /* Option 3 — shipped default: equal-weight horizontal manifesto bands. */
-            <div className="ds-stagger mt-10 divide-y divide-line border-y border-line">
-              {PILLARS.map((p) => (
-                <article key={p.title} className="flex items-start gap-5 py-7 md:gap-8 md:py-9">
-                  <p.icon size={32} strokeWidth={1.75} className="mt-1 shrink-0 text-clay" />
-                  <div>
-                    <h3 className="font-display text-xl font-semibold text-cocoa md:text-2xl">{p.title}</h3>
-                    <p className="mt-2 max-w-2xl leading-relaxed text-brown">{p.body}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
+                <p.icon size={26} strokeWidth={1.75} className="text-clay" />
+                <h3 className="mt-3 font-display text-xl font-semibold text-cocoa">{p.title}</h3>
+                <p className="mt-2 leading-relaxed text-brown">{p.body}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
