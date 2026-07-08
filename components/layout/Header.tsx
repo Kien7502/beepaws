@@ -9,10 +9,21 @@ import { SearchOverlay } from "./SearchOverlay";
 import { useCart } from "@/components/cart/CartProvider";
 import titleIcon from "@/app/Title_icon.png";
 
+// Category links return when the dogs/cats collections are populated in
+// Shopify — live-checked 2026-07-09: with today's catalog they render EMPTY
+// collection pages, so they're gated off rather than dead-ending a first-time
+// visitor (same staged-content pattern as the homepage's SHOW_GROOMING).
+// Footer.tsx carries the same flag — flip BOTH together.
+const SHOW_CATEGORY_LINKS = false;
+
 const navLinks = [
   { href: "/collections/all", label: "Shop All" },
-  { href: "/collections/dogs", label: "Dogs" },
-  { href: "/collections/cats", label: "Cats" },
+  ...(SHOW_CATEGORY_LINKS
+    ? [
+        { href: "/collections/dogs", label: "Dogs" },
+        { href: "/collections/cats", label: "Cats" },
+      ]
+    : []),
 ];
 
 function navLinkActive(pathname: string, href: string): boolean {

@@ -5,6 +5,10 @@ import { Instagram, Facebook, Twitter } from 'lucide-react';
 import { WaveDivider } from '@/components/ui/WaveDivider';
 import titleIcon from '@/app/Title_icon.png';
 
+// Paired with Header.tsx's flag of the same name — flip BOTH together when
+// the dogs/cats collections are populated.
+const SHOW_CATEGORY_LINKS = false;
+
 const Footer = () => {
   // Forest re-theme (experiment/skill-design-taste): footer block is the deep
   // forest green from the homepage sections (#15241A), with an amber accent
@@ -35,8 +39,10 @@ const Footer = () => {
               <Link href="/" className="inline-block mb-4">
                 <Image src={titleIcon} alt="Beepaws" className="h-9 w-auto" />
               </Link>
+              {/* Category-neutral on purpose: no grooming mention while that
+                  line is unlaunched (never-tease rule). */}
               <p className="text-[#A7B6A0] mb-6 max-w-sm leading-relaxed">
-                BeePaws makes at-home pet wellness tools, dental and grooming, honestly priced against the real alternatives. No fake urgency, no hidden ingredients, no clinical trials we did not run.
+                BeePaws makes at-home pet wellness tools, honestly priced against the real alternatives. No fake urgency, no hidden ingredients, no clinical trials we did not run.
               </p>
               <h4 className="font-bold text-[#EDF0E9] uppercase text-[13px] tracking-wider mb-3">
                 Subscribe to our newsletter
@@ -56,14 +62,21 @@ const Footer = () => {
               </div>
             </div>
 
-            {/* Quick Links */}
+            {/* Quick Links. Dogs/Cats return when their collections are
+                populated in Shopify (they rendered EMPTY pages with today's
+                catalog — Header.tsx carries the same flag, flip BOTH).
+                "New Arrivals" was dropped outright: meaningless until the
+                catalog is big enough for recency to be a real facet. */}
             <div className="space-y-4">
               <h4 className="font-bold text-[#EDF0E9] uppercase text-[13px] tracking-wider">Shop</h4>
               <ul className="space-y-2">
                 <li><Link href="/collections/all" className="text-[#A7B6A0] hover:text-[#E0892F] text-sm transition-colors">All products</Link></li>
-                <li><Link href="/collections/dogs" className="text-[#A7B6A0] hover:text-[#E0892F] text-sm transition-colors">For Dogs</Link></li>
-                <li><Link href="/collections/cats" className="text-[#A7B6A0] hover:text-[#E0892F] text-sm transition-colors">For Cats</Link></li>
-                <li><Link href="/collections/new" className="text-[#A7B6A0] hover:text-[#E0892F] text-sm transition-colors">New Arrivals</Link></li>
+                {SHOW_CATEGORY_LINKS && (
+                  <>
+                    <li><Link href="/collections/dogs" className="text-[#A7B6A0] hover:text-[#E0892F] text-sm transition-colors">For Dogs</Link></li>
+                    <li><Link href="/collections/cats" className="text-[#A7B6A0] hover:text-[#E0892F] text-sm transition-colors">For Cats</Link></li>
+                  </>
+                )}
               </ul>
             </div>
 
