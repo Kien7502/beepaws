@@ -76,12 +76,12 @@ export async function ProductPageView({
   const isBundle = product.tags?.includes("bundle") ?? false;
   const bundleItems = isBundle ? await getBundleContents(handle) : [];
 
-  // Consumables: the "What's inside" section renders only when ingredient
-  // content is authored (data-gated like ProductDetailsSections — no lorem
-  // band for products that never author ingredients).
-  const hasIngredients =
-    (beepaws?.ingredientGroups?.length ?? 0) > 0 ||
-    (beepaws?.ingredients?.length ?? 0) > 0;
+  // Product-type tags decide the Mechanism-slot section: `device` → Mechanism,
+  // `consumable` → "What's inside" (ingredients). Explicit opt-in per type —
+  // an untagged product gets neither — so future product types never inherit
+  // a section by accident. Both sections render lorem defaults until authored
+  // (the codebase convention: unedited reads as unedited).
+  const isConsumable = product.tags?.includes("consumable") ?? false;
 
   // Resolve any bundle linked from a tier (beepaws.bundle_tiers[i].bundle) to its
   // cart-ready variant + price/image, aligned by tier index, so the tier picker
@@ -387,11 +387,11 @@ export async function ProductPageView({
             />
           </div>
         </>
-      ) : hasIngredients ? (
+      ) : isConsumable ? (
         <>
-          {/* Non-device with authored ingredients: "What's inside" takes the
-              Mechanism slot — same toffee band, same wave act-breaks, so
-              consumable PDPs keep the device pages' rhythm. */}
+          {/* Consumable-tagged: "What's inside" takes the Mechanism slot —
+              same toffee band, same wave act-breaks, so consumable PDPs keep
+              the device pages' rhythm. */}
           <WaveDivider from="#FBF3E1" to="#E5C58C" />
           <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
             <IngredientsSection
@@ -414,7 +414,7 @@ export async function ProductPageView({
           </div>
         </>
       ) : (
-        /* Non-device, no ingredient content: PainPoints meets
+        /* Neither device nor consumable tag: PainPoints meets
            BeforeAfterSlider directly — hairline border separates. */
         <div className="border-t border-line">
           <BeforeAfterSlider

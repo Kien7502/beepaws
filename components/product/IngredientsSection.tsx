@@ -20,10 +20,26 @@ import type { IngredientGroup } from "@/types/metafields";
 // choosing, synced state four screens from the picker is a recall trap, and
 // the page stays statically renderable.
 //
-// ProductPageView gates the section on authored content (like
-// ProductDetailsSections) — no lorem band for products that never author
-// ingredients. The heading/lead defaults below are lorem per the codebase
-// convention, overridable via beepaws.ingredients_intro.
+// ProductPageView gates the section on the `consumable` product tag (explicit
+// opt-in, mirroring `device` → Mechanism, so future product types never
+// inherit a section by accident). All defaults below are lorem per the
+// codebase convention — an unedited consumable reads as unedited at a
+// glance — overridable via beepaws.ingredient_groups / ingredients_intro.
+
+// Two lorem groups so the formula toggle is visible before real content
+// lands and the layout reads correctly (3- and 4-item splits exercised).
+const DEFAULT_GROUPS: IngredientGroup[] = [
+  {
+    label: "Lorem formula A",
+    items:
+      "Lorem ipsum — dolor sit amet, consectetur adipiscing elit\nUt enim ad minim — veniam, quis nostrud exercitation\nDuis aute irure — dolor in reprehenderit in voluptate",
+  },
+  {
+    label: "Lorem formula B",
+    items:
+      "Excepteur sint — occaecat cupidatat non proident\nSed ut perspiciatis — unde omnis iste natus error\nNemo enim ipsam — voluptatem quia voluptas sit\nNeque porro — quisquam est qui dolorem ipsum",
+  },
+];
 
 interface ParsedItem {
   name: string;
@@ -72,7 +88,7 @@ export function IngredientsSection({
       ? groups
       : legacyIngredients && legacyIngredients.length > 0
         ? [{ items: legacyIngredients.join("\n") }]
-        : []
+        : DEFAULT_GROUPS
   )
     .map((g) => ({ label: g.label?.trim() ?? "", items: parseItems(g.items) }))
     .filter((g) => g.items.length > 0);
