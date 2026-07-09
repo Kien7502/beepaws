@@ -1,4 +1,7 @@
+'use client';
+
 import React from 'react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Instagram, Facebook, Twitter } from 'lucide-react';
@@ -16,13 +19,14 @@ const Footer = () => {
   //
   // The wave's CAP (the band above the crest + the -16px overlap strip) must
   // match the section ABOVE the footer so the wave reads as a transition INTO
-  // the footer, not a hard seam. Every page now ends on a bark band before the
-  // footer - the homepage on its Promise section (bg-bark), every other page on
-  // the bark Final CTA - so the cap is bark on all of them. The slower back
-  // ripples (#2E5440) tint the transition; the front curve (#15241A) melts into
-  // the forest block.
+  // the footer, not a hard seam. Route-aware again since the flow rework
+  // (2026-07-10) cut the homepage's bark promise band: '/' now ends on the
+  // cream product spotlight; every other page still ends on a bark band (the
+  // PDP Final CTA). The slower back ripples (#2E5440) tint the transition;
+  // the front curve (#15241A) melts into the forest block.
   const FOREST = '#15241A';
-  const cap = '#5E3C22'; // bark - matches the Promise / Final-CTA band above
+  const pathname = usePathname();
+  const cap = pathname === '/' ? '#FBF3E1' : '#5E3C22'; // cream on /, bark elsewhere
   return (
     <footer style={{ marginTop: "-16px", position: "relative", zIndex: 1, background: cap }}>
       <WaveDivider from={cap} to="#2E5440" frontColor={FOREST} flip />

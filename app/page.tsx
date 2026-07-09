@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import RevealObserver from '@/components/RevealObserver';
+import { WaveDivider } from '@/components/ui/WaveDivider';
 import NewsletterPopup from '@/components/NewsletterPopup';
 import { ShieldCheck, Tag, HandHeart, PawPrint, CalendarCheck, Heart, Search, Shield } from 'lucide-react';
 
@@ -117,7 +118,9 @@ export default function Home() {
       <section className="border-t border-line bg-honey-tint">
         <div className="ds-reveal mx-auto grid w-full max-w-7xl items-center gap-10 px-5 py-16 md:grid-cols-[55fr_45fr] md:gap-14 md:px-8 md:py-24">
           {/* Left: warm outcome image (illustrative; AI ok later; no attribution) */}
-          <div className="relative flex min-h-[300px] items-center justify-center overflow-hidden rounded-2xl bg-cream md:min-h-[440px]">
+          {/* min-h 240 on phones (was 300): a full-width empty box was eating
+              most of a mobile screen before any words arrived. */}
+          <div className="relative flex min-h-[240px] items-center justify-center overflow-hidden rounded-2xl bg-cream md:min-h-[440px]">
             <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Warm outcome scene</span>
           </div>
           {/* Right: the argument (must convert the skeptic, not just list nice ideas) */}
@@ -131,12 +134,17 @@ export default function Home() {
             {/* De-carded blocks: no card backgrounds, so the four read as
                 considered points separated by space rather than a template card
                 grid (kept distinct from the full-width Why-BeePaws bands below). */}
-            <div className="ds-stagger mt-8 grid grid-cols-1 gap-x-8 gap-y-7 sm:grid-cols-2">
+            {/* Mobile: icon-beside-text rows — four stacked icon-on-top blocks
+                read as a long pale wall on phones (mobile rework 2026-07-10,
+                PHERO-reference rhythm). ≥sm the icon returns above the title. */}
+            <div className="ds-stagger mt-8 grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2 sm:gap-y-7">
               {PRINCIPLES.map((p) => (
-                <div key={p.title}>
-                  <p.icon size={24} strokeWidth={1.75} className="text-clay" />
-                  <h3 className="mt-3 font-display text-lg font-semibold text-cocoa">{p.title}</h3>
-                  <p className="mt-1.5 text-sm leading-relaxed text-brown">{p.body}</p>
+                <div key={p.title} className="flex gap-3.5 sm:block">
+                  <p.icon size={24} strokeWidth={1.75} className="mt-0.5 shrink-0 text-clay sm:mt-0" />
+                  <div>
+                    <h3 className="font-display text-lg font-semibold text-cocoa sm:mt-3">{p.title}</h3>
+                    <p className="mt-1.5 text-sm leading-relaxed text-brown">{p.body}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -144,10 +152,149 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ───── Section 4 · Routing band - "Start with their teeth" (spec §4) ──────
-          Full-width dental outcome spotlight. Grooming slot hidden (SHOW_GROOMING)
-          until live - never "coming soon". The sub-line carries the honest-
-          sequencing message the cut 5.5 section used to hold. DRAFT - voice pass. */}
+      {/* ───── Section 4 · Why BeePaws - brand pillars (consolidated spec §5;
+          Option 6 flanked-scene layout). MOVED UP (flow rework 2026-07-10):
+          the page is now brand-first — pitch → identity → evidence → action —
+          so the pillars follow the at-home argument, the reviews prove them,
+          and the product spotlight closes the page as the exit ramp into the
+          PDP. bg-sand (was bg-card): plain white read "too bright" against
+          the warm page. Pillar 4 body swaps on SHOW_GROOMING. */}
+      <section id="why" className="bg-sand scroll-mt-24">
+        {/* max-w-6xl: the 3-column flank layout needs the extra width. */}
+        <div className="mx-auto max-w-6xl px-5 py-16 md:px-8 md:py-24">
+          <h2 className="ds-reveal font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[2.6rem]">
+            Why BeePaws
+          </h2>
+          <p className="ds-reveal mt-3 max-w-xl text-brown">
+            Plain-spoken about what our tools do, and what they do not.
+          </p>
+          {/* Option 6 — CHOSEN 2026-07-09 (beat row-manifesto Option 3 and
+              card-grid Option 5; both deleted with the ?variant switch).
+              Shrine-inspired benefits-flank-a-photo: two de-carded pillars
+              each side of a CENTRAL WARM SCENE — the pattern's engine is an
+              emotional image in the center (ILLUSTRATIVE slot: AI ok,
+              quality-inspected; never evidentiary), which is why Option 5's
+              logo-center never landed. Mobile: heading → image → pillars
+              stacked (DOM order: image first).
+
+              Layout: ONE 2×3 grid — the scene spans both rows in the center
+              column, pillars sit in the four corner cells, so both sides
+              share row heights and stay symmetric regardless of copy length.
+              Center column gets the LARGEST share so the scene dominates.
+              items-start: row-mates align at their TOPS — center-alignment
+              staggers the titles when copy lengths differ. */}
+          <div className="ds-reveal mt-12 grid items-start gap-x-8 gap-y-10 md:grid-cols-[4fr_5fr_4fr] md:grid-rows-2 lg:gap-x-12">
+            {/* cream + hairline (was borderless honey-tint): on the sand band
+                the honey placeholder all but vanished; the border stays right
+                once the real photo fills the slot. */}
+            {/* Mobile (rework 2026-07-10): the scene shortens (16/10) and
+                SANDWICHES between pillar pairs (order-2) instead of parking a
+                tall empty box before all the text — PHERO's mobile rhythm.
+                Desktop 2×3 corner-cell layout unchanged. */}
+            <div className="relative flex aspect-[16/10] items-center justify-center overflow-hidden rounded-2xl border border-line bg-cream max-md:order-2 md:col-start-2 md:row-start-1 md:row-span-2 md:aspect-[3/4]">
+              {/* TODO: warm at-home moment (owner + pet, hands-on care).
+                  Illustrative slot — AI ok later, never stock fur. */}
+              <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Warm scene (illustrative)</span>
+            </div>
+            {PILLARS.map((p, i) => (
+              <article
+                key={p.title}
+                className={`flex gap-3.5 md:block ${
+                  [
+                    "max-md:order-1 md:col-start-1 md:row-start-1",
+                    "max-md:order-1 md:col-start-1 md:row-start-2",
+                    "max-md:order-3 md:col-start-3 md:row-start-1",
+                    "max-md:order-3 md:col-start-3 md:row-start-2",
+                  ][i]
+                }`}
+              >
+                <p.icon size={26} strokeWidth={1.75} className="mt-0.5 shrink-0 text-clay md:mt-0" />
+                <div>
+                  <h3 className="font-display text-xl font-semibold text-cocoa md:mt-3">{p.title}</h3>
+                  <p className="mt-2 leading-relaxed text-brown">{p.body}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* WAVE PAIR — the proof band is ENCLOSED by waves (opened here, closed
+          below) and the band is BARK: the light ramp (cream/honey/sand) is too
+          compressed for another pale band to register — the page needs a
+          second COMMITTED surface (palette rework 2026-07-10, PHERO-reference
+          strategy: quiet bands alternating with drenched ones). Dark proof =
+          white testimonial cards pop hardest, the waves bridge a maximal
+          lightness step, and the page regains the mid-page dark anchor it
+          lost when the promise band was cut. */}
+      <WaveDivider from="#F2E7CC" to="#5E3C22" />
+      <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
+      {/* ───── Section 5 · Real proof - testimonials (consolidated spec §6) ───────
+          Flow rework 2026-07-10: proof FOLLOWS the pillars (brand-first page:
+          pitch → identity → evidence → action) — the reviews prove the pillar
+          claims, then the product spotlight closes the page. Path B
+          (testimonial-led): photo is the hero of each card, THREE large cards
+          in a row, breed-matched attribution. Photos MUST be real
+          customer-and-pet shots with permission - NEVER stock. Quotes are
+          brand-experience draft. Path A (guarantee-forward + founder note) is
+          a later funnel A/B - see the founder-note placeholder below. */}
+      <section className="bg-bark">
+        <div className="ds-reveal mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-24">
+          <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cream md:text-[2.6rem]">
+            Real pets. Real moms. Real photos.
+          </h2>
+          <div className="ds-stagger mt-10 grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
+            {[
+              { quote: "I never thought I'd be the kind of person who does this at home. Turns out I am, and I like it.", breed: "Goldendoodle mom" },
+              { quote: "I read every label before it goes near my pet. This is the first one I didn't put back.", breed: "Senior terrier mom" },
+              { quote: "No vet-office stress, no wrestling. We just do it on the couch now.", breed: "Cat mom" },
+            ].map((t, i) => (
+              /* bg-cream, no border: pure white cards glared on the bark band
+                 (user feedback) — cream keeps them lifted but warm, and the
+                 dark ground provides all the edge definition a border did. */
+              <figure key={i} className="ds-lift overflow-hidden rounded-2xl bg-cream">
+                {/* Photo is the hero element. TODO: real customer-and-pet photo
+                    (owner's hand/arm in frame), permission given. No stock, ever. */}
+                <div className="relative flex aspect-[4/3] items-center justify-center bg-honey-tint">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Customer + pet photo</span>
+                </div>
+                <div className="p-6 md:p-8">
+                  <blockquote className="text-lg leading-relaxed text-cocoa">&ldquo;{t.quote}&rdquo;</blockquote>
+                  <figcaption className="mt-5 text-sm">
+                    {/* TODO: real first name + breed (breed-matched proof converts hardest) */}
+                    <span className="font-bold text-cocoa">Name</span>
+                    <span className="text-brown"> · {t.breed}</span>
+                  </figcaption>
+                </div>
+              </figure>
+            ))}
+          </div>
+          <p className="mt-6 text-xs text-cream/70">
+            Placeholder proof. Replace with three real customer-and-pet photos (permission given) and verified, brand-experience testimonials before launch. Never stock.
+          </p>
+        </div>
+      </section>
+      </div>
+
+      {/* ───── Founder note - DEFERRED (Path A only, consolidated spec §7) ─────
+          Not built: Path B (chosen for launch) has no founder note, and Path A
+          needs a REAL founder photo + statement (never AI). When testing Path A,
+          add here a bg-cream band: real founder photo + name + 2-3 honest
+          sentences on why BeePaws exists and starts small. Stays proof-adjacent
+          after the §5↔§6 swap. */}
+
+      {/* WAVE — bark → cream: closes the dark proof band into the spotlight. */}
+      <WaveDivider from="#5E3C22" to="#FBF3E1" flip />
+
+      {/* ───── Section 6 · Routing band - "Start with their teeth" (spec §4) ──────
+          MOVED TO THE CLOSE (flow rework 2026-07-10): the spotlight is the
+          page's action moment — the exit ramp into the PDP funnel — after the
+          brand has argued (pillars) and proven (reviews) its case. The 30-day
+          promise band was CUT as redundant with the PDP's full guarantee +
+          inoculation treatment; risk reversal survives as the trust line under
+          the CTA, present at the moment of action. Grooming slot hidden
+          (SHOW_GROOMING) until live - never "coming soon". DRAFT - voice pass. */}
+      <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
       <section className="bg-cream">
         <div className="ds-reveal mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-20">
           {/* Heading reframes dental-only as a deliberate sequencing choice at
@@ -187,6 +334,12 @@ export default function Home() {
                 >
                   Shop dental
                 </Link>
+                {/* Risk reversal at the action moment — the promise band was
+                    cut as redundant with the PDP; the guarantee still shows
+                    where the click happens. */}
+                <p className="mt-4 text-xs font-semibold text-brown">
+                  30-day money-back guarantee · Free shipping over $50
+                </p>
               </div>
             </article>
           ) : (
@@ -232,173 +385,14 @@ export default function Home() {
           )}
         </div>
       </section>
+      </div>
 
-      {/* ───── Section 5 · Real proof - testimonials (consolidated spec §6) ───────
-          MOVED ABOVE THE PILLARS (§5↔§6 swap, 2026-07-09): evidence lands
-          right after the product pitch (claim→evidence adjacency), and the
-          pillars' brand voice then crescendos directly into the Promise band.
-          Path B (testimonial-led): photo is the hero of each card, THREE large
-          cards in a row, breed-matched attribution. Photos MUST be real
-          customer-and-pet shots with permission - NEVER stock. Quotes are
-          brand-experience draft. Path A (guarantee-forward + founder note) is
-          a later funnel A/B - see the founder-note placeholder below. */}
-      <section className="bg-honey-tint">
-        <div className="ds-reveal mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-24">
-          <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[2.6rem]">
-            Real pets. Real moms. Real photos.
-          </h2>
-          <div className="ds-stagger mt-10 grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
-            {[
-              { quote: "I never thought I'd be the kind of person who does this at home. Turns out I am, and I like it.", breed: "Goldendoodle mom" },
-              { quote: "I read every label before it goes near my pet. This is the first one I didn't put back.", breed: "Senior terrier mom" },
-              { quote: "No vet-office stress, no wrestling. We just do it on the couch now.", breed: "Cat mom" },
-            ].map((t, i) => (
-              <figure key={i} className="ds-lift overflow-hidden rounded-2xl border border-line bg-card">
-                {/* Photo is the hero element. TODO: real customer-and-pet photo
-                    (owner's hand/arm in frame), permission given. No stock, ever. */}
-                <div className="relative flex aspect-[4/3] items-center justify-center bg-honey-tint">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Customer + pet photo</span>
-                </div>
-                <div className="p-6 md:p-8">
-                  <blockquote className="text-lg leading-relaxed text-cocoa">&ldquo;{t.quote}&rdquo;</blockquote>
-                  <figcaption className="mt-5 text-sm">
-                    {/* TODO: real first name + breed (breed-matched proof converts hardest) */}
-                    <span className="font-bold text-cocoa">Name</span>
-                    <span className="text-brown"> · {t.breed}</span>
-                  </figcaption>
-                </div>
-              </figure>
-            ))}
-          </div>
-          <p className="mt-6 text-xs text-brown/60">
-            Placeholder proof. Replace with three real customer-and-pet photos (permission given) and verified, brand-experience testimonials before launch. Never stock.
-          </p>
-        </div>
-      </section>
-
-      {/* ───── Founder note - DEFERRED (Path A only, consolidated spec §7) ─────
-          Not built: Path B (chosen for launch) has no founder note, and Path A
-          needs a REAL founder photo + statement (never AI). When testing Path A,
-          add here a bg-cream band: real founder photo + name + 2-3 honest
-          sentences on why BeePaws exists and starts small. Stays proof-adjacent
-          after the §5↔§6 swap. */}
-
-      {/* ───── Section 6 · Why BeePaws - brand pillars (consolidated spec §5;
-          Option 6 flanked-scene layout, decided 2026-07-09). NOW FOLLOWS PROOF
-          (§5↔§6 swap): the brand-voice pillars sit directly before the Promise
-          band, whose "what we won't do" half continues their register. Pillar 4
-          body swaps on SHOW_GROOMING. */}
-      <section id="why" className="bg-card scroll-mt-24">
-        {/* max-w-6xl: the 3-column flank layout needs the extra width. */}
-        <div className="mx-auto max-w-6xl px-5 py-16 md:px-8 md:py-24">
-          <h2 className="ds-reveal font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[2.6rem]">
-            Why BeePaws
-          </h2>
-          <p className="ds-reveal mt-3 max-w-xl text-brown">
-            Plain-spoken about what our tools do, and what they do not.
-          </p>
-          {/* Option 6 — CHOSEN 2026-07-09 (beat row-manifesto Option 3 and
-              card-grid Option 5; both deleted with the ?variant switch).
-              Shrine-inspired benefits-flank-a-photo: two de-carded pillars
-              each side of a CENTRAL WARM SCENE — the pattern's engine is an
-              emotional image in the center (ILLUSTRATIVE slot: AI ok,
-              quality-inspected; never evidentiary), which is why Option 5's
-              logo-center never landed. Mobile: heading → image → pillars
-              stacked (DOM order: image first).
-
-              Layout: ONE 2×3 grid — the scene spans both rows in the center
-              column, pillars sit in the four corner cells, so both sides
-              share row heights and stay symmetric regardless of copy length.
-              Center column gets the LARGEST share so the scene dominates.
-              items-start: row-mates align at their TOPS — center-alignment
-              staggers the titles when copy lengths differ. */}
-          <div className="ds-reveal mt-12 grid items-start gap-x-8 gap-y-10 md:grid-cols-[4fr_5fr_4fr] md:grid-rows-2 lg:gap-x-12">
-            <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl bg-honey-tint md:col-start-2 md:row-start-1 md:row-span-2 md:aspect-[3/4]">
-              {/* TODO: warm at-home moment (owner + pet, hands-on care).
-                  Illustrative slot — AI ok later, never stock fur. */}
-              <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Warm scene (illustrative)</span>
-            </div>
-            {PILLARS.map((p, i) => (
-              <article
-                key={p.title}
-                className={
-                  [
-                    "md:col-start-1 md:row-start-1",
-                    "md:col-start-1 md:row-start-2",
-                    "md:col-start-3 md:row-start-1",
-                    "md:col-start-3 md:row-start-2",
-                  ][i]
-                }
-              >
-                <p.icon size={26} strokeWidth={1.75} className="text-clay" />
-                <h3 className="mt-3 font-display text-xl font-semibold text-cocoa">{p.title}</h3>
-                <p className="mt-2 leading-relaxed text-brown">{p.body}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ───── Section 8 · The promise - guarantee band ────────────────────────
-          Blueprint §6. Risk reversal as a brand commitment. Bark closing band,
-          matching the product page's final-CTA tone (gold seal on a paper island).
-          The honest hedge - what we will NOT do - is the conversion. DRAFT copy. */}
-      {/* Inset top vignette: the light→dark drop read as a flat pasted slab
-          (crisp edge alone was "still a bit weird"); a soft ink edge at the
-          band's top makes the drop feel like depth instead of a color swap.
-          Strengthened from 28/44/0.45 — that version was imperceptible on the
-          dark ground (user couldn't spot it). */}
-      <section className="bg-bark shadow-[inset_0_36px_56px_-28px_rgba(0,0,0,0.55)]">
-        <div className="ds-reveal mx-auto max-w-4xl px-5 py-16 text-center md:px-6 md:py-20">
-          <h2 className="font-display text-3xl font-semibold leading-tight text-white md:text-[34px]">
-            Try it for 30 days. If it is not for your pet, send it back.
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-cream/80 md:text-base">
-            A full refund, no restocking fee, no hassle. We would rather you keep what works than keep what does not.
-          </p>
-          <Link
-            href="/collections/all"
-            className="mt-7 inline-flex items-center justify-center rounded-full bg-gold px-8 py-4 text-base font-bold text-cocoa shadow-sm transition-colors hover:bg-gold-deep hover:text-white active:scale-[0.97] md:text-lg"
-          >
-            Start now
-          </Link>
-          {/* Guarantee card - two NEAR-EQUAL halves (spec §8): the guarantee and
-              "what we won't do" carry the same weight, since the "we won't invent a
-              review" line is the Amazon-comparison inoculation and is strategically
-              central. Paper island, gold seal (matches the product page tone). */}
-          <div className="mx-auto mt-10 grid gap-7 rounded-2xl border-2 border-gold bg-paper p-7 text-left shadow-[0_14px_40px_-16px_rgba(0,0,0,0.4)] md:grid-cols-2 md:gap-0 md:p-0">
-            {/* Half 1 - the guarantee. Stacks centered under ~640px: the 96px
-                seal + text side-by-side left ~150px of copy width on a phone. */}
-            <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:text-left md:p-9">
-              <div
-                className="flex h-24 w-24 shrink-0 flex-col items-center justify-center rounded-full text-cocoa shadow-[0_8px_24px_-8px_rgba(74,46,22,0.45)]"
-                style={{ background: "radial-gradient(circle at 38% 32%, #E7A92F, #C8901C)" }}
-              >
-                <span className="font-display text-[30px] font-bold leading-none">30</span>
-                <span className="mt-1 text-[9px] font-extrabold uppercase tracking-[0.08em]">Day Promise</span>
-              </div>
-              <div>
-                <h3 className="font-display text-xl font-semibold leading-tight text-cocoa">Money-back guarantee</h3>
-                <p className="mt-2 text-[14.5px] leading-relaxed text-brown">
-                  Send it back within 30 days for a full refund. No restocking fee, no hassle.
-                </p>
-              </div>
-            </div>
-            {/* Half 2 - what we won't do (co-equal; the inoculation line) */}
-            <div className="border-t border-line pt-7 md:border-l md:border-t-0 md:p-9 md:pt-9">
-              <h3 className="font-display text-xl font-semibold leading-tight text-cocoa">What we won&rsquo;t do</h3>
-              <p className="mt-2 text-[14.5px] leading-relaxed text-brown">
-                We won&rsquo;t claim to replace your vet, hide an ingredient, or invent a review. The honest version is the only version we sell.
-              </p>
-            </div>
-          </div>
-          {/* cream/70 (not the old #A8A48F) — that hex sat at ~3.9:1 on bark,
-              under the 4.5:1 AA floor for text this small. */}
-          <p className="mt-7 text-xs font-bold uppercase tracking-[0.08em] text-cream/70">
-            Free shipping over $50 · 30-day refund · Real human support
-          </p>
-        </div>
-      </section>
+      {/* ───── Promise band REMOVED (flow rework 2026-07-10) ──────────────────
+          The 30-day guarantee + "what we won't do" inoculation live in full on
+          the PDP (FinalCTASection); keeping a twin band here was redundant.
+          Risk reversal stays present at the homepage's action moment as the
+          trust line under the spotlight CTA above. The page now closes on the
+          spotlight (cream) → footer wave; Footer's cap is route-aware again. */}
 
       {/* Inline newsletter section removed (consolidated spec): the passive footer
           subscribe stays; active capture is the scroll-triggered popup below. */}
