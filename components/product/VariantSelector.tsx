@@ -7,7 +7,7 @@ import type { Product, ProductVariant } from "@/types/shopify";
 import type { BundleTierCopy } from "@/types/metafields";
 import type { PaymentMethods } from "@/lib/shopify/queries";
 import Button from "@/components/ui/Button";
-import { CheckCircle2, Info, ShoppingBag, Loader2 } from "lucide-react";
+import { CheckCircle2, Info, ShoppingBag, Loader2, Minus, Plus } from "lucide-react";
 import { useCart } from "@/components/cart/CartProvider";
 import { useProductMedia } from "./ProductMediaSync";
 import { PaymentMethodsRow } from "./PaymentMethodsRow";
@@ -199,6 +199,21 @@ export default function VariantSelector({
     () => tierBundles?.[1]?.variants[0]?.id ?? null,
   );
 
+  // QUANTITY MODE (owner decision 2026-07-10): products with NO bundle wired
+  // to any tier (e.g. consumables like the spray) drop the tier cards
+  // entirely — the composed "Lorem ipsum tier" fallbacks never made sense
+  // there — and instead every variant gets its own quantity stepper (2× Beef
+  // + 1× Unflavored in one add). The rows replace the option picker too:
+  // a row IS the option.
+  const quantityMode = !tierBundles?.some((tb) => tb);
+  const [variantQtys, setVariantQtys] = useState<Record<string, number>>(() => {
+    const first = product.variants.edges[0]?.node;
+    return first ? { [first.id]: 1 } : {};
+  });
+  function setVariantQty(id: string, qty: number) {
+    setVariantQtys((prev) => ({ ...prev, [id]: Math.max(0, Math.min(99, qty)) }));
+  }
+
   // Derive the option structure from variants. Each entry is one Shopify option
   // (e.g. "Color", "Size") and its ordered unique values. When the merchant
   // splits a single combined option into multiple separate options in Shopify
@@ -385,9 +400,20 @@ export default function VariantSelector({
     const v = variants.find((vv) => vv.id === vid) ?? selectedVariant;
     mainTotal += parseFloat(v.price.amount);
   }
-  const totalPrice = selectedTierBundle
-    ? parseFloat(chosenBundleVariant?.priceAmount ?? selectedTierBundle.variants[0].priceAmount)
-    : mainTotal + addonsTotal;
+  // Quantity-mode lines: every variant with a qty > 0, ready for add/checkout.
+  const qtyLines = variants
+    .map((v) => ({ variant: v, qty: variantQtys[v.id] ?? 0 }))
+    .filter((l) => l.qty > 0 && l.variant.availableForSale);
+  const qtyTotal = qtyLines.reduce(
+    (sum, l) => sum + parseFloat(l.variant.price.amount) * l.qty,
+    0,
+  );
+
+  const totalPrice = quantityMode
+    ? qtyTotal
+    : selectedTierBundle
+      ? parseFloat(chosenBundleVariant?.priceAmount ?? selectedTierBundle.variants[0].priceAmount)
+      : mainTotal + addonsTotal;
   const displayCurrency = selectedTierBundle?.currencyCode || currencyCode;
 
   function selectTier(idx: number) {
@@ -420,6 +446,26 @@ export default function VariantSelector({
 
 
   function onAddToCart() {
+    // Quantity mode → one cart line per variant with a chosen quantity.
+    if (quantityMode) {
+      if (qtyLines.length === 0) return;
+      for (const { variant: v, qty } of qtyLines) {
+        addItem({
+          merchandiseId: v.id,
+          productHandle: product.handle,
+          productTitle: product.title,
+          variantTitle: v.title,
+          imageUrl: v.image?.url || product.images.edges[0]?.node?.url || "/product-placeholder.svg",
+          currencyCode: v.price.currencyCode,
+          unitPriceAmount: v.price.amount,
+          quantity: qty,
+        });
+      }
+      setAdded(true);
+      window.setTimeout(() => setAdded(false), 1800);
+      return;
+    }
+
     // Tier linked to a real Shopify bundle → add the bundle product (one line;
     // Shopify expands it into components at checkout), not the tier's items.
     if (selectedTierBundle) {
@@ -508,6 +554,29 @@ export default function VariantSelector({
   async function onBuyNow() {
     if (buyingNow) return;
 
+    // Quantity mode → checkout with one line per chosen variant quantity.
+    if (quantityMode) {
+      if (qtyLines.length === 0) return;
+      setBuyingNow(true);
+      try {
+        const res = await fetch("/api/shopify/cart/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lines: qtyLines.map((l) => ({ merchandiseId: l.variant.id, quantity: l.qty })),
+          }),
+        });
+        const data = (await res.json()) as { checkoutUrl?: string; error?: string };
+        if (!res.ok || !data.checkoutUrl) {
+          throw new Error(data.error || "Couldn't open checkout");
+        }
+        window.location.href = data.checkoutUrl;
+      } catch {
+        setBuyingNow(false);
+      }
+      return;
+    }
+
     // Bundle tier → checkout with just the bundle line (Shopify expands it).
     if (selectedTierBundle) {
       if (!chosenBundleVariant?.availableForSale) return;
@@ -561,9 +630,11 @@ export default function VariantSelector({
     }
   }
 
-  const isAvailable = selectedTierBundle
-    ? (chosenBundleVariant?.availableForSale ?? false)
-    : selectedVariant?.availableForSale;
+  const isAvailable = quantityMode
+    ? qtyLines.length > 0
+    : selectedTierBundle
+      ? (chosenBundleVariant?.availableForSale ?? false)
+      : selectedVariant?.availableForSale;
 
   return (
     <div className="flex flex-col gap-6">
@@ -571,6 +642,68 @@ export default function VariantSelector({
           from-price, and the running total is baked into the Add-to-cart label
           below. One price on screen at a time per the device reference. */}
 
+      {quantityMode ? (
+        /* Quantity rows — one per variant, each with its own stepper (owner
+           decision 2026-07-10 for bundle-less products): the row IS the
+           option, so the option picker and tier cards are skipped entirely. */
+        <div>
+          <div className="mb-4 flex items-center gap-3">
+            <div className="h-px flex-1 bg-line" />
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-brown">
+              Choose your quantities
+            </span>
+            <div className="h-px flex-1 bg-line" />
+          </div>
+          <div className="space-y-3">
+            {variants.map((v) => {
+              const qty = variantQtys[v.id] ?? 0;
+              const soldOut = !v.availableForSale;
+              const label = v.selectedOptions.map((o) => o.value).join(" / ") || product.title;
+              return (
+                <div
+                  key={v.id}
+                  className={`flex items-center justify-between gap-3 rounded-[13px] border-[1.8px] px-4 py-3 transition-all ${
+                    qty > 0 && !soldOut ? "border-clay bg-[#FCFBF4]" : "border-line bg-card"
+                  } ${soldOut ? "opacity-60" : ""}`}
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-[15px] font-bold text-cocoa">{label}</p>
+                    <p className="text-[12.5px] text-brown">
+                      {soldOut
+                        ? "Out of stock"
+                        : `${formatMoney(parseFloat(v.price.amount), v.price.currencyCode)} each`}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      aria-label={`One less: ${label}`}
+                      disabled={soldOut || qty === 0}
+                      onClick={() => setVariantQty(v.id, qty - 1)}
+                      className="flex h-10 w-10 items-center justify-center rounded-lg border-[1.8px] border-line text-cocoa transition-colors hover:border-clay/60 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <Minus size={16} />
+                    </button>
+                    <span className="min-w-[2rem] text-center text-[15px] font-bold tabular-nums text-cocoa">
+                      {qty}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label={`One more: ${label}`}
+                      disabled={soldOut}
+                      onClick={() => setVariantQty(v.id, qty + 1)}
+                      className="flex h-10 w-10 items-center justify-center rounded-lg border-[1.8px] border-line text-cocoa transition-colors hover:border-clay/60 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <>
       {/* Variant pickers — one section per Shopify product option.
           Color options render as circular swatches (diagonal split for
           multi-color values); other options render as full-width stacked
@@ -990,6 +1123,8 @@ export default function VariantSelector({
           })}
         </div>
       </div>
+        </>
+      )}
 
       <div>
 
@@ -1018,7 +1153,11 @@ export default function VariantSelector({
           className="min-h-[52px] rounded-xl text-base md:text-lg !bg-gold !text-cocoa hover:!bg-gold-deep hover:!text-white"
           onClick={onAddToCart}
         >
-          {isAvailable ? `Add to cart — ${formatMoney(totalPrice, displayCurrency)}` : "Out of stock"}
+          {quantityMode && qtyLines.length === 0
+            ? "Choose a quantity above"
+            : isAvailable
+              ? `Add to cart — ${formatMoney(totalPrice, displayCurrency)}`
+              : "Out of stock"}
         </Button>
 
         {/* Buy It Now — outline secondary CTA per device reference. Skips the
@@ -1035,12 +1174,14 @@ export default function VariantSelector({
         </button>
 
         {/* Compact trust line — sits flush under the CTA at the decision moment. */}
+        {/* Copy audit §1.9: "Secure checkout" is corporate-logistics voice;
+            a named human behind the warranty is the trust signal. */}
         <p className="mt-2.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs font-medium text-brown">
-          <span>30-day money-back</span>
+          <span>30-day return, no questions asked</span>
           <span aria-hidden className="text-brown/40">·</span>
           <span>Free shipping over $50</span>
           <span aria-hidden className="text-brown/40">·</span>
-          <span>Secure checkout</span>
+          <span>Real-person support</span>
         </p>
 
         {/* Payment processor badges — card brands + wallets. ShopPay button

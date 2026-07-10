@@ -13,16 +13,40 @@ function formatMoney(amount: number, currencyCode: string) {
   }).format(amount);
 }
 
-export function StickyAddToCart({ product }: { product: Product }) {
+// When the PDP's tier 0 is a real Shopify bundle, the sticky bar prices AND
+// adds that bundle (one cart line; Shopify expands the components) so the
+// number on the bar always matches what lands in the cart — part of the
+// pricing-coherence fix (verification pass §2.1).
+type QuickAddBundle = {
+  variantId: string;
+  variantTitle: string;
+  priceAmount: string;
+  currencyCode: string;
+  available: boolean;
+  handle: string;
+  title: string;
+  imageUrl: string;
+  components: { quantity: number; title: string; imageUrl: string | null }[];
+};
+
+export function StickyAddToCart({
+  product,
+  quickAddBundle,
+}: {
+  product: Product;
+  quickAddBundle?: QuickAddBundle | null;
+}) {
   const [visible, setVisible] = useState(false);
   const [added, setAdded] = useState(false);
   const { addItem, closeDrawer, drawerOpen } = useCart();
 
   const variant = product.variants.edges[0]?.node;
-  const price = parseFloat(variant?.price?.amount || "0");
-  const currencyCode = variant?.price?.currencyCode || "USD";
+  const price = quickAddBundle
+    ? parseFloat(quickAddBundle.priceAmount)
+    : parseFloat(variant?.price?.amount || "0");
+  const currencyCode = quickAddBundle?.currencyCode || variant?.price?.currencyCode || "USD";
   const imageUrl = product.images.edges[0]?.node?.url || "/product-placeholder.svg";
-  const isAvailable = variant?.availableForSale;
+  const isAvailable = quickAddBundle ? quickAddBundle.available : variant?.availableForSale;
 
   useEffect(() => {
     // Watch the Add-to-cart button itself, not a zero-height sentinel —
@@ -49,17 +73,35 @@ export function StickyAddToCart({ product }: { product: Product }) {
   }, []);
 
   function onAdd() {
-    if (!variant || !isAvailable) return;
-    addItem({
-      merchandiseId: variant.id,
-      productHandle: product.handle,
-      productTitle: product.title,
-      variantTitle: variant.title,
-      imageUrl,
-      currencyCode: variant.price.currencyCode,
-      unitPriceAmount: variant.price.amount,
-      quantity: 1,
-    });
+    if (!isAvailable) return;
+
+    if (quickAddBundle) {
+      addItem({
+        merchandiseId: quickAddBundle.variantId,
+        productHandle: quickAddBundle.handle,
+        productTitle: quickAddBundle.title,
+        variantTitle: quickAddBundle.variantTitle,
+        imageUrl: quickAddBundle.imageUrl || imageUrl,
+        currencyCode: quickAddBundle.currencyCode,
+        unitPriceAmount: quickAddBundle.priceAmount,
+        quantity: 1,
+        // Carry the components so the cart line lists what's inside (and the
+        // line stays non-linking — bundle PDPs 404 by design).
+        bundleComponents: quickAddBundle.components,
+      });
+    } else {
+      if (!variant) return;
+      addItem({
+        merchandiseId: variant.id,
+        productHandle: product.handle,
+        productTitle: product.title,
+        variantTitle: variant.title,
+        imageUrl,
+        currencyCode: variant.price.currencyCode,
+        unitPriceAmount: variant.price.amount,
+        quantity: 1,
+      });
+    }
     // Don't open the drawer from the sticky bar — let the user stay on the page
     closeDrawer();
     setAdded(true);

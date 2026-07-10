@@ -118,6 +118,17 @@ export async function ProductPageView({
       )
     : null;
 
+  // Display price = the FIRST bundle tier's price when tier 0 is bundle-backed
+  // (owner decision 2026-07-10, verification pass §2.1): the Starter tier IS
+  // the entry offer, so the hero price, sticky bar, final CTA "From $X" and
+  // JSON-LD all quote it instead of the raw Shopify variant price. Falls back
+  // to minVariantPrice when no tier-0 bundle exists (a composed tier 0 is
+  // 1× device = the same number anyway). NOTE: collection/discovery
+  // ProductCards still show minVariantPrice — if that drifts from the Starter
+  // price in Shopify, the cross-page mismatch returns (punch-listed).
+  const tierZero = tierBundles?.[0] ?? null;
+  const displayPriceAmount = tierZero?.variants[0]?.priceAmount ?? minVariantPrice.amount;
+
   const primaryCollectionHandle = fullProduct?.collections?.edges?.[0]?.node?.handle;
   const collectionRecommendations = primaryCollectionHandle
     ? (await getProducts({ collectionHandle: primaryCollectionHandle }))
@@ -163,7 +174,7 @@ export async function ProductPageView({
     offers: {
       "@type": "Offer",
       priceCurrency: product.priceRange.minVariantPrice.currencyCode,
-      price: product.priceRange.minVariantPrice.amount,
+      price: displayPriceAmount,
       availability: product.availableForSale
         ? "https://schema.org/InStock"
         : "https://schema.org/OutOfStock",
@@ -249,7 +260,7 @@ export async function ProductPageView({
                 publishes the picked variant so the displayed price follows
                 color/accessory selection (just like the bundle picker total). */}
             <DynamicHeroPrice
-              fallbackAmount={minVariantPrice.amount}
+              fallbackAmount={displayPriceAmount}
               currencyCode={minVariantPrice.currencyCode}
               compareAtAmount={product.compareAtPriceRange?.minVariantPrice?.amount ?? null}
               fallbackAvailable={product.availableForSale}
@@ -262,9 +273,9 @@ export async function ProductPageView({
                 undercut against cheaper competitor devices. */}
             {isDevice && (
               <div className="mt-3 rounded-lg bg-honey-tint px-3.5 py-2.5 text-[13.5px] leading-snug text-brown">
-                The same ultrasonic technology your vet uses in the operatory —
-                the one they charge <b className="text-rose-soft">$500–$1,400+</b>{" "}
-                to use. Now it lives in your hand.
+                The same ultrasonic tool your vet uses behind that closed door —
+                the one she charges <b className="text-rose-soft">$500–$1,400+</b>{" "}
+                to swing once a year. Now it lives in your hand.
               </div>
             )}
 
@@ -310,9 +321,11 @@ export async function ProductPageView({
             <ul className="mt-5 grid grid-cols-3 gap-2 border-t border-line pt-4">
               {/* No forced <br/> — the columns get ~100px on a 320px phone and
                   the hard breaks doubled up with natural wrapping there. */}
+              {/* Copy audit §1.10: "silent" is a banned absolute (honest hedges
+                  beat hype) — "quiet in the air" states the physical fact. */}
               <li className="flex flex-col items-center gap-1 text-center text-[11.5px] font-bold text-brown">
                 <ShieldCheck className="h-5 w-5 text-clay" aria-hidden />
-                <span>Silent — won&apos;t scare skittish pets</span>
+                <span>Quiet in the air — even for skittish pets</span>
               </li>
               <li className="flex flex-col items-center gap-1 text-center text-[11.5px] font-bold text-brown">
                 <Truck className="h-5 w-5 text-clay" aria-hidden />
@@ -320,7 +333,7 @@ export async function ProductPageView({
               </li>
               <li className="flex flex-col items-center gap-1 text-center text-[11.5px] font-bold text-brown">
                 <RefreshCcw className="h-5 w-5 text-clay" aria-hidden />
-                <span>30-day money-back guarantee</span>
+                <span>30-day, no-questions-asked return</span>
               </li>
             </ul>
 
@@ -520,7 +533,7 @@ export async function ProductPageView({
             currency: minVariantPrice.currencyCode,
             minimumFractionDigits: 0,
             maximumFractionDigits: 0,
-          }).format(parseFloat(minVariantPrice.amount))}
+          }).format(parseFloat(displayPriceAmount))}
           heading={blank(fcc?.heading)}
           body={blank(fcc?.body)}
           smallPrint={blank(fcc?.smallPrint)}
@@ -528,7 +541,32 @@ export async function ProductPageView({
         />
       </div>
 
-      <StickyAddToCart product={product} />
+      <StickyAddToCart
+        product={product}
+        // The sticky bar must ADD what it PRICES: when tier 0 is bundle-backed
+        // it quick-adds the Starter bundle (one line, Shopify expands it) at
+        // the same price the bar displays.
+        quickAddBundle={
+          tierZero
+            ? {
+                variantId: tierZero.variants[0].id,
+                variantTitle:
+                  tierZero.variants[0].selectedOptions.map((o) => o.value).join(" / ") || "Bundle",
+                priceAmount: tierZero.variants[0].priceAmount,
+                currencyCode: tierZero.currencyCode,
+                available: tierZero.variants[0].availableForSale,
+                handle: tierZero.handle,
+                title: tierZero.title,
+                imageUrl: tierZero.imageUrl,
+                components: tierZero.components.map((c) => ({
+                  quantity: c.quantity,
+                  title: c.title,
+                  imageUrl: c.imageUrl,
+                })),
+              }
+            : null
+        }
+      />
     </div>
   );
 }
