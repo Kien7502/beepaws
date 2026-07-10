@@ -5,7 +5,7 @@
   /* ─── Warm Honey palette ──────────────────────────────────────────────────
      Generates Tailwind utilities: bg-clay, text-cocoa, border-line, etc.
      Each token references its raw hex in :root so the palette lives in one
-     place. Names match plans/beepaws-website-upgrade-plan.md §"Visual system". */
+     place. */
   --color-cream:      var(--cream);
   --color-paper:      var(--paper);
   --color-card:       var(--card);

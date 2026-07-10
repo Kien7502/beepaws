@@ -20,7 +20,10 @@ const DEFAULT_REVIEWS: Review[] = [
     rating: 5,
     likes: 1100,
     comments: 28,
-    text: "Skipped the vet cleaning and did it myself in 20 minutes. My corgi's breath went from absolutely awful to actually fine. The dental gel makes the whole thing easy. 😂",
+    // Audit §6.4: brand-authored placeholders must not use vet-replacement
+    // framing ("skipped the vet cleaning" crossed the guardrail), and the
+    // add-on reference matches the spray now planned for the Complete Care kit.
+    text: "Twenty minutes on the couch and it was done. My corgi's breath went from absolutely awful to actually fine. The spray makes the whole routine easy. 😂",
     reply: null,
   },
   {
@@ -56,7 +59,7 @@ const DEFAULT_REVIEWS: Review[] = [
     rating: 5,
     likes: 1400,
     comments: 33,
-    text: "Got the bundle deal for both my dogs. One session each and the plaque buildup I'd been worried about for months was visibly reduced. The dental gel smells great too — they actually enjoy it.",
+    text: "Got the bundle deal for both my dogs. One session each and the plaque buildup I'd been worried about for months was visibly reduced. The spray smells great too — they actually enjoy it.",
     reply: null,
   },
   {
@@ -66,7 +69,9 @@ const DEFAULT_REVIEWS: Review[] = [
     likes: 521,
     comments: 9,
     text: "My vet confirmed the tartar reduction at the last checkup and was genuinely surprised. She asked what I'd been doing differently. Would give 5 stars but takes a few sessions to see full results.",
-    reply: "Give it 2-3 sessions and you'll see the full transformation. You're doing great! 🐾",
+    // v2 §2.5: "you'll see the full transformation" was over-promise language
+    // under the page's most honest review — state the typical, not the promised.
+    reply: "2–3 sessions is typical — you're doing it right. 🐾",
   },
   {
     name: "Carlos P.",

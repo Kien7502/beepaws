@@ -44,9 +44,12 @@ const Footer = () => {
                 <Image src={titleIcon} alt="Beepaws" className="h-9 w-auto" />
               </Link>
               {/* Category-neutral on purpose: no grooming mention while that
-                  line is unlaunched (never-tease rule). */}
+                  line is unlaunched (never-tease rule; deliberate deviation
+                  from audit §11.1's "dental and grooming" wording). "No
+                  invented stats" per v2 §1.2 — the old "no clinical trials we
+                  did not run" double-negative misread as "we run no trials". */}
               <p className="text-[#A7B6A0] mb-6 max-w-sm leading-relaxed">
-                BeePaws makes at-home pet wellness tools, honestly priced against the real alternatives. No fake urgency, no hidden ingredients, no clinical trials we did not run.
+                BeePaws makes at-home pet wellness tools, honestly priced against the real alternatives. No fake urgency, no hidden ingredients, no invented stats.
               </p>
               <h4 className="font-bold text-[#EDF0E9] uppercase text-[13px] tracking-wider mb-3">
                 Subscribe to our newsletter
