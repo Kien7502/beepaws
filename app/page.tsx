@@ -2,6 +2,7 @@ import Link from 'next/link';
 import RevealObserver from '@/components/RevealObserver';
 import { WaveDivider } from '@/components/ui/WaveDivider';
 import NewsletterPopup from '@/components/NewsletterPopup';
+import ProofCarousel from '@/components/ProofCarousel';
 import { ShieldCheck, Tag, HandHeart, PawPrint, CalendarCheck, Heart, Search, Shield } from 'lucide-react';
 
 // ISR: revalidate via webhook → revalidateTag("products")
@@ -243,32 +244,17 @@ export default function Home() {
           <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cream md:text-[2.6rem]">
             Real pets. Real moms. Real photos.
           </h2>
-          <div className="ds-stagger mt-10 grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
-            {[
+          {/* Mobile: STAGED carousel with explicit prev/next + dot buttons
+              (owner decision 2026-07-10 — swipe misfired: accidental scrolls,
+              wet hands). Card markup + controls live in ProofCarousel;
+              ≥md it's the same 3-up grid as before. */}
+          <ProofCarousel
+            quotes={[
               { quote: "I never thought I'd be the kind of person who does this at home. Turns out I am, and I like it.", breed: "Goldendoodle mom" },
               { quote: "I read every label before it goes near my pet. This is the first one I didn't put back.", breed: "Senior terrier mom" },
               { quote: "No vet-office stress, no wrestling. We just do it on the couch now.", breed: "Cat mom" },
-            ].map((t, i) => (
-              /* bg-cream, no border: pure white cards glared on the bark band
-                 (user feedback) — cream keeps them lifted but warm, and the
-                 dark ground provides all the edge definition a border did. */
-              <figure key={i} className="ds-lift overflow-hidden rounded-2xl bg-cream">
-                {/* Photo is the hero element. TODO: real customer-and-pet photo
-                    (owner's hand/arm in frame), permission given. No stock, ever. */}
-                <div className="relative flex aspect-[4/3] items-center justify-center bg-honey-tint">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Customer + pet photo</span>
-                </div>
-                <div className="p-6 md:p-8">
-                  <blockquote className="text-lg leading-relaxed text-cocoa">&ldquo;{t.quote}&rdquo;</blockquote>
-                  <figcaption className="mt-5 text-sm">
-                    {/* TODO: real first name + breed (breed-matched proof converts hardest) */}
-                    <span className="font-bold text-cocoa">Name</span>
-                    <span className="text-brown"> · {t.breed}</span>
-                  </figcaption>
-                </div>
-              </figure>
-            ))}
-          </div>
+            ]}
+          />
           <p className="mt-6 text-xs text-cream/70">
             Placeholder proof. Replace with three real customer-and-pet photos (permission given) and verified, brand-experience testimonials before launch. Never stock.
           </p>
