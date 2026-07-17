@@ -16,6 +16,9 @@ type RawMoney = { amount: string; currencyCode: string };
 type RawCartLine = {
   id: string;
   quantity: number;
+  sellingPlanAllocation?: {
+    sellingPlan?: { id: string; name: string } | null;
+  } | null;
   merchandise: {
     id: string;
     title: string;
@@ -45,7 +48,28 @@ export type CartLine = {
   currencyCode: string;
   unitPriceAmount: string;
   quantity: number;
+  /** Subscription plan on this line (Subscribe & Save). Same variant with a
+   * different plan (or none) is a DIFFERENT cart line. */
+  sellingPlanId?: string | null;
+  sellingPlanName?: string | null;
 };
+
+/** One cart line to add: sellingPlanId rides along for subscriptions. */
+export type AddLineInput = {
+  merchandiseId: string;
+  quantity: number;
+  sellingPlanId?: string | null;
+};
+
+// Shopify's CartLineInput rejects explicit nulls less gracefully than absent
+// fields — strip the plan key entirely for one-time lines.
+function toApiLines(lines: AddLineInput[]) {
+  return lines.map((l) => ({
+    merchandiseId: l.merchandiseId,
+    quantity: l.quantity,
+    ...(l.sellingPlanId ? { sellingPlanId: l.sellingPlanId } : {}),
+  }));
+}
 
 export type ShopifyCart = {
   id: string;
@@ -122,6 +146,8 @@ function mapCart(raw: RawCart): ShopifyCart {
       currencyCode: node.merchandise.price.currencyCode,
       unitPriceAmount: node.merchandise.price.amount,
       quantity: node.quantity,
+      sellingPlanId: node.sellingPlanAllocation?.sellingPlan?.id ?? null,
+      sellingPlanName: node.sellingPlanAllocation?.sellingPlan?.name ?? null,
     })),
   };
 }
@@ -139,12 +165,10 @@ export async function getCart(cartId: string): Promise<ShopifyCart | null> {
   }
 }
 
-export async function createCart(
-  lines: { merchandiseId: string; quantity: number }[],
-): Promise<ShopifyCart> {
+export async function createCart(lines: AddLineInput[]): Promise<ShopifyCart> {
   const data = await storefrontPost<{
     cartCreate: { cart: RawCart; userErrors: { message: string }[] };
-  }>(GQL_CART_CREATE, { lines });
+  }>(GQL_CART_CREATE, { lines: toApiLines(lines) });
   const { cart, userErrors } = data.cartCreate;
   if (userErrors.length) throw new Error(userErrors[0].message);
   return mapCart(cart);
@@ -152,11 +176,11 @@ export async function createCart(
 
 export async function addCartLines(
   cartId: string,
-  lines: { merchandiseId: string; quantity: number }[],
+  lines: AddLineInput[],
 ): Promise<ShopifyCart> {
   const data = await storefrontPost<{
     cartLinesAdd: { cart: RawCart; userErrors: { message: string }[] };
-  }>(GQL_CART_LINES_ADD, { cartId, lines });
+  }>(GQL_CART_LINES_ADD, { cartId, lines: toApiLines(lines) });
   const { cart, userErrors } = data.cartLinesAdd;
   if (userErrors.length) throw new Error(userErrors[0].message);
   return mapCart(cart);

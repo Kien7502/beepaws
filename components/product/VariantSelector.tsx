@@ -5,6 +5,9 @@ import Image from "next/image";
 
 import type { Product, ProductVariant } from "@/types/shopify";
 import type { BundleTierCopy } from "@/types/metafields";
+// Type-only import: the module itself is server-only, but `import type` is
+// fully erased at compile time so nothing server-side reaches the client.
+import type { SellingPlanOption } from "@/lib/shopify/selling-plans";
 import type { PaymentMethods } from "@/lib/shopify/queries";
 import Button from "@/components/ui/Button";
 import { CheckCircle2, Info, ShoppingBag, Loader2, Minus, Plus } from "lucide-react";
@@ -170,6 +173,9 @@ type Props = {
   /** Per-tier resolved bundle (aligned by index with bundleTiers). When the
    * selected tier has one, Add/Buy adds the bundle product instead of items. */
   tierBundles?: (TierBundle | null)[] | null;
+  /** Subscribe & Save selling plans (Shopify Subscriptions app), resolved
+   * server-side. Renders the purchase-option radio in quantity mode. */
+  sellingPlans?: SellingPlanOption[] | null;
 };
 
 export default function VariantSelector({
@@ -179,6 +185,7 @@ export default function VariantSelector({
   educationNote,
   bundleTiers,
   tierBundles,
+  sellingPlans,
 }: Props) {
   // Resolve tier copy: metafield wins when set, else default. We do this
   // here rather than mutating TIERS so the structural shape (and the
@@ -212,6 +219,19 @@ export default function VariantSelector({
   });
   function setVariantQty(id: string, qty: number) {
     setVariantQtys((prev) => ({ ...prev, [id]: Math.max(0, Math.min(99, qty)) }));
+  }
+
+  // Subscribe & Save (quantity mode only for now: bundle lines can't carry a
+  // selling plan, and the only planned subscription products are consumables).
+  // null = one-time purchase, the default.
+  const [sellingPlanId, setSellingPlanId] = useState<string | null>(null);
+  const activePlan =
+    (quantityMode && sellingPlans?.find((p) => p.id === sellingPlanId)) || null;
+
+  /** Per-unit price for a variant under the current purchase option — the
+   * plan's allocation price (Shopify's own math) when subscribed. */
+  function unitAmountFor(v: ProductVariant): string {
+    return activePlan?.pricesByVariant[v.id]?.amount ?? v.price.amount;
   }
 
   // Derive the option structure from variants. Each entry is one Shopify option
@@ -405,7 +425,7 @@ export default function VariantSelector({
     .map((v) => ({ variant: v, qty: variantQtys[v.id] ?? 0 }))
     .filter((l) => l.qty > 0 && l.variant.availableForSale);
   const qtyTotal = qtyLines.reduce(
-    (sum, l) => sum + parseFloat(l.variant.price.amount) * l.qty,
+    (sum, l) => sum + parseFloat(unitAmountFor(l.variant)) * l.qty,
     0,
   );
 
@@ -457,8 +477,12 @@ export default function VariantSelector({
           variantTitle: v.title,
           imageUrl: v.image?.url || product.images.edges[0]?.node?.url || "/product-placeholder.svg",
           currencyCode: v.price.currencyCode,
-          unitPriceAmount: v.price.amount,
+          // Subscribed lines carry the plan's allocation price so the drawer
+          // shows what will actually be charged per delivery.
+          unitPriceAmount: unitAmountFor(v),
           quantity: qty,
+          sellingPlanId: activePlan?.id ?? null,
+          sellingPlanName: activePlan?.name ?? null,
         });
       }
       setAdded(true);
@@ -563,7 +587,11 @@ export default function VariantSelector({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            lines: qtyLines.map((l) => ({ merchandiseId: l.variant.id, quantity: l.qty })),
+            lines: qtyLines.map((l) => ({
+              merchandiseId: l.variant.id,
+              quantity: l.qty,
+              ...(activePlan ? { sellingPlanId: activePlan.id } : {}),
+            })),
           }),
         });
         const data = (await res.json()) as { checkoutUrl?: string; error?: string };
@@ -647,6 +675,71 @@ export default function VariantSelector({
            decision 2026-07-10 for bundle-less products): the row IS the
            option, so the option picker and tier cards are skipped entirely. */
         <div>
+          {/* Purchase options — Subscribe & Save (handoff §1). Copy guardrail:
+              cadence + discount come from the plan name (Shopify's own), the
+              cancel claim is true (the customer portal allows it), and it must
+              stay consistent with the guarantee's "no subscription you can't
+              cancel" line. Radio cards mirror the tier-card pattern. */}
+          {sellingPlans && sellingPlans.length > 0 && (
+            <div className="mb-6">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="h-px flex-1 bg-line" />
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-brown">
+                  Purchase options
+                </span>
+                <div className="h-px flex-1 bg-line" />
+              </div>
+              <div className="space-y-3" role="radiogroup" aria-label="Purchase options">
+                {[
+                  { id: null as string | null, name: "One-time purchase", desc: "Pay once — no renewals." },
+                  ...sellingPlans.map((p) => ({
+                    id: p.id as string | null,
+                    name: p.name,
+                    desc: "Renews at the discounted price each delivery. Cancel from your account anytime.",
+                  })),
+                ].map((opt) => {
+                  const selected = sellingPlanId === opt.id;
+                  return (
+                    <div
+                      key={opt.id ?? "one-time"}
+                      role="radio"
+                      aria-checked={selected}
+                      tabIndex={0}
+                      onClick={() => setSellingPlanId(opt.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setSellingPlanId(opt.id);
+                        }
+                      }}
+                      className={`relative cursor-pointer rounded-[13px] border-[1.8px] py-3 pl-12 pr-4 transition-all ${
+                        selected
+                          ? "border-clay bg-[#FCFBF4] shadow-sm"
+                          : "border-line bg-card hover:border-clay/60"
+                      }`}
+                    >
+                      <span
+                        aria-hidden
+                        className={`absolute left-4 top-1/2 h-[19px] w-[19px] -translate-y-1/2 rounded-full border-2 transition-all ${
+                          selected ? "border-clay" : "border-[#cdc4a7] bg-white"
+                        }`}
+                        style={
+                          selected
+                            ? { background: "radial-gradient(circle, var(--color-clay) 0 44%, #fff 47%)" }
+                            : undefined
+                        }
+                      />
+                      <span className="block text-[15px] font-bold text-cocoa">{opt.name}</span>
+                      <span className="mt-0.5 block text-[12.5px] leading-snug text-brown">
+                        {opt.desc}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="mb-4 flex items-center gap-3">
             <div className="h-px flex-1 bg-line" />
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-brown">
@@ -668,11 +761,19 @@ export default function VariantSelector({
                 >
                   <div className="min-w-0">
                     <p className="truncate text-[15px] font-bold text-cocoa">{label}</p>
-                    <p className="text-[12.5px] text-brown">
-                      {soldOut
-                        ? "Out of stock"
-                        : `${formatMoney(parseFloat(v.price.amount), v.price.currencyCode)} each`}
-                    </p>
+                    {soldOut ? (
+                      <p className="text-[12.5px] text-brown">Out of stock</p>
+                    ) : (
+                      <p className="text-[12.5px] text-brown">
+                        {formatMoney(parseFloat(unitAmountFor(v)), v.price.currencyCode)} each
+                        {/* Struck one-time price when a plan discounts it. */}
+                        {activePlan && unitAmountFor(v) !== v.price.amount && (
+                          <span className="ml-1.5 text-brown/60 line-through">
+                            {formatMoney(parseFloat(v.price.amount), v.price.currencyCode)}
+                          </span>
+                        )}
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-1.5">
                     <button

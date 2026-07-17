@@ -26,8 +26,9 @@ const DEFAULT_STEPS: MechanismStep[] = [
   },
 ];
 
-// Default body for the "feels broken" callout. Set beepaws.education_note to
-// override this with the product's actual first-use reassurance copy.
+// Default body for the "feels broken" callout. Set the mechanism_intro
+// metafield's feelsBrokenBody to override (split from education_note
+// 2026-07-17 — that field feeds only the buy-column reassurance now).
 const DEFAULT_FEELS_BROKEN_NOTE =
   "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.";
 

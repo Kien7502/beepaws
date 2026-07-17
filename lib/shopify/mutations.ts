@@ -9,6 +9,9 @@ const CART_FIELDS = `
         node {
           id
           quantity
+          sellingPlanAllocation {
+            sellingPlan { id name }
+          }
           merchandise {
             ... on ProductVariant {
               id

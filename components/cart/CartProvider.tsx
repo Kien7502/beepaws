@@ -47,11 +47,27 @@ export type LocalCartItem = {
   unitPriceAmount: string;
   quantity: number;
   lineId?: string; // Shopify cart line GID — present when synced
+  /** Subscribe & Save: the selling plan on this line. The SAME variant
+   * subscribed and one-time are two DIFFERENT cart lines — every identity
+   * operation in this file keys on cartLineKey(), never merchandiseId alone. */
+  sellingPlanId?: string | null;
+  sellingPlanName?: string | null;
   /** For a real Shopify bundle: the components it expands into. Kept in a
    * side-map keyed by merchandiseId (see bundleComponentsById) so it survives
-   * cart syncs that rebuild lines from Shopify (which omit this metadata). */
+   * cart syncs that rebuild lines from Shopify (which omit this metadata).
+   * Bundles never carry selling plans, so merchandiseId keying stays safe. */
   bundleComponents?: BundleComponentLite[];
 };
+
+/** Cart line identity: variant + selling plan. Plain merchandiseId for
+ * one-time lines keeps every pre-subscription key (bundle side-map,
+ * localStorage carts) valid. */
+export function cartLineKey(i: {
+  merchandiseId: string;
+  sellingPlanId?: string | null;
+}): string {
+  return i.sellingPlanId ? `${i.merchandiseId}::${i.sellingPlanId}` : i.merchandiseId;
+}
 
 type CartContextValue = {
   // ── Backwards-compatible API ──────────────────────────────────────────
@@ -66,8 +82,10 @@ type CartContextValue = {
   openCart: () => void;
   closeCart: () => void;
   addItem: (item: LocalCartItem) => void;
-  updateQuantity: (merchandiseId: string, quantity: number) => void;
-  removeItem: (merchandiseId: string) => void;
+  /** Both take a cartLineKey(item) — NOT a bare merchandiseId — so a
+   * subscribed line and its one-time twin stay independent. */
+  updateQuantity: (lineKey: string, quantity: number) => void;
+  removeItem: (lineKey: string) => void;
   clearCart: () => void;
   // ── Phase 4 ───────────────────────────────────────────────────────────
   drawerOpen: boolean;
@@ -133,6 +151,8 @@ function mapShopifyToLocal(cart: ShopifyCart): LocalCartItem[] {
     currencyCode: line.currencyCode,
     unitPriceAmount: line.unitPriceAmount,
     quantity: line.quantity,
+    sellingPlanId: line.sellingPlanId ?? null,
+    sellingPlanName: line.sellingPlanName ?? null,
   }));
 }
 
@@ -147,21 +167,22 @@ function reorderLikePrev(
 ): ShopifyCart {
   if (!prev || prev.lines.length === 0) return updated;
   const orderIndex = new Map(
-    prev.lines.map((l, i) => [l.merchandiseId, i]),
+    prev.lines.map((l, i) => [cartLineKey(l), i]),
   );
   const lines = [...updated.lines].sort((a, b) => {
-    const ai = orderIndex.get(a.merchandiseId) ?? Number.POSITIVE_INFINITY;
-    const bi = orderIndex.get(b.merchandiseId) ?? Number.POSITIVE_INFINITY;
+    const ai = orderIndex.get(cartLineKey(a)) ?? Number.POSITIVE_INFINITY;
+    const bi = orderIndex.get(cartLineKey(b)) ?? Number.POSITIVE_INFINITY;
     return ai - bi;
   });
   return { ...updated, lines };
 }
 
 function mergeLocalItem(prev: LocalCartItem[], next: LocalCartItem): LocalCartItem[] {
-  const found = prev.find((p) => p.merchandiseId === next.merchandiseId);
+  const key = cartLineKey(next);
+  const found = prev.find((p) => cartLineKey(p) === key);
   if (!found) return [...prev, next];
   return prev.map((p) =>
-    p.merchandiseId === next.merchandiseId
+    cartLineKey(p) === key
       ? { ...p, quantity: Math.min(99, p.quantity + next.quantity) }
       : p,
   );
@@ -230,7 +251,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // addCartLines request. Without this, each item took a separate round-trip
   // and each response clobbered the optimistic state, making items visibly
   // appear in the cart one by one.
-  const pendingAddsRef = useRef<{ merchandiseId: string; quantity: number }[]>([]);
+  const pendingAddsRef = useRef<
+    { merchandiseId: string; quantity: number; sellingPlanId?: string | null }[]
+  >([]);
   const flushScheduledRef = useRef(false);
 
   // Derived: use Shopify cart items when available, else localStorage items.
@@ -313,9 +336,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     // response; until then it's an empty string.
     setShopifyCart((prev) => {
       if (!prev) return prev;
-      const idx = prev.lines.findIndex(
-        (l) => l.merchandiseId === next.merchandiseId,
-      );
+      const nextKey = cartLineKey(next);
+      const idx = prev.lines.findIndex((l) => cartLineKey(l) === nextKey);
       const lines =
         idx === -1
           ? [
@@ -330,6 +352,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 currencyCode: next.currencyCode,
                 unitPriceAmount: next.unitPriceAmount,
                 quantity: next.quantity,
+                sellingPlanId: next.sellingPlanId ?? null,
+                sellingPlanName: next.sellingPlanName ?? null,
               },
             ]
           : prev.lines.map((l, i) =>
@@ -354,6 +378,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     pendingAddsRef.current.push({
       merchandiseId: next.merchandiseId,
       quantity: next.quantity,
+      sellingPlanId: next.sellingPlanId ?? null,
     });
 
     if (flushScheduledRef.current) return;
@@ -368,14 +393,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Coalesce repeated merchandiseIds so we send one line per variant.
-      const counts = new Map<string, number>();
+      // Coalesce repeated lines (same variant + same plan) into one API line.
+      const counts = new Map<
+        string,
+        { merchandiseId: string; sellingPlanId?: string | null; quantity: number }
+      >();
       for (const l of batch) {
-        counts.set(l.merchandiseId, (counts.get(l.merchandiseId) ?? 0) + l.quantity);
+        const key = cartLineKey(l);
+        const existing = counts.get(key);
+        if (existing) existing.quantity += l.quantity;
+        else counts.set(key, { ...l });
       }
-      const lines = Array.from(counts, ([merchandiseId, quantity]) => ({
-        merchandiseId,
-        quantity,
+      const lines = Array.from(counts.values(), (l) => ({
+        merchandiseId: l.merchandiseId,
+        quantity: l.quantity,
+        sellingPlanId: l.sellingPlanId ?? null,
       }));
 
       queueCartOp(async () => {
@@ -412,13 +444,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // ── updateQuantity (optimistic + debounced API) ───────────────────────────
 
   const updateQuantity = useCallback(
-    (merchandiseId: string, quantity: number) => {
+    (lineKey: string, quantity: number) => {
       // Immediate optimistic update
       setLocalItems((prev) =>
         quantity <= 0
-          ? prev.filter((i) => i.merchandiseId !== merchandiseId)
+          ? prev.filter((i) => cartLineKey(i) !== lineKey)
           : prev.map((i) =>
-              i.merchandiseId === merchandiseId ? { ...i, quantity } : i,
+              cartLineKey(i) === lineKey ? { ...i, quantity } : i,
             ),
       );
       if (shopifyCartRef.current) {
@@ -428,9 +460,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 ...prev,
                 lines:
                   quantity <= 0
-                    ? prev.lines.filter((l) => l.merchandiseId !== merchandiseId)
+                    ? prev.lines.filter((l) => cartLineKey(l) !== lineKey)
                     : prev.lines.map((l) =>
-                        l.merchandiseId === merchandiseId ? { ...l, quantity } : l,
+                        cartLineKey(l) === lineKey ? { ...l, quantity } : l,
                       ),
               }
             : prev,
@@ -439,25 +471,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       // Invalidate any in-flight sync for this line — the user just changed it,
       // so an earlier op's response (if still pending) must not be committed.
-      const seq = (quantityOpSeq.current.get(merchandiseId) ?? 0) + 1;
-      quantityOpSeq.current.set(merchandiseId, seq);
+      const seq = (quantityOpSeq.current.get(lineKey) ?? 0) + 1;
+      quantityOpSeq.current.set(lineKey, seq);
 
       // Debounced Shopify sync
       const cartId = readCartId();
       if (!cartId || !hasStorefrontConfig()) return;
 
       const item = localItemsRef.current.find(
-        (i) => i.merchandiseId === merchandiseId,
+        (i) => cartLineKey(i) === lineKey,
       );
       if (!item?.lineId) return;
 
       const lineId = item.lineId;
 
-      const prev = debounceTimers.current.get(merchandiseId);
+      const prev = debounceTimers.current.get(lineKey);
       if (prev) clearTimeout(prev);
 
       const timer = setTimeout(() => {
-        debounceTimers.current.delete(merchandiseId);
+        debounceTimers.current.delete(lineKey);
         // Route through the same operation queue so quantity changes can't
         // race with concurrent add/remove on the same cart.
         queueCartOp(async () => {
@@ -469,7 +501,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             // Skip a stale response: a newer updateQuantity for this line has
             // superseded us (its own op commits the latest state). Without this,
             // an old quantity's response briefly overrides the user's new value.
-            if (quantityOpSeq.current.get(merchandiseId) !== seq) return;
+            if (quantityOpSeq.current.get(lineKey) !== seq) return;
             if (inFlightCount.current <= 1) {
               const ordered = reorderLikePrev(updated, shopifyCartRef.current);
               setShopifyCart(ordered);
@@ -481,25 +513,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         });
       }, DEBOUNCE_MS);
 
-      debounceTimers.current.set(merchandiseId, timer);
+      debounceTimers.current.set(lineKey, timer);
     },
     [],
   );
 
   // ── removeItem (immediate) ────────────────────────────────────────────────
 
-  const removeItem = useCallback((merchandiseId: string) => {
+  const removeItem = useCallback((lineKey: string) => {
     // Optimistic removal — local state is the user's intent, applied immediately.
-    setLocalItems((prev) => prev.filter((i) => i.merchandiseId !== merchandiseId));
+    setLocalItems((prev) => prev.filter((i) => cartLineKey(i) !== lineKey));
+    // Bundle components are keyed by merchandiseId; bundles never carry a
+    // selling plan, so their lineKey IS the merchandiseId and this stays safe.
     setBundleComponentsById((prev) => {
-      if (!(merchandiseId in prev)) return prev;
+      if (!(lineKey in prev)) return prev;
       const next = { ...prev };
-      delete next[merchandiseId];
+      delete next[lineKey];
       return next;
     });
     setShopifyCart((prev) =>
       prev
-        ? { ...prev, lines: prev.lines.filter((l) => l.merchandiseId !== merchandiseId) }
+        ? { ...prev, lines: prev.lines.filter((l) => cartLineKey(l) !== lineKey) }
         : prev,
     );
 
@@ -517,13 +551,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       // skipped the sync entirely, leaving the item alive in Shopify and
       // letting it reappear on the next addItem refresh.
       let lineId = shopifyCartRef.current?.lines.find(
-        (l) => l.merchandiseId === merchandiseId,
+        (l) => cartLineKey(l) === lineKey,
       )?.lineId;
 
       if (!lineId) {
         try {
           const fresh = await getCart(cartId);
-          if (fresh) lineId = fresh.lines.find((l) => l.merchandiseId === merchandiseId)?.lineId;
+          if (fresh) lineId = fresh.lines.find((l) => cartLineKey(l) === lineKey)?.lineId;
         } catch (e) {
           console.error("[Cart] removeItem refetch failed:", e);
           return;

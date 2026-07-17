@@ -7,13 +7,14 @@ import {
 import { buildStorefrontCartPermalinkFromLines } from "@/lib/shopify/cart-permalink";
 
 const VARIANT_GID = /^gid:\/\/shopify\/ProductVariant\/\d+$/;
+const SELLING_PLAN_GID = /^gid:\/\/shopify\/SellingPlan\/\d+$/;
 
 export async function POST(req: Request) {
   let body:
     | {
         merchandiseId?: string;
         quantity?: number;
-        lines?: { merchandiseId?: string; quantity?: number }[];
+        lines?: { merchandiseId?: string; quantity?: number; sellingPlanId?: string }[];
       }
     | undefined;
   try {
@@ -27,6 +28,7 @@ export async function POST(req: Request) {
         .map((line) => ({
           merchandiseId: line.merchandiseId?.trim() || "",
           quantity: typeof line.quantity === "number" ? line.quantity : 1,
+          sellingPlanId: line.sellingPlanId?.trim() || undefined,
         }))
         .filter((line) => line.merchandiseId)
     : body?.merchandiseId
@@ -34,6 +36,7 @@ export async function POST(req: Request) {
           {
             merchandiseId: body.merchandiseId.trim(),
             quantity: typeof body.quantity === "number" ? body.quantity : 1,
+            sellingPlanId: undefined as string | undefined,
           },
         ]
       : [];
@@ -50,6 +53,12 @@ export async function POST(req: Request) {
   if (lines.some((line) => line.quantity < 1 || line.quantity > 99)) {
     return NextResponse.json({ error: "quantity must be 1–99" }, { status: 400 });
   }
+  if (lines.some((line) => line.sellingPlanId && !SELLING_PLAN_GID.test(line.sellingPlanId))) {
+    return NextResponse.json(
+      { error: "sellingPlanId must be gid://shopify/SellingPlan/{numericId}" },
+      { status: 400 },
+    );
+  }
 
   const cookieStore = await cookies();
   const existing = cookieStore.get(SHOPIFY_CART_COOKIE)?.value;
@@ -62,6 +71,7 @@ export async function POST(req: Request) {
         cartId,
         line.merchandiseId,
         line.quantity,
+        line.sellingPlanId,
       );
       cartId = merged.cartId;
       checkoutUrl = merged.checkoutUrl;

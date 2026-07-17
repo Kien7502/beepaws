@@ -11,9 +11,14 @@ export async function shopifyFetch<T>({
   query,
   tags,
   variables,
-}: ShopifyFetchParams & { headers?: HeadersInit }): Promise<
-  { status: number; body: T } | never
-> {
+  silent = false,
+}: ShopifyFetchParams & {
+  headers?: HeadersInit;
+  /** Skip the console.error on failure — for optional-enhancement callers
+   * (e.g. selling plans) whose catch-and-degrade path shouldn't spam the
+   * dev overlay on every render when a scope is missing. */
+  silent?: boolean;
+}): Promise<{ status: number; body: T } | never> {
   try {
     const host = normalizeStorefrontApiHost(
       process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN,
@@ -76,7 +81,7 @@ export async function shopifyFetch<T>({
       body: body as T,
     };
   } catch (e) {
-    console.error("Error fetching from Shopify:", e);
+    if (!silent) console.error("Error fetching from Shopify:", e);
     throw {
       error: e,
       query,

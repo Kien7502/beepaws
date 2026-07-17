@@ -147,6 +147,10 @@ export interface MechanismIntro {
   stepsHeading?: string;
   stepsLead?: string;
   feelsBrokenHeading?: string;
+  /** Long-form callout body (audit §4.10). Split from education_note
+   * 2026-07-17 — that field kept the SHORT buy-column reassurance (§1.5)
+   * and this one holds the dark callout's longer version. */
+  feelsBrokenBody?: string;
 }
 
 export interface Guarantee {

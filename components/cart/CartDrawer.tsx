@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { X, Minus, Plus, Trash2, ShoppingBag, ArrowRight, Loader2 } from "lucide-react";
+import { X, Minus, Plus, Trash2, ShoppingBag, ArrowRight, Loader2, RefreshCcw } from "lucide-react";
 import Button from "@/components/ui/Button";
-import { useCart } from "@/components/cart/CartProvider";
+import { useCart, cartLineKey } from "@/components/cart/CartProvider";
 
 function formatMoney(amount: string | number, currency: string) {
   const n = typeof amount === "string" ? parseFloat(amount) : amount;
@@ -191,7 +191,9 @@ export function CartDrawer() {
                 );
                 return (
                   <li
-                    key={item.merchandiseId}
+                    // cartLineKey, not merchandiseId: the same variant can sit
+                    // in the cart twice — once one-time, once subscribed.
+                    key={cartLineKey(item)}
                     className="flex items-center gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--background)] p-3 transition-shadow hover:shadow-sm"
                   >
                     {isBundleLine ? (
@@ -232,10 +234,18 @@ export function CartDrawer() {
                             item.variantTitle !== "Default Title" && (
                               <p className="mt-0.5 text-xs text-slate-500">{item.variantTitle}</p>
                             )}
+                          {/* Subscribe & Save line — the plan name carries
+                              cadence + discount ("Deliver every 2 weeks, 15% off"). */}
+                          {item.sellingPlanName && (
+                            <p className="mt-0.5 flex items-center gap-1 text-xs font-semibold text-[var(--color-primary-hover)]">
+                              <RefreshCcw size={11} aria-hidden />
+                              {item.sellingPlanName}
+                            </p>
+                          )}
                         </div>
                         <button
                           type="button"
-                          onClick={() => removeItem(item.merchandiseId)}
+                          onClick={() => removeItem(cartLineKey(item))}
                           className="shrink-0 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-500"
                           aria-label={`Remove ${item.productTitle}`}
                         >
@@ -281,7 +291,7 @@ export function CartDrawer() {
                         <div className="inline-flex items-center rounded-xl border border-[var(--color-border)] text-sm">
                           <button
                             type="button"
-                            onClick={() => updateQuantity(item.merchandiseId, item.quantity - 1)}
+                            onClick={() => updateQuantity(cartLineKey(item), item.quantity - 1)}
                             className="px-2.5 py-1.5 transition-colors hover:bg-[var(--color-surface-2)]"
                             aria-label="Decrease"
                           >
@@ -290,7 +300,7 @@ export function CartDrawer() {
                           <span className="min-w-[1.75rem] text-center font-bold">{item.quantity}</span>
                           <button
                             type="button"
-                            onClick={() => updateQuantity(item.merchandiseId, item.quantity + 1)}
+                            onClick={() => updateQuantity(cartLineKey(item), item.quantity + 1)}
                             className="px-2.5 py-1.5 transition-colors hover:bg-[var(--color-surface-2)]"
                             aria-label="Increase"
                           >

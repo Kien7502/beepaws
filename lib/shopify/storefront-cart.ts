@@ -47,8 +47,16 @@ const CART_LINES_ADD = `
   }
 `;
 
+// sellingPlanId (Subscribe & Save) rides along when present; omitted keys —
+// not nulls — for one-time lines, matching CartLineInput's expectations.
+export type CheckoutLine = {
+  merchandiseId: string;
+  quantity: number;
+  sellingPlanId?: string;
+};
+
 async function createCartWithLines(
-  lines: { merchandiseId: string; quantity: number }[],
+  lines: CheckoutLine[],
 ): Promise<{ cartId: string; checkoutUrl: string }> {
   const res = await shopifyFetch<CartOpResult>({
     query: CART_CREATE,
@@ -69,7 +77,7 @@ async function createCartWithLines(
 
 async function addLinesToCart(
   cartId: string,
-  lines: { merchandiseId: string; quantity: number }[],
+  lines: CheckoutLine[],
 ): Promise<{ cartId: string; checkoutUrl: string }> {
   const res = await shopifyFetch<CartOpResult>({
     query: CART_LINES_ADD,
@@ -96,8 +104,13 @@ export async function mergeCartAndGetCheckoutUrl(
   existingCartId: string | undefined,
   merchandiseId: string,
   quantity: number,
+  sellingPlanId?: string,
 ): Promise<{ cartId: string; checkoutUrl: string }> {
-  const line = { merchandiseId, quantity };
+  const line: CheckoutLine = {
+    merchandiseId,
+    quantity,
+    ...(sellingPlanId ? { sellingPlanId } : {}),
+  };
 
   if (existingCartId?.trim()) {
     try {

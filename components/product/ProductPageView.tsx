@@ -1,4 +1,5 @@
 import { getBundleContents } from "@/lib/shopify/bundle-contents";
+import { getSellingPlans } from "@/lib/shopify/selling-plans";
 import { getFullProductForPage, getPaymentMethods, getProduct, getProducts } from "@/lib/shopify/queries";
 import VariantSelector from "@/components/product/VariantSelector";
 import { ProductGallery } from "@/components/product/ProductGallery";
@@ -82,6 +83,12 @@ export async function ProductPageView({
   // a section by accident. Both sections render lorem defaults until authored
   // (the codebase convention: unedited reads as unedited).
   const isConsumable = product.tags?.includes("consumable") ?? false;
+
+  // Subscribe & Save (handoff §1): selling plans from the official Shopify
+  // Subscriptions app, read via the Storefront API. Empty when the product
+  // has none or the storefront token isn't configured — the buy column then
+  // renders exactly as before.
+  const sellingPlans = isBundle ? [] : await getSellingPlans(handle);
 
   // Resolve any bundle linked from a tier (beepaws.bundle_tiers[i].bundle) to its
   // cart-ready variant + price/image, aligned by tier index, so the tier picker
@@ -310,6 +317,7 @@ export async function ProductPageView({
                 educationNote={beepaws?.educationNote}
                 bundleTiers={beepaws?.bundleTiers}
                 tierBundles={tierBundles}
+                sellingPlans={sellingPlans}
               />
             </div>
 
@@ -377,7 +385,11 @@ export async function ProductPageView({
           <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
             <Mechanism
               steps={beepaws?.mechanismSteps}
-              feelsBrokenNote={beepaws?.educationNote}
+              // mechanism_intro.feelsBrokenBody, NOT education_note: that field
+              // now holds only the short buy-column reassurance (§1.5) while
+              // the callout gets its own long version (§4.10) — the two slots
+              // wanted different lengths of the same message.
+              feelsBrokenNote={blank(mi?.feelsBrokenBody)}
               introEyebrow={blank(mi?.introEyebrow)}
               introHeading={blank(mi?.introHeading)}
               introLead={blank(mi?.introLead)}
