@@ -39,7 +39,7 @@ Server Component → lib/shopify/queries.ts → admin-catalog.ts → admin-graph
 | `lib/shopify/bundle-contents.ts` | resolves a Shopify bundle's components/variants (bundle PDP + inline tier picker) |
 | `lib/shopify/draft-preview.ts` | admin-tool draft preview: `fetchAdminDraft` + `beepawsFromDraft` |
 | `lib/shopify/mutations.ts` + `cart-client.ts` | Storefront Cart API, browser-safe (`NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN`) |
-| `lib/shopify/storefront-cart.ts` | server-side cart create/merge for checkout |
+| `lib/shopify/storefront-cart.ts` | server-side fresh-cart creation for checkout (`createCartWithLines`) |
 | `lib/shopify/domain.ts` | `normalizeStorefrontApiHost` — requires the `.myshopify.com` host, throws on custom domains |
 
 ### Cart — two layers
@@ -55,7 +55,11 @@ Catalog queries use `cache: "force-cache"` + `next: { tags: ["products"] }`. The
 
 ### Checkout
 
-Cart items → `components/checkout/CheckoutClient.tsx` POSTs to `app/api/shopify/cart/checkout/route.ts` → server creates/merges a Shopify cart via `lib/shopify/storefront-cart.ts` → returns `checkoutUrl` → redirect. The cart drawer uses `cart.checkoutUrl` directly when the Storefront API is live.
+Two paths, both meaning "check out exactly these lines":
+1. Cart drawer uses `cart.checkoutUrl` from the synced Storefront cart directly when available; otherwise it POSTs all items to `app/api/shopify/cart/checkout/route.ts`.
+2. PDP "Buy It Now" (`VariantSelector`) POSTs its lines to the same route.
+
+The route always creates a **fresh** Shopify cart via `createCartWithLines` and returns its `checkoutUrl`. Never reintroduce a persistent server-side cart with line merging — the old cookie-cart merge flow made every buy-now stack onto up to 14 days of earlier lines at checkout (bug fixed 2026-07-18); the route deletes the legacy `shopify_storefront_cart_id` cookie on each hit.
 
 ### Bundles
 

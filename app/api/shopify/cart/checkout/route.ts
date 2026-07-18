@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import {
-  mergeCartAndGetCheckoutUrl,
+  createCartWithLines,
   SHOPIFY_CART_COOKIE,
 } from "@/lib/shopify/storefront-cart";
 import { buildStorefrontCartPermalinkFromLines } from "@/lib/shopify/cart-permalink";
@@ -60,33 +59,16 @@ export async function POST(req: Request) {
     );
   }
 
-  const cookieStore = await cookies();
-  const existing = cookieStore.get(SHOPIFY_CART_COOKIE)?.value;
-
   try {
-    let cartId = existing;
-    let checkoutUrl = "";
-    for (const line of lines) {
-      const merged = await mergeCartAndGetCheckoutUrl(
-        cartId,
-        line.merchandiseId,
-        line.quantity,
-        line.sellingPlanId,
-      );
-      cartId = merged.cartId;
-      checkoutUrl = merged.checkoutUrl;
-    }
+    // Fresh cart with exactly the posted lines. The old flow merged into a
+    // cart persisted in a 14-day cookie — every buy-now stacked onto all the
+    // previous ones, so Shopify checkout showed items from earlier sessions.
+    const { cartId, checkoutUrl } = await createCartWithLines(lines);
 
     const res = NextResponse.json({ checkoutUrl, cartId });
-    if (cartId) {
-      res.cookies.set(SHOPIFY_CART_COOKIE, cartId, {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        maxAge: 60 * 60 * 24 * 14,
-        secure: process.env.NODE_ENV === "production",
-      });
-    }
+    // Clear the legacy merge-cart cookie so the stale accumulated cart is
+    // permanently unreachable.
+    res.cookies.delete(SHOPIFY_CART_COOKIE);
     return res;
   } catch (e) {
     // Fallback: use Online Store cart permalink even if Storefront API fails.
