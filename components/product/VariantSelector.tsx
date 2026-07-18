@@ -152,6 +152,20 @@ export type TierBundle = {
   variants: TierBundleVariant[];
 };
 
+/** A COMPOSED KIT authored in `beepaws.bundle_tiers[i].components` (admin
+ * handoff 2026-07-19) and resolved by the page: one cart line per component.
+ * This is how a tier offers a subscribable component — real bundle lines
+ * can't carry selling plans. A component with sellingPlans gets its own
+ * Subscribe & Save toggle; the kit total is always the sum of the chosen
+ * component variant prices (plan-adjusted when subscribed) — never an
+ * authored number, so checkout always matches. */
+export type TierKitComponent = {
+  product: Product;
+  quantity: number;
+  sellingPlans: SellingPlanOption[];
+};
+export type TierKit = { components: TierKitComponent[] };
+
 type Props = {
   product: Product;
   /** Pool of products eligible as cross-sell add-ons in higher tiers. Typically
@@ -173,6 +187,10 @@ type Props = {
   /** Per-tier resolved bundle (aligned by index with bundleTiers). When the
    * selected tier has one, Add/Buy adds the bundle product instead of items. */
   tierBundles?: (TierBundle | null)[] | null;
+  /** Per-tier resolved COMPOSED KIT (aligned by index; only populated when
+   * the tier has authored components and NO bundle link — bundle wins).
+   * Add/Buy composes one cart line per component. */
+  tierKits?: (TierKit | null)[] | null;
   /** Subscribe & Save selling plans (Shopify Subscriptions app), resolved
    * server-side. Renders the purchase-option radio in quantity mode. */
   sellingPlans?: SellingPlanOption[] | null;
@@ -185,6 +203,7 @@ export default function VariantSelector({
   educationNote,
   bundleTiers,
   tierBundles,
+  tierKits,
   sellingPlans,
 }: Props) {
   // Resolve tier copy: metafield wins when set, else default. We do this
@@ -205,6 +224,17 @@ export default function VariantSelector({
   const [bundleVariantId, setBundleVariantId] = useState<string | null>(
     () => tierBundles?.[1]?.variants[0]?.id ?? null,
   );
+  // Composed-kit state for the SELECTED tier only (same lifecycle as
+  // bundleVariantId): per-component chosen variant + chosen selling plan
+  // (null = one-time). Reset on tier change.
+  const kitFirstVariantIds = (kit: TierKit | null) =>
+    kit ? kit.components.map((c) => c.product.variants.edges[0]?.node.id ?? "") : [];
+  const [kitVariantIds, setKitVariantIds] = useState<string[]>(() =>
+    kitFirstVariantIds(tierKits?.[1] ?? null),
+  );
+  const [kitPlanIds, setKitPlanIds] = useState<(string | null)[]>(() =>
+    (tierKits?.[1]?.components ?? []).map(() => null),
+  );
 
   // QUANTITY MODE (owner decision 2026-07-10): products with NO bundle wired
   // to any tier (e.g. consumables like the spray) drop the tier cards
@@ -212,12 +242,15 @@ export default function VariantSelector({
   // there — and instead every variant gets its own quantity stepper (2× Beef
   // + 1× Unflavored in one add). The rows replace the option picker too:
   // a row IS the option.
-  // Keyed off the metafield WIRING (bundleTiers[i].bundle), not the resolved
-  // tierBundles: a wired bundle that fails the sellability guard (archived /
-  // channel-unpublished) must degrade to COMPOSED tier cards, not flip the
-  // whole selector into quantity mode.
+  // Keyed off the metafield WIRING (bundleTiers[i].bundle / .components), not
+  // the resolved tierBundles/tierKits: a wired tier that fails the sellability
+  // guard must degrade to COMPOSED tier cards, not flip the whole selector
+  // into quantity mode.
+  const tierWired = bundleTiers?.some(
+    (t) => t?.bundle?.handle || (t?.components?.length ?? 0) > 0,
+  );
   const quantityMode =
-    !bundleTiers?.some((t) => t?.bundle?.handle) && !tierBundles?.some((tb) => tb);
+    !tierWired && !tierBundles?.some((tb) => tb) && !tierKits?.some(Boolean);
   const [variantQtys, setVariantQtys] = useState<Record<string, number>>(() => {
     const first = product.variants.edges[0]?.node;
     return first ? { [first.id]: 1 } : {};
@@ -331,6 +364,69 @@ export default function VariantSelector({
   // When the selected tier links a real bundle, the buy actions add the bundle
   // product (not the tier's separate items) and the price reflects the bundle.
   const selectedTierBundle = tierBundles?.[tierIdx] ?? null;
+  // Composed kit for the selected tier. Bundle precedence is enforced at
+  // resolution time (a tier with a bundle never gets a kit), but guard here
+  // too so a data slip can't double-render.
+  const selectedTierKit = (!selectedTierBundle && tierKits?.[tierIdx]) || null;
+  // One entry per kit component: the chosen variant, the chosen plan (null =
+  // one-time) and the per-unit amount actually charged (plan allocation price
+  // when subscribed — Shopify's math, never recomputed here).
+  const kitLines = (selectedTierKit?.components ?? []).map((c, ci) => {
+    const cvs = c.product.variants.edges.map((e) => e.node);
+    const variant = cvs.find((v) => v.id === kitVariantIds[ci]) ?? cvs[0];
+    const plan = c.sellingPlans.find((p) => p.id === kitPlanIds[ci]) ?? null;
+    const unitAmount = plan?.pricesByVariant[variant.id]?.amount ?? variant.price.amount;
+    return { component: c, ci, variant, plan, unitAmount };
+  });
+  const kitTotal = kitLines.reduce(
+    (sum, l) => sum + parseFloat(l.unitAmount) * l.component.quantity,
+    0,
+  );
+
+  // Change one option value on one kit component → snap to the matching
+  // variant (mirror of pickBundleOption, scoped to that component's product).
+  function pickKitOption(ci: number, optName: string, optValue: string) {
+    const c = selectedTierKit?.components[ci];
+    if (!c) return;
+    const cvs = c.product.variants.edges.map((e) => e.node);
+    const current = cvs.find((v) => v.id === kitVariantIds[ci]) ?? cvs[0];
+    const next: Record<string, string> = Object.fromEntries(
+      current.selectedOptions.map((o) => [o.name, o.value]),
+    );
+    next[optName] = optValue;
+    const matched =
+      cvs.find((v) => v.selectedOptions.every((o) => next[o.name] === o.value)) ??
+      cvs.find((v) => v.selectedOptions.some((o) => o.name === optName && o.value === optValue));
+    if (matched) {
+      setKitVariantIds((prev) => {
+        const n = [...prev];
+        n[ci] = matched.id;
+        return n;
+      });
+    }
+  }
+
+  function setKitPlan(ci: number, planId: string | null) {
+    setKitPlanIds((prev) => {
+      const n = [...prev];
+      n[ci] = planId;
+      return n;
+    });
+  }
+
+  // Option groups of an arbitrary product's variants (kit components) —
+  // same derivation as the main product's optionGroups / bundleOptionGroups.
+  function variantOptionGroups(vs: ProductVariant[]) {
+    const map = new Map<string, string[]>();
+    for (const v of vs) {
+      for (const o of v.selectedOptions) {
+        if (!map.has(o.name)) map.set(o.name, []);
+        const arr = map.get(o.name)!;
+        if (!arr.includes(o.value)) arr.push(o.value);
+      }
+    }
+    return Array.from(map.entries()).map(([name, values]) => ({ name, values }));
+  }
   const chosenBundleVariant =
     selectedTierBundle?.variants.find((v) => v.id === bundleVariantId) ??
     selectedTierBundle?.variants[0] ??
@@ -438,8 +534,13 @@ export default function VariantSelector({
     ? qtyTotal
     : selectedTierBundle
       ? parseFloat(chosenBundleVariant?.priceAmount ?? selectedTierBundle.variants[0].priceAmount)
-      : mainTotal + addonsTotal;
-  const displayCurrency = selectedTierBundle?.currencyCode || currencyCode;
+      : selectedTierKit
+        ? kitTotal
+        : mainTotal + addonsTotal;
+  const displayCurrency =
+    selectedTierBundle?.currencyCode ||
+    kitLines[0]?.variant.price.currencyCode ||
+    currencyCode;
 
   function selectTier(idx: number) {
     setTierIdx(idx);
@@ -452,6 +553,10 @@ export default function VariantSelector({
     // Reset the bundle variant to the new tier's bundle default (or clear it).
     const b = tierBundles?.[idx] ?? null;
     setBundleVariantId(b ? b.variants[0]?.id ?? null : null);
+    // Reset composed-kit state to the new tier's kit defaults (or clear it).
+    const k = (!b && tierKits?.[idx]) || null;
+    setKitVariantIds(kitFirstVariantIds(k));
+    setKitPlanIds((k?.components ?? []).map(() => null));
   }
 
   function selectTopVariant(variant: ProductVariant) {
@@ -531,6 +636,35 @@ export default function VariantSelector({
           options: valuesByTitle[c.title],
         })),
       });
+      setAdded(true);
+      window.setTimeout(() => setAdded(false), 1800);
+      return;
+    }
+
+    // Composed kit → one cart line per component; a subscribed component's
+    // line carries its selling plan (the whole point of composing: bundle
+    // lines can't).
+    if (selectedTierKit) {
+      if (kitLines.length === 0 || kitLines.some((l) => !l.variant.availableForSale)) return;
+      for (const l of kitLines) {
+        addItem({
+          merchandiseId: l.variant.id,
+          productHandle: l.component.product.handle,
+          productTitle: l.component.product.title,
+          variantTitle: l.variant.title,
+          imageUrl:
+            l.variant.image?.url ||
+            l.component.product.images.edges[0]?.node?.url ||
+            "/product-placeholder.svg",
+          currencyCode: l.variant.price.currencyCode,
+          // Subscribed lines carry the plan allocation price so the drawer
+          // shows what is actually charged per delivery.
+          unitPriceAmount: l.unitAmount,
+          quantity: l.component.quantity,
+          sellingPlanId: l.plan?.id ?? null,
+          sellingPlanName: l.plan?.name ?? null,
+        });
+      }
       setAdded(true);
       window.setTimeout(() => setAdded(false), 1800);
       return;
@@ -633,6 +767,34 @@ export default function VariantSelector({
       return;
     }
 
+    // Composed kit → checkout with one line per component (plan rides along
+    // on subscribed lines; the route validates + passes sellingPlanId).
+    if (selectedTierKit) {
+      if (kitLines.length === 0 || kitLines.some((l) => !l.variant.availableForSale)) return;
+      setBuyingNow(true);
+      try {
+        const res = await fetch("/api/shopify/cart/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lines: kitLines.map((l) => ({
+              merchandiseId: l.variant.id,
+              quantity: l.component.quantity,
+              ...(l.plan ? { sellingPlanId: l.plan.id } : {}),
+            })),
+          }),
+        });
+        const data = (await res.json()) as { checkoutUrl?: string; error?: string };
+        if (!res.ok || !data.checkoutUrl) {
+          throw new Error(data.error || "Couldn't open checkout");
+        }
+        window.location.href = data.checkoutUrl;
+      } catch {
+        setBuyingNow(false);
+      }
+      return;
+    }
+
     if (!selectedVariant?.availableForSale) return;
     setBuyingNow(true);
     try {
@@ -667,7 +829,9 @@ export default function VariantSelector({
     ? qtyLines.length > 0
     : selectedTierBundle
       ? (chosenBundleVariant?.availableForSale ?? false)
-      : selectedVariant?.availableForSale;
+      : selectedTierKit
+        ? kitLines.length > 0 && kitLines.every((l) => l.variant.availableForSale)
+        : selectedVariant?.availableForSale;
 
   return (
     <div className="flex flex-col gap-6">
@@ -915,14 +1079,34 @@ export default function VariantSelector({
               const v = variants.find((vv) => vv.id === vid) ?? selectedVariant;
               tMainTotal += parseFloat(v.price.amount);
             }
+            const kit = (!tb && tierKits?.[i]) || null;
             // For a bundle tier, price reflects the chosen variant when this tier
-            // is selected, else its first variant. Otherwise the composed total.
+            // is selected, else its first variant. A composed kit reflects the
+            // chosen variants + plans when selected, else its base (first-variant,
+            // one-time) sum. Otherwise the legacy composed total.
             const tbVariant = tb ? (selected ? chosenBundleVariant : tb.variants[0]) : null;
+            const kitBaseTotal = kit
+              ? kit.components.reduce(
+                  (sum, c) =>
+                    sum +
+                    parseFloat(c.product.variants.edges[0]?.node.price.amount ?? "0") * c.quantity,
+                  0,
+                )
+              : 0;
             const tTotal = tb
               ? parseFloat(tbVariant?.priceAmount ?? tb.variants[0].priceAmount)
-              : tMainTotal +
-                tAddons.reduce((sum, a) => sum + parseFloat(a.variant.price.amount) * a.qty, 0);
-            const tCurrency = tb ? tb.currencyCode : currencyCode;
+              : kit
+                ? selected
+                  ? kitTotal
+                  : kitBaseTotal
+                : tMainTotal +
+                  tAddons.reduce((sum, a) => sum + parseFloat(a.variant.price.amount) * a.qty, 0);
+            const tCurrency = tb
+              ? tb.currencyCode
+              : kit
+                ? kit.components[0]?.product.variants.edges[0]?.node.price.currencyCode ||
+                  currencyCode
+                : currencyCode;
             const bGroups = tb ? bundleOptionGroupsByProduct(tb) : [];
 
             return (
@@ -985,7 +1169,57 @@ export default function VariantSelector({
                     Rendered only for the SELECTED tier so unselected tiers stay
                     a scannable name + price + description row and the buy
                     column keeps its height in check. */}
-                {selected && (tb ? (
+                {selected && kit && (
+                  /* Composed-kit contents: one row per component with the line
+                     price actually charged (plan-adjusted when subscribed,
+                     struck base beside it). */
+                  <ul className="mt-2 space-y-1 text-[12px] text-brown">
+                    {kitLines.map((l) => {
+                      const lineTotal = parseFloat(l.unitAmount) * l.component.quantity;
+                      const baseTotal =
+                        parseFloat(l.variant.price.amount) * l.component.quantity;
+                      return (
+                        <li key={l.component.product.id} className="flex items-center gap-2">
+                          <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded-md border border-line bg-cream">
+                            <Image
+                              src={
+                                l.variant.image?.url ||
+                                l.component.product.images.edges[0]?.node?.url ||
+                                "/product-placeholder.svg"
+                              }
+                              alt=""
+                              fill
+                              className="object-cover"
+                              sizes="24px"
+                            />
+                          </span>
+                          <span className="min-w-0 truncate">
+                            {l.component.quantity}×{" "}
+                            <a
+                              href={`/products/${l.component.product.handle}`}
+                              target="_blank"
+                              rel="noopener"
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-cocoa underline decoration-line underline-offset-2 hover:text-clay"
+                            >
+                              {l.component.product.title}
+                            </a>
+                          </span>
+                          <span className="ml-auto shrink-0 tabular-nums text-cocoa">
+                            {l.plan && lineTotal !== baseTotal && (
+                              <span className="mr-1.5 text-brown/60 line-through">
+                                {formatMoney(baseTotal, l.variant.price.currencyCode)}
+                              </span>
+                            )}
+                            {formatMoney(lineTotal, l.variant.price.currencyCode)}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+
+                {selected && !kit && (tb ? (
                   <ul className="mt-2 space-y-1 text-[12px] text-brown">
                     {tb.components.map((c, ci) => (
                       <li key={c.handle} className="flex items-center gap-2">
@@ -1069,7 +1303,7 @@ export default function VariantSelector({
                     the reference template but kept as a real feature for multi-
                     pet bundles — only renders when the user has selected this
                     tier AND it has more than one main unit. */}
-                {selected && multi && t.mainQty > 1 && !tb && (
+                {selected && multi && t.mainQty > 1 && !tb && !kit && (
                   <div className="mt-3 space-y-3 border-t border-line pt-3">
                     {Array.from({ length: t.mainQty }, (_, j) => {
                       const uid = unitVariantIds[j] ?? variants[0]?.id ?? "";
@@ -1222,6 +1456,130 @@ export default function VariantSelector({
                         })}
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {/* Composed-kit per-component controls: option pickers for
+                    multi-variant components + a Delivery toggle for components
+                    with selling plans. Chip-scale (not the page-level radio
+                    cards) because this lives inside a tier card. */}
+                {selected && kit && (
+                  <div className="mt-3 space-y-3 border-t border-line pt-3">
+                    {kitLines.map((l) => {
+                      const cvs = l.component.product.variants.edges.map((e) => e.node);
+                      const groups = cvs.length > 1 ? variantOptionGroups(cvs) : [];
+                      const hasPlans = l.component.sellingPlans.length > 0;
+                      if (groups.length === 0 && !hasPlans) return null;
+                      const chosenValues: Record<string, string> = Object.fromEntries(
+                        l.variant.selectedOptions.map((o) => [o.name, o.value]),
+                      );
+                      return (
+                        <div key={l.component.product.id} className="space-y-1.5">
+                          <p className="text-[14.5px] font-bold text-cocoa">
+                            {l.component.product.title}
+                          </p>
+                          {groups.map((opt) => {
+                            const colorMode = isColorOption(opt.name);
+                            const sel = chosenValues[opt.name];
+                            return (
+                              <div
+                                key={opt.name}
+                                className="flex flex-wrap items-center gap-x-2 gap-y-1.5"
+                              >
+                                <span className="text-[11px] font-semibold text-brown">
+                                  {opt.name}:
+                                </span>
+                                {opt.values.map((value) => {
+                                  const active = sel === value;
+                                  if (colorMode) {
+                                    const colors = resolveSwatchColors(value);
+                                    if (colors) {
+                                      return (
+                                        <button
+                                          key={value}
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            pickKitOption(l.ci, opt.name, value);
+                                          }}
+                                          title={value}
+                                          aria-label={value}
+                                          aria-pressed={active}
+                                          className={`relative flex h-9 w-9 items-center justify-center rounded-lg border-[1.8px] bg-[#EFE6CF] transition-all ${
+                                            active
+                                              ? "border-transparent ring-2 ring-clay"
+                                              : "border-line hover:border-clay/60"
+                                          }`}
+                                        >
+                                          <span
+                                            className="block h-6 w-6 rounded-full border border-black/25 shadow-[inset_0_-1px_2px_rgb(0_0_0_/_0.08)]"
+                                            style={{ background: swatchBackground(colors) }}
+                                          />
+                                        </button>
+                                      );
+                                    }
+                                  }
+                                  return (
+                                    <button
+                                      key={value}
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        pickKitOption(l.ci, opt.name, value);
+                                      }}
+                                      className={`rounded-lg border-[1.8px] px-3 py-1.5 text-xs font-bold transition-all ${
+                                        active
+                                          ? "border-clay bg-[#FCFBF4] text-cocoa"
+                                          : "border-line text-cocoa hover:border-clay/60"
+                                      }`}
+                                    >
+                                      {value}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })}
+                          {hasPlans && (
+                            /* Copy guardrail (same as the quantity-mode radio):
+                               cadence + discount come from the plan name —
+                               Shopify's own string, never recomputed here. */
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+                              <span className="text-[11px] font-semibold text-brown">
+                                Delivery:
+                              </span>
+                              {[
+                                { id: null as string | null, label: "One-time" },
+                                ...l.component.sellingPlans.map((p) => ({
+                                  id: p.id as string | null,
+                                  label: p.name,
+                                })),
+                              ].map((opt) => {
+                                const active = (l.plan?.id ?? null) === opt.id;
+                                return (
+                                  <button
+                                    key={opt.id ?? "one-time"}
+                                    type="button"
+                                    aria-pressed={active}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setKitPlan(l.ci, opt.id);
+                                    }}
+                                    className={`rounded-lg border-[1.8px] px-3 py-1.5 text-xs font-bold transition-all ${
+                                      active
+                                        ? "border-clay bg-[#FCFBF4] text-cocoa"
+                                        : "border-line text-cocoa hover:border-clay/60"
+                                    }`}
+                                  >
+                                    {opt.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

@@ -130,6 +130,42 @@ export async function ProductPageView({
       )
     : null;
 
+  // Resolve composed kits (beepaws.bundle_tiers[i].components — admin handoff
+  // 2026-07-19, beepaws-admin backlog #20): full product + selling plans per
+  // component so the tier can compose one cart line each, with a subscribe
+  // toggle on plan-bearing components. Precedence: a bundle link wins. Any
+  // unsellable/unresolvable component nulls the WHOLE kit — the tier then
+  // falls back to the legacy code-defined composition (contract rule 3).
+  const tierKits = beepaws?.bundleTiers
+    ? await Promise.all(
+        beepaws.bundleTiers.map(async (t) => {
+          if (t?.bundle?.handle) return null;
+          const refs = (t?.components ?? []).flatMap((c) => {
+            const handle = c?.product?.handle;
+            return handle
+              ? [{ handle, quantity: Math.max(1, Math.round(c?.quantity ?? 1)) }]
+              : [];
+          });
+          if (refs.length === 0) return null;
+          const resolved = await Promise.all(
+            refs.map(async (ref) => {
+              const [p, sellable, plans] = await Promise.all([
+                getProduct(ref.handle),
+                isSellableOnStorefront(ref.handle),
+                getSellingPlans(ref.handle),
+              ]);
+              if (!p || p.variants.edges.length === 0 || sellable === false) return null;
+              return { product: p, quantity: ref.quantity, sellingPlans: plans };
+            }),
+          );
+          const components = resolved.filter(
+            (r): r is NonNullable<(typeof resolved)[number]> => r !== null,
+          );
+          return components.length === resolved.length ? { components } : null;
+        }),
+      )
+    : null;
+
   // Display price = the FIRST bundle tier's price when tier 0 is bundle-backed
   // (owner decision 2026-07-10, verification pass §2.1): the Starter tier IS
   // the entry offer, so the hero price, sticky bar, final CTA "From $X" and
@@ -322,6 +358,7 @@ export async function ProductPageView({
                 educationNote={beepaws?.educationNote}
                 bundleTiers={beepaws?.bundleTiers}
                 tierBundles={tierBundles}
+                tierKits={tierKits}
                 sellingPlans={sellingPlans}
               />
             </div>

@@ -90,6 +90,19 @@ export interface BundleTierCopy {
    * this tier adds the bundle product to the cart (one line; Shopify expands it)
    * instead of the tier's separate items. */
   bundle?: { id: string; handle: string; title: string } | null;
+  /** COMPOSED KIT contents (admin handoff 2026-07-19, beepaws-admin backlog
+   * #20): one cart line per component — this is how a tier offers a
+   * subscribable component (bundle lines can't carry selling plans). Same
+   * nested product_ref shape as discovery_products. Precedence: `bundle`
+   * wins over `components`; both empty → legacy code-defined composition.
+   * Pricing is NEVER authored here — the kit total is the sum of the real
+   * component line prices. */
+  components?:
+    | {
+        product?: { id?: string; handle?: string; title?: string } | null;
+        quantity?: number;
+      }[]
+    | null;
 }
 
 /** One "What's inside" formula group (`beepaws.ingredient_groups`). A product
