@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   createCartWithLines,
+  UnsellableLinesError,
   SHOPIFY_CART_COOKIE,
 } from "@/lib/shopify/storefront-cart";
 import { buildStorefrontCartPermalinkFromLines } from "@/lib/shopify/cart-permalink";
@@ -71,6 +72,11 @@ export async function POST(req: Request) {
     res.cookies.delete(SHOPIFY_CART_COOKIE);
     return res;
   } catch (e) {
+    // A ghosted (unsellable) line must NOT fall through to the permalink —
+    // the permalink would carry the same unsellable variant. Tell the user.
+    if (e instanceof UnsellableLinesError) {
+      return NextResponse.json({ error: e.message }, { status: 409 });
+    }
     // Fallback: use Online Store cart permalink even if Storefront API fails.
     const storeOrigin =
       process.env.NEXT_PUBLIC_SHOPIFY_ONLINE_STORE_URL ||

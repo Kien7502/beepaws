@@ -1,5 +1,6 @@
 import { getBundleContents } from "@/lib/shopify/bundle-contents";
 import { getSellingPlans } from "@/lib/shopify/selling-plans";
+import { isSellableOnStorefront } from "@/lib/shopify/storefront-visibility";
 import { getFullProductForPage, getPaymentMethods, getProduct, getProducts } from "@/lib/shopify/queries";
 import VariantSelector from "@/components/product/VariantSelector";
 import { ProductGallery } from "@/components/product/ProductGallery";
@@ -93,7 +94,10 @@ export async function ProductPageView({
   // Resolve any bundle linked from a tier (beepaws.bundle_tiers[i].bundle) to its
   // cart-ready variant + price/image, aligned by tier index, so the tier picker
   // can "add the bundle" (one line; Shopify expands it) instead of separate items.
-  // null when no link or the bundle is unpublished (getProduct returns nothing).
+  // null when no link OR the storefront channel can't sell the bundle. The
+  // Admin API behind getProduct returns ARCHIVED/unpublished products too, and
+  // offering those makes the Storefront Cart API create GHOST lines (invisible
+  // in cart.lines, still charged in subtotal) — hence isSellableOnStorefront.
   const tierBundles = beepaws?.bundleTiers
     ? await Promise.all(
         beepaws.bundleTiers.map(async (t) => {
@@ -101,13 +105,14 @@ export async function ProductPageView({
           if (!bundleHandle) return null;
           // A customer-choose bundle is a normal multi-variant product, so carry
           // ALL its variants (to pick inline) + its components (to show what's
-          // inside). null if no link or the bundle is unpublished.
-          const [bp, components] = await Promise.all([
+          // inside).
+          const [bp, components, sellable] = await Promise.all([
             getProduct(bundleHandle),
             getBundleContents(bundleHandle),
+            isSellableOnStorefront(bundleHandle),
           ]);
           const vs = bp?.variants.edges.map((e) => e.node) ?? [];
-          if (!bp || vs.length === 0) return null;
+          if (!bp || vs.length === 0 || sellable === false) return null;
           return {
             handle: bp.handle,
             title: bp.title,
