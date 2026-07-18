@@ -212,7 +212,12 @@ export default function VariantSelector({
   // there — and instead every variant gets its own quantity stepper (2× Beef
   // + 1× Unflavored in one add). The rows replace the option picker too:
   // a row IS the option.
-  const quantityMode = !tierBundles?.some((tb) => tb);
+  // Keyed off the metafield WIRING (bundleTiers[i].bundle), not the resolved
+  // tierBundles: a wired bundle that fails the sellability guard (archived /
+  // channel-unpublished) must degrade to COMPOSED tier cards, not flip the
+  // whole selector into quantity mode.
+  const quantityMode =
+    !bundleTiers?.some((t) => t?.bundle?.handle) && !tierBundles?.some((tb) => tb);
   const [variantQtys, setVariantQtys] = useState<Record<string, number>>(() => {
     const first = product.variants.edges[0]?.node;
     return first ? { [first.id]: 1 } : {};
