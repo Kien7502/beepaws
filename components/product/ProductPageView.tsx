@@ -1,6 +1,7 @@
 import { getBundleContents } from "@/lib/shopify/bundle-contents";
 import { getSellingPlans } from "@/lib/shopify/selling-plans";
 import { isSellableOnStorefront } from "@/lib/shopify/storefront-visibility";
+import { getBeePawsAutoDiscounts } from "@/lib/shopify/discounts";
 import { getFullProductForPage, getPaymentMethods, getProduct, getProducts } from "@/lib/shopify/queries";
 import VariantSelector from "@/components/product/VariantSelector";
 import { ProductGallery } from "@/components/product/ProductGallery";
@@ -162,6 +163,76 @@ export async function ProductPageView({
             (r): r is NonNullable<(typeof resolved)[number]> => r !== null,
           );
           return components.length === resolved.length ? { components } : null;
+        }),
+      )
+    : null;
+
+  // Managed automatic discounts (BeePaws Kit* / BeePaws Tier Gift* — created
+  // by the admin tool). ALL kit/gift money math derives from these, never
+  // hardcoded (cross-repo contract). Fetched only when a tier wires either.
+  const wantsDiscounts = beepaws?.bundleTiers?.some(
+    (t) => t?.gift?.handle || (t?.components?.length ?? 0) > 0,
+  );
+  const autoDiscounts = wantsDiscounts
+    ? await getBeePawsAutoDiscounts()
+    : { kits: [], tierGifts: [] };
+
+  // Kit-discount deal per tier (contract matching rule): buys-product = the
+  // tier's FIRST component; gets set intersects the remaining components.
+  // Subscribed lines never get the kit % (BXGY platform limit).
+  const tierKitDeals = tierKits
+    ? tierKits.map((kit) => {
+        if (!kit) return null;
+        const firstId = kit.components[0]?.product.id;
+        const otherIds = kit.components.slice(1).map((c) => c.product.id);
+        const deal = autoDiscounts.kits.find(
+          (k) =>
+            firstId &&
+            k.buysProductIds.includes(firstId) &&
+            otherIds.some((o) => k.getsProductIds.includes(o)),
+        );
+        return deal
+          ? {
+              percentage: deal.percentage,
+              unitQuantity: deal.unitQuantity,
+              getsProductIds: deal.getsProductIds,
+            }
+          : null;
+      })
+    : null;
+
+  // Tier gifts. Tier gating is storefront behavior (Shopify can't see tiers);
+  // the discount fires whenever the MAIN product is a cart line + the gift
+  // line exists. So: no gift on bundle tiers (main product isn't a line — the
+  // bundle is) or on kits that don't include the main product; and never
+  // offered without the backing ACTIVE discount or a sellable gift product.
+  const tierGifts = beepaws?.bundleTiers
+    ? await Promise.all(
+        beepaws.bundleTiers.map(async (t, i) => {
+          const giftHandle = t?.gift?.handle;
+          if (!giftHandle) return null;
+          if (t?.bundle?.handle) return null;
+          const kit = tierKits?.[i] ?? null;
+          if (kit && !kit.components.some((c) => c.product.id === product.id)) return null;
+          const [gp, sellable] = await Promise.all([
+            getProduct(giftHandle),
+            isSellableOnStorefront(giftHandle),
+          ]);
+          if (!gp || sellable === false) return null;
+          const gv = gp.variants.edges.map((e) => e.node).find((v) => v.availableForSale);
+          if (!gv) return null;
+          const backed = autoDiscounts.tierGifts.some(
+            (d) => d.buysProductIds.includes(product.id) && d.getsProductIds.includes(gp.id),
+          );
+          if (!backed) return null;
+          return {
+            handle: gp.handle,
+            title: gp.title,
+            imageUrl: gp.images.edges[0]?.node?.url ?? fallbackUrl,
+            variantId: gv.id,
+            priceAmount: gv.price.amount,
+            currencyCode: gv.price.currencyCode,
+          };
         }),
       )
     : null;
@@ -359,6 +430,8 @@ export async function ProductPageView({
                 bundleTiers={beepaws?.bundleTiers}
                 tierBundles={tierBundles}
                 tierKits={tierKits}
+                tierKitDeals={tierKitDeals}
+                tierGifts={tierGifts}
                 sellingPlans={sellingPlans}
               />
             </div>

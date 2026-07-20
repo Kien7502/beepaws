@@ -175,7 +175,19 @@ export function CartDrawer() {
           ) : (
             <ul className="space-y-3">
               {items.map((item) => {
-                const lineTotal = parseFloat(item.unitPriceAmount || "0") * item.quantity;
+                const baseTotal = parseFloat(item.unitPriceAmount || "0") * item.quantity;
+                // Synced carts carry Shopify's post-discount line cost (kit
+                // discounts + tier gifts apply IN the cart, not just at
+                // checkout — verified live 2026-07-19). Prefer it; fall back
+                // to unitPrice×qty for optimistic/local lines.
+                const discountedTotal =
+                  item.lineTotalAmount != null && item.lineTotalAmount !== ""
+                    ? parseFloat(item.lineTotalAmount)
+                    : null;
+                const lineTotal = discountedTotal ?? baseTotal;
+                const lineDiscounted =
+                  discountedTotal !== null && discountedTotal < baseTotal - 0.001;
+                const lineFree = lineTotal <= 0.001 && item.quantity > 0;
                 // Bundle lines don't link anywhere: bundles are offers, not
                 // destinations — their PDPs 404 by design (route guard), so a
                 // link here would dead-end mid-purchase.
@@ -308,7 +320,25 @@ export function CartDrawer() {
                           </button>
                         </div>
                         <span className="text-sm font-extrabold text-[var(--color-foreground)]">
-                          {formatMoney(lineTotal, item.currencyCode)}
+                          {lineFree ? (
+                            <>
+                              {baseTotal > 0 && (
+                                <span className="mr-1.5 text-xs font-semibold text-slate-400 line-through">
+                                  {formatMoney(baseTotal, item.currencyCode)}
+                                </span>
+                              )}
+                              <span className="text-emerald-600">FREE</span>
+                            </>
+                          ) : (
+                            <>
+                              {lineDiscounted && (
+                                <span className="mr-1.5 text-xs font-semibold text-slate-400 line-through">
+                                  {formatMoney(baseTotal, item.currencyCode)}
+                                </span>
+                              )}
+                              {formatMoney(lineTotal, item.currencyCode)}
+                            </>
+                          )}
                         </span>
                       </div>
                     </div>

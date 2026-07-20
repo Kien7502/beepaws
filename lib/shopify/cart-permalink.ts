@@ -25,14 +25,19 @@ export function buildStorefrontCartPermalinkFromLines(
   lines: { merchandiseId: string; quantity: number }[],
 ): string | null {
   if (!storeOrigin?.trim() || !lines.length) return null;
-  const segments: string[] = [];
+  // Merge duplicate variants: permalinks can't express selling plans, so a
+  // one-time + subscribed pair of the same variant collapses to one segment.
+  // Shopify's cart page hard-errors on duplicate ids ("you can't add two
+  // separate items with the same ID").
+  const qtyById = new Map<string, number>();
   for (const line of lines) {
     const id = variantGidToNumericId(line.merchandiseId);
     if (!id) continue;
     const qty = Number.isFinite(line.quantity) ? Math.max(1, Math.min(99, line.quantity)) : 1;
-    segments.push(`${id}:${qty}`);
+    qtyById.set(id, Math.min(99, (qtyById.get(id) ?? 0) + qty));
   }
-  if (!segments.length) return null;
+  if (qtyById.size === 0) return null;
+  const segments = Array.from(qtyById, ([id, qty]) => `${id}:${qty}`);
   const base = storeOrigin.trim().replace(/\/$/, "");
   const origin = base.startsWith("http") ? base : `https://${base}`;
   return `${origin}/cart/${segments.join(",")}`;

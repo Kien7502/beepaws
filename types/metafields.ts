@@ -103,6 +103,12 @@ export interface BundleTierCopy {
         quantity?: number;
       }[]
     | null;
+  /** Tier gift (admin handoff 2026-07-19): selecting this tier adds the gift
+   * product's line alongside the tier's lines, rendered FREE — but ONLY when
+   * backed by the admin-managed "BeePaws Tier Gift" automatic discount (the
+   * discount is what makes it free at checkout; without it the line would
+   * charge full price, so the storefront must not offer it). */
+  gift?: { id?: string; handle?: string; title?: string } | null;
 }
 
 /** One "What's inside" formula group (`beepaws.ingredient_groups`). A product

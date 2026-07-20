@@ -16,6 +16,10 @@ type RawMoney = { amount: string; currencyCode: string };
 type RawCartLine = {
   id: string;
   quantity: number;
+  cost?: {
+    subtotalAmount?: RawMoney | null;
+    totalAmount?: RawMoney | null;
+  } | null;
   sellingPlanAllocation?: {
     sellingPlan?: { id: string; name: string } | null;
   } | null;
@@ -52,6 +56,12 @@ export type CartLine = {
    * different plan (or none) is a DIFFERENT cart line. */
   sellingPlanId?: string | null;
   sellingPlanName?: string | null;
+  /** Shopify's line cost AFTER automatic discounts (BeePaws Kit / Tier Gift
+   * BXGYs apply in the cart itself — verified live 2026-07-19). The drawer
+   * shows this over unitPrice×qty when they differ; 0 renders as FREE. */
+  lineTotalAmount?: string | null;
+  /** Line cost before discounts — the struck price beside a discounted one. */
+  lineSubtotalAmount?: string | null;
 };
 
 /** One cart line to add: sellingPlanId rides along for subscriptions. */
@@ -148,6 +158,8 @@ function mapCart(raw: RawCart): ShopifyCart {
       quantity: node.quantity,
       sellingPlanId: node.sellingPlanAllocation?.sellingPlan?.id ?? null,
       sellingPlanName: node.sellingPlanAllocation?.sellingPlan?.name ?? null,
+      lineTotalAmount: node.cost?.totalAmount?.amount ?? null,
+      lineSubtotalAmount: node.cost?.subtotalAmount?.amount ?? null,
     })),
   };
 }

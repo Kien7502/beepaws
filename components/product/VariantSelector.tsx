@@ -166,6 +166,28 @@ export type TierKitComponent = {
 };
 export type TierKit = { components: TierKitComponent[] };
 
+/** Admin-managed "BeePaws Kit" automatic BXGY, resolved per tier by the page.
+ * Display math derives from it (never hardcoded) and mirrors Shopify's
+ * allocation: % off up to unitQuantity add-on units, cheapest first,
+ * ONE-TIME lines only (automatic BXGY can't touch subscription lines). */
+export type TierKitDeal = {
+  percentage: number;
+  unitQuantity: number;
+  getsProductIds: string[];
+};
+
+/** Tier gift, resolved + VERIFIED by the page: only present when the gift is
+ * sellable AND the "BeePaws Tier Gift" discount actively backs it — the
+ * discount is what makes the line free, the storefront just adds it. */
+export type TierGift = {
+  handle: string;
+  title: string;
+  imageUrl: string;
+  variantId: string;
+  priceAmount: string;
+  currencyCode: string;
+};
+
 type Props = {
   product: Product;
   /** Pool of products eligible as cross-sell add-ons in higher tiers. Typically
@@ -191,6 +213,13 @@ type Props = {
    * the tier has authored components and NO bundle link — bundle wins).
    * Add/Buy composes one cart line per component. */
   tierKits?: (TierKit | null)[] | null;
+  /** Per-tier kit discount (aligned by index), from the managed BeePaws Kit
+   * automatic discount. Applies in the cart itself — the drawer will show
+   * the same discounted lines. */
+  tierKitDeals?: (TierKitDeal | null)[] | null;
+  /** Per-tier verified free gift (aligned by index). Selecting the tier adds
+   * the gift line; the backing discount zeroes it in cart + checkout. */
+  tierGifts?: (TierGift | null)[] | null;
   /** Subscribe & Save selling plans (Shopify Subscriptions app), resolved
    * server-side. Renders the purchase-option radio in quantity mode. */
   sellingPlans?: SellingPlanOption[] | null;
@@ -204,6 +233,8 @@ export default function VariantSelector({
   bundleTiers,
   tierBundles,
   tierKits,
+  tierKitDeals,
+  tierGifts,
   sellingPlans,
 }: Props) {
   // Resolve tier copy: metafield wins when set, else default. We do this
@@ -383,6 +414,41 @@ export default function VariantSelector({
     0,
   );
 
+  // Savings from a BeePaws Kit deal, mirroring Shopify's own allocation:
+  // % off up to unitQuantity eligible units, CHEAPEST first, one-time lines
+  // only (automatic BXGY never applies to subscription lines — the plan's
+  // own % is that line's discount).
+  function kitDealSavings(
+    lines: { productId: string; unitAmount: number; quantity: number; subscribed: boolean }[],
+    deal: TierKitDeal | null,
+  ): number {
+    if (!deal) return 0;
+    const units: number[] = [];
+    for (const l of lines) {
+      if (l.subscribed) continue;
+      if (!deal.getsProductIds.includes(l.productId)) continue;
+      for (let u = 0; u < l.quantity; u++) units.push(l.unitAmount);
+    }
+    units.sort((a, b) => a - b);
+    return units.slice(0, deal.unitQuantity).reduce((sum, u) => sum + u * deal.percentage, 0);
+  }
+
+  const selectedKitDeal = selectedTierKit ? (tierKitDeals?.[tierIdx] ?? null) : null;
+  const kitSavings = kitDealSavings(
+    kitLines.map((l) => ({
+      productId: l.component.product.id,
+      unitAmount: parseFloat(l.unitAmount),
+      quantity: l.component.quantity,
+      subscribed: !!l.plan,
+    })),
+    selectedKitDeal,
+  );
+  const kitDiscountedTotal = Math.max(0, kitTotal - kitSavings);
+  // The gift line is added with the tier but never charged (the backing
+  // discount zeroes it in cart + checkout), so it doesn't touch totals.
+  const selectedTierGift =
+    !quantityMode && !selectedTierBundle ? (tierGifts?.[tierIdx] ?? null) : null;
+
   // Change one option value on one kit component → snap to the matching
   // variant (mirror of pickBundleOption, scoped to that component's product).
   function pickKitOption(ci: number, optName: string, optValue: string) {
@@ -535,7 +601,7 @@ export default function VariantSelector({
     : selectedTierBundle
       ? parseFloat(chosenBundleVariant?.priceAmount ?? selectedTierBundle.variants[0].priceAmount)
       : selectedTierKit
-        ? kitTotal
+        ? kitDiscountedTotal
         : mainTotal + addonsTotal;
   const displayCurrency =
     selectedTierBundle?.currencyCode ||
@@ -574,6 +640,23 @@ export default function VariantSelector({
     });
   }
 
+
+  // The tier gift line: never charged — the backing "BeePaws Tier Gift"
+  // discount zeroes it in cart + checkout (the page only passes a gift when
+  // that discount is verified ACTIVE). unitPrice 0 keeps the optimistic
+  // drawer honest until the sync brings Shopify's own zeroed line cost.
+  function addGiftLine(gift: TierGift) {
+    addItem({
+      merchandiseId: gift.variantId,
+      productHandle: gift.handle,
+      productTitle: gift.title,
+      variantTitle: "",
+      imageUrl: gift.imageUrl,
+      currencyCode: gift.currencyCode,
+      unitPriceAmount: "0.00",
+      quantity: 1,
+    });
+  }
 
   function onAddToCart() {
     // Quantity mode → one cart line per variant with a chosen quantity.
@@ -665,6 +748,7 @@ export default function VariantSelector({
           sellingPlanName: l.plan?.name ?? null,
         });
       }
+      if (selectedTierGift) addGiftLine(selectedTierGift);
       setAdded(true);
       window.setTimeout(() => setAdded(false), 1800);
       return;
@@ -707,6 +791,7 @@ export default function VariantSelector({
       });
     }
 
+    if (selectedTierGift) addGiftLine(selectedTierGift);
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1800);
   }
@@ -777,11 +862,17 @@ export default function VariantSelector({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            lines: kitLines.map((l) => ({
-              merchandiseId: l.variant.id,
-              quantity: l.component.quantity,
-              ...(l.plan ? { sellingPlanId: l.plan.id } : {}),
-            })),
+            lines: [
+              ...kitLines.map((l) => ({
+                merchandiseId: l.variant.id,
+                quantity: l.component.quantity,
+                ...(l.plan ? { sellingPlanId: l.plan.id } : {}),
+              })),
+              // Gift line: zeroed by the backing Tier Gift discount at checkout.
+              ...(selectedTierGift
+                ? [{ merchandiseId: selectedTierGift.variantId, quantity: 1 }]
+                : []),
+            ],
           }),
         });
         const data = (await res.json()) as { checkoutUrl?: string; error?: string };
@@ -809,6 +900,10 @@ export default function VariantSelector({
       }
       for (const addon of resolvedAddons) {
         lines.push({ merchandiseId: addon.variant.id, quantity: addon.qty });
+      }
+      if (selectedTierGift) {
+        // Zeroed by the backing Tier Gift discount at checkout.
+        lines.push({ merchandiseId: selectedTierGift.variantId, quantity: 1 });
       }
       const res = await fetch("/api/shopify/cart/checkout", {
         method: "POST",
@@ -1080,10 +1175,13 @@ export default function VariantSelector({
               tMainTotal += parseFloat(v.price.amount);
             }
             const kit = (!tb && tierKits?.[i]) || null;
+            const gift = selected ? (tierGifts?.[i] ?? null) : null;
             // For a bundle tier, price reflects the chosen variant when this tier
             // is selected, else its first variant. A composed kit reflects the
             // chosen variants + plans when selected, else its base (first-variant,
-            // one-time) sum. Otherwise the legacy composed total.
+            // one-time) sum — both net of the kit deal, matching what the cart
+            // will actually charge (the deal applies in the cart, verified live).
+            // Otherwise the legacy composed total.
             const tbVariant = tb ? (selected ? chosenBundleVariant : tb.variants[0]) : null;
             const kitBaseTotal = kit
               ? kit.components.reduce(
@@ -1093,14 +1191,35 @@ export default function VariantSelector({
                   0,
                 )
               : 0;
+            const kitBaseSavings = kit
+              ? kitDealSavings(
+                  kit.components.map((c) => ({
+                    productId: c.product.id,
+                    unitAmount: parseFloat(c.product.variants.edges[0]?.node.price.amount ?? "0"),
+                    quantity: c.quantity,
+                    subscribed: false,
+                  })),
+                  tierKitDeals?.[i] ?? null,
+                )
+              : 0;
             const tTotal = tb
               ? parseFloat(tbVariant?.priceAmount ?? tb.variants[0].priceAmount)
               : kit
                 ? selected
-                  ? kitTotal
-                  : kitBaseTotal
+                  ? kitDiscountedTotal
+                  : Math.max(0, kitBaseTotal - kitBaseSavings)
                 : tMainTotal +
                   tAddons.reduce((sum, a) => sum + parseFloat(a.variant.price.amount) * a.qty, 0);
+            // Pre-deal sum, struck beside the discounted price when a deal bites.
+            const tStruck = kit
+              ? selected
+                ? kitSavings > 0.005
+                  ? kitTotal
+                  : null
+                : kitBaseSavings > 0.005
+                  ? kitBaseTotal
+                  : null
+              : null;
             const tCurrency = tb
               ? tb.currencyCode
               : kit
@@ -1155,6 +1274,11 @@ export default function VariantSelector({
                     {tierCopy(i, "name")}
                   </span>
                   <span className="text-[15.5px] font-bold tabular-nums text-cocoa">
+                    {tStruck !== null && (
+                      <span className="mr-1.5 text-[12.5px] font-semibold text-brown/60 line-through">
+                        {formatMoney(tStruck, tCurrency)}
+                      </span>
+                    )}
                     {formatMoney(tTotal, tCurrency)}
                   </span>
                 </div>
@@ -1216,7 +1340,39 @@ export default function VariantSelector({
                         </li>
                       );
                     })}
+                    {gift && (
+                      <li className="flex items-center gap-2">
+                        <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded-md border border-line bg-cream">
+                          <Image
+                            src={gift.imageUrl || "/product-placeholder.svg"}
+                            alt=""
+                            fill
+                            className="object-cover"
+                            sizes="24px"
+                          />
+                        </span>
+                        <span className="min-w-0 truncate">1× {gift.title}</span>
+                        <span className="shrink-0 rounded-full bg-honey-tint px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-gold-deep">
+                          Gift
+                        </span>
+                        <span className="ml-auto shrink-0 tabular-nums">
+                          <span className="mr-1.5 text-brown/60 line-through">
+                            {formatMoney(parseFloat(gift.priceAmount), gift.currencyCode)}
+                          </span>
+                          <span className="font-bold text-emerald-700">FREE</span>
+                        </span>
+                      </li>
+                    )}
                   </ul>
+                )}
+
+                {selected && kit && kitSavings > 0.005 && (
+                  /* Derived from the managed BeePaws Kit discount — the same
+                     math Shopify applies in the cart, so drawer + checkout
+                     show identical numbers. */
+                  <p className="mt-1.5 text-[11.5px] font-bold text-emerald-700">
+                    Kit deal: you save {formatMoney(kitSavings, tCurrency)}
+                  </p>
                 )}
 
                 {selected && !kit && (tb ? (
@@ -1296,6 +1452,29 @@ export default function VariantSelector({
                         </span>
                       </li>
                     ))}
+                    {gift && (
+                      <li className="flex items-center gap-2">
+                        <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded-md border border-line bg-cream">
+                          <Image
+                            src={gift.imageUrl || "/product-placeholder.svg"}
+                            alt=""
+                            fill
+                            className="object-cover"
+                            sizes="24px"
+                          />
+                        </span>
+                        <span className="min-w-0 truncate">1× {gift.title}</span>
+                        <span className="shrink-0 rounded-full bg-honey-tint px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-gold-deep">
+                          Gift
+                        </span>
+                        <span className="ml-auto shrink-0 tabular-nums">
+                          <span className="mr-1.5 text-brown/60 line-through">
+                            {formatMoney(parseFloat(gift.priceAmount), gift.currencyCode)}
+                          </span>
+                          <span className="font-bold text-emerald-700">FREE</span>
+                        </span>
+                      </li>
+                    )}
                   </ul>
                 ))}
 

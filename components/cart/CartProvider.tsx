@@ -52,6 +52,9 @@ export type LocalCartItem = {
    * operation in this file keys on cartLineKey(), never merchandiseId alone. */
   sellingPlanId?: string | null;
   sellingPlanName?: string | null;
+  /** Line cost after automatic discounts (from the synced Shopify cart) —
+   * the drawer's price of record when present; 0 renders as FREE. */
+  lineTotalAmount?: string | null;
   /** For a real Shopify bundle: the components it expands into. Kept in a
    * side-map keyed by merchandiseId (see bundleComponentsById) so it survives
    * cart syncs that rebuild lines from Shopify (which omit this metadata).
@@ -153,6 +156,7 @@ function mapShopifyToLocal(cart: ShopifyCart): LocalCartItem[] {
     quantity: line.quantity,
     sellingPlanId: line.sellingPlanId ?? null,
     sellingPlanName: line.sellingPlanName ?? null,
+    lineTotalAmount: line.lineTotalAmount ?? null,
   }));
 }
 
@@ -416,6 +420,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           let updated: ShopifyCart;
 
           if (existingId) {
+            // No client-side merging needed: the Storefront Cart API merges
+            // duplicate merchandise+plan lines itself (verified live
+            // 2026-07-19 — cartCreate AND cartLinesAdd both collapse a
+            // repeated variant into one line with summed quantity). The
+            // duplicate-id error seen in kit testing comes from the online
+            // store CART PERMALINK, deduped in cart-permalink.ts.
             try {
               updated = await addCartLines(existingId, lines);
             } catch {

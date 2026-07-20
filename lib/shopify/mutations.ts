@@ -9,6 +9,10 @@ const CART_FIELDS = `
         node {
           id
           quantity
+          cost {
+            subtotalAmount { amount }
+            totalAmount { amount }
+          }
           sellingPlanAllocation {
             sellingPlan { id name }
           }
