@@ -1366,15 +1366,6 @@ export default function VariantSelector({
                   </ul>
                 )}
 
-                {selected && kit && kitSavings > 0.005 && (
-                  /* Derived from the managed BeePaws Kit discount — the same
-                     math Shopify applies in the cart, so drawer + checkout
-                     show identical numbers. */
-                  <p className="mt-1.5 text-[11.5px] font-bold text-emerald-700">
-                    Kit deal: you save {formatMoney(kitSavings, tCurrency)}
-                  </p>
-                )}
-
                 {selected && !kit && (tb ? (
                   <ul className="mt-2 space-y-1 text-[12px] text-brown">
                     {tb.components.map((c, ci) => (
