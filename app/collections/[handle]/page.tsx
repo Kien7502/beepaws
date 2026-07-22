@@ -1,4 +1,5 @@
 import { getProducts } from "@/lib/shopify/queries";
+import { withoutVariantGroupMembers } from "@/lib/shopify/variant-groups";
 import ProductCard from "@/components/product/ProductCard";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
@@ -29,9 +30,11 @@ export default async function CollectionPage({
 }) {
   const resolvedParams = await params;
   const collectionHandle = resolvedParams.handle;
-  // Hide Shopify bundle products (tagged `bundle`) from collection grids.
-  const products = (await getProducts({ collectionHandle })).filter(
-    (p) => !p.tags?.includes("bundle"),
+  // Hide Shopify bundle products (tagged `bundle`) from collection grids, and
+  // collapse variant groups to their primary (contract §3) so flavours of one
+  // product don't appear as near-duplicate rows.
+  const products = await withoutVariantGroupMembers(
+    (await getProducts({ collectionHandle })).filter((p) => !p.tags?.includes("bundle")),
   );
 
   const title = formatCollectionTitle(collectionHandle);

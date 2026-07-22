@@ -167,6 +167,34 @@ export async function ProductPageView({
       )
     : null;
 
+  // VARIANT GROUP (combined listings, storefront-side — admin handoff
+  // 2026-07-21). Members are SEPARATE Shopify products presented as options on
+  // this page; each keeps its own price/images/variants/availability. The list
+  // includes this product. Unresolvable members drop out; fewer than 2 usable
+  // options = ordinary product, no picker. Labels come from the metafield
+  // (HyperSKU overwrites Shopify titles on sync).
+  const variantGroup = beepaws?.variantGroup?.length
+    ? (
+        await Promise.all(
+          beepaws.variantGroup.map(async (m) => {
+            const memberHandle = m?.product?.handle;
+            if (!memberHandle) return null;
+            const mp =
+              memberHandle === product.handle ? product : await getProduct(memberHandle);
+            if (!mp || mp.variants.edges.length === 0) return null;
+            return {
+              handle: mp.handle,
+              label: m?.label?.trim() || m?.product?.title?.trim() || mp.title,
+              product: mp,
+              // Honour each member's OWN availability (contract §5: never
+              // derive stock numbers — availableForSale is the honest signal).
+              availableForSale: mp.variants.edges.some((e) => e.node.availableForSale),
+            };
+          }),
+        )
+      ).filter((o): o is NonNullable<typeof o> => o !== null)
+    : [];
+
   // Managed automatic discounts (BeePaws Kit* / BeePaws Tier Gift* — created
   // by the admin tool). ALL kit/gift money math derives from these, never
   // hardcoded (cross-repo contract). Fetched only when a tier wires either.
@@ -433,6 +461,8 @@ export async function ProductPageView({
                 tierKitDeals={tierKitDeals}
                 tierGifts={tierGifts}
                 sellingPlans={sellingPlans}
+                variantGroup={variantGroup.length > 1 ? variantGroup : null}
+                variantGroupLabel={beepaws?.variantGroupLabel}
               />
             </div>
 

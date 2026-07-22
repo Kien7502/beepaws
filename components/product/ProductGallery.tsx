@@ -19,18 +19,35 @@ const GAP = 8; // gap-2
 const THUMB_MIN = 90; // target minimum size — controls how many fit per row
 
 export function ProductGallery({ productTitle, images, fallbackUrl }: Props) {
-  const list =
-    images.length > 0
-      ? images.map((e) => e.node)
-      : [{ url: fallbackUrl, altText: productTitle, width: 1200, height: 1200 }];
-
   // Controlled-vs-uncontrolled: when wrapped in <ProductMediaSync>, the active
   // index is shared with VariantSelector so variant picks scroll the gallery.
   // Standalone usage falls back to local state.
   const isControlled = useIsInsideMediaSync();
   const media = useProductMedia();
+
+  // A variant group (combined listing) swaps the whole image set when the
+  // customer picks another flavour — those images belong to a DIFFERENT
+  // Shopify product, so they can't be an index into this product's list.
+  const serverList =
+    images.length > 0
+      ? images.map((e) => e.node)
+      : [{ url: fallbackUrl, altText: productTitle, width: 1200, height: 1200 }];
+  const list =
+    media.activeImages && media.activeImages.length > 0
+      ? media.activeImages.map((i) => ({
+          url: i.url,
+          altText: i.altText,
+          width: 1200,
+          height: 1200,
+        }))
+      : serverList;
   const [localActive, setLocalActive] = useState(0);
-  const active = isControlled ? media.activeIndex : localActive;
+  // Clamped: a shorter image set after a variant-group swap must never leave
+  // the index pointing past the end.
+  const active = Math.min(
+    isControlled ? media.activeIndex : localActive,
+    Math.max(0, list.length - 1),
+  );
   const setActive = (i: number) => {
     if (isControlled) media.setActiveIndex(i);
     else setLocalActive(i);

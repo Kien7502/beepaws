@@ -1,4 +1,5 @@
 import { getFullProductForPage, getPaymentMethods, getProduct } from "@/lib/shopify/queries";
+import { getVariantGroupPrimary } from "@/lib/shopify/variant-groups";
 import { notFound } from "next/navigation";
 import { ProductPageView } from "@/components/product/ProductPageView";
 
@@ -12,11 +13,20 @@ export async function generateMetadata({
   params: Promise<{ handle: string }>;
 }) {
   const { handle } = await params;
-  const product = await getProduct(handle);
+  const [product, variantGroupPrimary] = await Promise.all([
+    getProduct(handle),
+    getVariantGroupPrimary(handle),
+  ]);
   if (!product) return { title: "Not found | Beepaws" };
 
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
   const pageUrl = `${siteUrl}/products/${handle}`;
+  // Variant-group members keep their own URLs but must not compete with the
+  // primary in search (contract §2): canonical points at the page that
+  // actually presents this product as an option.
+  const canonicalUrl = variantGroupPrimary
+    ? `${siteUrl}/products/${variantGroupPrimary}`
+    : pageUrl;
   const title = `${product.seo?.title || product.title} | Beepaws`;
   const description = (product.seo?.description || product.description || "").slice(0, 160);
   const ogImage = product.images.edges[0]?.node?.url;
@@ -25,7 +35,7 @@ export async function generateMetadata({
     title,
     description,
     alternates: {
-      canonical: pageUrl,
+      canonical: canonicalUrl,
     },
     openGraph: {
       title,

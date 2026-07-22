@@ -122,6 +122,20 @@ export interface IngredientGroup {
   items?: string;
 }
 
+/** One member of a variant group (`beepaws.variant_group`) — the
+ * combined-listings pattern implemented storefront-side (admin handoff
+ * 2026-07-21, `docs/admin-handoff-variant-groups.md`). Several SEPARATE
+ * Shopify products (each fully supplier-synced) are presented as options on
+ * ONE PDP. The list includes the PRIMARY itself, in display order.
+ *
+ * `label` lives here rather than being read from the Shopify title ON
+ * PURPOSE: HyperSKU overwrites titles when it syncs. `product` is the usual
+ * product_ref shape — resolve by handle. */
+export interface VariantGroupMember {
+  product?: { id?: string; handle?: string; title?: string } | null;
+  label?: string;
+}
+
 /** One curated pick for the "More from BeePaws" discovery band
  * (`beepaws.discovery_products`). Mirrors the admin tool's list_of_objects
  * shape: the ref nests under `product` (same nesting as
@@ -220,6 +234,10 @@ export interface BeepawsMetafields {
   educationNote: string | null;
   beforeAfterSlides: BeforeAfterSlide[] | null;
   bundleTiers: BundleTierCopy[] | null;
+  /** Picker label for a variant group ("Flavor", "Scent"). */
+  variantGroupLabel: string | null;
+  /** Variant-group members incl. the primary; empty/absent = ordinary product. */
+  variantGroup: VariantGroupMember[] | null;
   // Curated picks for the "More from BeePaws" band; null/empty → automatic.
   discoveryProducts: DiscoveryPick[] | null;
   painPoints: PainPoint[] | null;

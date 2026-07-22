@@ -2,7 +2,7 @@ import type { BeepawsMetafields } from "@/types/metafields";
 
 // Map a beepaws-admin draft (snake_case keys, already-native JSON values) onto the
 // normalized.beepaws shape. Inverse of parseBeepaws() in admin-product-page.ts —
-// keep the two key lists in sync (same 26 keys). Draft values are NOT JSON strings
+// keep the two key lists in sync (same 28 keys). Draft values are NOT JSON strings
 // (unlike Shopify metafields), so no JSON.parse.
 export function beepawsFromDraft(content: Record<string, unknown>): BeepawsMetafields {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,6 +22,8 @@ export function beepawsFromDraft(content: Record<string, unknown>): BeepawsMetaf
     educationNote: g("education_note"), // string
     beforeAfterSlides: g("before_after_slides"),
     bundleTiers: g("bundle_tiers"),
+    variantGroupLabel: g("variant_group_label"), // string
+    variantGroup: g("variant_group"),
     discoveryProducts: g("discovery_products"),
     painPoints: g("pain_points"),
     painPointsIntro: g("pain_points_intro"),

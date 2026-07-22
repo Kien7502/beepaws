@@ -176,6 +176,18 @@ export type TierKitDeal = {
   getsProductIds: string[];
 };
 
+/** One option in a variant group (combined listing): a SEPARATE Shopify
+ * product presented as a flavour/scent choice on this page. Each member keeps
+ * its own price, images, variants and availability — nothing is shared.
+ * `label` comes from the metafield, never the Shopify title (HyperSKU
+ * overwrites titles on sync). */
+export type VariantGroupOption = {
+  handle: string;
+  label: string;
+  product: Product;
+  availableForSale: boolean;
+};
+
 /** Tier gift, resolved + VERIFIED by the page: only present when the gift is
  * sellable AND the "BeePaws Tier Gift" discount actively backs it — the
  * discount is what makes the line free, the storefront just adds it. */
@@ -223,6 +235,11 @@ type Props = {
   /** Subscribe & Save selling plans (Shopify Subscriptions app), resolved
    * server-side. Renders the purchase-option radio in quantity mode. */
   sellingPlans?: SellingPlanOption[] | null;
+  /** Variant group (combined listing) members incl. this product, in display
+   * order. Picking one switches which PRODUCT the buy box sells. */
+  variantGroup?: VariantGroupOption[] | null;
+  /** Picker label for the group ("Flavor", "Scent"). */
+  variantGroupLabel?: string | null;
 };
 
 export default function VariantSelector({
@@ -236,6 +253,8 @@ export default function VariantSelector({
   tierKitDeals,
   tierGifts,
   sellingPlans,
+  variantGroup,
+  variantGroupLabel,
 }: Props) {
   // Resolve tier copy: metafield wins when set, else default. We do this
   // here rather than mutating TIERS so the structural shape (and the
@@ -244,10 +263,26 @@ export default function VariantSelector({
     const custom = bundleTiers?.[i]?.[field]?.trim();
     return custom || TIERS[i][field];
   }
-  const variants = product.variants.edges.map((e) => e.node);
+  // VARIANT GROUP (combined listing): the picked member decides which PRODUCT
+  // this buy box sells. Everything below reads `activeProduct`, never the
+  // `product` prop, so price, variants, images and the cart line all follow
+  // the choice. Members are independent products — nothing is shared.
+  const groupOptions = variantGroup?.length ? variantGroup : null;
+  const [groupHandle, setGroupHandle] = useState<string>(product.handle);
+  const activeGroupOption =
+    groupOptions?.find((o) => o.handle === groupHandle) ?? groupOptions?.[0] ?? null;
+  const activeProduct = activeGroupOption?.product ?? product;
+
+  const variants = activeProduct.variants.edges.map((e) => e.node);
   const multi = variants.length > 1;
 
-  const [selectedVariant, setSelectedVariant] = useState<ProductVariant>(variants[0]);
+  // Variant identity is held as an ID, not an object: when the group member
+  // changes, the old ID stops resolving and the selection falls back to the
+  // new product's first variant automatically — no reset effect needed.
+  const [selectedVariantId, setSelectedVariantId] = useState<string>(variants[0]?.id ?? "");
+  const selectedVariant: ProductVariant =
+    variants.find((v) => v.id === selectedVariantId) ?? variants[0];
+  const setSelectedVariant = (v: ProductVariant) => setSelectedVariantId(v.id);
   // Default to the "Most Popular" tier (Complete Care Kit) — common conversion pattern.
   const [tierIdx, setTierIdx] = useState(1);
   // When a tier links a (customer-choose) bundle, this is the chosen bundle
@@ -286,6 +321,23 @@ export default function VariantSelector({
     const first = product.variants.edges[0]?.node;
     return first ? { [first.id]: 1 } : {};
   });
+  // Switching group member: sell the new product, and seed its first variant
+  // at qty 1 so the CTA is never "Choose a quantity above" right after a pick.
+  function selectGroupMember(option: VariantGroupOption) {
+    if (option.handle === groupHandle) return;
+    setGroupHandle(option.handle);
+    const first = option.product.variants.edges[0]?.node;
+    setSelectedVariantId(first?.id ?? "");
+    setVariantQtys(first ? { [first.id]: 1 } : {});
+    setUnitVariantIds((prev) => prev.map(() => first?.id ?? ""));
+    // Swap the gallery to this member's own images.
+    setActiveImages(
+      option.product.images.edges.map((e) => ({
+        url: e.node.url,
+        altText: e.node.altText ?? null,
+      })),
+    );
+  }
   function setVariantQty(id: string, qty: number) {
     setVariantQtys((prev) => ({ ...prev, [id]: Math.max(0, Math.min(99, qty)) }));
   }
@@ -376,7 +428,7 @@ export default function VariantSelector({
   // changes → this effect re-runs → sets gallery back to current variant's
   // image → user's click is undone). The setter itself is identity-stable via
   // a ref inside ProductMediaSync, so depending on it is loop-free.
-  const { setActiveByUrl, setActiveVariant } = useProductMedia();
+  const { setActiveByUrl, setActiveVariant, setActiveImages } = useProductMedia();
 
   useEffect(() => {
     setActiveByUrl(selectedVariant?.image?.url ?? null);
@@ -665,10 +717,11 @@ export default function VariantSelector({
       for (const { variant: v, qty } of qtyLines) {
         addItem({
           merchandiseId: v.id,
-          productHandle: product.handle,
-          productTitle: product.title,
+          productHandle: activeProduct.handle,
+          productTitle: activeProduct.title,
           variantTitle: v.title,
-          imageUrl: v.image?.url || product.images.edges[0]?.node?.url || "/product-placeholder.svg",
+          imageUrl:
+            v.image?.url || activeProduct.images.edges[0]?.node?.url || "/product-placeholder.svg",
           currencyCode: v.price.currencyCode,
           // Subscribed lines carry the plan's allocation price so the drawer
           // shows what will actually be charged per delivery.
@@ -767,10 +820,10 @@ export default function VariantSelector({
       const v = variants.find((vv) => vv.id === variantId) ?? selectedVariant;
       addItem({
         merchandiseId: variantId,
-        productHandle: product.handle,
-        productTitle: product.title,
+        productHandle: activeProduct.handle,
+        productTitle: activeProduct.title,
         variantTitle: v.title,
-        imageUrl: product.images.edges[0]?.node?.url || "/product-placeholder.svg",
+        imageUrl: activeProduct.images.edges[0]?.node?.url || "/product-placeholder.svg",
         currencyCode: v.price.currencyCode,
         unitPriceAmount: v.price.amount,
         quantity: qty,
@@ -934,6 +987,48 @@ export default function VariantSelector({
           from-price, and the running total is baked into the Add-to-cart label
           below. One price on screen at a time per the device reference. */}
 
+      {/* Variant group (combined listing): each option is a SEPARATE Shopify
+          product shown as one choice here. Full-width stacked rows like the
+          non-color option picker, since flavour names are wordy. Unavailable
+          members render DISABLED rather than hidden (contract §4) so the
+          range stays legible. Labels come from the metafield — never the
+          Shopify title, which HyperSKU overwrites on sync. */}
+      {groupOptions && groupOptions.length > 1 && (
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-baseline gap-x-2 text-sm">
+            <span className="font-bold text-cocoa">{variantGroupLabel?.trim() || "Option"}</span>
+            <span className="text-brown">{activeGroupOption?.label}</span>
+          </div>
+          <div className="flex flex-col gap-2" role="radiogroup" aria-label={variantGroupLabel?.trim() || "Option"}>
+            {groupOptions.map((opt) => {
+              const active = opt.handle === activeGroupOption?.handle;
+              return (
+                <button
+                  key={opt.handle}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  disabled={!opt.availableForSale}
+                  onClick={() => selectGroupMember(opt)}
+                  className={`flex w-full min-h-[44px] items-center justify-between gap-3 rounded-xl border-[1.8px] px-4 py-2.5 text-left text-sm font-bold transition-all ${
+                    active
+                      ? "border-clay bg-[#FCFBF4] text-cocoa shadow-sm"
+                      : "border-line text-cocoa hover:border-clay/60"
+                  } ${!opt.availableForSale ? "cursor-not-allowed opacity-50 hover:border-line" : ""}`}
+                >
+                  <span className="min-w-0 truncate">{opt.label}</span>
+                  {!opt.availableForSale && (
+                    <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-brown">
+                      Sold out
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {quantityMode ? (
         /* Quantity rows — one per variant, each with its own stepper (owner
            decision 2026-07-10 for bundle-less products): the row IS the
@@ -1015,7 +1110,7 @@ export default function VariantSelector({
             {variants.map((v) => {
               const qty = variantQtys[v.id] ?? 0;
               const soldOut = !v.availableForSale;
-              const label = v.selectedOptions.map((o) => o.value).join(" / ") || product.title;
+              const label = v.selectedOptions.map((o) => o.value).join(" / ") || activeProduct.title;
               return (
                 <div
                   key={v.id}
@@ -1407,7 +1502,7 @@ export default function VariantSelector({
                     <li className="flex items-center gap-2">
                       <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded-md border border-line bg-cream">
                         <Image
-                          src={product.images.edges[0]?.node?.url || "/product-placeholder.svg"}
+                          src={activeProduct.images.edges[0]?.node?.url || "/product-placeholder.svg"}
                           alt=""
                           fill
                           className="object-cover"
@@ -1415,7 +1510,7 @@ export default function VariantSelector({
                         />
                       </span>
                       <span className="min-w-0 truncate">
-                        <span className="font-bold">{t.mainQty}×</span> {product.title}
+                        <span className="font-bold">{t.mainQty}×</span> {activeProduct.title}
                       </span>
                     </li>
                     {tAddons.map((a) => (

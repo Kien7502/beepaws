@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { getProducts } from "@/lib/shopify/queries";
+import { withoutVariantGroupMembers } from "@/lib/shopify/variant-groups";
 import { hasAdminApiCredentials } from "@/lib/shopify/admin-credentials";
 import ProductCard from "@/components/product/ProductCard";
 import SortDropdown from "@/components/product/SortDropdown";
@@ -66,8 +67,10 @@ export default async function ShopAllPage({
   });
   // Hide Shopify bundle products (tagged `bundle`) from the catalog grid - they
   // sell via their own page / a cross-sell on component PDPs, not mixed in here.
+  // Variant groups collapse to their primary (contract §3): one row per page,
+  // not one per flavour.
   const products = sortProducts(
-    rawProducts.filter((p) => !p.tags?.includes("bundle")),
+    await withoutVariantGroupMembers(rawProducts.filter((p) => !p.tags?.includes("bundle"))),
     sort,
   );
 

@@ -256,6 +256,8 @@ function normalizeMetafields(metafields: AdminMetafield[]) {
     educationNote:    byKey["beepaws.education_note"]?.value ?? null,
     beforeAfterSlides: parseBeepaws("before_after_slides"),
     bundleTiers:      parseBeepaws("bundle_tiers"),
+    variantGroupLabel: byKey["beepaws.variant_group_label"]?.value ?? null,
+    variantGroup:     parseBeepaws("variant_group"),
     discoveryProducts: parseBeepaws("discovery_products"),
     painPoints:       parseBeepaws("pain_points"),
     painPointsIntro:  parseBeepaws("pain_points_intro"),
