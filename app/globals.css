@@ -21,6 +21,7 @@
   --color-rose-soft:  var(--rose-soft);
   --color-sage:       var(--sage);
   --color-moss:       var(--moss);
+  --color-positive:   var(--positive);
   --color-toffee:     var(--toffee);
   --color-bark:       var(--bark);
   --color-sand:       var(--sand);
@@ -68,8 +69,16 @@
   --honey-tint: #F6E6C6;   /* light warm tint — cards, bands              */
   --line:       #EADEC2;   /* hairline border                             */
   --rose-soft:  #BC5E38;   /* warm alert tone — never harsh red           */
-  --sage:       #8CA081;   /* soft sage — fusion accent (footer stripe)   */
-  --moss:       #2F3B2A;   /* deep sage — footer bg, plant-brand nod      */
+  /* GREEN IS BOTANICAL, NOT A BRAND ACCENT (palette pass 2026-07-21).
+     Green used to be a general accent (the forest footer, left over from the
+     abandoned Forest experiment) while nothing else on the site was green, so
+     the footer read as another site's. Green now means ONE thing: living /
+     plant-derived. It appears where the page is literally about plants — the
+     "What's inside" ingredient names — and as the positive signal below.
+     Do not reintroduce green as a decorative surface. */
+  --sage:       #8CA081;   /* light green — decorative only, fails AA on text */
+  --moss:       #2F3B2A;   /* deep green — ingredient names (7.1:1 on toffee) */
+  --positive:   var(--moss); /* free / added / saved confirmations           */
   --toffee:     #E5C58C;   /* mid toffee — Mechanism band, warm but not dark */
   --bark:       #5E3C22;   /* warm-dark brown — Final CTA, softer than cocoa */
   --sand:       #F2E7CC;   /* deepened cream — section bg paired w/ white      */
@@ -97,6 +106,42 @@
      were a standing invitation to drift. If a future feature needs a
      category accent or a "vet-safe" badge tone, mint it deliberately from
      the Warm Honey ramp above. */
+}
+
+/* ─── Seasonal skins ───────────────────────────────────────────────────────
+   A season is a small set of overrides on the RAW palette above. Because every
+   component reads tokens (never hex), a season needs zero component changes:
+   set `data-season` on <html> and the whole site re-skins.
+
+   Activated from lib/theme.ts (a constant, or NEXT_PUBLIC_SEASONAL_THEME).
+   `default` deliberately has no block — Warm Honey IS the identity.
+
+   THE RULE THAT KEEPS THIS SAFE: a season may only move ACCENT and BAND
+   colors. It must never touch the ink ramp (--ink / --cocoa / --brown), the
+   base surfaces (--paper / --cream / --card), or --line. Those carry every
+   text contrast pair on the site, so leaving them fixed means a new season
+   cannot silently break AA. Band colors stay in the same lightness
+   neighbourhood as the values they replace for the same reason.
+
+   Adding one: copy a block, change the values, add the name to SEASONS in
+   lib/theme.ts. Check any text that sits on a band you moved. */
+
+/* Winter holiday: the closing band turns evergreen and the tints cool toward
+   frost, while CTAs stay warm gold — festive without the costume. */
+[data-season="evergreen"] {
+  --honey-tint: #E7E6D6;
+  --sand:       #E6E5D4;
+  --toffee:     #D9CDA4;
+  --bark:       #2A3B2E;
+}
+
+/* Spring: warm tints shift toward blossom, closing band lightens to a softer
+   brown. Gold stays; the season is carried by the bands. */
+[data-season="blossom"] {
+  --honey-tint: #F7E3DF;
+  --sand:       #F4E5DD;
+  --toffee:     #EFC9B4;
+  --bark:       #6B4A3A;
 }
 
 

@@ -121,7 +121,7 @@ const Header = () => {
                 </span>
               )}
               {showCartPulse && (
-                <span className="absolute -bottom-7 right-0 rounded-full bg-emerald-600 px-2.5 py-1 text-[10px] font-bold text-white shadow-md">
+                <span className="absolute -bottom-7 right-0 rounded-full bg-positive px-2.5 py-1 text-[10px] font-bold text-white shadow-md">
                   +{lastAddedQuantity}
                 </span>
               )}

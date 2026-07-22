@@ -52,7 +52,10 @@ export function WaveDivider({ from, to, frontColor, flip = false, simple = false
         style={{ display: "block", width: "100%", height }}
         xmlns="http://www.w3.org/2000/svg"
       >
-        <path d={path} fill={fill} fillOpacity={opacity} />
+        {/* fill via style, not the presentation attribute: the attribute
+            does not resolve CSS custom properties, and callers pass tokens
+            (var(--cocoa)) so waves follow the seasonal skin. */}
+        <path d={path} style={{ fill, fillOpacity: opacity }} />
       </svg>
     </div>
   );

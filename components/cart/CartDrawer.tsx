@@ -327,7 +327,7 @@ export function CartDrawer() {
                                   {formatMoney(baseTotal, item.currencyCode)}
                                 </span>
                               )}
-                              <span className="text-emerald-600">FREE</span>
+                              <span className="text-positive">FREE</span>
                             </>
                           ) : (
                             <>

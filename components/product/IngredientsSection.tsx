@@ -101,9 +101,12 @@ export function IngredientsSection({
   const left = group.items.slice(0, split);
   const right = group.items.slice(split);
 
+  // Ingredient NAMES carry the brand's one green (palette pass 2026-07-21):
+  // this section is literally about plants, so green means "plant-derived"
+  // here rather than decorating a surface. moss on toffee is 7.1:1.
   const renderItem = (it: ParsedItem, i: number) => (
     <li key={`${it.name}-${i}`}>
-      <h3 className="font-display text-lg font-semibold text-cocoa md:text-[19px]">
+      <h3 className="font-display text-lg font-semibold text-moss md:text-[19px]">
         {it.name}
       </h3>
       {it.why && (
@@ -139,8 +142,8 @@ export function IngredientsSection({
                 onClick={() => setActive(i)}
                 className={`rounded-full px-5 py-2.5 text-sm font-bold transition-colors ${
                   i === active
-                    ? "bg-cocoa text-cream"
-                    : "border border-line bg-card text-cocoa hover:border-clay/60"
+                    ? "bg-moss text-cream"
+                    : "border border-line bg-card text-cocoa hover:border-moss/50"
                 }`}
               >
                 {g.label || `Formula ${i + 1}`}

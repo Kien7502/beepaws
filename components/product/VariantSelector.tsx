@@ -1454,7 +1454,7 @@ export default function VariantSelector({
                           <span className="mr-1.5 text-brown/60 line-through">
                             {formatMoney(parseFloat(gift.priceAmount), gift.currencyCode)}
                           </span>
-                          <span className="font-bold text-emerald-700">FREE</span>
+                          <span className="font-bold text-positive">FREE</span>
                         </span>
                       </li>
                     )}
@@ -1557,7 +1557,7 @@ export default function VariantSelector({
                           <span className="mr-1.5 text-brown/60 line-through">
                             {formatMoney(parseFloat(gift.priceAmount), gift.currencyCode)}
                           </span>
-                          <span className="font-bold text-emerald-700">FREE</span>
+                          <span className="font-bold text-positive">FREE</span>
                         </span>
                       </li>
                     )}
@@ -1920,7 +1920,7 @@ export default function VariantSelector({
 
 
         {added && (
-          <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-sm font-semibold text-emerald-600">
+          <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-sm font-semibold text-positive">
             <CheckCircle2 size={16} />
             Added to cart!{" "}
             <button

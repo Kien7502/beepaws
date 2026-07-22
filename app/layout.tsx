@@ -6,6 +6,7 @@ import Footer from "@/components/layout/Footer";
 import { CartProvider } from "@/components/cart/CartProvider";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { ScrollToTopButton } from "@/components/ui/ScrollToTopButton";
+import { activeSeason } from "@/lib/theme";
 
 // Warm Honey type system: Fraunces (display serif) for headings + brand
 // moments, Hanken Grotesk (humanist sans) for body. next/font assigns each a
@@ -42,8 +43,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // data-season drives the seasonal skin (lib/theme.ts → the [data-season]
+  // blocks in globals.css). Server-rendered, so the right palette is in the
+  // first paint — no flash of the default.
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" data-season={activeSeason()} suppressHydrationWarning>
       <body className={`${fraunces.variable} ${hankenGrotesk.variable} antialiased min-h-screen flex flex-col`}>
         <CartProvider>
           <Header />
