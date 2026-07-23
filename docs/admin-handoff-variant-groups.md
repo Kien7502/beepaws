@@ -79,3 +79,26 @@ when it syncs**, so the picker must not read Shopify titles.
 - The existing merged product ("Beepaws oral spray") is being **archived** by the
   owner; the two sprays return to being separate, synced products joined by a
   variant group. Expect the group to be authored on one of the sprays.
+
+## Bugs found in testing (2026-07-22) — PDP variant-group behaviour
+
+The admin side works; these are storefront-side PDP defects to fix:
+
+1. **Images reload on every option switch.** Changing the flavour re-fetches /
+   re-mounts that member's images each time, so there's a visible flash/spinner
+   on every switch. Preload all members up front: resolve the whole
+   `variant_group` (each member's images + price + availability) when the PDP
+   mounts, keep them in state, and swap the already-loaded set on selection —
+   no fetch on switch. Warming `<link rel="preload" as="image">` (or just
+   rendering the other members' images hidden) avoids the decode flash too.
+
+2. **Cart line shows the member's ORIGINAL product name, not the flavour.**
+   Adding a non-primary flavour puts its own product title on the cart line
+   (e.g. "PHANSTA Pet Oral Hygiene Spray 100ml") instead of presenting it as a
+   flavour of the group. The cart should read as the PRIMARY product + the
+   chosen option — e.g. title = primary's title, with the group label + value
+   ("Flavor: Chicken") shown as the line's option. Carry that via a cart line
+   attribute / the line's presentation (custom attributes on cartLinesAdd, or
+   the storefront's own line-title override), since the underlying merchandise
+   is genuinely a different product. Don't rename the Shopify product — HyperSKU
+   would overwrite it, and it must stay findable by its real name in admin.
