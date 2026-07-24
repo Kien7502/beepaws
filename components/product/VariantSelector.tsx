@@ -11,7 +11,7 @@ import type { SellingPlanOption } from "@/lib/shopify/selling-plans";
 import type { PaymentMethods } from "@/lib/shopify/queries";
 import Button from "@/components/ui/Button";
 import { CheckCircle2, Info, ShoppingBag, Loader2, Minus, Plus } from "lucide-react";
-import { useCart } from "@/components/cart/CartProvider";
+import { useCart, type LocalCartItem } from "@/components/cart/CartProvider";
 import { useProductMedia } from "./ProductMediaSync";
 import { PaymentMethodsRow } from "./PaymentMethodsRow";
 
@@ -340,6 +340,21 @@ export default function VariantSelector({
   }
   function setVariantQty(id: string, qty: number) {
     setVariantQtys((prev) => ({ ...prev, [id]: Math.max(0, Math.min(99, qty)) }));
+  }
+
+  // Cart-line display override for a group member: a member is a separate
+  // Shopify product, so its synced line would read as that product's own title.
+  // Carry the PRIMARY title + the chosen option so the drawer presents it as a
+  // flavour of the group (bug found in testing 2026-07-22). undefined for
+  // non-group products, so ordinary lines are untouched.
+  function groupPresentation(): LocalCartItem["variantGroup"] | undefined {
+    if (!groupOptions || !activeGroupOption) return undefined;
+    return {
+      primaryTitle: product.title,
+      primaryHandle: product.handle,
+      label: variantGroupLabel?.trim() || "Option",
+      value: activeGroupOption.label,
+    };
   }
 
   // Subscribe & Save (quantity mode only for now: bundle lines can't carry a
@@ -729,6 +744,7 @@ export default function VariantSelector({
           quantity: qty,
           sellingPlanId: activePlan?.id ?? null,
           sellingPlanName: activePlan?.name ?? null,
+          variantGroup: groupPresentation(),
         });
       }
       setAdded(true);
@@ -827,6 +843,7 @@ export default function VariantSelector({
         currencyCode: v.price.currencyCode,
         unitPriceAmount: v.price.amount,
         quantity: qty,
+        variantGroup: groupPresentation(),
       });
     }
 
@@ -1025,6 +1042,33 @@ export default function VariantSelector({
                 </button>
               );
             })}
+          </div>
+
+          {/* Warm the OTHER members' hero images so switching flavour swaps an
+              already-fetched, already-decoded image instead of flashing while
+              it loads (bug found in testing 2026-07-22). Rendered 1px + hidden;
+              `sizes` matches the gallery's main image so Next requests the same
+              srcset candidate the gallery will actually show. Only the first
+              image of each non-active member (the one shown on switch) — the
+              thumb strip lazy-loads the rest. */}
+          <div aria-hidden className="pointer-events-none absolute h-px w-px overflow-hidden opacity-0">
+            {groupOptions
+              .filter((opt) => opt.handle !== activeGroupOption?.handle)
+              .map((opt) => {
+                const first = opt.product.images.edges[0]?.node?.url;
+                if (!first) return null;
+                return (
+                  <span key={opt.handle} className="relative block h-px w-px">
+                    <Image
+                      src={first}
+                      alt=""
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 58vw"
+                      loading="eager"
+                    />
+                  </span>
+                );
+              })}
           </div>
         </div>
       )}

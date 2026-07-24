@@ -192,10 +192,13 @@ export function CartDrawer() {
                 // destinations — their PDPs 404 by design (route guard), so a
                 // link here would dead-end mid-purchase.
                 const isBundleLine = (item.bundleComponents?.length ?? 0) > 0;
+                // Group members present as the primary product everywhere in
+                // the line (title, thumb link), since that's how they were chosen.
+                const lineHandle = item.variantGroup?.primaryHandle ?? item.productHandle;
                 const thumb = (
                   <Image
                     src={item.imageUrl || "/product-placeholder.svg"}
-                    alt={item.productTitle}
+                    alt={item.variantGroup?.primaryTitle ?? item.productTitle}
                     fill
                     className="object-cover"
                     sizes="80px"
@@ -214,7 +217,7 @@ export function CartDrawer() {
                       </div>
                     ) : (
                       <Link
-                        href={`/products/${item.productHandle}`}
+                        href={`/products/${lineHandle}`}
                         onClick={closeDrawer}
                         className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-[var(--color-border)]"
                         tabIndex={-1}
@@ -226,22 +229,39 @@ export function CartDrawer() {
                     <div className="flex min-w-0 flex-1 flex-col">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          {isBundleLine ? (
-                            <p className="truncate text-sm font-bold text-[var(--color-foreground)]">
-                              {item.productTitle}
+                          {(() => {
+                            // A variant-group member links to the PRIMARY's page
+                            // and shows the primary's title — its own merchandise
+                            // is a separate product, but on the PDP it was chosen
+                            // as a flavour of the group.
+                            const displayTitle = item.variantGroup?.primaryTitle ?? item.productTitle;
+                            return isBundleLine ? (
+                              <p className="truncate text-sm font-bold text-[var(--color-foreground)]">
+                                {displayTitle}
+                              </p>
+                            ) : (
+                              <Link
+                                href={`/products/${lineHandle}`}
+                                onClick={closeDrawer}
+                                className="block truncate text-sm font-bold text-[var(--color-foreground)] hover:text-[var(--color-primary)]"
+                              >
+                                {displayTitle}
+                              </Link>
+                            );
+                          })()}
+                          {/* Variant-group option: "Flavor: Fresh Mint". Reads as
+                              a choice within the group, not the member's own name. */}
+                          {item.variantGroup && (
+                            <p className="mt-0.5 text-xs text-slate-500">
+                              {item.variantGroup.label}: {item.variantGroup.value}
                             </p>
-                          ) : (
-                            <Link
-                              href={`/products/${item.productHandle}`}
-                              onClick={closeDrawer}
-                              className="block truncate text-sm font-bold text-[var(--color-foreground)] hover:text-[var(--color-primary)]"
-                            >
-                              {item.productTitle}
-                            </Link>
                           )}
                           {/* For a bundle, the variant value is shown under its
-                              own component below — not here on the bundle line. */}
+                              own component below — not here on the bundle line.
+                              Suppressed for group members too (the option line
+                              above already carries the meaningful label). */}
                           {!item.bundleComponents?.length &&
+                            !item.variantGroup &&
                             item.variantTitle &&
                             item.variantTitle !== "Default Title" && (
                               <p className="mt-0.5 text-xs text-slate-500">{item.variantTitle}</p>

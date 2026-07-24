@@ -24,6 +24,7 @@ import {
 const CART_ID_KEY = "beepaws_shopify_cart_id";
 const LEGACY_KEY = "beepaws_local_cart_v1";
 const BUNDLE_COMPONENTS_KEY = "beepaws_bundle_components_v1";
+const VARIANT_GROUP_KEY = "beepaws_variant_group_v1";
 const DEBOUNCE_MS = 600;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -60,6 +61,19 @@ export type LocalCartItem = {
    * cart syncs that rebuild lines from Shopify (which omit this metadata).
    * Bundles never carry selling plans, so merchandiseId keying stays safe. */
   bundleComponents?: BundleComponentLite[];
+  /** Variant-group (combined-listing) display override. A group member is a
+   * SEPARATE Shopify product, so a synced line carries the member's own product
+   * title (e.g. "PHANSTA…") — misleading, since on the PDP it was chosen as a
+   * flavour of the primary. Kept in a side-map (variantGroupById) so it survives
+   * the Shopify sync that rebuilds titles, and the drawer shows the primary +
+   * the chosen option instead. Display-only: at Shopify checkout the merchandise
+   * really is the member product, so its name shows there. */
+  variantGroup?: {
+    primaryTitle: string;
+    primaryHandle: string;
+    label: string;
+    value: string;
+  };
 };
 
 /** Cart line identity: variant + selling plan. Plain merchandiseId for
@@ -203,6 +217,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [bundleComponentsById, setBundleComponentsById] = useState<
     Record<string, BundleComponentLite[]>
   >({});
+  // Variant-group display overrides keyed by merchandiseId — same rationale as
+  // bundleComponentsById: survives Shopify syncs that would otherwise stamp the
+  // member product's own title onto the line. Persisted to localStorage.
+  const [variantGroupById, setVariantGroupById] = useState<
+    Record<string, NonNullable<LocalCartItem["variantGroup"]>>
+  >({});
   const [hydrated, setHydrated] = useState(false);
   const [isCartLoading, setIsCartLoading] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -261,15 +281,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const flushScheduledRef = useRef(false);
 
   // Derived: use Shopify cart items when available, else localStorage items.
-  // Decorate each with its bundle components (if any) from the side-map so the
-  // drawer can list what's inside a bundle line even after a Shopify sync.
+  // Decorate each from the side-maps (bundle components + variant-group display
+  // override) so the drawer keeps that metadata even after a Shopify sync
+  // rebuilds the lines.
   const items = useMemo<LocalCartItem[]>(() => {
     const base = shopifyCart ? mapShopifyToLocal(shopifyCart) : localItems;
     return base.map((it) => {
       const bc = bundleComponentsById[it.merchandiseId];
-      return bc ? { ...it, bundleComponents: bc } : it;
+      const vg = variantGroupById[it.merchandiseId];
+      if (!bc && !vg) return it;
+      return { ...it, ...(bc ? { bundleComponents: bc } : {}), ...(vg ? { variantGroup: vg } : {}) };
     });
-  }, [shopifyCart, localItems, bundleComponentsById]);
+  }, [shopifyCart, localItems, bundleComponentsById, variantGroupById]);
 
   // ── Hydration: restore cart on mount ────────────────────────────────────
 
@@ -316,6 +339,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   }, [bundleComponentsById]);
 
+  // Load + persist the variant-group side-map (same lifecycle as above).
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(VARIANT_GROUP_KEY);
+      if (raw)
+        setVariantGroupById(
+          JSON.parse(raw) as Record<string, NonNullable<LocalCartItem["variantGroup"]>>,
+        );
+    } catch {}
+  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem(VARIANT_GROUP_KEY, JSON.stringify(variantGroupById));
+    } catch {}
+  }, [variantGroupById]);
+
   // ── addItem ───────────────────────────────────────────────────────────────
 
   const addItem = useCallback((next: LocalCartItem) => {
@@ -328,6 +367,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (next.bundleComponents?.length) {
       const components = next.bundleComponents;
       setBundleComponentsById((prev) => ({ ...prev, [next.merchandiseId]: components }));
+    }
+
+    // Remember a variant-group member's display override (keyed by
+    // merchandiseId) so the drawer shows the primary + flavour even after sync.
+    if (next.variantGroup) {
+      const vg = next.variantGroup;
+      setVariantGroupById((prev) => ({ ...prev, [next.merchandiseId]: vg }));
     }
 
     // Optimistic local update — visible immediately regardless of sync mode.
@@ -595,6 +641,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setLocalItems([]);
     setShopifyCart(null);
     setBundleComponentsById({});
+    setVariantGroupById({});
     clearCartId();
   }, []);
 
