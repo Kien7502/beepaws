@@ -1,6 +1,7 @@
 import "server-only";
 
 import { shopifyFetch } from "./index";
+import { buildReturnAttributes } from "./mutations";
 
 /** Legacy cookie from the retired merge-into-cookie-cart flow. Still exported
  * so the checkout route can DELETE it — carts it points at accumulated every
@@ -54,7 +55,7 @@ export async function createCartWithLines(
   const res = await shopifyFetch<CartOpResult>({
     query: CART_CREATE,
     variables: {
-      input: { lines },
+      input: { lines, attributes: buildReturnAttributes() },
     },
     cache: "no-store",
   });

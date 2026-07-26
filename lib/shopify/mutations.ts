@@ -1,5 +1,23 @@
 // GraphQL fragments & mutations for Shopify Storefront Cart API
 
+/**
+ * Shopify's hosted checkout has no supported return_url/return_to parameter on
+ * the Cart API's checkoutUrl (confirmed against current shopify.dev docs and
+ * the Shopify dev community — the Storefront Cart returned by cartCreate
+ * carries no field for it, and the post-checkout Thank You / Order status page
+ * lives on Shopify's own domain by design). CartInput.attributes IS a real,
+ * schema-supported field, so this stamps the intended return URL onto the
+ * cart as a plain key/value attribute — the signal a merchant-configured
+ * redirect (Shopify Plus checkout script/UI extension, or the official
+ * "Hydrogen redirect theme" that works on all plans) can read when sending
+ * the customer back here. It does not make Shopify redirect on its own; see
+ * docs/post-purchase-return.md.
+ */
+export function buildReturnAttributes(): { key: string; value: string }[] {
+  const site = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "");
+  return site ? [{ key: "return_url", value: `${site}/thank-you` }] : [];
+}
+
 const CART_FIELDS = `
   fragment CartFields on Cart {
     id
@@ -48,8 +66,8 @@ export const GQL_GET_CART = `
 
 export const GQL_CART_CREATE = `
   ${CART_FIELDS}
-  mutation CartCreate($lines: [CartLineInput!]!) {
-    cartCreate(input: { lines: $lines }) {
+  mutation CartCreate($lines: [CartLineInput!]!, $attributes: [AttributeInput!]) {
+    cartCreate(input: { lines: $lines, attributes: $attributes }) {
       cart { ...CartFields }
       userErrors { field message }
     }

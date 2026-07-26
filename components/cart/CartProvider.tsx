@@ -25,6 +25,13 @@ const CART_ID_KEY = "beepaws_shopify_cart_id";
 const LEGACY_KEY = "beepaws_local_cart_v1";
 const BUNDLE_COMPONENTS_KEY = "beepaws_bundle_components_v1";
 const VARIANT_GROUP_KEY = "beepaws_variant_group_v1";
+/** Cart ids we know were already checked out — see markCartCompleted(). Shopify's
+ * Cart API has no completedAt/equivalent field and keeps serving the same lines
+ * for a cart id after its order completes (a documented platform gap, not
+ * something this app can fix server-side), so the hydration restore path below
+ * treats this locally-recorded ledger as the authoritative "already used" signal. */
+const COMPLETED_CART_IDS_KEY = "beepaws_completed_cart_ids";
+const MAX_COMPLETED_CART_IDS = 20;
 const DEBOUNCE_MS = 600;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -86,6 +93,22 @@ export function cartLineKey(i: {
   return i.sellingPlanId ? `${i.merchandiseId}::${i.sellingPlanId}` : i.merchandiseId;
 }
 
+/** The Shopify cart id currently active in this browser, if any — read by the
+ * /thank-you return route before it clears the cart, so it can record which
+ * id just completed. */
+export function getStoredCartId(): string | null {
+  return readCartId();
+}
+
+/** Record that a cart id has been checked out. Call this (then clearCart())
+ * from the post-purchase return route — see the COMPLETED_CART_IDS_KEY
+ * comment above for why this locally-tracked ledger exists at all. Exported
+ * at module scope (not through context) since it's a plain storage op, not
+ * React state. */
+export function markCartCompleted(cartId: string): void {
+  recordCompletedCartId(cartId);
+}
+
 type CartContextValue = {
   // ── Backwards-compatible API ──────────────────────────────────────────
   items: LocalCartItem[];
@@ -134,6 +157,35 @@ function clearCartId() {
   try {
     localStorage.removeItem(CART_ID_KEY);
     localStorage.removeItem(LEGACY_KEY);
+  } catch {}
+}
+
+function readCompletedCartIds(): string[] {
+  try {
+    const raw = localStorage.getItem(COMPLETED_CART_IDS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function isCartIdCompleted(cartId: string): boolean {
+  return readCompletedCartIds().includes(cartId);
+}
+
+/** Record a cart id as already checked out. Capped so a browser that never
+ * clears storage doesn't grow this list forever — only the most recent ids
+ * matter for catching a stale restore/race. */
+function recordCompletedCartId(cartId: string) {
+  try {
+    const ids = readCompletedCartIds().filter((id) => id !== cartId);
+    ids.push(cartId);
+    localStorage.setItem(
+      COMPLETED_CART_IDS_KEY,
+      JSON.stringify(ids.slice(-MAX_COMPLETED_CART_IDS)),
+    );
   } catch {}
 }
 
@@ -301,12 +353,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (hasStorefrontConfig()) {
         const cartId = readCartId();
         if (cartId) {
-          const cart = await getCart(cartId);
-          if (cart) {
-            setShopifyCart(cart);
-          } else {
-            // Cart expired on Shopify's side
+          if (isCartIdCompleted(cartId)) {
+            // Already checked out (recorded by the /thank-you return route or a
+            // same-id sync that raced past it) — Shopify would happily keep
+            // serving these same lines, so don't resurrect a purchased cart.
             clearCartId();
+          } else {
+            const cart = await getCart(cartId);
+            if (cart) {
+              setShopifyCart(cart);
+            } else {
+              // Cart expired on Shopify's side
+              clearCartId();
+            }
           }
         }
       } else {
