@@ -65,12 +65,18 @@ not just this one.
 `app/thank-you/page.tsx` (client logic in
 `components/checkout/ThankYouContent.tsx`) is the return route:
 
-- Reads an optional `?cart_id=` query param.
-- Marks the cart id currently stored in this browser (if any) — and the
-  `cart_id` query param, if given and different — as completed via
-  `markCartCompleted()` in `CartProvider.tsx`.
-- Calls `clearCart()`, which resets cart state and clears
-  `beepaws_shopify_cart_id` / `beepaws_local_cart_v1` from `localStorage`.
+- Reads a **required** `?cart_id=` query param. Without it, the route does
+  nothing to cart state — a bare, guessed, or stale `/thank-you` URL must
+  never touch whatever the visitor currently has in their drawer.
+- Always records the `cart_id` param as completed via `markCartCompleted()`
+  in `CartProvider.tsx`, so it can never be resurrected on this browser.
+- Only calls `clearCart()` (which resets cart state and clears
+  `beepaws_shopify_cart_id` / `beepaws_local_cart_v1` from `localStorage`)
+  when `cart_id` exactly matches the cart id this browser currently has
+  stored. Buy It Now always builds a separate, unlinked cart from whatever is
+  sitting in the drawer (see `app/api/shopify/cart/checkout/route.ts`), so a
+  purchase completing elsewhere must not wipe an unrelated, still-active
+  drawer cart.
 
 On the next hydration, `CartProvider`'s restore effect checks any stored cart
 id against that completed-ids ledger before re-fetching/re-presenting it, so a
