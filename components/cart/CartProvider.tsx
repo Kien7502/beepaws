@@ -375,7 +375,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setHydrated(true);
     }
     restore();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Keep legacy storage in sync when operating in non-Shopify mode
