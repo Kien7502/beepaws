@@ -195,6 +195,28 @@ export async function ProductPageView({
       ).filter((o): o is NonNullable<typeof o> => o !== null)
     : [];
 
+  // Combined-listing gallery: when this is a variant group, the gallery shows
+  // EVERY member's images in one reel (owner decision 2026-07-25 — replaces the
+  // swap-the-set-on-select model, which flashed while the new set loaded). All
+  // images are mounted at once, so picking a flavour just scrolls within the
+  // already-decoded reel. Members in group order; deduped by URL. Falls back to
+  // this product's own images for an ordinary (non-group) product.
+  const isVariantGroup = variantGroup.length > 1;
+  const galleryImages = isVariantGroup
+    ? (() => {
+        const seen = new Set<string>();
+        const edges: { node: (typeof product.images.edges)[number]["node"] }[] = [];
+        for (const member of variantGroup) {
+          for (const e of member.product.images.edges) {
+            if (seen.has(e.node.url)) continue;
+            seen.add(e.node.url);
+            edges.push(e);
+          }
+        }
+        return edges;
+      })()
+    : product.images.edges;
+
   // Managed automatic discounts (BeePaws Kit* / BeePaws Tier Gift* — created
   // by the admin tool). ALL kit/gift money math derives from these, never
   // hardcoded (cross-repo contract). Fetched only when a tier wires either.
@@ -355,8 +377,10 @@ export async function ProductPageView({
       <div className="relative container mx-auto max-w-7xl px-4 pb-16 pt-8 md:px-6 md:pb-24 md:pt-10">
         {/* ProductMediaSync provides shared activeImage state between the
             gallery (left col) and the variant selector (right col), so picking
-            a variant scrolls the gallery to the matching image. */}
-        <ProductMediaSync imageUrls={product.images.edges.map((e) => e.node.url)}>
+            a variant scrolls the gallery to the matching image. For a variant
+            group the reel is every member's images combined, and selecting a
+            flavour scrolls to that member's first image. */}
+        <ProductMediaSync imageUrls={galleryImages.map((e) => e.node.url)}>
         {/* min-w-0 on BOTH grid children: grid items default to min-width:auto,
             so one unshrinkable element in either column pushes the shared track
             (and the gallery card with it) past the viewport on phones — seen
@@ -366,7 +390,7 @@ export async function ProductPageView({
             <div className="lg:sticky lg:top-[7.5rem]">
               <ProductGallery
                 productTitle={product.title}
-                images={product.images.edges}
+                images={galleryImages}
                 fallbackUrl={fallbackUrl}
               />
             </div>

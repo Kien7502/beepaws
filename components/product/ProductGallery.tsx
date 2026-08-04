@@ -25,22 +25,14 @@ export function ProductGallery({ productTitle, images, fallbackUrl }: Props) {
   const isControlled = useIsInsideMediaSync();
   const media = useProductMedia();
 
-  // A variant group (combined listing) swaps the whole image set when the
-  // customer picks another flavour — those images belong to a DIFFERENT
-  // Shopify product, so they can't be an index into this product's list.
-  const serverList =
+  // For a variant group the `images` prop is already the combined reel of every
+  // member's images (built server-side in ProductPageView), so the gallery just
+  // renders the list it's given — picking a flavour scrolls within it via the
+  // shared activeIndex, no set-swap.
+  const list =
     images.length > 0
       ? images.map((e) => e.node)
       : [{ url: fallbackUrl, altText: productTitle, width: 1200, height: 1200 }];
-  const list =
-    media.activeImages && media.activeImages.length > 0
-      ? media.activeImages.map((i) => ({
-          url: i.url,
-          altText: i.altText,
-          width: 1200,
-          height: 1200,
-        }))
-      : serverList;
   const [localActive, setLocalActive] = useState(0);
   // Clamped: a shorter image set after a variant-group swap must never leave
   // the index pointing past the end.

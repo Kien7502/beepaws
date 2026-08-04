@@ -330,13 +330,10 @@ export default function VariantSelector({
     setSelectedVariantId(first?.id ?? "");
     setVariantQtys(first ? { [first.id]: 1 } : {});
     setUnitVariantIds((prev) => prev.map(() => first?.id ?? ""));
-    // Swap the gallery to this member's own images.
-    setActiveImages(
-      option.product.images.edges.map((e) => ({
-        url: e.node.url,
-        altText: e.node.altText ?? null,
-      })),
-    );
+    // The gallery is ONE combined reel of every member's images (built server-
+    // side), so switching flavour just scrolls to this member's first image —
+    // no set-swap, no reload flash. The images are already mounted + decoded.
+    setActiveByUrl(option.product.images.edges[0]?.node?.url ?? null);
   }
   function setVariantQty(id: string, qty: number) {
     setVariantQtys((prev) => ({ ...prev, [id]: Math.max(0, Math.min(99, qty)) }));
@@ -443,7 +440,7 @@ export default function VariantSelector({
   // changes → this effect re-runs → sets gallery back to current variant's
   // image → user's click is undone). The setter itself is identity-stable via
   // a ref inside ProductMediaSync, so depending on it is loop-free.
-  const { setActiveByUrl, setActiveVariant, setActiveImages } = useProductMedia();
+  const { setActiveByUrl, setActiveVariant } = useProductMedia();
 
   useEffect(() => {
     setActiveByUrl(selectedVariant?.image?.url ?? null);
@@ -1042,33 +1039,6 @@ export default function VariantSelector({
                 </button>
               );
             })}
-          </div>
-
-          {/* Warm the OTHER members' hero images so switching flavour swaps an
-              already-fetched, already-decoded image instead of flashing while
-              it loads (bug found in testing 2026-07-22). Rendered 1px + hidden;
-              `sizes` matches the gallery's main image so Next requests the same
-              srcset candidate the gallery will actually show. Only the first
-              image of each non-active member (the one shown on switch) — the
-              thumb strip lazy-loads the rest. */}
-          <div aria-hidden className="pointer-events-none absolute h-px w-px overflow-hidden opacity-0">
-            {groupOptions
-              .filter((opt) => opt.handle !== activeGroupOption?.handle)
-              .map((opt) => {
-                const first = opt.product.images.edges[0]?.node?.url;
-                if (!first) return null;
-                return (
-                  <span key={opt.handle} className="relative block h-px w-px">
-                    <Image
-                      src={first}
-                      alt=""
-                      fill
-                      sizes="(max-width: 1024px) 100vw, 58vw"
-                      loading="eager"
-                    />
-                  </span>
-                );
-              })}
           </div>
         </div>
       )}
