@@ -19,6 +19,10 @@ type Ctx = {
   activeIndex: number;
   setActiveIndex: (i: number) => void;
   setActiveByUrl: (url: string | null | undefined) => void;
+  /** URL of the image currently shown, so callers can tell whether the gallery
+   * is already on an image they'd otherwise scroll to (and skip a redundant,
+   * flicker-causing jump). */
+  activeUrl: string | null;
   activeVariant: ActiveVariant | null;
   setActiveVariant: (v: ActiveVariant | null) => void;
 };
@@ -42,12 +46,21 @@ export function ProductMediaSync({
   // image URL resolves to its index here.
   const urlsRef = useRef(imageUrls);
   urlsRef.current = imageUrls;
+  // Ref-mirror of activeIndex so setActiveByUrl can compare against the current
+  // index without being recreated (it must stay identity-stable — consumers
+  // depend on it in effects).
+  const activeIndexRef = useRef(activeIndex);
+  activeIndexRef.current = activeIndex;
 
   const setActiveByUrl = useCallback((url: string | null | undefined) => {
     if (!url) return;
     const idx = urlsRef.current.findIndex((u) => u === url);
-    if (idx >= 0) setActiveIndex(idx);
+    // Idempotent: targeting the image already shown is a no-op, so a redundant
+    // call can't re-trigger the slide/thumb-scroll (the flicker).
+    if (idx >= 0 && idx !== activeIndexRef.current) setActiveIndex(idx);
   }, []);
+
+  const activeUrl = imageUrls[activeIndex] ?? null;
 
   // Memoise the context value so children only re-render when something
   // actually changes (not on every parent render).
@@ -56,10 +69,11 @@ export function ProductMediaSync({
       activeIndex,
       setActiveIndex,
       setActiveByUrl,
+      activeUrl,
       activeVariant,
       setActiveVariant,
     }),
-    [activeIndex, setActiveByUrl, activeVariant],
+    [activeIndex, setActiveByUrl, activeUrl, activeVariant],
   );
 
   return <MediaCtx.Provider value={value}>{children}</MediaCtx.Provider>;
@@ -71,6 +85,7 @@ export function useProductMedia() {
     activeIndex: 0,
     setActiveIndex: () => {},
     setActiveByUrl: () => {},
+    activeUrl: null,
     activeVariant: null,
     setActiveVariant: () => {},
   };

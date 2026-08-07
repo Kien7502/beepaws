@@ -332,8 +332,13 @@ export default function VariantSelector({
     setUnitVariantIds((prev) => prev.map(() => first?.id ?? ""));
     // The gallery is ONE combined reel of every member's images (built server-
     // side), so switching flavour just scrolls to this member's first image —
-    // no set-swap, no reload flash. The images are already mounted + decoded.
-    setActiveByUrl(option.product.images.edges[0]?.node?.url ?? null);
+    // no set-swap, no reload flash. But if the reel is ALREADY on one of this
+    // member's images (the user scrolled there), scrolling to its first image
+    // would be a redundant jump/flicker — so skip it and leave the gallery put.
+    const memberUrls = new Set(option.product.images.edges.map((e) => e.node.url));
+    if (!activeUrl || !memberUrls.has(activeUrl)) {
+      setActiveByUrl(option.product.images.edges[0]?.node?.url ?? null);
+    }
   }
   function setVariantQty(id: string, qty: number) {
     setVariantQtys((prev) => ({ ...prev, [id]: Math.max(0, Math.min(99, qty)) }));
@@ -440,7 +445,7 @@ export default function VariantSelector({
   // changes → this effect re-runs → sets gallery back to current variant's
   // image → user's click is undone). The setter itself is identity-stable via
   // a ref inside ProductMediaSync, so depending on it is loop-free.
-  const { setActiveByUrl, setActiveVariant } = useProductMedia();
+  const { setActiveByUrl, setActiveVariant, activeUrl } = useProductMedia();
 
   useEffect(() => {
     setActiveByUrl(selectedVariant?.image?.url ?? null);
