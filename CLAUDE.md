@@ -94,3 +94,27 @@ All colors and shadows are CSS variables in `app/globals.css` under `@theme inli
 \* One of the two admin credential options is required for the catalog to work.
 
 `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` must be the `.myshopify.com` host, not the public storefront domain — `lib/shopify/domain.ts` throws otherwise.
+
+## Admin handoffs (post-launch wiring)
+
+The BeePaws Admin tool (sibling repo `../beepaws-admin`) now authors several shop-level
+documents into `beepaws.*` metafields **ahead of** the storefront reading them. Each has a
+contract in `docs/admin-handoff-*.md`. All are **additive** — an absent/empty metafield
+renders today's built-in defaults — so wiring them is post-launch, not a blocker.
+
+- **Homepage** (`docs/admin-handoff-homepage.md`) — **NOTE:** the homepage (`app/page.tsx`)
+  is currently 100% hardcoded text + Lucide icons + placeholder colour grounds, with **no
+  real images placed yet**. The admin now has a `/homepage` editor that publishes an ordered
+  list of **image blocks** (image + alt + plain heading/body + CTA) to the `beepaws.homepage`
+  metafield, each identified by a `key`. There is nothing to "import" the other direction —
+  the admin editor is the new source of truth. **Storefront TODO:** read + validate the
+  metafield, map each block to a homepage slot **by its `key`**, render image + text/CTA,
+  and fall back to the current hardcoded content when a block is absent. Then publish back the
+  list of keys the homepage consumes so the admin's keys match (e.g. `hero`, `proof-1/2/3`).
+- **Theme** (`docs/admin-handoff-theme-editor.md`) — visual composer → `beepaws.theme`
+  (accents-only palette + per-section bg/ink/texture + placed decoration sprites).
+- **Variant groups** (`docs/admin-handoff-variant-groups.md`) and **subscriptions/copy**
+  (`docs/admin-handoff-subscriptions-and-copy.md`) — see each doc.
+
+Treat every metafield as untrusted: re-apply the admin's validation (drop unknown keys, clamp
+ranges, verify CDN hosts) rather than trusting the stored JSON.
