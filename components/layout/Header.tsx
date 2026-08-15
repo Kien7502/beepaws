@@ -9,6 +9,16 @@ import { SearchOverlay } from "./SearchOverlay";
 import { useCart } from "@/components/cart/CartProvider";
 import titleIcon from "@/app/Title_icon.png";
 
+// LAUNCH NAV MODE (2026-07-26). The device launches with essentially one
+// product, so a full inline nav reads as empty. Until the spray (and more
+// products) are online we ship the MINIMAL bar: menu button + centered logo +
+// search + cart, with the real links (Shop / FAQ / Contact) in the menu panel.
+// Flip to `true` to reveal the conventional inline desktop nav — built and
+// ready, just dormant. Owner is sending a visual reference; styling here is
+// deliberately restrained (Warm Honey tokens, no heavy art direction) pending
+// that, so it re-skins cleanly.
+const SHOW_FULL_NAV = false;
+
 // Category links return when the dogs/cats collections are populated in
 // Shopify — live-checked 2026-07-09: with today's catalog they render EMPTY
 // collection pages, so they're gated off rather than dead-ending a first-time
@@ -16,6 +26,7 @@ import titleIcon from "@/app/Title_icon.png";
 // Footer.tsx carries the same flag — flip BOTH together.
 const SHOW_CATEGORY_LINKS = false;
 
+// Inline desktop nav (full mode only) — the wayfinding shown beside the logo.
 const navLinks = [
   { href: "/collections/all", label: "Shop All" },
   ...(SHOW_CATEGORY_LINKS
@@ -24,13 +35,28 @@ const navLinks = [
         { href: "/collections/cats", label: "Cats" },
       ]
     : []),
+  { href: "/faq", label: "FAQ" },
+];
+
+// Menu-panel links (mobile always; desktop in minimal mode). This is the ONLY
+// wayfinding on screen in minimal mode, so it carries the support pages too.
+const menuLinks = [
+  { href: "/", label: "Home" },
+  { href: "/collections/all", label: "Shop All" },
+  ...(SHOW_CATEGORY_LINKS
+    ? [
+        { href: "/collections/dogs", label: "Dogs" },
+        { href: "/collections/cats", label: "Cats" },
+      ]
+    : []),
+  { href: "/faq", label: "FAQ" },
+  { href: "/contact", label: "Contact" },
 ];
 
 function navLinkActive(pathname: string, href: string): boolean {
+  if (href === "/") return pathname === "/";
   if (href === "/collections/all") {
-    return (
-      pathname === "/collections/all" || pathname.startsWith("/products/")
-    );
+    return pathname === "/collections/all" || pathname.startsWith("/products/");
   }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
@@ -48,6 +74,11 @@ const Header = () => {
     return () => window.clearTimeout(t);
   }, [lastAddedAt]);
 
+  // Close the menu on navigation (route change).
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
   return (
     // Warm Honey re-skin: paper bg + hairline border (no shadow). Sticky stays.
     <header className="sticky top-0 z-50 w-full bg-paper border-b border-line">
@@ -62,11 +93,15 @@ const Header = () => {
 
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between h-16 md:h-[68px]">
-          <div className="flex flex-1 items-center md:flex-none">
+          {/* Left: menu button. Always visible in minimal mode; mobile-only in
+              full mode (desktop uses the inline nav instead). */}
+          <div className={`flex flex-1 items-center ${SHOW_FULL_NAV ? "md:flex-none" : ""}`}>
             <button
               type="button"
               onClick={() => setMobileOpen((o) => !o)}
-              className="p-2 text-cocoa hover:bg-honey-tint rounded-full transition-colors md:hidden"
+              className={`p-2 text-cocoa hover:bg-honey-tint rounded-full transition-colors ${
+                SHOW_FULL_NAV ? "md:hidden" : ""
+              }`}
               aria-expanded={mobileOpen}
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
             >
@@ -74,7 +109,9 @@ const Header = () => {
             </button>
           </div>
 
-          <div className="flex-1 md:flex-none text-center md:text-left">
+          {/* Logo: centered in minimal mode (all breakpoints); left-aligned on
+              desktop in full mode. */}
+          <div className={`flex-1 text-center ${SHOW_FULL_NAV ? "md:flex-none md:text-left" : ""}`}>
             <Link href="/" className="inline-block">
               <Image
                 src={titleIcon}
@@ -85,25 +122,29 @@ const Header = () => {
             </Link>
           </div>
 
-          <nav className="hidden md:flex flex-1 justify-center items-center gap-7">
-            {navLinks.map((link) => {
-              const active = navLinkActive(pathname, link.href);
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`text-[14.5px] font-semibold transition-colors relative py-1 ${
-                    active
-                      ? "text-clay after:absolute after:left-0 after:right-0 after:-bottom-0.5 after:h-0.5 after:rounded-full after:bg-clay"
-                      : "text-brown hover:text-gold-deep"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
-          </nav>
+          {/* Inline desktop nav — full mode only. */}
+          {SHOW_FULL_NAV && (
+            <nav className="hidden md:flex flex-1 justify-center items-center gap-7">
+              {navLinks.map((link) => {
+                const active = navLinkActive(pathname, link.href);
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`text-[14.5px] font-semibold transition-colors relative py-1 ${
+                      active
+                        ? "text-clay after:absolute after:left-0 after:right-0 after:-bottom-0.5 after:h-0.5 after:rounded-full after:bg-clay"
+                        : "text-brown hover:text-gold-deep"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          )}
 
+          {/* Right: search + cart. */}
           <div className="flex-1 flex items-center justify-end gap-1 md:gap-3">
             <SearchOverlay />
             <button
@@ -130,20 +171,15 @@ const Header = () => {
         </div>
       </div>
 
+      {/* Menu panel — mobile always; also desktop in minimal mode (it's the only
+          wayfinding there). */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-line bg-paper px-4 py-4 space-y-1 shadow-lg">
-          <Link
-            href="/"
-            onClick={() => setMobileOpen(false)}
-            className={`block rounded-xl px-4 py-3 text-base font-semibold ${
-              pathname === "/"
-                ? "text-clay bg-honey-tint/60"
-                : "text-cocoa hover:bg-honey-tint/80"
-            }`}
-          >
-            Home
-          </Link>
-          {navLinks.map((link) => {
+        <div
+          className={`border-t border-line bg-paper px-4 py-4 space-y-1 shadow-lg ${
+            SHOW_FULL_NAV ? "md:hidden" : ""
+          }`}
+        >
+          {menuLinks.map((link) => {
             const active = navLinkActive(pathname, link.href);
             return (
               <Link
