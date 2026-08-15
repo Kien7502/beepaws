@@ -12,11 +12,10 @@ import titleIcon from "@/app/Title_icon.png";
 // LAUNCH NAV MODE (2026-07-26). The device launches with essentially one
 // product, so a full inline nav reads as empty. Until the spray (and more
 // products) are online we ship the MINIMAL bar: menu button + centered logo +
-// search + cart, with the real links (Shop / FAQ / Contact) in the menu panel.
+// search + cart, with the launch links in the menu panel (see menuLinks).
 // Flip to `true` to reveal the conventional inline desktop nav — built and
-// ready, just dormant. Owner is sending a visual reference; styling here is
-// deliberately restrained (Warm Honey tokens, no heavy art direction) pending
-// that, so it re-skins cleanly.
+// ready, just dormant. Styling stays on Warm Honey tokens (the launch look;
+// no separate reference is planned).
 const SHOW_FULL_NAV = false;
 
 // Category links return when the dogs/cats collections are populated in
