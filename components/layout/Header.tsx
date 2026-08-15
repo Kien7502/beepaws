@@ -27,6 +27,7 @@ const SHOW_FULL_NAV = false;
 const SHOW_CATEGORY_LINKS = false;
 
 // Inline desktop nav (full mode only) — the wayfinding shown beside the logo.
+// Shop All + categories return when there's more than the device to browse.
 const navLinks = [
   { href: "/collections/all", label: "Shop All" },
   ...(SHOW_CATEGORY_LINKS
@@ -35,21 +36,15 @@ const navLinks = [
         { href: "/collections/cats", label: "Cats" },
       ]
     : []),
-  { href: "/faq", label: "FAQ" },
 ];
 
-// Menu-panel links (mobile always; desktop in minimal mode). This is the ONLY
-// wayfinding on screen in minimal mode, so it carries the support pages too.
+// Menu-panel links (mobile always; desktop in minimal mode). Trimmed for the
+// device-only launch (owner 2026-07-26): no "Shop All" (one product — the
+// homepage routes to it), no in-menu "Cart" (the cart icon already sits in the
+// bar), no "FAQ" (general info, not product wayfinding — reachable from the
+// footer). Shop All returns via navLinks when the catalog grows.
 const menuLinks = [
   { href: "/", label: "Home" },
-  { href: "/collections/all", label: "Shop All" },
-  ...(SHOW_CATEGORY_LINKS
-    ? [
-        { href: "/collections/dogs", label: "Dogs" },
-        { href: "/collections/cats", label: "Cats" },
-      ]
-    : []),
-  { href: "/faq", label: "FAQ" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -196,13 +191,6 @@ const Header = () => {
               </Link>
             );
           })}
-          <button
-            type="button"
-            onClick={() => { setMobileOpen(false); openDrawer(); }}
-            className="block w-full rounded-xl px-4 py-3 text-left text-base font-semibold text-cocoa hover:bg-honey-tint/80"
-          >
-            Cart {hydrated && itemCount > 0 && `(${itemCount})`}
-          </button>
         </div>
       )}
     </header>
