@@ -3,6 +3,8 @@ import RevealObserver from '@/components/RevealObserver';
 import { WaveDivider } from '@/components/ui/WaveDivider';
 import NewsletterPopup from '@/components/NewsletterPopup';
 import ProofCarousel from '@/components/ProofCarousel';
+import { HomeSlotImage } from '@/components/HomeSlotImage';
+import { getHomepageBlocks } from '@/lib/shopify/homepage';
 import { ShieldCheck, Tag, HandHeart, PawPrint, CalendarCheck, Heart, Search, Shield } from 'lucide-react';
 
 // ISR: revalidate via webhook → revalidateTag("products")
@@ -48,7 +50,12 @@ const PRINCIPLES = [
 // experiment are both retired (Option 6 + the default Warm Honey ground won,
 // 2026-07-09), so the page statically renders again and the ISR revalidate
 // above is live. A palette review, if ever wanted, is a deliberate later pass.
-export default function Home() {
+export default async function Home() {
+  // Admin-authored image blocks (docs/admin-handoff-homepage.md), keyed by slot.
+  // Absent/empty metafield → {} → every slot falls back to its hardcoded
+  // placeholder + copy below, so the page renders identically to before until
+  // the owner publishes. Keys consumed: see HOMEPAGE_KEYS in lib/shopify/homepage.
+  const blocks = await getHomepageBlocks();
   return (
     <div className="flex w-full flex-col bg-cream text-cocoa [font-family:var(--font-body)]">
       {/* Scroll-reveal driver + no-JS fallback so content is never hidden */}
@@ -69,9 +76,12 @@ export default function Home() {
           duplicated the shipping bar + Promise). Real Warm Honey tokens. */}
       <section className="relative min-h-[min(86dvh,800px)] w-full overflow-hidden">
         {/* Full-bleed lifestyle SCENE. Illustrative (AI ok later); NO product, NO
-            stock fur close-up. TODO: real warm at-home scene (pet in lap, hands). */}
+            stock fur close-up. Filled by the `hero` block when published, else
+            the placeholder ground. */}
         <div className="absolute inset-0 flex items-center justify-center bg-honey-tint">
-          <span className="text-xs font-semibold uppercase tracking-wider text-brown/50">Lifestyle scene (full-bleed)</span>
+          <HomeSlotImage block={blocks.hero} sizes="100vw" priority>
+            <span className="text-xs font-semibold uppercase tracking-wider text-brown/50">Lifestyle scene (full-bleed)</span>
+          </HomeSlotImage>
         </div>
         {/* Warm scrim, heavier on the left where the copy sits, for legibility */}
         <div className="absolute inset-0 bg-gradient-to-r from-cocoa/85 via-cocoa/45 to-transparent" />
@@ -85,17 +95,22 @@ export default function Home() {
                 narrow phone it stacked with natural wrapping into ragged 3-4
                 line output, so let mobile wrap on its own. */}
             <h1 className="mt-5 font-display text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl">
-              Keep your pet healthy,<br className="hidden md:inline" /> on your own terms.
+              {blocks.hero?.heading ? (
+                <span className="whitespace-pre-line">{blocks.hero.heading}</span>
+              ) : (
+                <>Keep your pet healthy,<br className="hidden md:inline" /> on your own terms.</>
+              )}
             </h1>
-            <p className="mt-5 max-w-md text-lg leading-relaxed text-white/85">
-              Honest tools for the care you would rather do at home. We don&rsquo;t claim to replace your vet — just to keep you out of the chair for the easy stuff.
+            <p className="mt-5 max-w-md whitespace-pre-line text-lg leading-relaxed text-white/85">
+              {blocks.hero?.body ??
+                "Honest tools for the care you would rather do at home. We don’t claim to replace your vet — just to keep you out of the chair for the easy stuff."}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
-                href="/collections/all"
+                href={blocks.hero?.ctaHref ?? "/collections/all"}
                 className="inline-flex h-14 items-center justify-center rounded-full bg-clay px-9 text-base font-bold text-white shadow-lg transition-colors duration-200 hover:bg-cocoa active:scale-[0.97]"
               >
-                Start now
+                {blocks.hero?.ctaLabel ?? "Start now"}
               </Link>
               <Link
                 href="#why"
@@ -122,15 +137,18 @@ export default function Home() {
           {/* min-h 240 on phones (was 300): a full-width empty box was eating
               most of a mobile screen before any words arrived. */}
           <div className="relative flex min-h-[240px] items-center justify-center overflow-hidden rounded-2xl bg-cream md:min-h-[440px]">
-            <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Warm outcome scene</span>
+            <HomeSlotImage block={blocks['healthy-home']} sizes="(max-width: 768px) 100vw, 55vw">
+              <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Warm outcome scene</span>
+            </HomeSlotImage>
           </div>
           {/* Right: the argument (must convert the skeptic, not just list nice ideas) */}
           <div>
             <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[2.6rem]">
-              Healthy pets start at home
+              {blocks['healthy-home']?.heading ?? "Healthy pets start at home"}
             </h2>
-            <p className="mt-3 max-w-xl text-brown">
-              The vet is for the big stuff. Most of what keeps a pet healthy is small, regular, and yours to do.
+            <p className="mt-3 max-w-xl whitespace-pre-line text-brown">
+              {blocks['healthy-home']?.body ??
+                "The vet is for the big stuff. Most of what keeps a pet healthy is small, regular, and yours to do."}
             </p>
             {/* De-carded blocks: no card backgrounds, so the four read as
                 considered points separated by space rather than a template card
@@ -193,9 +211,11 @@ export default function Home() {
                 tall empty box before all the text — PHERO's mobile rhythm.
                 Desktop 2×3 corner-cell layout unchanged. */}
             <div className="relative flex aspect-[16/10] items-center justify-center overflow-hidden rounded-2xl border border-line bg-cream max-md:order-2 md:col-start-2 md:row-start-1 md:row-span-2 md:aspect-[3/4]">
-              {/* TODO: warm at-home moment (owner + pet, hands-on care).
-                  Illustrative slot — AI ok later, never stock fur. */}
-              <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Warm scene (illustrative)</span>
+              {/* Central illustrative scene — the engine of the Option-6 flank
+                  layout. Filled by the `why-scene` block when published. */}
+              <HomeSlotImage block={blocks['why-scene']} sizes="(max-width: 768px) 100vw, 40vw">
+                <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Warm scene (illustrative)</span>
+              </HomeSlotImage>
             </div>
             {PILLARS.map((p, i) => (
               <article
@@ -248,11 +268,14 @@ export default function Home() {
               (owner decision 2026-07-10 — swipe misfired: accidental scrolls,
               wet hands). Card markup + controls live in ProofCarousel;
               ≥md it's the same 3-up grid as before. */}
+          {/* Photos + first names come from the proof-1/2/3 blocks when
+              published; the quote/breed fall back to the drafted defaults.
+              A published block's body overrides the quote, its heading the name. */}
           <ProofCarousel
             quotes={[
-              { quote: "I never thought I'd be the kind of person who does this at home. Turns out I am, and I like it.", breed: "Goldendoodle mom" },
-              { quote: "I read every label before it goes near my pet. This is the first one I didn't put back.", breed: "Senior terrier mom" },
-              { quote: "No vet-office stress, no wrestling. We just do it on the couch now.", breed: "Cat mom" },
+              { quote: blocks['proof-1']?.body ?? "I never thought I'd be the kind of person who does this at home. Turns out I am, and I like it.", breed: "Goldendoodle mom", image: blocks['proof-1']?.image, alt: blocks['proof-1']?.alt, name: blocks['proof-1']?.heading },
+              { quote: blocks['proof-2']?.body ?? "I read every label before it goes near my pet. This is the first one I didn't put back.", breed: "Senior terrier mom", image: blocks['proof-2']?.image, alt: blocks['proof-2']?.alt, name: blocks['proof-2']?.heading },
+              { quote: blocks['proof-3']?.body ?? "No vet-office stress, no wrestling. We just do it on the couch now.", breed: "Cat mom", image: blocks['proof-3']?.image, alt: blocks['proof-3']?.alt, name: blocks['proof-3']?.heading },
             ]}
           />
           <p className="mt-6 text-xs text-cream/70">
@@ -298,15 +321,21 @@ export default function Home() {
                width. The price-anchor line (voice principle 4) makes it read as a
                real spotlight, not a placeholder card. Real product photo needed. */
             <article className="ds-lift grid overflow-hidden rounded-2xl border border-line bg-card shadow-[var(--elev-shadow-card)] md:grid-cols-5">
-              <div className="relative flex min-h-[260px] items-center justify-center bg-honey-tint md:col-span-3 md:min-h-[380px]">
-                {/* TODO: real OUTCOME photo - a happy, relaxed pet (pink gums as part of a
-                    natural expression, NOT a clinical teeth shot). No stock. */}
-                <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Outcome photo (happy pet)</span>
+              <div className="relative flex min-h-[260px] items-center justify-center overflow-hidden bg-honey-tint md:col-span-3 md:min-h-[380px]">
+                {/* Real OUTCOME photo — a happy, relaxed pet (pink gums as part of a
+                    natural expression, NOT a clinical teeth shot). Filled by the
+                    `dental-spotlight` block; placeholder otherwise. No stock. */}
+                <HomeSlotImage block={blocks['dental-spotlight']} sizes="(max-width: 768px) 100vw, 45vw">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Outcome photo (happy pet)</span>
+                </HomeSlotImage>
               </div>
               <div className="flex flex-col justify-center p-8 md:col-span-2 md:p-10">
-                <h3 className="font-display text-3xl font-semibold text-cocoa">Dental</h3>
-                <p className="mt-3 leading-relaxed text-brown">
-                  Pearly whites, pink gums, fresh breath — without the anesthesia.
+                <h3 className="font-display text-3xl font-semibold text-cocoa">
+                  {blocks['dental-spotlight']?.heading ?? "Dental"}
+                </h3>
+                <p className="mt-3 whitespace-pre-line leading-relaxed text-brown">
+                  {blocks['dental-spotlight']?.body ??
+                    "Pearly whites, pink gums, fresh breath — without the anesthesia."}
                 </p>
                 <p className="mt-4 font-display text-xl font-bold text-clay">
                   A $40 device, or a $1,400 vet bill.
@@ -315,10 +344,10 @@ export default function Home() {
                 {/* Solid brown: /70 sat at ~4.2:1 on cream — under AA for 14px. */}
                 <p className="mt-2 text-sm text-brown">Ultrasonic · cordless · USB-C · 3 cleaning modes</p>
                 <Link
-                  href="/collections/all"
+                  href={blocks['dental-spotlight']?.ctaHref ?? "/collections/all"}
                   className="mt-6 inline-flex h-12 w-fit items-center rounded-full bg-clay px-6 font-bold text-white transition-colors hover:bg-cocoa active:scale-[0.97]"
                 >
-                  Shop dental
+                  {blocks['dental-spotlight']?.ctaLabel ?? "Shop dental"}
                 </Link>
                 {/* Risk reversal at the action moment — the promise band was
                     cut as redundant with the PDP; the guarantee still shows

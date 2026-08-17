@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // Staged mobile carousel for the homepage proof cards (owner decision
@@ -14,6 +15,12 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 export interface ProofQuote {
   quote: string;
   breed: string;
+  /** Admin-authored via the homepage `proof-1/2/3` blocks. `image` fills the
+   * photo slot (placeholder when absent); `name` overrides the "Name" in the
+   * attribution. Photos MUST be real customer-and-pet shots, never stock. */
+  image?: string;
+  alt?: string;
+  name?: string;
 }
 
 export default function ProofCarousel({ quotes }: { quotes: ProofQuote[] }) {
@@ -34,16 +41,27 @@ export default function ProofCarousel({ quotes }: { quotes: ProofQuote[] }) {
               i === active ? "" : "max-md:hidden"
             }`}
           >
-            {/* Photo is the hero element. TODO: real customer-and-pet photo
-                (owner's hand/arm in frame), permission given. No stock, ever. */}
+            {/* Photo is the hero element. Filled by the proof-N block when
+                published; placeholder otherwise. Real customer-and-pet photos
+                only (permission given) — no stock, ever. */}
             <div className="relative flex aspect-[4/3] items-center justify-center bg-honey-tint">
-              <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Customer + pet photo</span>
+              {t.image ? (
+                <Image
+                  src={t.image}
+                  alt={t.alt ?? ""}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className="object-cover"
+                />
+              ) : (
+                <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Customer + pet photo</span>
+              )}
             </div>
             <div className="p-6 md:p-8">
               <blockquote className="text-lg leading-relaxed text-cocoa">&ldquo;{t.quote}&rdquo;</blockquote>
               <figcaption className="mt-5 text-sm">
-                {/* TODO: real first name + breed (breed-matched proof converts hardest) */}
-                <span className="font-bold text-cocoa">Name</span>
+                {/* Real first name + breed (breed-matched proof converts hardest). */}
+                <span className="font-bold text-cocoa">{t.name ?? "Name"}</span>
                 <span className="text-brown"> · {t.breed}</span>
               </figcaption>
             </div>

@@ -67,7 +67,11 @@ export async function POST(req: Request) {
   }
 
   const tag = url.searchParams.get("tag") ?? "products";
-  const allowedTags = ["products", "collections"];
+  // `homepage` = the beepaws.homepage shop metafield (admin homepage editor).
+  // Publishing from the admin should ping `?secret=…&tag=homepage` so the new
+  // blocks show without a redeploy (there's no Shopify webhook for shop
+  // metafields, so this manual path is the trigger).
+  const allowedTags = ["products", "collections", "homepage"];
   if (!allowedTags.includes(tag)) {
     return NextResponse.json({ error: `tag must be one of: ${allowedTags.join(", ")}` }, { status: 400 });
   }
