@@ -7,6 +7,7 @@ import {
   GQL_CART_LINES_ADD,
   GQL_CART_LINES_UPDATE,
   GQL_CART_LINES_REMOVE,
+  buildReturnAttributes,
 } from "./mutations";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -180,7 +181,7 @@ export async function getCart(cartId: string): Promise<ShopifyCart | null> {
 export async function createCart(lines: AddLineInput[]): Promise<ShopifyCart> {
   const data = await storefrontPost<{
     cartCreate: { cart: RawCart; userErrors: { message: string }[] };
-  }>(GQL_CART_CREATE, { lines: toApiLines(lines) });
+  }>(GQL_CART_CREATE, { lines: toApiLines(lines), attributes: buildReturnAttributes() });
   const { cart, userErrors } = data.cartCreate;
   if (userErrors.length) throw new Error(userErrors[0].message);
   return mapCart(cart);
