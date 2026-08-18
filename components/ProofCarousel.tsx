@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ImageLightbox, ZoomHint, type LightboxImage } from "@/components/ui/ImageLightbox";
 
 // Staged mobile carousel for the homepage proof cards (owner decision
 // 2026-07-10, replacing the scroll-snap swipe version): explicit prev/next +
@@ -25,6 +26,25 @@ export interface ProofQuote {
 
 export default function ProofCarousel({ quotes }: { quotes: ProofQuote[] }) {
   const [active, setActive] = useState(0);
+  // Zoom for the customer-and-pet photos: these are the page's evidence, and
+  // people look closely at real proof. Only slides with a REAL photo are
+  // zoomable — the placeholder card has nothing to inspect. Indices map back
+  // to the quote they belong to so the viewer opens on the one clicked.
+  const [zoomOpen, setZoomOpen] = useState(false);
+  const [zoomIndex, setZoomIndex] = useState(0);
+  const withPhotos = quotes
+    .map((q, i) => ({ q, i }))
+    .filter(({ q }) => Boolean(q.image));
+  const zoomImages: LightboxImage[] = withPhotos.map(({ q }) => ({
+    url: q.image as string,
+    alt: q.alt || `${q.name ?? "Customer"} and their pet`,
+  }));
+  const openZoomFor = (quoteIdx: number) => {
+    const pos = withPhotos.findIndex(({ i }) => i === quoteIdx);
+    if (pos < 0) return;
+    setZoomIndex(pos);
+    setZoomOpen(true);
+  };
   const go = (i: number) =>
     setActive(((i % quotes.length) + quotes.length) % quotes.length);
 
@@ -44,15 +64,23 @@ export default function ProofCarousel({ quotes }: { quotes: ProofQuote[] }) {
             {/* Photo is the hero element. Filled by the proof-N block when
                 published; placeholder otherwise. Real customer-and-pet photos
                 only (permission given) — no stock, ever. */}
-            <div className="relative flex aspect-[4/3] items-center justify-center bg-honey-tint">
+            <div className="group relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-honey-tint">
               {t.image ? (
-                <Image
-                  src={t.image}
-                  alt={t.alt ?? ""}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                  className="object-cover"
-                />
+                <button
+                  type="button"
+                  onClick={() => openZoomFor(i)}
+                  className="absolute inset-0 cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay focus-visible:ring-inset"
+                  aria-label={`View ${t.name ?? "this"} photo full size`}
+                >
+                  <Image
+                    src={t.image}
+                    alt={t.alt ?? ""}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    className="object-cover"
+                  />
+                  <ZoomHint />
+                </button>
               ) : (
                 <span className="text-xs font-semibold uppercase tracking-wider text-brown/60">Customer + pet photo</span>
               )}
@@ -110,6 +138,15 @@ export default function ProofCarousel({ quotes }: { quotes: ProofQuote[] }) {
           <ChevronRight size={20} />
         </button>
       </div>
+
+      <ImageLightbox
+        images={zoomImages}
+        index={zoomIndex}
+        open={zoomOpen}
+        onIndexChange={setZoomIndex}
+        onClose={() => setZoomOpen(false)}
+        label="Customer photos, full size"
+      />
     </div>
   );
 }
