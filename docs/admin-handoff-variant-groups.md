@@ -1,8 +1,10 @@
 # Handoff from the admin repo (2026-07-21): variant groups (combined listings, in our code)
 
-**New contract — nothing in this repo reads it yet.** Everything else the admin
-tool recently shipped (composed kits, kit discounts, tier gifts, the free-gift
-discount) is already consumed here; this is the one outstanding piece.
+**STATUS: IMPLEMENTED** (`8ba988d`, plus `88155b1` / `a85af3c` / `27cb007` for the
+PDP fixes found in testing). `lib/shopify/variant-groups.ts` derives membership,
+the PDP renders the picker, listings hide members, and member URLs canonicalise to
+the primary. Kept as the living contract for the metafield shape + the rationale
+below — do not re-litigate the merge question.
 
 ## The need
 

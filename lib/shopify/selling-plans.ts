@@ -2,8 +2,11 @@ import "server-only";
 
 import { shopifyFetch } from "./index";
 
-// Selling plans for the PDP "Subscribe & Save" selector (handoff
-// docs/admin-handoff-subscriptions-and-copy.md §1). Plans are created and
+// Selling plans for the PDP "Subscribe & Save" selector. DORMANT since the
+// owner's 2026-07-21 decision to sell one-time and convert to subscription by
+// email instead: no product currently has a plan, so this returns [] and the
+// selector never renders. Kept because it reactivates the moment a plan is
+// attached to a product. Plans are created and
 // billed by the official Shopify Subscriptions app; the storefront only reads
 // them and puts a sellingPlanId on the cart line — Shopify checkout and the
 // app handle the agreement, renewals, and the customer portal from there.

@@ -67,7 +67,7 @@ Real Shopify bundles (created by the sibling admin tool, always tagged `bundle`)
 
 ### Admin draft preview
 
-`app/preview/products/[handle]/page.tsx` (guarded, `force-dynamic`) renders the shared `components/product/ProductPageView.tsx` with the `beepaws.*` content (+ tags) overridden by a live draft fetched server-side from the admin tool at `BEEPAWS_ADMIN_URL` (default `http://localhost:3000`); price/images/variants stay from Shopify. Spec: `docs/admin-draft-preview-plan.md`.
+`app/preview/products/[handle]/page.tsx` (guarded, `force-dynamic`) renders the shared `components/product/ProductPageView.tsx` with the `beepaws.*` content (+ tags) overridden by a live draft fetched server-side from the admin tool at `BEEPAWS_ADMIN_URL` (default `http://localhost:3000`); price/images/variants stay from Shopify.
 
 ### Design tokens
 
@@ -102,19 +102,20 @@ documents into `beepaws.*` metafields **ahead of** the storefront reading them. 
 contract in `docs/admin-handoff-*.md`. All are **additive** — an absent/empty metafield
 renders today's built-in defaults — so wiring them is post-launch, not a blocker.
 
-- **Homepage** (`docs/admin-handoff-homepage.md`) — **NOTE:** the homepage (`app/page.tsx`)
-  is currently 100% hardcoded text + Lucide icons + placeholder colour grounds, with **no
-  real images placed yet**. The admin now has a `/homepage` editor that publishes an ordered
-  list of **image blocks** (image + alt + plain heading/body + CTA) to the `beepaws.homepage`
-  metafield, each identified by a `key`. There is nothing to "import" the other direction —
-  the admin editor is the new source of truth. **Storefront TODO:** read + validate the
-  metafield, map each block to a homepage slot **by its `key`**, render image + text/CTA,
-  and fall back to the current hardcoded content when a block is absent. Then publish back the
-  list of keys the homepage consumes so the admin's keys match (e.g. `hero`, `proof-1/2/3`).
+- **Homepage** (`docs/admin-handoff-homepage.md`) — ✅ **WIRED** (`a6012a8`).
+  `lib/shopify/homepage.ts` reads + validates `beepaws.homepage`; the markup lives in
+  `components/home/HomePageView.tsx` (blocks passed in as a prop) and each slot looks up
+  its block **by key** with per-field fallbacks, so an absent metafield renders today's
+  hardcoded page. Keys consumed (`HOMEPAGE_KEYS`): `hero`, `healthy-home`, `why-scene`,
+  `proof-1/2/3`, `dental-spotlight` — published back to the admin repo's copy of the doc.
+  Real photos are still placeholders; publishing blocks is how they land.
+  **Preview** (`f36cb17`): `/preview/homepage` renders the admin's unsaved draft,
+  `?mode=published` renders the live metafield UNCACHED (so a draft-vs-live compare can't
+  show stale ISR content); the PDP preview gained the same `?mode=published`. Both are
+  dev-gated (404 in prod without `BEEPAWS_PREVIEW_ENABLED=1`).
 - **Theme** (`docs/admin-handoff-theme-editor.md`) — visual composer → `beepaws.theme`
   (accents-only palette + per-section bg/ink/texture + placed decoration sprites).
-- **Variant groups** (`docs/admin-handoff-variant-groups.md`) and **subscriptions/copy**
-  (`docs/admin-handoff-subscriptions-and-copy.md`) — see each doc.
+- **Variant groups** (`docs/admin-handoff-variant-groups.md`) — combined listings.
 
 Treat every metafield as untrusted: re-apply the admin's validation (drop unknown keys, clamp
 ranges, verify CDN hosts) rather than trusting the stored JSON.
