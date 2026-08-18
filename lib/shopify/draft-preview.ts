@@ -60,3 +60,26 @@ export async function fetchAdminDraft(
     return null;
   }
 }
+
+// Fetch the admin tool's unsaved HOMEPAGE draft (data/homepage.json), the
+// equivalent of fetchAdminDraft() for products. The admin serves it at
+// GET /api/homepage/draft → { homepage: { blocks: [...] } }. Same
+// `?admin=<port>` override so it works whatever port the admin landed on.
+// Returns null when the admin isn't running, so the preview route can say so
+// instead of silently rendering the published page as if it were the draft.
+export async function fetchAdminHomepageDraft(
+  adminPort?: string,
+): Promise<{ blocks: unknown[] } | null> {
+  const base =
+    adminPort && /^\d+$/.test(adminPort)
+      ? `http://localhost:${adminPort}`
+      : process.env.BEEPAWS_ADMIN_URL ?? "http://localhost:3000";
+  try {
+    const res = await fetch(`${base}/api/homepage/draft`, { cache: "no-store" });
+    if (!res.ok) return null;
+    const json = (await res.json()) as { homepage?: { blocks?: unknown[] } };
+    return { blocks: json.homepage?.blocks ?? [] };
+  } catch {
+    return null;
+  }
+}

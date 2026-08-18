@@ -105,7 +105,7 @@ function safeHref(v: unknown): string | undefined {
   }
 }
 
-function sanitizeHomepage(raw: unknown): HomepageBlocks {
+export function sanitizeHomepage(raw: unknown): HomepageBlocks {
   const blocksRaw = (raw as { blocks?: unknown })?.blocks;
   if (!Array.isArray(blocksRaw)) return {};
 
@@ -159,4 +159,16 @@ const cached =
 
 export function getHomepageBlocks(): Promise<HomepageBlocks> {
   return cached();
+}
+
+/**
+ * Published blocks read FRESH, bypassing `unstable_cache`.
+ *
+ * Used by the preview route's `published` mode: the live homepage is ISR-cached
+ * for an hour, so a draft-vs-live comparison built on the cached read could show
+ * hour-old content and lie about what is actually published. A comparison view
+ * is only worth having if the "live" side is genuinely live.
+ */
+export function getPublishedHomepageBlocksUncached(): Promise<HomepageBlocks> {
+  return fetchHomepageBlocks();
 }
