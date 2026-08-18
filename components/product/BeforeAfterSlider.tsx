@@ -2,8 +2,7 @@
 
 import { useRef, useState, useCallback } from "react";
 import Image from "next/image";
-import { ArrowLeftRight, ChevronLeft, ChevronRight, Expand } from "lucide-react";
-import { ImageLightbox, type LightboxImage } from "@/components/ui/ImageLightbox";
+import { ArrowLeftRight, ChevronLeft, ChevronRight } from "lucide-react";
 import type { BeforeAfterSlide } from "@/types/metafields";
 
 // Plan §Phase 4: drag-to-reveal slider, one card per Shopify
@@ -171,18 +170,6 @@ export function BeforeAfterSlider({
 // Per-slide drag-to-reveal panel. Each instance owns its own pct so revisiting
 // a previously-seen slide keeps the drag position the user left it at.
 function BeforeAfterPanel({ slide }: { slide: BeforeAfterSlide }) {
-  // Zoom: an EXPLICIT button, not click-anywhere on the frame — this panel is a
-  // drag-to-compare surface, so a click handler on it would fight the drag (a
-  // stray click ending a drag would pop the viewer open). Scoped per panel:
-  // each slide zooms its OWN pair, and the viewer's arrows step between the
-  // before and after of the same pet.
-  const [zoomOpen, setZoomOpen] = useState(false);
-  const [zoomIndex, setZoomIndex] = useState(0);
-  const zoomImages: LightboxImage[] = [
-    { url: slide.beforeImageUrl ?? "", alt: `${slide.petName ?? "Pet"} — before` },
-    { url: slide.afterImageUrl ?? "", alt: `${slide.petName ?? "Pet"} — after` },
-  ].filter((i) => i.url);
-
   const wrapRef = useRef<HTMLDivElement>(null);
   const [pct, setPct] = useState(50);
   const dragging = useRef(false);
@@ -275,27 +262,6 @@ function BeforeAfterPanel({ slide }: { slide: BeforeAfterSlide }) {
         )}
       </div>
 
-      {/* Zoom affordance — a real button, positioned above the drag surface.
-          stopPropagation so pressing it never starts a divider drag. Hidden
-          entirely when the slide is still on placeholder art (nothing to
-          inspect). */}
-      {slide.beforeImageUrl && slide.afterImageUrl && (
-        <button
-          type="button"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation();
-            setZoomIndex(0);
-            setZoomOpen(true);
-          }}
-          aria-label={`View ${slide.petName ?? "this"} before and after photos full size`}
-          className="absolute right-3 top-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm transition-colors hover:bg-black/75"
-        >
-          <Expand size={14} aria-hidden />
-          Full size
-        </button>
-      )}
-
       {/* Corner tags */}
       <span className="absolute bottom-3 left-3 rounded-full bg-black/55 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-white">
         {slide.beforeLabel ?? "Before"}
@@ -315,15 +281,6 @@ function BeforeAfterPanel({ slide }: { slide: BeforeAfterSlide }) {
       >
         <ArrowLeftRight size={16} />
       </div>
-
-      <ImageLightbox
-        images={zoomImages}
-        index={zoomIndex}
-        open={zoomOpen}
-        onIndexChange={setZoomIndex}
-        onClose={() => setZoomOpen(false)}
-        label={`${slide.petName ?? "Pet"} before and after, full size`}
-      />
     </div>
   );
 }
