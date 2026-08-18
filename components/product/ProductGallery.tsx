@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import Image from "next/image";
+import { X, ChevronLeft, ChevronRight, Expand } from "lucide-react";
 import type { Image as ShopifyImage } from "@/types/shopify";
 import { useIsInsideMediaSync, useProductMedia } from "./ProductMediaSync";
 
@@ -115,6 +116,39 @@ export function ProductGallery({ productTitle, images, fallbackUrl }: Props) {
     scrollActiveIntoView(index);
   }
 
+  // ── Lightbox (click the main image to see it full size) ──────────────────
+  // Native <dialog> on purpose: the gallery lives inside an overflow-hidden,
+  // position-sticky column, so a plain absolutely-positioned overlay would be
+  // clipped by its own container. showModal() renders in the browser's top
+  // layer, which escapes every ancestor's overflow and stacking context, and
+  // brings focus trapping + Esc-to-close for free.
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [zoomOpen, setZoomOpen] = useState(false);
+
+  function openZoom() {
+    setZoomOpen(true);
+    dialogRef.current?.showModal();
+  }
+  function closeZoom() {
+    dialogRef.current?.close();
+  }
+  // Keep the active image in sync while zoomed, and let arrow keys page
+  // through — the same navigation the thumbs give, without leaving the zoom.
+  function zoomStep(delta: number) {
+    const next = (active + delta + list.length) % list.length;
+    selectImage(next);
+  }
+  useEffect(() => {
+    if (!zoomOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") { e.preventDefault(); zoomStep(1); }
+      if (e.key === "ArrowLeft") { e.preventDefault(); zoomStep(-1); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zoomOpen, active, list.length]);
+
   // When `active` changes externally (variant pick → shared context → here),
   // mirror the same scroll behaviour clicks get.
   useEffect(() => {
@@ -130,7 +164,7 @@ export function ProductGallery({ productTitle, images, fallbackUrl }: Props) {
           image exits one way, the new image enters from the other. Picking a
           thumb to the right of current → image slides leftward (current exits
           left, new enters from right); vice versa. */}
-      <div className="relative aspect-square lg:aspect-auto lg:flex-1 lg:max-h-[100cqi] overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+      <div className="group relative aspect-square lg:aspect-auto lg:flex-1 lg:max-h-[100cqi] overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]">
         {list.map((node, idx) => {
           const offset = (idx - active) * 100;
           const isActive = idx === active;
@@ -159,7 +193,92 @@ export function ProductGallery({ productTitle, images, fallbackUrl }: Props) {
             </div>
           );
         })}
+
+        {/* Click-to-zoom. A transparent button over the whole frame rather than
+            an onClick on the image, so it is keyboard-reachable and announces
+            itself; the corner pill is the visual affordance (pointer devices
+            get it on hover, touch always, since there is no hover to reveal it). */}
+        <button
+          type="button"
+          onClick={openZoom}
+          className="absolute inset-0 z-10 cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
+          aria-label={`View ${list[active]?.altText || productTitle} full size`}
+        >
+          <span className="pointer-events-none absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-[var(--color-foreground)]/70 px-3 py-1.5 text-xs font-semibold text-white opacity-100 backdrop-blur-sm transition-opacity md:opacity-0 md:group-hover:opacity-100">
+            <Expand size={14} aria-hidden />
+            Full size
+          </span>
+        </button>
       </div>
+
+      {/* Full-size viewer. Native <dialog> = top layer, so it is never clipped
+          by the sticky/overflow-hidden gallery column, and Esc + focus trap
+          come from the platform. `onClose` syncs React state for the backdrop
+          click and the Esc key alike. */}
+      <dialog
+        ref={dialogRef}
+        onClose={() => setZoomOpen(false)}
+        onClick={(e) => {
+          // Backdrop click: the dialog element itself is the backdrop, so a
+          // click landing on it (not on its contents) means "outside".
+          if (e.target === dialogRef.current) closeZoom();
+        }}
+        className="max-h-none max-w-none bg-transparent p-0 backdrop:bg-black/80 backdrop:backdrop-blur-sm"
+        style={{ width: "100vw", height: "100dvh" }}
+        aria-label={`${productTitle} images, full size`}
+      >
+        {zoomOpen && (
+          <div className="relative flex h-full w-full items-center justify-center p-4 md:p-10">
+            {/* The image itself. `sizes` at ~full viewport so Next serves a
+                large candidate; object-contain so tall product shots are never
+                cropped the way the thumbnail frame crops them. */}
+            <div className="relative h-full w-full">
+              <Image
+                key={list[active]?.url}
+                src={list[active]?.url ?? fallbackUrl}
+                alt={list[active]?.altText || productTitle}
+                fill
+                sizes="100vw"
+                className="object-contain"
+                priority
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={closeZoom}
+              aria-label="Close full size view"
+              className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-[var(--color-foreground)] shadow-lg transition-colors hover:bg-white md:right-6 md:top-6"
+            >
+              <X size={20} />
+            </button>
+
+            {hasMultiple && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => zoomStep(-1)}
+                  aria-label="Previous image"
+                  className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[var(--color-foreground)] shadow-lg transition-colors hover:bg-white md:left-6"
+                >
+                  <ChevronLeft size={22} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => zoomStep(1)}
+                  aria-label="Next image"
+                  className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[var(--color-foreground)] shadow-lg transition-colors hover:bg-white md:right-6"
+                >
+                  <ChevronRight size={22} />
+                </button>
+                <span className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white">
+                  {active + 1} / {list.length}
+                </span>
+              </>
+            )}
+          </div>
+        )}
+      </dialog>
 
       {/* Thumbnail strip — thumbs grow to fill container width with no leftover.
           measureRef is always mounted so we can read clientWidth; the inner
