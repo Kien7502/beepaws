@@ -119,3 +119,39 @@ renders today's built-in defaults — so wiring them is post-launch, not a block
 
 Treat every metafield as untrusted: re-apply the admin's validation (drop unknown keys, clamp
 ranges, verify CDN hosts) rather than trusting the stored JSON.
+
+## PDP performance (flagged from admin-side review, 2026-08-19)
+
+The product page feels slow to load (also visible as a slow preview pane in the admin tool).
+Grounding: the real PDP is ISR-cached (`revalidate = 3600`) and the data layer uses
+`unstable_cache` + `revalidateTag("products")`, so **warm** loads are fine. The cost is the
+**cold render** (cache miss / post-revalidation) and the **`/preview/*` routes** — those are
+`force-dynamic` by design, so they never cache and always pay full price. The admin's preview
+pane renders that uncached draft route, so its slowness is largely expected, not a bug.
+
+Where to optimise the cold render:
+- Audit how many **sequential** Shopify round-trips the PDP makes on a miss (product +
+  variant-groups + discounts + recommendations + reviews + …). Run independent fetches in
+  `Promise.all` to kill waterfalls, and wrap each sub-fetch in `unstable_cache` with its own
+  tag so one revalidation doesn't re-fetch everything (variant-groups / discounts / homepage
+  already do this — audit the main product fetch + any per-request ones).
+- Optional UX: Suspense/streaming so the shell + hero paint while slower bands (reviews,
+  recommendations) stream in; a light skeleton in the preview route so it feels responsive
+  despite being deliberately uncached.
+
+## Security posture (public storefront)
+
+Different profile than the admin tool (which is personal-use, local-only). The architecture
+already covers the big items — keep enforcing rather than adding:
+- **Server-only secrets:** `SHOPIFY_ADMIN_ACCESS_TOKEN` / client credentials must never reach
+  the client bundle (server components / route handlers only). `NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN`
+  is public by design (scoped). Verify no admin token leaks client-side.
+- **Untrusted admin-authored metafields are the main injection surface:** render `beepaws.*`
+  as PLAIN TEXT (no `dangerouslySetInnerHTML`), CDN-host-only images, sanitised/clamped — as the
+  handoff contracts mandate. A bad metafield value must never become executable markup.
+- **Route protection:** `/preview/*` dev-gated (404 in prod without `BEEPAWS_PREVIEW_ENABLED=1`)
+  and `/api/revalidate` secret-gated — keep both.
+- **Checkout is Shopify's** (PCI/card handling out of scope; no card data touches the storefront).
+  No user accounts today → minimal auth surface; revisit if login/accounts are ever added.
+- Net: no big "add auth" task — it's a public catalog. Ongoing discipline = server-secret
+  hygiene + treating metafields as untrusted.
