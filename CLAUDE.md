@@ -129,6 +129,19 @@ Grounding: the real PDP is ISR-cached (`revalidate = 3600`) and the data layer u
 `force-dynamic` by design, so they never cache and always pay full price. The admin's preview
 pane renders that uncached draft route, so its slowness is largely expected, not a bug.
 
+**UPDATE 2026-08-19 pt.2 — the REAL cause was missing caching (`f3c9224`).** After the
+waterfall fix the owner still saw multi-second spikes. Measurement showed every request
+hit Shopify even in production: `adminGraphqlFetch` defaults to `cache: "no-store"` and
+the catalog call sites never opted into `force-cache`, which also defeats the
+`unstable_cache` wrapper in `queries.ts` (a no-store fetch inside it caches nothing). All
+8 call sites now pass `force-cache` + tags. Production warm requests went **1.2–2.0s →
+~0.07s (~20x)** and Shopify quota for 20 renders **~1492 → ~95 points**; dev went
+1.64s → 0.85s. Rate limiting was ruled out first (bucket 2000, restore 100/s, ~26/render).
+⚠ **Consequence:** catalog data is cached until `revalidateTag("products")`. The
+`/api/revalidate` webhook fires that, but `SHOPIFY_WEBHOOK_SECRET` / `REVALIDATE_SECRET`
+are NOT set locally — **set them at deploy**, or published changes lag up to the 1h ISR
+window. Admin draft previews stay live regardless (the draft is fetched `no-store`).
+
 **UPDATE 2026-08-19 — the waterfall is FIXED (`8760433`).** `ProductPageView` made
 ~8 top-level awaits in sequence; they were mutually independent, so they now resolve in
 one `Promise.all` (dependent work — tierGifts, tierKitDeals — still follows it).
