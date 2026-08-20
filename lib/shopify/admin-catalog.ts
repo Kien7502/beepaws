@@ -304,7 +304,12 @@ export async function adminGetCollections(): Promise<Collection[]> {
         }[];
       };
     };
-  }>({ query });
+  }>({
+    // Cached read (CLAUDE.md: callers opt into force-cache + tags).
+    // Without this the default is `no-store`, which also defeats the
+    // unstable_cache wrapper in queries.ts — every render refetched.
+    cache: "force-cache",
+    tags: ["products"], query });
 
   return res.body.data.collections.edges.map(({ node }) => {
     const plain = stripHtml(node.descriptionHtml);
@@ -413,6 +418,11 @@ export async function adminGetProducts(opts: {
         } | null;
       };
     }>({
+    // Cached read (CLAUDE.md: callers opt into force-cache + tags).
+    // Without this the default is `no-store`, which also defeats the
+    // unstable_cache wrapper in queries.ts — every render refetched.
+    cache: "force-cache",
+    tags: ["products"],
       query: gql,
       variables: {
         handle: opts.collectionHandle,
@@ -450,6 +460,11 @@ export async function adminGetProducts(opts: {
       products: { edges: { node: AdminProductNode }[] };
     };
   }>({
+    // Cached read (CLAUDE.md: callers opt into force-cache + tags).
+    // Without this the default is `no-store`, which also defeats the
+    // unstable_cache wrapper in queries.ts — every render refetched.
+    cache: "force-cache",
+    tags: ["products"],
     query: gql,
     variables: {
       first: 100,
@@ -534,6 +549,11 @@ export async function adminGetPaymentMethods(): Promise<PaymentMethods> {
         shop: { paymentSettings: { supportedDigitalWallets: string[] | null } | null };
       };
     }>({
+    // Cached read (CLAUDE.md: callers opt into force-cache + tags).
+    // Without this the default is `no-store`, which also defeats the
+    // unstable_cache wrapper in queries.ts — every render refetched.
+    cache: "force-cache",
+    tags: ["products"],
       query: `
         query PaymentSettings {
           shop { paymentSettings { supportedDigitalWallets } }
@@ -566,6 +586,11 @@ export async function adminGetProductByHandle(
   const res = await adminGraphqlFetch<{
     data: { productByHandle: AdminProductNode | null };
   }>({
+    // Cached read (CLAUDE.md: callers opt into force-cache + tags).
+    // Without this the default is `no-store`, which also defeats the
+    // unstable_cache wrapper in queries.ts — every render refetched.
+    cache: "force-cache",
+    tags: ["products"],
     query: gql,
     variables: { handle },
   });

@@ -435,6 +435,11 @@ export async function adminGetFullProductsForPage(opts?: {
         > | null;
       };
     }>({
+    // Cached read (CLAUDE.md: callers opt into force-cache + tags).
+    // Without this the default is `no-store`, which also defeats the
+    // unstable_cache wrapper in queries.ts — every render refetched.
+    cache: "force-cache",
+    tags: ["products", "product-full"],
       query,
       variables: { handle: opts.handle },
     });
@@ -477,6 +482,11 @@ export async function adminGetFullProductsForPage(opts?: {
       };
     };
   }>({
+    // Cached read (CLAUDE.md: callers opt into force-cache + tags).
+    // Without this the default is `no-store`, which also defeats the
+    // unstable_cache wrapper in queries.ts — every render refetched.
+    cache: "force-cache",
+    tags: ["products", "product-full"],
     query,
     variables: {
       first,

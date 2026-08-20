@@ -76,6 +76,11 @@ export async function getBundleContents(handle: string): Promise<BundleComponent
   `;
 
   const res = await adminGraphqlFetch<BundleContentsResponse>({
+    // Cached read (CLAUDE.md: callers opt into force-cache + tags).
+    // Without this the default is `no-store`, which also defeats the
+    // unstable_cache wrapper in queries.ts — every render refetched.
+    cache: "force-cache",
+    tags: ["products"],
     query,
     variables: { handle },
   });
