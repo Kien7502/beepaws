@@ -77,7 +77,17 @@ export async function ProductPageView({
   // and carry component variants. Fetch the "what's included" list only for
   // bundles so normal products skip the extra query. See docs/bundles-from-admin.md.
   const isBundle = product.tags?.includes("bundle") ?? false;
-  const bundleItems = isBundle ? await getBundleContents(handle) : [];
+  // Inputs the parallel wave needs, computed up front (pure, no I/O).
+  const primaryCollectionHandle = fullProduct?.collections?.edges?.[0]?.node?.handle;
+  const curatedHandles = [
+    ...new Set(
+      (beepaws?.discoveryProducts ?? [])
+        .map((d) => d?.product?.handle)
+        .filter((h): h is string => Boolean(h && h !== product.handle)),
+    ),
+  ];
+
+  const bundleItemsP = isBundle ? getBundleContents(handle) : Promise.resolve([]);
 
   // Product-type tags decide the Mechanism-slot section: `device` → Mechanism,
   // `consumable` → "What's inside" (ingredients). Explicit opt-in per type —
@@ -90,7 +100,7 @@ export async function ProductPageView({
   // Subscriptions app, read via the Storefront API. Empty when the product
   // has none or the storefront token isn't configured — the buy column then
   // renders exactly as before.
-  const sellingPlans = isBundle ? [] : await getSellingPlans(handle);
+  const sellingPlansP = isBundle ? Promise.resolve([]) : getSellingPlans(handle);
 
   // Resolve any bundle linked from a tier (beepaws.bundle_tiers[i].bundle) to its
   // cart-ready variant + price/image, aligned by tier index, so the tier picker
@@ -99,8 +109,8 @@ export async function ProductPageView({
   // Admin API behind getProduct returns ARCHIVED/unpublished products too, and
   // offering those makes the Storefront Cart API create GHOST lines (invisible
   // in cart.lines, still charged in subtotal) — hence isSellableOnStorefront.
-  const tierBundles = beepaws?.bundleTiers
-    ? await Promise.all(
+  const tierBundlesP = beepaws?.bundleTiers
+    ? Promise.all(
         beepaws.bundleTiers.map(async (t) => {
           const bundleHandle = t?.bundle?.handle;
           if (!bundleHandle) return null;
@@ -137,8 +147,8 @@ export async function ProductPageView({
   // toggle on plan-bearing components. Precedence: a bundle link wins. Any
   // unsellable/unresolvable component nulls the WHOLE kit — the tier then
   // falls back to the legacy code-defined composition (contract rule 3).
-  const tierKits = beepaws?.bundleTiers
-    ? await Promise.all(
+  const tierKitsP = beepaws?.bundleTiers
+    ? Promise.all(
         beepaws.bundleTiers.map(async (t) => {
           if (t?.bundle?.handle) return null;
           const refs = (t?.components ?? []).flatMap((c) => {
@@ -173,9 +183,8 @@ export async function ProductPageView({
   // includes this product. Unresolvable members drop out; fewer than 2 usable
   // options = ordinary product, no picker. Labels come from the metafield
   // (HyperSKU overwrites Shopify titles on sync).
-  const variantGroup = beepaws?.variantGroup?.length
-    ? (
-        await Promise.all(
+  const variantGroupP = beepaws?.variantGroup?.length
+    ? Promise.all(
           beepaws.variantGroup.map(async (m) => {
             const memberHandle = m?.product?.handle;
             if (!memberHandle) return null;
@@ -191,9 +200,63 @@ export async function ProductPageView({
               availableForSale: mp.variants.edges.some((e) => e.node.availableForSale),
             };
           }),
-        )
-      ).filter((o): o is NonNullable<typeof o> => o !== null)
-    : [];
+      )
+    : Promise.resolve([]);
+
+
+  // Managed automatic discounts (BeePaws Kit* / BeePaws Tier Gift* — created
+  // by the admin tool). ALL kit/gift money math derives from these, never
+  // hardcoded (cross-repo contract). Fetched only when a tier wires either.
+  const wantsDiscounts = beepaws?.bundleTiers?.some(
+    (t) => t?.gift?.handle || (t?.components?.length ?? 0) > 0,
+  );
+  const autoDiscountsP = wantsDiscounts
+    ? getBeePawsAutoDiscounts()
+    : Promise.resolve({ kits: [], tierGifts: [] });
+
+  // ── ONE PARALLEL WAVE ──────────────────────────────────────────────────────
+  // PERF (2026-08-19): these were ~8 separate top-level `await`s, so each
+  // stage's Shopify round-trip waited on the previous one — a waterfall that
+  // dominated the COLD render (warm/ISR loads were always fine, which is why it
+  // hid). They are mutually independent: each reads only `beepaws` / `product` /
+  // `handle` / `fullProduct`, all resolved above. Nothing about WHAT is fetched
+  // changed — only that they now overlap. Genuinely dependent work still
+  // follows: tierGifts needs tierKits + autoDiscounts, tierKitDeals computes
+  // over both.
+  const [
+    bundleItems,
+    sellingPlans,
+    tierBundles,
+    tierKits,
+    variantGroupRaw,
+    autoDiscounts,
+    collectionRecsRaw,
+    catalogFallbackRaw,
+    discoveryRaw,
+  ] = await Promise.all([
+    bundleItemsP,
+    sellingPlansP,
+    tierBundlesP,
+    tierKitsP,
+    variantGroupP,
+    autoDiscountsP,
+    primaryCollectionHandle
+      ? getProducts({ collectionHandle: primaryCollectionHandle })
+      : Promise.resolve([]),
+    // Catalog fallback fetched alongside rather than only-on-miss: it is a
+    // small cached query, and making it conditional would reintroduce a serial
+    // hop for the common case where the collection yields nothing usable.
+    getProducts(),
+    curatedHandles.length
+      ? Promise.all(curatedHandles.map((h) => getProduct(h)))
+      : Promise.resolve([]),
+  ]);
+
+  // Members that failed to resolve drop out; <2 usable options = ordinary
+  // product, no picker.
+  const variantGroup = variantGroupRaw.filter(
+    (o): o is NonNullable<typeof o> => o !== null,
+  );
 
   // Combined-listing gallery: when this is a variant group, the gallery shows
   // EVERY member's images in one reel (owner decision 2026-07-25 — replaces the
@@ -216,16 +279,6 @@ export async function ProductPageView({
         return edges;
       })()
     : product.images.edges;
-
-  // Managed automatic discounts (BeePaws Kit* / BeePaws Tier Gift* — created
-  // by the admin tool). ALL kit/gift money math derives from these, never
-  // hardcoded (cross-repo contract). Fetched only when a tier wires either.
-  const wantsDiscounts = beepaws?.bundleTiers?.some(
-    (t) => t?.gift?.handle || (t?.components?.length ?? 0) > 0,
-  );
-  const autoDiscounts = wantsDiscounts
-    ? await getBeePawsAutoDiscounts()
-    : { kits: [], tierGifts: [] };
 
   // Kit-discount deal per tier (contract matching rule): buys-product = the
   // tier's FIRST component; gets set intersects the remaining components.
@@ -298,16 +351,13 @@ export async function ProductPageView({
   const tierZero = tierBundles?.[0] ?? null;
   const displayPriceAmount = tierZero?.variants[0]?.priceAmount ?? minVariantPrice.amount;
 
-  const primaryCollectionHandle = fullProduct?.collections?.edges?.[0]?.node?.handle;
-  const collectionRecommendations = primaryCollectionHandle
-    ? (await getProducts({ collectionHandle: primaryCollectionHandle }))
-        .filter((p) => p.handle !== product.handle)
-        .slice(0, 3)
-    : [];
+  const collectionRecommendations = collectionRecsRaw
+    .filter((p) => p.handle !== product.handle)
+    .slice(0, 3);
   const recommendedBundleProducts =
     collectionRecommendations.length > 0
       ? collectionRecommendations
-      : (await getProducts()).filter((p) => p.handle !== product.handle).slice(0, 3);
+      : catalogFallbackRaw.filter((p) => p.handle !== product.handle).slice(0, 3);
 
   // "More from BeePaws" discovery band — CURATED ONLY (user decision
   // 2026-07-08): the band renders solely from beepaws.discovery_products
@@ -316,20 +366,9 @@ export async function ProductPageView({
   // uncontrolled output on the page.) Picks are deduped and resolved by
   // handle; unresolvable refs (draft/deleted), this product itself, and
   // bundle-tagged products (whose PDPs 404 by design) are dropped; capped at 6.
-  const curatedHandles = [
-    ...new Set(
-      (beepaws?.discoveryProducts ?? [])
-        .map((d) => d?.product?.handle)
-        .filter((h): h is string => Boolean(h && h !== product.handle)),
-    ),
-  ];
-  const discoveryProducts = curatedHandles.length
-    ? (
-        await Promise.all(curatedHandles.map((h) => getProduct(h)))
-      )
-        .filter((p): p is Product => Boolean(p && !p.tags?.includes("bundle")))
-        .slice(0, 6)
-    : [];
+  const discoveryProducts = discoveryRaw
+    .filter((p): p is Product => Boolean(p && !p.tags?.includes("bundle")))
+    .slice(0, 6);
 
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
   const jsonLd = {
