@@ -129,7 +129,14 @@ Grounding: the real PDP is ISR-cached (`revalidate = 3600`) and the data layer u
 `force-dynamic` by design, so they never cache and always pay full price. The admin's preview
 pane renders that uncached draft route, so its slowness is largely expected, not a bug.
 
-Where to optimise the cold render:
+**UPDATE 2026-08-19 — the waterfall is FIXED (`8760433`).** `ProductPageView` made
+~8 top-level awaits in sequence; they were mutually independent, so they now resolve in
+one `Promise.all` (dependent work — tierGifts, tierKitDeals — still follows it).
+Measured on dev (passthrough caching = every fetch real): median **2.65s → 1.64s**, and
+the spread tightened from 1.05s to 0.31s. Rendered markup verified byte-identical.
+The remaining items below are still open.
+
+Where to optimise the cold render further:
 - Audit how many **sequential** Shopify round-trips the PDP makes on a miss (product +
   variant-groups + discounts + recommendations + reviews + …). Run independent fetches in
   `Promise.all` to kill waterfalls, and wrap each sub-fetch in `unstable_cache` with its own
