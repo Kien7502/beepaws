@@ -11,7 +11,7 @@ for wiring the storefront homepage to read the metafield (post-launch, own sessi
 ## Storage contract
 
 ONE shop metafield, `beepaws.homepage`, type `json` (ownerId = shop gid
-`gid://shopify/Shop/83346981089`, written via the same `metafieldsSet` the tool uses
+`gid://shopify/Shop/101774655859`, written via the same `metafieldsSet` the tool uses
 for the theme). Absent/empty = the built-in hardcoded homepage. Shape:
 
 ```jsonc

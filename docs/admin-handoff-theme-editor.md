@@ -18,7 +18,7 @@ remaining work (own session in `../beepaws`).
 ## Storage contract
 
 ONE shop metafield, `beepaws.theme`, type `json` (ownerId = shop gid
-`gid://shopify/Shop/83346981089`, written via the `metafieldsSet` the tool already uses).
+`gid://shopify/Shop/101774655859`, written via the `metafieldsSet` the tool already uses).
 Absent/empty = built-in default (Warm Honey). Shape:
 
 ```jsonc
