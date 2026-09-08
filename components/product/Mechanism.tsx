@@ -110,10 +110,13 @@ export function Mechanism({
                 {paradoxParagraphs[0]}
               </p>
             )}
+            {/* Deliberately NOT a blockquote: there's no attributed speaker, so
+                quote marks + rule + italic read as a citation that doesn't exist.
+                Renders as ordinary body copy (matching the paragraphs around it). */}
             {paradoxPullQuote && (
-              <blockquote className="font-display my-5 border-l-[3px] border-cocoa pl-4 text-lg italic text-cocoa">
-                &ldquo;{paradoxPullQuote}&rdquo;
-              </blockquote>
+              <p className="mb-3 text-[15.5px] leading-relaxed text-brown">
+                {paradoxPullQuote}
+              </p>
             )}
             {paradoxParagraphs.slice(1).map((para, i) => (
               <p key={i} className="mb-3 text-[15.5px] leading-relaxed text-brown">

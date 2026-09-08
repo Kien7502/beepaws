@@ -541,7 +541,7 @@ export async function ProductPageView({
                   beat hype) — "quiet in the air" states the physical fact. */}
               <li className="flex flex-col items-center gap-1 text-center text-[11.5px] font-bold text-brown">
                 <ShieldCheck className="h-5 w-5 text-clay" aria-hidden />
-                <span>Quiet in the air — even for skittish pets</span>
+                <span>Quiet in the air — even for skittish dogs</span>
               </li>
               <li className="flex flex-col items-center gap-1 text-center text-[11.5px] font-bold text-brown">
                 <Truck className="h-5 w-5 text-clay" aria-hidden />
