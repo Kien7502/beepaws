@@ -85,16 +85,16 @@ export function Mechanism({
         {/* Intro grid: diagram + body copy. Diagram bg flipped from honey-tint
             (now too close to toffee) to card-white so it still reads as a
             distinct framed block on the warm mid-tone section. */}
-        <div className="grid items-center gap-10 md:grid-cols-2 md:gap-12">
+        <div className="grid items-center gap-10 md:grid-cols-[1.35fr_1fr] md:gap-12">
           <div
-            // 4:3, not square: the art is a 1024² JPEG with generous dead margin
-            // inside it, so cover here trims ~12.5% off the top and bottom — which
-            // is mostly that empty margin — and keeps the block from towering over
-            // the copy beside it. Go back to aspect-square if the art is ever
-            // re-exported tight-cropped. Placeholder keeps the old min-height box.
-            className={`relative overflow-hidden rounded-2xl border border-line bg-card ${
-              diagramImageUrl ? "aspect-[4/3]" : "min-h-[260px] md:min-h-[320px]"
-            }`}
+            // Square again — 4:3 cropped the diagram's own labels (SALIVA at the
+            // top, HUMAN/DOG at the bottom sit close to its edges). Instead of
+            // cropping to control the height, the slot is CAPPED (max-w) and moved
+            // to the narrower right column, with the copy given the wider left one
+            // (md:order). Same figure, fully intact, no longer towering.
+            className={`relative mx-auto w-full max-w-[340px] md:order-2 ${
+              "overflow-hidden rounded-2xl border border-line bg-card"
+            } ${diagramImageUrl ? "aspect-square" : "min-h-[260px] md:min-h-[320px]"}`}
           >
             {diagramImageUrl ? (
               <Image
@@ -102,7 +102,7 @@ export function Mechanism({
                 alt="Tooth cross-section showing visible crust above gumline and hidden tartar below"
                 fill
                 className="object-cover"
-                sizes="(max-width: 880px) 100vw, 50vw"
+                sizes="(max-width: 880px) 100vw, 340px"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center p-6 text-center text-xs font-bold uppercase tracking-wider text-brown">
@@ -111,7 +111,7 @@ export function Mechanism({
             )}
           </div>
 
-          <div>
+          <div className="md:order-1">
             <h3 className="font-display mb-3 text-2xl font-semibold text-cocoa md:text-[30px]">
               {paradoxHeading}
             </h3>
