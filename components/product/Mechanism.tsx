@@ -124,8 +124,12 @@ export function Mechanism({
             <h3 className="font-display mb-3 text-2xl font-semibold text-cocoa md:text-[30px]">
               {paradoxHeading}
             </h3>
+            {/* Justified (Word-style flush edges). hyphens-auto rides along on
+                purpose: justifying a ~520px column WITHOUT hyphenation stretches
+                word gaps into visible white "rivers". <html lang="en"> is set, so
+                the browser can actually hyphenate. */}
             {paradoxParagraphs[0] && (
-              <p className="mb-3 text-[15.5px] leading-relaxed text-brown">
+              <p className="mb-3 text-justify hyphens-auto text-[15.5px] leading-relaxed text-brown">
                 {paradoxParagraphs[0]}
               </p>
             )}
@@ -133,12 +137,12 @@ export function Mechanism({
                 quote marks + rule + italic read as a citation that doesn't exist.
                 Renders as ordinary body copy (matching the paragraphs around it). */}
             {paradoxPullQuote && (
-              <p className="mb-3 text-[15.5px] leading-relaxed text-brown">
+              <p className="mb-3 text-justify hyphens-auto text-[15.5px] leading-relaxed text-brown">
                 {paradoxPullQuote}
               </p>
             )}
             {paradoxParagraphs.slice(1).map((para, i) => (
-              <p key={i} className="mb-3 text-[15.5px] leading-relaxed text-brown">
+              <p key={i} className="mb-3 text-justify hyphens-auto text-[15.5px] leading-relaxed text-brown">
                 {para}
               </p>
             ))}
