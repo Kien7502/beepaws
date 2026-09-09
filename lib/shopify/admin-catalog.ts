@@ -573,6 +573,8 @@ export async function adminGetPaymentMethods(): Promise<PaymentMethods> {
 
 export async function adminGetProductByHandle(
   handle: string,
+  /** Bypass the Next data cache — see adminGetFullProductsForPage's `fresh`. */
+  fresh?: boolean,
 ): Promise<Product | undefined> {
   const gql = `
     ${PRODUCT_FRAGMENT}
@@ -586,11 +588,11 @@ export async function adminGetProductByHandle(
   const res = await adminGraphqlFetch<{
     data: { productByHandle: AdminProductNode | null };
   }>({
-    // Cached read (CLAUDE.md: callers opt into force-cache + tags).
-    // Without this the default is `no-store`, which also defeats the
-    // unstable_cache wrapper in queries.ts — every render refetched.
-    cache: "force-cache",
-    tags: ["products"],
+    // Cached read (CLAUDE.md: callers opt into force-cache + tags), unless the
+    // caller asked for a fresh read (live preview).
+    ...(fresh
+      ? { cache: "no-store" as const }
+      : { cache: "force-cache" as const, tags: ["products"] }),
     query: gql,
     variables: { handle },
   });

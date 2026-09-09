@@ -111,6 +111,33 @@ export function getFullProductForPage(
   return _getCachedFullProduct(handle);
 }
 
+// UNCACHED reads for the admin's live preview. Same reasoning as
+// getPublishedHomepageBlocksUncached: a preview built on the cached read shows
+// stale content (an image uploaded a second ago wouldn't appear until
+// revalidateTag("products")), which looks like a broken preview.
+export async function getProductUncached(handle: string): Promise<Product | undefined> {
+  if (!hasAdminApiCredentials()) return undefined;
+  try {
+    return await adminGetProductByHandle(handle, true);
+  } catch (e) {
+    console.error("Admin GraphQL product (uncached) failed", e);
+    return undefined;
+  }
+}
+
+export async function getFullProductForPageUncached(
+  handle: string,
+): Promise<AdminFullProductForPage | undefined> {
+  if (!hasAdminApiCredentials()) return undefined;
+  try {
+    const products = await adminGetFullProductsForPage({ handle, fresh: true });
+    return products[0];
+  } catch (e) {
+    console.error("Admin GraphQL full product (uncached) failed", e);
+    return undefined;
+  }
+}
+
 // Payment methods rarely change — cache for the full revalidate window. Falls
 // back to an empty set when credentials are missing so the UI can render
 // nothing instead of crashing.

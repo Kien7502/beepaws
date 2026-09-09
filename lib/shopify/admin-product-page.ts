@@ -417,6 +417,11 @@ const PRODUCT_FULL_FRAGMENT = `
 export async function adminGetFullProductsForPage(opts?: {
   handle?: string;
   first?: number;
+  /** Bypass the Next data cache. The admin's live preview needs this: catalog
+   *  reads are force-cache'd until revalidateTag("products"), so a preview would
+   *  keep showing the OLD images/price after an edit — which reads as "the
+   *  preview is broken" rather than "the cache is stale". */
+  fresh?: boolean;
 }) {
   if (opts?.handle) {
     const query = `
@@ -435,11 +440,11 @@ export async function adminGetFullProductsForPage(opts?: {
         > | null;
       };
     }>({
-    // Cached read (CLAUDE.md: callers opt into force-cache + tags).
-    // Without this the default is `no-store`, which also defeats the
-    // unstable_cache wrapper in queries.ts — every render refetched.
-    cache: "force-cache",
-    tags: ["products", "product-full"],
+      // Cached read (CLAUDE.md: callers opt into force-cache + tags), unless the
+      // caller asked for a fresh read (live preview — see `fresh` above).
+      ...(opts?.fresh
+        ? { cache: "no-store" as const }
+        : { cache: "force-cache" as const, tags: ["products", "product-full"] }),
       query,
       variables: { handle: opts.handle },
     });
@@ -482,11 +487,11 @@ export async function adminGetFullProductsForPage(opts?: {
       };
     };
   }>({
-    // Cached read (CLAUDE.md: callers opt into force-cache + tags).
-    // Without this the default is `no-store`, which also defeats the
-    // unstable_cache wrapper in queries.ts — every render refetched.
-    cache: "force-cache",
-    tags: ["products", "product-full"],
+      // Cached read (CLAUDE.md: callers opt into force-cache + tags), unless the
+      // caller asked for a fresh read (live preview — see `fresh` above).
+      ...(opts?.fresh
+        ? { cache: "no-store" as const }
+        : { cache: "force-cache" as const, tags: ["products", "product-full"] }),
     query,
     variables: {
       first,
