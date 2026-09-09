@@ -7,6 +7,8 @@
 // Renders the existing beepaws.education_note metafield if set, otherwise a
 // strong default that matches the reference template copy.
 
+import { VolumeX } from "lucide-react";
+
 interface Props {
   // Pulled from beepaws.education_note (already plumbed through the page).
   // When null, defaults to the dental-scaler copy.
@@ -29,8 +31,8 @@ export function SilentReassurance({
         <div className="grid items-center gap-7 rounded-2xl bg-cocoa p-8 md:grid-cols-[auto_1fr] md:gap-10 md:p-10">
           {/* Round badge */}
           <div className="mx-auto md:mx-0">
-            <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-gold bg-gold/15 text-5xl">
-              🤫
+            <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-gold bg-gold/15">
+              <VolumeX className="h-11 w-11 text-amber" aria-hidden />
             </div>
           </div>
 

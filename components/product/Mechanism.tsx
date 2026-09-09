@@ -1,4 +1,5 @@
 import type { MechanismStep } from "@/types/metafields";
+import { VolumeX } from "lucide-react";
 import Image from "next/image";
 
 // Defaults are intentional Lorem ipsum placeholders. Per-product copy lives
@@ -160,8 +161,8 @@ export function Mechanism({
             light text against the toffee section. One dark punch, not a slab. */}
         <div className="mt-12 grid items-center gap-7 rounded-2xl bg-cocoa p-8 md:mt-14 md:grid-cols-[auto_1fr] md:gap-10 md:p-10">
           <div className="mx-auto md:mx-0">
-            <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-gold bg-gold/15 text-5xl">
-              🤫
+            <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-gold bg-gold/15">
+              <VolumeX className="h-11 w-11 text-amber" aria-hidden />
             </div>
           </div>
           <div className="text-center md:text-left">

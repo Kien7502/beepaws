@@ -110,7 +110,12 @@ const TIERS = [
     description: "Consectetur adipiscing elit — placeholder tier description.",
     mainQty: 1,
     addonRefs: [{ idx: 0, qty: 1 }],
-    popular: true,
+    // B9: "Most Chosen" is a factual claim and there is no order data behind it
+    // yet, so it stays hidden until there is — and then only on whichever tier
+    // the data actually supports. Kept as `false` rather than deleted: the badge
+    // render narrows on `"popular" in t`, so removing the key entirely makes that
+    // expression `unknown` and breaks the build. Flip to true when data exists.
+    popular: false,
   },
   {
     name: "Lorem ipsum tier 3",
