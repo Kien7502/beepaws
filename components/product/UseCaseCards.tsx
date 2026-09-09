@@ -72,7 +72,15 @@ export function UseCaseCards({
                   otherwise the emoji on the per-card gradient. The label badge sits
                   on top of either. */}
               <div
-                className="relative flex h-44 items-center justify-center overflow-hidden text-6xl"
+                // The illustrations are SQUARE (1024x1024) and opaque JPEGs. In the
+                // old wide h-44 band, cover cropped half their height off and
+                // contain letterboxed them, showing the jpeg's own background as a
+                // box-in-a-box. A square slot matches the art exactly: cover then
+                // fills edge to edge with no crop and no letterbox. The emoji
+                // fallback keeps the short band.
+                className={`relative flex items-center justify-center overflow-hidden text-6xl ${
+                  c.image ? "aspect-square" : "h-44"
+                }`}
                 style={{ background: `linear-gradient(135deg, ${c.from}25 0%, ${c.to} 100%)` }}
               >
                 <span
@@ -87,11 +95,7 @@ export function UseCaseCards({
                     alt={c.title}
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    // contain, not cover: these slots hold ILLUSTRATIONS, and cover
-                    // crops them (a dog on a lap loses its head). The per-card
-                    // gradient behind is the intended backdrop. Hover zoom eased
-                    // 110 -> 105 so the lift doesn't re-crop what we just uncropped.
-                    className="object-contain p-3 transition-transform duration-300 group-hover:scale-105"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                 ) : (
                   <span className="drop-shadow-sm transition-transform duration-300 group-hover:scale-110">

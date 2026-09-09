@@ -86,17 +86,20 @@ export function Mechanism({
             (now too close to toffee) to card-white so it still reads as a
             distinct framed block on the warm mid-tone section. */}
         <div className="grid items-center gap-10 md:grid-cols-2 md:gap-12">
-          <div className="relative min-h-[260px] overflow-hidden rounded-2xl border border-line bg-card md:min-h-[320px]">
+          <div
+            // Square slot to match the square diagram art — cover then fills the
+            // frame exactly (no crop, no letterbox, no inner white box from the
+            // jpeg's own background). Placeholder keeps the old min-height box.
+            className={`relative overflow-hidden rounded-2xl border border-line bg-card ${
+              diagramImageUrl ? "aspect-square" : "min-h-[260px] md:min-h-[320px]"
+            }`}
+          >
             {diagramImageUrl ? (
               <Image
                 src={diagramImageUrl}
                 alt="Tooth cross-section showing visible crust above gumline and hidden tartar below"
                 fill
-                // contain, not cover: this is an informational diagram — cropping
-                // its edges cuts off the very thing it explains. Padding keeps it
-                // off the frame border. (fill sets w/h to 100%, and border-box
-                // padding shrinks the content box, so object-contain fits inside.)
-                className="object-contain p-4 md:p-6"
+                className="object-cover"
                 sizes="(max-width: 880px) 100vw, 50vw"
               />
             ) : (
