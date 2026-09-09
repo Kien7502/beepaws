@@ -85,7 +85,12 @@ export function Mechanism({
         {/* Intro grid: diagram + body copy. Diagram bg flipped from honey-tint
             (now too close to toffee) to card-white so it still reads as a
             distinct framed block on the warm mid-tone section. */}
-        <div className="grid items-center gap-10 md:grid-cols-[1.35fr_1fr] md:gap-12">
+        <div className="grid items-center gap-10 md:grid-cols-[minmax(0,1fr)_340px] md:gap-10">
+          {/* Second column is EXACTLY the diagram's width (340px), not a
+              fraction: a 1fr column left the capped figure centred inside a
+              wider track, so there was dead gutter either side of it and the
+              copy sat further away than it needed to. Fixing the track pulls
+              the two together and gives the leftover width to the text. */}
           <div
             // Square again — 4:3 cropped the diagram's own labels (SALIVA at the
             // top, HUMAN/DOG at the bottom sit close to its edges). Instead of
