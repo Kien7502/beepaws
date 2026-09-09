@@ -85,19 +85,18 @@ export function Mechanism({
         {/* Intro grid: diagram + body copy. Diagram bg flipped from honey-tint
             (now too close to toffee) to card-white so it still reads as a
             distinct framed block on the warm mid-tone section. */}
-        <div className="grid items-center gap-10 md:grid-cols-[minmax(0,1fr)_340px] md:gap-10">
-          {/* Second column is EXACTLY the diagram's width (340px), not a
-              fraction: a 1fr column left the capped figure centred inside a
-              wider track, so there was dead gutter either side of it and the
-              copy sat further away than it needed to. Fixing the track pulls
-              the two together and gives the leftover width to the text. */}
+        <div className="grid items-center gap-10 md:grid-cols-[340px_minmax(0,1fr)] md:gap-8">
+          {/* Diagram left (its original side), copy right. The first track is
+              EXACTLY the figure's width (340px), not a fraction — a 1fr track
+              left the capped figure centred inside a wider column, so dead
+              gutter pushed the copy away from it. Fixing the track removes the
+              slack and hands the leftover width to the text. */}
           <div
-            // Square again — 4:3 cropped the diagram's own labels (SALIVA at the
-            // top, HUMAN/DOG at the bottom sit close to its edges). Instead of
-            // cropping to control the height, the slot is CAPPED (max-w) and moved
-            // to the narrower right column, with the copy given the wider left one
-            // (md:order). Same figure, fully intact, no longer towering.
-            className={`relative mx-auto w-full max-w-[340px] md:order-2 ${
+            // Square — 4:3 cropped the diagram's own labels (SALIVA at the top,
+            // HUMAN/DOG at the bottom sit close to its edges). Height is controlled
+            // by CAPPING the slot (max-w) instead of cropping, so the figure stays
+            // fully intact without towering over the copy beside it.
+            className={`relative mx-auto w-full max-w-[340px] ${
               "overflow-hidden rounded-2xl border border-line bg-card"
             } ${diagramImageUrl ? "aspect-square" : "min-h-[260px] md:min-h-[320px]"}`}
           >
@@ -116,7 +115,7 @@ export function Mechanism({
             )}
           </div>
 
-          <div className="md:order-1">
+          <div>
             <h3 className="font-display mb-3 text-2xl font-semibold text-cocoa md:text-[30px]">
               {paradoxHeading}
             </h3>
