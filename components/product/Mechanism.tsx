@@ -87,11 +87,13 @@ export function Mechanism({
             distinct framed block on the warm mid-tone section. */}
         <div className="grid items-center gap-10 md:grid-cols-2 md:gap-12">
           <div
-            // Square slot to match the square diagram art — cover then fills the
-            // frame exactly (no crop, no letterbox, no inner white box from the
-            // jpeg's own background). Placeholder keeps the old min-height box.
+            // 4:3, not square: the art is a 1024² JPEG with generous dead margin
+            // inside it, so cover here trims ~12.5% off the top and bottom — which
+            // is mostly that empty margin — and keeps the block from towering over
+            // the copy beside it. Go back to aspect-square if the art is ever
+            // re-exported tight-cropped. Placeholder keeps the old min-height box.
             className={`relative overflow-hidden rounded-2xl border border-line bg-card ${
-              diagramImageUrl ? "aspect-square" : "min-h-[260px] md:min-h-[320px]"
+              diagramImageUrl ? "aspect-[4/3]" : "min-h-[260px] md:min-h-[320px]"
             }`}
           >
             {diagramImageUrl ? (
