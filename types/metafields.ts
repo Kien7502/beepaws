@@ -179,6 +179,8 @@ export interface MechanismIntro {
   paradoxPullQuote?: string;
   stepsHeading?: string;
   stepsLead?: string;
+  /** Tooth cross-section beside the steps; falls back to the dev placeholder. */
+  diagramImageUrl?: string;
   feelsBrokenHeading?: string;
   /** Long-form callout body (audit §4.10). Split from education_note
    * 2026-07-17 — that field kept the SHORT buy-column reassurance (§1.5)

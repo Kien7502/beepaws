@@ -606,6 +606,7 @@ export async function ProductPageView({
               paradoxPullQuote={blank(mi?.paradoxPullQuote)}
               stepsHeading={blank(mi?.stepsHeading)}
               stepsLead={blank(mi?.stepsLead)}
+              diagramImageUrl={blank(mi?.diagramImageUrl)}
               feelsBrokenHeading={blank(mi?.feelsBrokenHeading)}
             />
           </div>
