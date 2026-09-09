@@ -85,12 +85,17 @@ export function Mechanism({
         {/* Intro grid: diagram + body copy. Diagram bg flipped from honey-tint
             (now too close to toffee) to card-white so it still reads as a
             distinct framed block on the warm mid-tone section. */}
-        <div className="grid items-center gap-10 md:grid-cols-[340px_minmax(0,1fr)] md:gap-8">
+        <div className="mx-auto grid max-w-4xl items-center gap-10 md:grid-cols-[340px_minmax(0,1fr)] md:gap-8">
           {/* Diagram left (its original side), copy right. The first track is
               EXACTLY the figure's width (340px), not a fraction — a 1fr track
               left the capped figure centred inside a wider column, so dead
-              gutter pushed the copy away from it. Fixing the track removes the
-              slack and hands the leftover width to the text. */}
+              gutter pushed the copy away from it.
+
+              max-w-4xl + mx-auto: the section is max-w-6xl, and letting this row
+              use all of it read as "spread out" next to the centred heading and
+              lead above, and stretched the paragraphs to an uncomfortably long
+              measure. Capping it centres the pair and lands the copy at ~520px,
+              a readable line length. */}
           <div
             // Square — 4:3 cropped the diagram's own labels (SALIVA at the top,
             // HUMAN/DOG at the bottom sit close to its edges). Height is controlled
