@@ -236,7 +236,12 @@ function BeforeAfterPanel({ slide }: { slide: BeforeAfterSlide }) {
           src={slide.beforeImageUrl}
           alt={`${slide.petName ?? "Pet"} — before`}
           fill
-          className="object-cover"
+          // draggable=false + pointer-events-none: without them a mouse drag
+          // starts the browser's native IMAGE drag (ghost image) instead of
+          // moving the divider, which also leaves the page feeling unscrollable.
+          // The wrapper owns all pointer input, same as the divider/knob.
+          draggable={false}
+          className="pointer-events-none select-none object-cover"
           sizes="(max-width: 768px) 100vw, 620px"
         />
       ) : (
@@ -252,7 +257,8 @@ function BeforeAfterPanel({ slide }: { slide: BeforeAfterSlide }) {
             src={slide.afterImageUrl}
             alt={`${slide.petName ?? "Pet"} — after`}
             fill
-            className="object-cover"
+            draggable={false}
+            className="pointer-events-none select-none object-cover"
             sizes="(max-width: 768px) 100vw, 620px"
           />
         ) : (
