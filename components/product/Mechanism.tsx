@@ -92,7 +92,11 @@ export function Mechanism({
                 src={diagramImageUrl}
                 alt="Tooth cross-section showing visible crust above gumline and hidden tartar below"
                 fill
-                className="object-cover"
+                // contain, not cover: this is an informational diagram — cropping
+                // its edges cuts off the very thing it explains. Padding keeps it
+                // off the frame border. (fill sets w/h to 100%, and border-box
+                // padding shrinks the content box, so object-contain fits inside.)
+                className="object-contain p-4 md:p-6"
                 sizes="(max-width: 880px) 100vw, 50vw"
               />
             ) : (
