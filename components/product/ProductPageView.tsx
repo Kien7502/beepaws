@@ -57,9 +57,10 @@ export async function ProductPageView({
   const hero = beepaws?.heroCopy?.[0];
   // Hero bullets arrive as `{icon, text}` objects — or, on a product not re-pushed
   // since per-bullet icons landed, as the old plain strings. Reading only the new
-  // shape rendered every legacy bullet as a bare checkmark with the text missing
-  // (live on the flagship until its next Push). Accept both, and never render a
-  // bullet with nothing to say.
+  // shape rendered every legacy bullet as a bare checkmark with the text missing —
+  // caught before merge, but the flagship's published value is exactly that old
+  // shape until its next Push. Accept both, and never render a bullet with
+  // nothing to say.
   const bullets = (beepaws?.bullets ?? [])
     .map((b) => (typeof b === "string" ? { text: b } : b))
     .filter((b): b is { icon?: string; text: string } => !!b?.text);
