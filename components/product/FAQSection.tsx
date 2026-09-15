@@ -1,15 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Shield, PawPrint, Volume2, Package, RefreshCw, Stethoscope, type LucideIcon } from "lucide-react";
+import { Plus, Shield } from "lucide-react";
+import { contentIcon } from "@/lib/content-icons";
 import type { FaqItem } from "@/types/metafields";
-
-// Keep in sync with FAQ_ICONS in the admin schema (lib/schema.ts). Stethoscope
-// was already in use by the vet FAQ but missing here, so it silently fell back
-// to a shield.
-const ICON_MAP: Record<string, LucideIcon> = {
-  Shield, PawPrint, Volume2, Package, RefreshCw, Stethoscope,
-};
 
 // Lorem ipsum placeholders — set beepaws.faq_items to override. Icons stay
 // distinct so each row reads as a different question visually.
@@ -69,7 +63,7 @@ export function FAQSection({
 
         <div className="space-y-3">
           {data.map((faq, i) => {
-            const Icon = ICON_MAP[faq.icon] ?? Shield;
+            const Icon = contentIcon(faq.icon, Shield);
             const isOpen = open === i;
             return (
               <div

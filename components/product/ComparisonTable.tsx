@@ -1,14 +1,6 @@
 import type { ComparisonData, ComparisonColumn } from "@/types/metafields";
-import {
-  Check, X,
-  PawPrint, Stethoscope, Leaf, Shield, Star, Heart, DollarSign, Clock, Zap, Package,
-  type LucideIcon,
-} from "lucide-react";
-
-// Column icons the editor (beepaws-admin) can assign, keyed by lucide name.
-const COLUMN_ICONS: Record<string, LucideIcon> = {
-  PawPrint, Stethoscope, Leaf, Shield, Star, Heart, DollarSign, Clock, Zap, Package,
-};
+import { Check, X, PawPrint } from "lucide-react";
+import { contentIcon } from "@/lib/content-icons";
 
 const DEFAULT_COLUMNS: ComparisonColumn[] = [
   { label: "BeePaws", icon: "PawPrint" },
@@ -133,7 +125,7 @@ export function ComparisonTable({
             <div className="mb-4 grid items-end gap-2 text-center" style={{ gridTemplateColumns: gridCols }}>
               <div />
               {columns.map((col, i) => {
-                const Icon = COLUMN_ICONS[col.icon] ?? PawPrint;
+                const Icon = contentIcon(col.icon, PawPrint);
                 const isUs = i === 0;
                 return (
                   <div key={i} className="flex flex-col items-center gap-1.5">
