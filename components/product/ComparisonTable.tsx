@@ -171,7 +171,9 @@ export function ComparisonTable({
                   {columns.map((_, ci) => {
                     const c = row.cells[ci] ?? { on: false, text: null };
                     return (
-                      <div key={ci} className={`flex items-center justify-center py-3.5 ${ci === 0 ? "bg-[#FCF2DD]" : ""}`}>
+                      // border-l: a hairline between every column, so values read as
+                      // columns and not just rows.
+                      <div key={ci} className={`flex items-center justify-center border-l border-line py-3.5 ${ci === 0 ? "bg-[#FCF2DD]" : ""}`}>
                         {cell(c.on, c.text)}
                       </div>
                     );

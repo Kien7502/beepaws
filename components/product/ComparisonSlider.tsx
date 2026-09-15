@@ -128,16 +128,18 @@ export function ComparisonSlider({
         <div className="overflow-hidden rounded-2xl border border-line bg-card shadow-[0_18px_50px_-12px_rgba(74,46,22,0.30)]">
           <div className="grid" style={{ gridTemplateColumns: GRID }}>
             {rows.map((row, ri) => {
-              // Divider on BOTH the label and the value cell, with no gap
-              // between them, so each row reads as one continuous line. It sits
-              // on the static Strip wrapper, so it doesn't slide.
+              // Row divider on BOTH the label and the value cell, with no gap
+              // between them, so each row reads as one continuous line; the
+              // value side also carries the column line (border-l), matching the
+              // desktop table. Both sit on the static Strip wrapper, so they
+              // don't slide with the values.
               const edge = ri < rows.length - 1 ? "border-b border-line" : "";
               return (
                 <Fragment key={ri}>
                   <div className={`flex items-center px-4 py-3.5 text-[13px] font-semibold leading-snug text-cocoa ${edge}`}>
                     {row.label}
                   </div>
-                  <Strip active={active} className={edge}>
+                  <Strip active={active} className={`border-l border-line ${edge}`}>
                     {row.cells.map((c, ci) => (
                       <div
                         key={ci}
