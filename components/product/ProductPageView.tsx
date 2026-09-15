@@ -53,6 +53,7 @@ export async function ProductPageView({
   // coerce empty strings → undefined so partially-filled entries fall back to
   // each component's in-code default per-field. The mechanism paradox is two
   // flat metafield strings reconstructed into the component's paragraphs[].
+  const hero = beepaws?.heroCopy?.[0];
   const ppi = beepaws?.painPointsIntro?.[0];
   const mi = beepaws?.mechanismIntro?.[0];
   const uci = beepaws?.useCasesIntro?.[0];
@@ -446,9 +447,30 @@ export async function ProductPageView({
               </span>
             )}
 
-            <h1 className="font-display mt-3 text-balance text-[33px] font-bold leading-[1.1] tracking-tight text-cocoa md:text-[40px]">
-              {product.title}
+            {/* Hero rework 2026-09-15 §2/§4: the display HEADLINE is the H1 and the
+                product name demotes to a small line above it. Shopify still wants
+                the product name on the page, just not as the headline. With no
+                hero_copy authored this falls back to the old behaviour — product
+                title as H1, no subheadline — so non-device PDPs are untouched. */}
+            {hero?.headline && (
+              <p className="mt-3 text-[13px] font-semibold uppercase tracking-[0.08em] text-brown">
+                {product.title}
+              </p>
+            )}
+
+            <h1
+              className={`font-display text-balance text-[33px] font-bold leading-[1.1] tracking-tight text-cocoa md:text-[40px] ${
+                hero?.headline ? "mt-1.5" : "mt-3"
+              }`}
+            >
+              {hero?.headline || product.title}
             </h1>
+
+            {hero?.subheadline && (
+              <p className="mt-3 text-[16.5px] leading-relaxed text-brown">
+                {hero.subheadline}
+              </p>
+            )}
 
             {/* Rating row — pulled from beepaws.reviews aggregation when
                 present. SocialProofBar replaced inline for tighter layout. */}
@@ -463,6 +485,24 @@ export async function ProductPageView({
                   </span>
                 </span>
               </div>
+            )}
+
+            {beepaws?.bullets && beepaws.bullets.length > 0 && (
+              <ul className="mt-5 space-y-2.5">
+                {beepaws.bullets.map((b, i) => (
+                  <li
+                    key={i}
+                    className="flex items-start gap-2.5 text-sm text-cocoa"
+                  >
+                    <Check
+                      className="mt-0.5 h-4 w-4 shrink-0 text-clay"
+                      strokeWidth={3}
+                      aria-hidden
+                    />
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
             )}
 
             {/* Price row — strikethrough + sale pill + out-of-stock pill.
@@ -487,24 +527,6 @@ export async function ProductPageView({
                 the one she charges <b className="text-rose-soft">$500–$1,400+</b>{" "}
                 to swing once a year. Now it lives in your hand.
               </div>
-            )}
-
-            {beepaws?.bullets && beepaws.bullets.length > 0 && (
-              <ul className="mt-5 space-y-2.5">
-                {beepaws.bullets.map((b, i) => (
-                  <li
-                    key={i}
-                    className="flex items-start gap-2.5 text-sm text-cocoa"
-                  >
-                    <Check
-                      className="mt-0.5 h-4 w-4 shrink-0 text-clay"
-                      strokeWidth={3}
-                      aria-hidden
-                    />
-                    <span>{b}</span>
-                  </li>
-                ))}
-              </ul>
             )}
 
             {/* Buy area — bundle tier picker + Add/Buy + payment row. The

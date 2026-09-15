@@ -262,6 +262,7 @@ function normalizeMetafields(metafields: AdminMetafield[]) {
     painPoints:       parseBeepaws("pain_points"),
     painPointsIntro:  parseBeepaws("pain_points_intro"),
     mechanismSteps:   parseBeepaws("mechanism_steps"),
+    heroCopy:         parseBeepaws("hero_copy"),
     mechanismIntro:   parseBeepaws("mechanism_intro"),
     guarantee:        parseBeepaws("guarantee"),
     useCasesIntro:    parseBeepaws("use_cases_intro"),

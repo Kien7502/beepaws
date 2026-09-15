@@ -28,6 +28,7 @@ export function beepawsFromDraft(content: Record<string, unknown>): BeepawsMetaf
     painPoints: g("pain_points"),
     painPointsIntro: g("pain_points_intro"),
     mechanismSteps: g("mechanism_steps"),
+    heroCopy: g("hero_copy"),
     mechanismIntro: g("mechanism_intro"),
     guarantee: g("guarantee"),
     useCasesIntro: g("use_cases_intro"),

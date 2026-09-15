@@ -169,6 +169,13 @@ export interface MechanismStep {
 // Section-level intro copy for Mechanism — single-entry list (index 0).
 // paradoxParagraph1/2 map to the component's paradoxParagraphs[] (the page
 // reconstructs the array). Missing fields fall back to in-code defaults.
+/** Hero above-the-fold copy. Absent -> the hero falls back to the product title
+ *  as H1 with no subheadline (how non-device PDPs render). */
+export interface HeroCopy {
+  headline?: string;
+  subheadline?: string;
+}
+
 export interface MechanismIntro {
   introEyebrow?: string;
   introHeading?: string;
@@ -245,6 +252,7 @@ export interface BeepawsMetafields {
   painPoints: PainPoint[] | null;
   painPointsIntro: PainPointsIntro[] | null;
   mechanismSteps: MechanismStep[] | null;
+  heroCopy: HeroCopy[] | null;
   mechanismIntro: MechanismIntro[] | null;
   guarantee: Guarantee[] | null;
   // Section-header copy for the remaining sections (single-entry lists).
