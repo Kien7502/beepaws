@@ -1,12 +1,7 @@
 import type { ComparisonData, ComparisonColumn } from "@/types/metafields";
 import { Check, X, PawPrint } from "lucide-react";
 import { contentIcon } from "@/lib/content-icons";
-
-// Mobile carousel geometry. The rail holds full-sentence row labels, so it needs
-// real width; scroll-padding must equal it exactly or a snapped column lands
-// underneath the frozen labels.
-const RAIL_W = "10.5rem";
-const COL_W = "8.5rem";
+import { ComparisonSlider, type SliderColumn, type SliderRow } from "@/components/product/ComparisonSlider";
 
 const DEFAULT_COLUMNS: ComparisonColumn[] = [
   { label: "BeePaws", icon: "PawPrint" },
@@ -111,90 +106,29 @@ export function ComparisonTable({
           {/* Right — table */}
           <div className="relative w-full md:flex-1">
 
-            {/* MOBILE — the row labels stay FROZEN on the left and only the option
-                columns slide, one per swipe. (First attempt put a whole column on
-                each slide, labels repeated inside; you lose your place because
-                nothing is anchored.) Before that it forced the desktop grid to
-                min-w-[540px] and scrolled sideways, cutting cells in half.
-
-                It's a real <table> on purpose: `position: sticky` on a cell is the
-                one dependable way to freeze a column — as a grid item the same
-                rule does nothing, because a grid item's containing block is its
-                own grid area, so there's no room to stick. A table also matches
-                label heights to value heights for free, which two side-by-side
-                containers can't do without fixed row heights. Scroll-snap does the
-                carousel; no JS (this is a server component), no library. */}
-            <div
-              className="-mb-6 snap-x snap-mandatory overflow-x-auto overscroll-x-contain pb-6 md:hidden"
-              style={{ scrollPaddingLeft: RAIL_W }}
-            >
-              <table className="border-separate border-spacing-0" style={{ width: "max-content" }}>
-                <caption className="caption-top pb-2 text-left text-xs font-semibold text-brown/70">
-                  Swipe to compare — the rows stay put.
-                </caption>
-                <thead>
-                  <tr>
-                    {/* Corner: empty, but it has to be sticky too or the columns
-                        slide over the gap above the labels. */}
-                    <th className="sticky left-0 z-20 bg-card" style={{ width: RAIL_W }} />
-                    {columns.map((col, i) => {
-                      const Icon = contentIcon(col.icon, PawPrint);
-                      const isUs = i === 0;
-                      return (
-                        <th
-                          key={i}
-                          scope="col"
-                          className="snap-start border-b border-line px-2 pb-3 align-bottom"
-                          style={{ width: COL_W }}
-                        >
-                          <span className="flex flex-col items-center gap-1.5">
-                            <span className={`flex h-10 w-10 items-center justify-center rounded-full ${isUs ? "bg-cocoa" : "bg-cream"}`}>
-                              <Icon size={18} className={isUs ? "text-gold" : "text-brown"} />
-                            </span>
-                            <span className={`text-[11px] uppercase leading-tight tracking-wider ${isUs ? "font-extrabold text-cocoa" : "font-bold text-brown"}`}>
-                              {col.label}
-                            </span>
-                          </span>
-                        </th>
-                      );
-                    })}
-                  </tr>
-                </thead>
-                <tbody>
-                  {dataRows.map((row, ri) => {
-                    const last = ri === dataRows.length - 1;
-                    return (
-                      <tr key={ri}>
-                        <th
-                          scope="row"
-                          // The frozen rail. Solid background + a soft right edge so
-                          // the scrolling columns read as passing UNDER it.
-                          className={`sticky left-0 z-10 bg-card py-3 pr-3 text-left text-[13px] font-semibold leading-snug text-cocoa shadow-[7px_0_9px_-7px_rgba(74,46,22,0.22)] ${
-                            last ? "" : "border-b border-line"
-                          }`}
-                          style={{ width: RAIL_W }}
-                        >
-                          {row.label}
-                        </th>
-                        {columns.map((_, ci) => {
-                          const c = row.cells[ci] ?? { on: false, text: null };
-                          return (
-                            <td
-                              key={ci}
-                              className={`snap-start px-2 py-3 text-center align-middle ${ci === 0 ? "bg-[#FCF2DD]" : ""} ${
-                                last ? "" : "border-b border-line"
-                              }`}
-                            >
-                              <span className="inline-flex justify-center">{cell(c.on, c.text)}</span>
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            {/* MOBILE — labels fixed, one option column sliding. Built in
+                ComparisonSlider; glyphs are resolved HERE, server-side, and handed
+                over as rendered nodes (the icon catalog can't cross into a client
+                component — see lib/content-icons.ts). Passing whole rendered cells
+                also means `cell()` below stays the only place ✓/✕/prices are
+                rendered, so the phone view can't drift from the desktop table. */}
+            <ComparisonSlider
+              columns={columns.map((col, i): SliderColumn => {
+                const Icon = contentIcon(col.icon, PawPrint);
+                return {
+                  label: col.label,
+                  // Index 0 is the "us" column — gold on cocoa, like the desktop badge.
+                  icon: <Icon size={18} className={i === 0 ? "text-gold" : "text-brown"} />,
+                };
+              })}
+              rows={dataRows.map((row): SliderRow => ({
+                label: row.label,
+                cells: columns.map((_, ci) => {
+                  const c = row.cells[ci] ?? { on: false, text: null };
+                  return cell(c.on, c.text);
+                }),
+              }))}
+            />
 
             {/* DESKTOP — the real side-by-side table, where the comparison works. */}
             <div className="hidden md:block">
