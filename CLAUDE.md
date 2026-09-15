@@ -161,6 +161,31 @@ Where to optimise the cold render further:
   recommendations) stream in; a light skeleton in the preview route so it feels responsive
   despite being deliberately uncached.
 
+## Mobile card sliders (planned 2026-09-15 — NOT built)
+
+Owner wants the **PainPoints**, **Mechanism steps** and **UseCaseCards** sections on phones to use
+the same slider as the comparison table (`components/product/ComparisonSlider.tsx`: arrows, dots,
+swipe, one item per slide) instead of stacking three full-width cards.
+
+- **Targets:** `PainPoints.tsx` (card grid ~L56), `Mechanism.tsx` (the numbered STEPS grid ~L161
+  only — not the diagram/copy row), `UseCaseCards.tsx` (~L65). All three are server components
+  whose cards sit in `grid md:grid-cols-3`, i.e. one stacked column below md.
+- **Plan:** pull the slider behaviour out of ComparisonSlider into shared pieces (a `useSlider`
+  hook for active index + swipe — 40px threshold with a horizontal-axis check — and a
+  `SliderControls` arrows+dots component), then build a client `CardSlider` on them with a
+  translated track (420ms `cubic-bezier(0.22,0.61,0.36,1)`, same as ProductGallery). Refit
+  ComparisonSlider onto the same pieces so the behaviour has one implementation.
+- **Cards stay server-rendered** and arrive as `ReactNode` slides. That's mandatory, not style:
+  `lib/content-icons.ts` is `server-only`, and it also keeps `next/image` rendering on the server.
+- **Render the cards ONCE and let CSS switch layouts:** below md the track is a translated flex
+  strip plus controls; at md+ it becomes the existing `grid-cols-3`, controls hidden and the
+  transform cleared (`md:!transform-none` — the transform is an inline style, so it needs the
+  important modifier). Don't copy the comparison table's phone-copy + desktop-copy approach
+  here: it would duplicate every card, and for UseCaseCards/Mechanism every image.
+- **Keep:** equal card heights (a flex track stretches slides to the tallest), `aria-hidden` on
+  off-screen slides, desktop pixel-identical. Verify with screenshots at 390px and 1280px
+  (method: admin repo memory "storefront screenshot harness").
+
 ## Security posture (public storefront)
 
 Different profile than the admin tool (which is personal-use, local-only). The architecture
