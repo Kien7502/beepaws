@@ -18,6 +18,8 @@ No test framework exists. **`npx tsc --noEmit` and `npm run build` are the corre
 
 Next.js 16 App Router · React 19 · TypeScript · Tailwind CSS v4 · Lucide icons · next-themes.
 
+**Content icons (2026-09-15):** authored icon names (`beepaws.faq_items`, `product_bullets`, `comparison_rows`) resolve through `lib/content-icons.ts`, which maps lucide's **entire** `icons` catalog (~1700) so the admin picker can offer any of them without a hand-mirrored list going stale. That module is `server-only` **on purpose** — importing the catalog into a client component ships ~400KB of unused glyphs. A client component that needs an authored icon receives it as a rendered ReactNode from its server parent; `FAQSection` (server: data + glyphs) / `FAQAccordion` (client: open state only) is the pattern to copy.
+
 ## Architecture
 
 ### Data layer — Shopify Admin GraphQL API (server-only)
