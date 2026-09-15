@@ -17,6 +17,8 @@ export interface SliderRow {
 }
 
 const EASE = "duration-[420ms] ease-[cubic-bezier(0.22,0.61,0.36,1)]";
+// Label rail | value column. Shared by the header and the card.
+const GRID = "44% minmax(0, 1fr)";
 
 // One row's worth of values, slid horizontally. Every row uses the same `active`
 // index, so the whole column moves as one piece.
@@ -24,11 +26,21 @@ const EASE = "duration-[420ms] ease-[cubic-bezier(0.22,0.61,0.36,1)]";
 // Each value sits in normal flow at 100% of the viewport width — never absolute
 // — so the row grows to fit its tallest value and long text WRAPS instead of
 // being clipped at a column edge.
-function Strip({ active, children }: { active: number; children: ReactNode[] }) {
+function Strip({
+  active,
+  children,
+  className = "",
+}: {
+  active: number;
+  children: ReactNode[];
+  className?: string;
+}) {
+  // `h-full` on the track resolves because the Strip is a stretched grid item
+  // (definite height), so slides — and the tint inside them — fill the whole row.
   return (
-    <div className="overflow-hidden">
+    <div className={`overflow-hidden ${className}`}>
       <div
-        className={`flex transition-transform ${EASE}`}
+        className={`flex h-full transition-transform ${EASE}`}
         style={{ transform: `translateX(-${active * 100}%)` }}
       >
         {children.map((c, i) => (
@@ -68,9 +80,11 @@ export function ComparisonSlider({
 
   return (
     <div className="md:hidden">
+      {/* Same geometry for header and card so the sliding header sits exactly
+          over the value column. The header's transparent side borders mirror the
+          card's 1px border — without them the two 44% splits resolve against
+          widths 2px apart and the header drifts off the column. */}
       <div
-        className="grid gap-x-3"
-        style={{ gridTemplateColumns: "44% minmax(0, 1fr)" }}
         onTouchStart={(e) => {
           const t = e.touches[0];
           setTouch({ x: t.clientX, y: t.clientY });
@@ -84,54 +98,62 @@ export function ComparisonSlider({
           setTouch(null);
         }}
       >
-        {/* Header: nothing above the labels, the column identity slides. */}
-        <div />
-        <Strip active={active}>
-          {columns.map((col, i) => (
-            <div key={i} className="flex flex-col items-center gap-1.5 pb-3">
-              <span
-                className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                  i === 0 ? "bg-cocoa" : "bg-cream"
-                }`}
-              >
-                {col.icon}
-              </span>
-              <span
-                className={`text-center text-[11px] uppercase leading-tight tracking-wider ${
-                  i === 0 ? "font-extrabold text-cocoa" : "font-bold text-brown"
-                }`}
-              >
-                {col.label}
-              </span>
-            </div>
-          ))}
-        </Strip>
+        {/* Header badge — above the card, like the desktop's column badges. */}
+        <div className="mb-4 grid border-x border-transparent" style={{ gridTemplateColumns: GRID }}>
+          <div />
+          <Strip active={active}>
+            {columns.map((col, i) => (
+              <div key={i} className="flex flex-col items-center gap-1.5">
+                <span
+                  className={`flex h-12 w-12 items-center justify-center rounded-full ${
+                    i === 0 ? "bg-cocoa" : "bg-cream"
+                  }`}
+                >
+                  {col.icon}
+                </span>
+                <span
+                  className={`text-center text-xs uppercase tracking-wider ${
+                    i === 0 ? "font-extrabold text-cocoa" : "font-bold text-brown"
+                  }`}
+                >
+                  {col.label}
+                </span>
+              </div>
+            ))}
+          </Strip>
+        </div>
 
-        {rows.map((row, ri) => {
-          const edge = ri < rows.length - 1 ? "border-b border-line" : "";
-          return (
-            <Fragment key={ri}>
-              <div className={`flex items-center py-3 pr-1 text-[13px] font-semibold leading-snug text-cocoa ${edge}`}>
-                {row.label}
-              </div>
-              {/* The divider sits on the static wrapper, so it doesn't slide. */}
-              <div className={edge}>
-                <Strip active={active}>
-                  {row.cells.map((c, ci) => (
-                    <div
-                      key={ci}
-                      className={`flex items-center justify-center break-words px-2 py-3 text-center ${
-                        ci === 0 ? "bg-[#FCF2DD]" : ""
-                      }`}
-                    >
-                      {c}
-                    </div>
-                  ))}
-                </Strip>
-              </div>
-            </Fragment>
-          );
-        })}
+        {/* Rows — the desktop's white card: border, radius, shadow, hairline
+            dividers running the full width of the card. */}
+        <div className="overflow-hidden rounded-2xl border border-line bg-card shadow-[0_18px_50px_-12px_rgba(74,46,22,0.30)]">
+          <div className="grid" style={{ gridTemplateColumns: GRID }}>
+            {rows.map((row, ri) => {
+              // Divider on BOTH the label and the value cell, with no gap
+              // between them, so each row reads as one continuous line. It sits
+              // on the static Strip wrapper, so it doesn't slide.
+              const edge = ri < rows.length - 1 ? "border-b border-line" : "";
+              return (
+                <Fragment key={ri}>
+                  <div className={`flex items-center px-4 py-3.5 text-[13px] font-semibold leading-snug text-cocoa ${edge}`}>
+                    {row.label}
+                  </div>
+                  <Strip active={active} className={edge}>
+                    {row.cells.map((c, ci) => (
+                      <div
+                        key={ci}
+                        className={`flex items-center justify-center break-words px-2 py-3 text-center ${
+                          ci === 0 ? "bg-[#FCF2DD]" : ""
+                        }`}
+                      >
+                        {c}
+                      </div>
+                    ))}
+                  </Strip>
+                </Fragment>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Controls */}
