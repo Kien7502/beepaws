@@ -5,7 +5,27 @@ import { getBeePawsAutoDiscounts } from "@/lib/shopify/discounts";
 import { getFullProductForPage, getPaymentMethods, getProduct, getProducts } from "@/lib/shopify/queries";
 import VariantSelector from "@/components/product/VariantSelector";
 import { ProductGallery } from "@/components/product/ProductGallery";
-import { Truck, ShieldCheck, RefreshCcw, Check } from "lucide-react";
+import {
+  Truck,
+  ShieldCheck,
+  RefreshCcw,
+  Check,
+  VolumeX,
+  Timer,
+  Zap,
+  Shield,
+  Heart,
+  Sparkles,
+  PawPrint,
+  type LucideIcon,
+} from "lucide-react";
+
+// Icons a hero bullet may use — mirrors BULLET_ICONS in the admin schema
+// (lib/schema.ts). Unknown or absent falls back to Check, so a bullet authored
+// before icons existed still renders exactly as it did.
+const BULLET_ICON_MAP: Record<string, LucideIcon> = {
+  Check, VolumeX, Timer, Zap, Shield, Heart, Sparkles, PawPrint,
+};
 import { ProductDetailsSections } from "@/components/product/ProductDetailsSections";
 import { FinalCTASection } from "@/components/product/FinalCTASection";
 import { StickyAddToCart } from "@/components/product/StickyAddToCart";
@@ -489,19 +509,22 @@ export async function ProductPageView({
 
             {beepaws?.bullets && beepaws.bullets.length > 0 && (
               <ul className="mt-5 space-y-2.5">
-                {beepaws.bullets.map((b, i) => (
-                  <li
-                    key={i}
-                    className="flex items-start gap-2.5 text-sm text-cocoa"
-                  >
-                    <Check
-                      className="mt-0.5 h-4 w-4 shrink-0 text-clay"
-                      strokeWidth={3}
-                      aria-hidden
-                    />
-                    <span>{b}</span>
-                  </li>
-                ))}
+                {beepaws.bullets.map((b, i) => {
+                  const Icon = BULLET_ICON_MAP[b?.icon ?? ""] ?? Check;
+                  return (
+                    <li
+                      key={i}
+                      className="flex items-start gap-2.5 text-sm text-cocoa"
+                    >
+                      <Icon
+                        className="mt-0.5 h-4 w-4 shrink-0 text-clay"
+                        strokeWidth={3}
+                        aria-hidden
+                      />
+                      <span>{b?.text}</span>
+                    </li>
+                  );
+                })}
               </ul>
             )}
 

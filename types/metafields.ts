@@ -171,6 +171,13 @@ export interface MechanismStep {
 // reconstructs the array). Missing fields fall back to in-code defaults.
 /** Hero above-the-fold copy. Absent -> the hero falls back to the product title
  *  as H1 with no subheadline (how non-device PDPs render). */
+/** A hero bullet. `icon` is a key into BULLET_ICON_MAP (ProductPageView);
+ *  anything unknown or absent falls back to Check. */
+export interface BulletItem {
+  icon?: string;
+  text?: string;
+}
+
 export interface HeroCopy {
   headline?: string;
   subheadline?: string;
@@ -230,7 +237,7 @@ export interface BeepawsMetafields {
   reviews: Review[] | null;
   stats: StatItem[] | null;
   techSpecs: TechSpec[] | null;
-  bullets: string[] | null;
+  bullets: BulletItem[] | null;
   // Legacy flat list — superseded by ingredientGroups; still renders as a
   // single unlabeled group when groups are unset.
   ingredients: string[] | null;
