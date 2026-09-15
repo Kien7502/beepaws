@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import type { ComparisonData, ComparisonColumn } from "@/types/metafields";
 import { Check, X, PawPrint } from "lucide-react";
 import { contentIcon } from "@/lib/content-icons";
@@ -125,7 +126,10 @@ export function ComparisonTable({
                 label: row.label,
                 cells: columns.map((_, ci) => {
                   const c = row.cells[ci] ?? { on: false, text: null };
-                  return cell(c.on, c.text);
+                  // Keyed even though the slider re-wraps each cell in its own
+                  // keyed div: an array of elements crossing into a client
+                  // component is validated as a list on arrival.
+                  return <Fragment key={ci}>{cell(c.on, c.text)}</Fragment>;
                 }),
               }))}
             />
