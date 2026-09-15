@@ -55,6 +55,14 @@ export async function ProductPageView({
   // each component's in-code default per-field. The mechanism paradox is two
   // flat metafield strings reconstructed into the component's paragraphs[].
   const hero = beepaws?.heroCopy?.[0];
+  // Hero bullets arrive as `{icon, text}` objects — or, on a product not re-pushed
+  // since per-bullet icons landed, as the old plain strings. Reading only the new
+  // shape rendered every legacy bullet as a bare checkmark with the text missing
+  // (live on the flagship until its next Push). Accept both, and never render a
+  // bullet with nothing to say.
+  const bullets = (beepaws?.bullets ?? [])
+    .map((b) => (typeof b === "string" ? { text: b } : b))
+    .filter((b): b is { icon?: string; text: string } => !!b?.text);
   const ppi = beepaws?.painPointsIntro?.[0];
   const mi = beepaws?.mechanismIntro?.[0];
   const uci = beepaws?.useCasesIntro?.[0];
@@ -488,10 +496,10 @@ export async function ProductPageView({
               </div>
             )}
 
-            {beepaws?.bullets && beepaws.bullets.length > 0 && (
+            {bullets.length > 0 && (
               <ul className="mt-5 space-y-2.5">
-                {beepaws.bullets.map((b, i) => {
-                  const Icon = contentIcon(b?.icon, Check);
+                {bullets.map((b, i) => {
+                  const Icon = contentIcon(b.icon, Check);
                   return (
                     <li
                       key={i}
@@ -502,7 +510,7 @@ export async function ProductPageView({
                         strokeWidth={3}
                         aria-hidden
                       />
-                      <span>{b?.text}</span>
+                      <span>{b.text}</span>
                     </li>
                   );
                 })}

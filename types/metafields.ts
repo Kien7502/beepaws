@@ -237,7 +237,10 @@ export interface BeepawsMetafields {
   reviews: Review[] | null;
   stats: StatItem[] | null;
   techSpecs: TechSpec[] | null;
-  bullets: BulletItem[] | null;
+  // `{icon,text}` objects since per-bullet icons (2026-09-15); plain strings
+  // before that. A product not re-pushed since still holds the strings, so
+  // ProductPageView reads both.
+  bullets: (BulletItem | string)[] | null;
   // Legacy flat list — superseded by ingredientGroups; still renders as a
   // single unlabeled group when groups are unset.
   ingredients: string[] | null;
