@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Shield, PawPrint, Volume2, Package, RefreshCw, type LucideIcon } from "lucide-react";
+import { Plus, Shield, PawPrint, Volume2, Package, RefreshCw, Stethoscope, type LucideIcon } from "lucide-react";
 import type { FaqItem } from "@/types/metafields";
 
+// Keep in sync with FAQ_ICONS in the admin schema (lib/schema.ts). Stethoscope
+// was already in use by the vet FAQ but missing here, so it silently fell back
+// to a shield.
 const ICON_MAP: Record<string, LucideIcon> = {
-  Shield, PawPrint, Volume2, Package, RefreshCw,
+  Shield, PawPrint, Volume2, Package, RefreshCw, Stethoscope,
 };
 
 // Lorem ipsum placeholders — set beepaws.faq_items to override. Icons stay
