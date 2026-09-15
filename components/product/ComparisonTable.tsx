@@ -105,20 +105,56 @@ export function ComparisonTable({
           {/* Right — table */}
           <div className="relative w-full md:flex-1">
 
-            {/* The wrapper's own scrollbar sits below the fold on phones, so
-                without this line the cut-off columns read as a bug, not as
-                something swipeable. */}
-            <p className="mb-2 text-xs font-semibold text-brown/70 md:hidden">
-              Swipe the table sideways to see all three columns.
-            </p>
+            {/* MOBILE — one COLUMN per slide, not a sideways-scrolling table.
+                A 4-column grid can't compress below ~540px and stay readable, so
+                this used to force that width and scroll horizontally: the columns
+                were cut off mid-cell and you had to drag a table to read it.
+                Each option now gets its own card carrying every row, so a phone
+                reads one option at a time and swipes to compare. Scroll-snap +
+                a part-visible neighbour does it with no JS (this is a server
+                component) and no library. */}
+            <div className="md:hidden">
+              <p className="mb-2 text-xs font-semibold text-brown/70">
+                Swipe to compare each option.
+              </p>
+              <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain px-4 pb-4">
+                {columns.map((col, i) => {
+                  const Icon = contentIcon(col.icon, PawPrint);
+                  const isUs = i === 0;
+                  return (
+                    <div key={i} className="w-[82%] shrink-0 snap-center">
+                      <div className="overflow-hidden rounded-2xl border border-line bg-card shadow-[0_12px_32px_-14px_rgba(74,46,22,0.30)]">
+                        <div className={`flex items-center gap-2.5 px-4 py-3 ${isUs ? "bg-cocoa" : "bg-cream"}`}>
+                          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${isUs ? "bg-cream/15" : "bg-card"}`}>
+                            <Icon size={18} className={isUs ? "text-gold" : "text-brown"} />
+                          </div>
+                          <span className={`text-xs uppercase tracking-wider ${isUs ? "font-extrabold text-cream" : "font-bold text-brown"}`}>
+                            {col.label}
+                          </span>
+                        </div>
+                        {dataRows.map((row, ri) => {
+                          const c = row.cells[i] ?? { on: false, text: null };
+                          return (
+                            <div
+                              key={ri}
+                              className={`flex items-center justify-between gap-3 px-4 py-3 ${
+                                ri < dataRows.length - 1 ? "border-b border-line" : ""
+                              }`}
+                            >
+                              <span className="text-sm font-semibold text-cocoa">{row.label}</span>
+                              <span className="shrink-0">{cell(c.on, c.text)}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
 
-            {/* Below md the 4-column grid can't compress under ~540px and stay
-                readable, so badges + rows share one horizontal-scroll container
-                (they must scroll together to keep columns aligned). The
-                pb/-mb pair reserves room for the card's drop shadow, which the
-                scroll container would otherwise clip. ≥md the wrapper is inert. */}
-            <div className="max-md:-mb-10 max-md:overflow-x-auto max-md:overscroll-x-contain max-md:pb-10">
-            <div className="max-md:min-w-[540px]">
+            {/* DESKTOP — the real side-by-side table, where the comparison works. */}
+            <div className="hidden md:block">
 
             {/* Column header badges — sit above the table card, aligned over their
                 columns (wider first column for the row labels). */}
@@ -164,13 +200,6 @@ export function ComparisonTable({
             </div>
 
             </div>
-            </div>
-
-            {/* Right-edge fade — mobile-only cue that the table continues. */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-card to-transparent md:hidden"
-            />
           </div>
 
         </div>
