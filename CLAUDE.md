@@ -161,7 +161,9 @@ Where to optimise the cold render further:
   recommendations) stream in; a light skeleton in the preview route so it feels responsive
   despite being deliberately uncached.
 
-## Mobile card sliders (planned 2026-09-15 — NOT built)
+## Mobile card sliders (planned 2026-09-15, BUILT 2026-09-16)
+
+**Status 2026-09-16:** built as planned — `components/product/Slider.tsx` (`useSlider`, `SliderControls`, `CardSlider`), ComparisonSlider refit onto it. Verified on a production build: phone screenshots of all three sliders (incl. Next); desktop geometry of every section and card title identical to the pre-change build. Owner still to try it on a real phone. The plan below is kept as the design record.
 
 Owner wants the **PainPoints**, **Mechanism steps** and **UseCaseCards** sections on phones to use
 the same slider as the comparison table (`components/product/ComparisonSlider.tsx`: arrows, dots,
