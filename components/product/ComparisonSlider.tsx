@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, Fragment, type ReactNode } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Fragment, type ReactNode } from "react";
+import { useSlider, SliderControls, SLIDE_EASE } from "@/components/product/Slider";
 
 export interface SliderColumn {
   label: string;
@@ -16,7 +16,6 @@ export interface SliderRow {
   cells: ReactNode[];
 }
 
-const EASE = "duration-[420ms] ease-[cubic-bezier(0.22,0.61,0.36,1)]";
 // Label rail | value column. Shared by the header and the card.
 const GRID = "44% minmax(0, 1fr)";
 
@@ -40,7 +39,7 @@ function Strip({
   return (
     <div className={`overflow-hidden ${className}`}>
       <div
-        className={`flex h-full transition-transform ${EASE}`}
+        className={`flex h-full transition-transform ${SLIDE_EASE}`}
         style={{ transform: `translateX(-${active * 100}%)` }}
       >
         {children.map((c, i) => (
@@ -70,13 +69,8 @@ export function ComparisonSlider({
   columns: SliderColumn[];
   rows: SliderRow[];
 }) {
-  const [active, setActive] = useState(0);
-  const last = columns.length - 1;
-  const go = (i: number) => setActive(Math.max(0, Math.min(last, i)));
-
-  // Swipe. Phones expect it even when arrows exist; a threshold and an axis
-  // check are enough, and it keeps vertical page scrolling untouched.
-  const [touch, setTouch] = useState<{ x: number; y: number } | null>(null);
+  // State, swipe and controls are shared with the card sliders (Slider.tsx).
+  const { active, last, go, swipe } = useSlider(columns.length);
 
   return (
     <div className="md:hidden">
@@ -84,20 +78,7 @@ export function ComparisonSlider({
           over the value column. The header's transparent side borders mirror the
           card's 1px border — without them the two 44% splits resolve against
           widths 2px apart and the header drifts off the column. */}
-      <div
-        onTouchStart={(e) => {
-          const t = e.touches[0];
-          setTouch({ x: t.clientX, y: t.clientY });
-        }}
-        onTouchEnd={(e) => {
-          if (!touch) return;
-          const t = e.changedTouches[0];
-          const dx = t.clientX - touch.x;
-          const dy = t.clientY - touch.y;
-          if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) go(active + (dx < 0 ? 1 : -1));
-          setTouch(null);
-        }}
-      >
+      <div {...swipe}>
         {/* Header badge — above the card, like the desktop's column badges. */}
         <div className="mb-4 grid border-x border-transparent" style={{ gridTemplateColumns: GRID }}>
           <div />
@@ -158,41 +139,14 @@ export function ComparisonSlider({
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="mt-4 flex items-center justify-center gap-4">
-        <button
-          type="button"
-          onClick={() => go(active - 1)}
-          disabled={active === 0}
-          aria-label="Previous option"
-          className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-brown transition-opacity disabled:opacity-30"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        <div className="flex items-center gap-2">
-          {columns.map((col, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => go(i)}
-              aria-label={`Show ${col.label}`}
-              aria-pressed={i === active}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                i === active ? "w-5 bg-cocoa" : "w-2 bg-line"
-              }`}
-            />
-          ))}
-        </div>
-        <button
-          type="button"
-          onClick={() => go(active + 1)}
-          disabled={active === last}
-          aria-label="Next option"
-          className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-brown transition-opacity disabled:opacity-30"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
-      </div>
+      <SliderControls
+        active={active}
+        last={last}
+        go={go}
+        labels={columns.map((c) => c.label)}
+        noun="option"
+        className="mt-4"
+      />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import type { MechanismStep } from "@/types/metafields";
 import { VolumeX } from "lucide-react";
 import Image from "next/image";
+import { CardSlider } from "@/components/product/Slider";
 
 // Defaults are intentional Lorem ipsum placeholders. Per-product copy lives
 // in beepaws.mechanism_steps + beepaws.education_note metafields; the intro,
@@ -158,8 +159,11 @@ export function Mechanism({
           <p className="mx-auto mb-10 max-w-xl text-center text-base text-brown">
             {stepsLead}
           </p>
-          <div className="grid gap-5 md:grid-cols-3">
-            {data.map((step) => (
+          {/* Phones: one step at a time; md+: the same three-column grid as before. */}
+          <CardSlider
+            gap="1.25rem"
+            labels={data.map((step) => `step ${step.number}`)}
+            slides={data.map((step) => (
               <div
                 key={step.number + step.title}
                 className="rounded-2xl bg-card p-6 text-center shadow-[0_4px_20px_-10px_rgba(74,46,22,0.10)] md:p-7"
@@ -175,7 +179,7 @@ export function Mechanism({
                 </p>
               </div>
             ))}
-          </div>
+          />
         </div>
 
         {/* Feels-broken callout — restructure plan §Task 3 (v2) — this is the

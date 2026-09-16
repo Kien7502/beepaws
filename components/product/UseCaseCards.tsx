@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { UseCaseCard } from "@/types/metafields";
+import { CardSlider } from "@/components/product/Slider";
 
 // Lorem ipsum placeholders — set the beepaws.use_cases metafield to override.
 // Per-card emoji + gradient colors stay set so the layout reads correctly.
@@ -62,8 +63,11 @@ export function UseCaseCards({
 
         {/* md, not sm: three columns at 640px are ~200px each — too narrow for
             the image header + copy. Cards stack full-width until tablet. */}
-        <div className="grid gap-6 md:grid-cols-3">
-          {data.map((c) => (
+        {/* Phones: one card at a time; md+: the same three-column grid as before. */}
+        <CardSlider
+          gap="1.5rem"
+          labels={data.map((c) => c.title)}
+          slides={data.map((c) => (
             <div
               key={c.title}
               className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-card shadow-[0_4px_20px_-10px_rgba(74,46,22,0.10)] transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-1 hover:shadow-[0_14px_40px_-16px_rgba(74,46,22,0.20)]"
@@ -94,7 +98,10 @@ export function UseCaseCards({
                     src={c.image}
                     alt={c.title}
                     fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    // Full width below md (one card per slide), a third of the row from md.
+                    // The old `(max-width: 1024px) 50vw` step under-sized it at 641–767px,
+                    // where the card was already full width.
+                    sizes="(max-width: 767px) 100vw, 33vw"
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                 ) : (
@@ -112,7 +119,7 @@ export function UseCaseCards({
               </div>
             </div>
           ))}
-        </div>
+        />
       </div>
     </section>
   );

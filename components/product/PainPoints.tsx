@@ -1,4 +1,5 @@
 import type { PainPoint } from "@/types/metafields";
+import { CardSlider } from "@/components/product/Slider";
 
 // Defaults are intentional Lorem ipsum placeholders so an unedited product
 // reads as unedited at a glance. Per-product copy lives in the
@@ -53,8 +54,11 @@ export function PainPoints({
           {lead}
         </p>
 
-        <div className="grid gap-5 md:grid-cols-3">
-          {data.map((p) => (
+        {/* Phones: one card at a time; md+: the same three-column grid as before. */}
+        <CardSlider
+          gap="1.25rem"
+          labels={data.map((p) => p.title)}
+          slides={data.map((p) => (
             <div
               key={p.number + p.title}
               className="rounded-2xl border border-line bg-card p-6 md:p-7 shadow-[0_4px_20px_-10px_rgba(74,46,22,0.08)]"
@@ -70,7 +74,7 @@ export function PainPoints({
               </p>
             </div>
           ))}
-        </div>
+        />
       </div>
     </section>
   );
