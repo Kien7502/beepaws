@@ -67,6 +67,11 @@ export function UseCaseCards({
         <CardSlider
           gap="1.5rem"
           labels={data.map((c) => c.title)}
+          // Arrows on the sides of the header art. A square image is as tall as the
+          // card is wide, so its middle is 50cqw down. Emoji cards have the h-44
+          // band instead — 5.5rem is its middle and still inside any square image,
+          // so a mixed set keeps every arrow on the art.
+          overlayArrowsAt={data.every((c) => c.image) ? "50cqw" : "5.5rem"}
           slides={data.map((c) => (
             <div
               key={c.title}

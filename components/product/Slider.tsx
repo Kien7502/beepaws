@@ -37,7 +37,74 @@ export function useSlider(count: number) {
   return { active, last, go, swipe };
 }
 
-/** Prev / dots / next. `labels` name each slide for the dots' aria-labels. */
+type SliderNav = { active: number; last: number; go: (i: number) => void };
+
+/**
+ * One prev/next arrow.
+ * - `inline` sits in a controls row; at an end it fades to 30% so the row keeps its shape.
+ * - `overlay` floats over the card (see CardSlider's `overlayArrowsAt`): a solid
+ *   chip so it reads over artwork, and at an end it HIDES — a ghosted arrow
+ *   sitting on an image is just noise.
+ */
+export function SliderArrow({
+  dir,
+  active,
+  last,
+  go,
+  noun = "slide",
+  variant = "inline",
+  className = "",
+  style,
+}: SliderNav & {
+  dir: "prev" | "next";
+  noun?: string;
+  variant?: "inline" | "overlay";
+  className?: string;
+  style?: CSSProperties;
+}) {
+  const prev = dir === "prev";
+  const look =
+    variant === "overlay"
+      ? "h-9 w-9 border border-line/60 bg-card/90 text-cocoa shadow-[0_4px_14px_-4px_rgba(74,46,22,0.35)] backdrop-blur-sm disabled:pointer-events-none disabled:opacity-0"
+      : "h-8 w-8 border border-line text-brown disabled:opacity-30";
+  return (
+    <button
+      type="button"
+      onClick={() => go(active + (prev ? -1 : 1))}
+      disabled={prev ? active === 0 : active === last}
+      aria-label={`${prev ? "Previous" : "Next"} ${noun}`}
+      className={`flex items-center justify-center rounded-full transition-opacity ${look} ${className}`}
+      style={style}
+    >
+      {prev ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+    </button>
+  );
+}
+
+/** Position dots. `labels` name each slide for the dots' aria-labels. */
+export function SliderDots({
+  active,
+  go,
+  labels,
+  className = "",
+}: Pick<SliderNav, "active" | "go"> & { labels: string[]; className?: string }) {
+  return (
+    <div className={`flex items-center justify-center gap-2 ${className}`}>
+      {labels.map((label, i) => (
+        <button
+          key={i}
+          type="button"
+          onClick={() => go(i)}
+          aria-label={`Show ${label}`}
+          aria-pressed={i === active}
+          className={`h-2 rounded-full transition-all duration-300 ${i === active ? "w-5 bg-cocoa" : "w-2 bg-line"}`}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** Prev / dots / next in one row, under the slider. */
 export function SliderControls({
   active,
   last,
@@ -45,36 +112,13 @@ export function SliderControls({
   labels,
   noun = "slide",
   className = "",
-}: {
-  active: number;
-  last: number;
-  go: (i: number) => void;
-  labels: string[];
-  noun?: string;
-  className?: string;
-}) {
-  const arrow =
-    "flex h-8 w-8 items-center justify-center rounded-full border border-line text-brown transition-opacity disabled:opacity-30";
+}: SliderNav & { labels: string[]; noun?: string; className?: string }) {
+  const nav = { active, last, go, noun };
   return (
     <div className={`flex items-center justify-center gap-4 ${className}`}>
-      <button type="button" onClick={() => go(active - 1)} disabled={active === 0} aria-label={`Previous ${noun}`} className={arrow}>
-        <ChevronLeft className="h-4 w-4" />
-      </button>
-      <div className="flex items-center gap-2">
-        {labels.map((label, i) => (
-          <button
-            key={i}
-            type="button"
-            onClick={() => go(i)}
-            aria-label={`Show ${label}`}
-            aria-pressed={i === active}
-            className={`h-2 rounded-full transition-all duration-300 ${i === active ? "w-5 bg-cocoa" : "w-2 bg-line"}`}
-          />
-        ))}
-      </div>
-      <button type="button" onClick={() => go(active + 1)} disabled={active === last} aria-label={`Next ${noun}`} className={arrow}>
-        <ChevronRight className="h-4 w-4" />
-      </button>
+      <SliderArrow dir="prev" {...nav} />
+      <SliderDots active={active} go={go} labels={labels} />
+      <SliderArrow dir="next" {...nav} />
     </div>
   );
 }
@@ -103,6 +147,7 @@ export function CardSlider({
   labels,
   gap,
   noun = "card",
+  overlayArrowsAt,
 }: {
   slides: ReactNode[];
   labels: string[];
@@ -110,6 +155,15 @@ export function CardSlider({
    *  the slides in motion, and is part of each step's offset. */
   gap: string;
   noun?: string;
+  /**
+   * Put the arrows on the SIDES of the card, vertically centred at this CSS `top`
+   * (e.g. the middle of a square image), with only the dots left underneath.
+   * For TALL cards: with arrows below, a big card pushed them off screen and
+   * shoppers had to scroll just to find the next one. `cqw` units resolve against
+   * the card's width. Omit for short text cards — overlaid arrows would sit on
+   * their text, and arrows below are already in view.
+   */
+  overlayArrowsAt?: string;
 }) {
   const { active, last, go, swipe } = useSlider(slides.length);
   const trackStyle = {
@@ -118,8 +172,16 @@ export function CardSlider({
     "--slide-x": `calc(${active} * (-100% - ${gap}))`,
   } as CSSProperties;
 
+  const many = slides.length > 1;
+  const nav = { active, last, go, noun };
+  const side = { variant: "overlay" as const, style: { top: overlayArrowsAt } };
+
   return (
     <div>
+      {/* The arrows' positioning box. Phone-only, like everything slider-specific,
+          so desktop layout is untouched: `relative` anchors the side arrows, and
+          the inline-size container is what `cqw` in overlayArrowsAt measures. */}
+      <div className={overlayArrowsAt ? "max-md:relative max-md:[container-type:inline-size]" : undefined}>
       {/* overflow-x-CLIP, not overflow-hidden: `hidden` would also clip the cards'
           drop shadows vertically and turn this into a scroll container. */}
       <div className="max-md:overflow-x-clip" {...swipe}>
@@ -137,9 +199,20 @@ export function CardSlider({
           ))}
         </div>
       </div>
-      {slides.length > 1 && (
-        <SliderControls active={active} last={last} go={go} labels={labels} noun={noun} className="mt-5 md:hidden" />
+      {many && overlayArrowsAt && (
+        <>
+          {/* Outside the swipe area, so tapping an arrow is never read as a swipe. */}
+          <SliderArrow dir="prev" {...nav} {...side} className="absolute left-2 z-20 -translate-y-1/2 md:hidden" />
+          <SliderArrow dir="next" {...nav} {...side} className="absolute right-2 z-20 -translate-y-1/2 md:hidden" />
+        </>
       )}
+      </div>
+      {many &&
+        (overlayArrowsAt ? (
+          <SliderDots active={active} go={go} labels={labels} className="mt-4 md:hidden" />
+        ) : (
+          <SliderControls active={active} last={last} go={go} labels={labels} noun={noun} className="mt-5 md:hidden" />
+        ))}
     </div>
   );
 }
