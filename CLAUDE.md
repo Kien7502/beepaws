@@ -163,7 +163,15 @@ Where to optimise the cold render further:
 
 ## Mobile card sliders (planned 2026-09-15, BUILT 2026-09-16)
 
-**Status 2026-09-16:** built as planned — `components/product/Slider.tsx` (`useSlider`, `SliderControls`, `CardSlider`), ComparisonSlider refit onto it. Verified on a production build: phone screenshots of all three sliders (incl. Next); desktop geometry of every section and card title identical to the pre-change build. Owner still to try it on a real phone. The plan below is kept as the design record.
+**Status 2026-09-16:** built as planned — `components/product/Slider.tsx` (`useSlider`, `SliderArrow`, `SliderDots`,
+`SliderControls`, `CardSlider`), ComparisonSlider refit onto it. Verified on a production build: phone screenshots of all
+sliders; desktop geometry identical to the pre-change build. Follow-ups the same day (owner feedback):
+- **Arrows must stay in view on tall content.** UseCaseCards passes `overlayArrowsAt` (side arrows centred on the square
+  image via `50cqw`, hidden at either end; dots stay below). The comparison table's arrows flank the column title at the
+  top (`‹ icon ›`). Short text cards (pain points, mechanism steps) keep arrows + dots below — overlaid arrows would cover
+  their text.
+- **Relative moves use `step(delta)`** (functional update), never `go(active ± 1)`: computing from the render's closure
+  dropped a tap when two landed before a re-render. Dots keep absolute `go(i)`.
 
 Owner wants the **PainPoints**, **Mechanism steps** and **UseCaseCards** sections on phones to use
 the same slider as the comparison table (`components/product/ComparisonSlider.tsx`: arrows, dots,
@@ -187,6 +195,21 @@ swipe, one item per slide) instead of stacking three full-width cards.
 - **Keep:** equal card heights (a flex track stretches slides to the tallest), `aria-hidden` on
   off-screen slides, desktop pixel-identical. Verify with screenshots at 390px and 1280px
   (method: admin repo memory "storefront screenshot harness").
+
+## Phone hero sizing (2026-09-16, owner-approved)
+
+Set by measurement on a production build, not by eye — re-measure (admin memory "storefront screenshot harness") before
+changing any of these:
+- **H1 is `text-pretty`, never `text-balance`.** Balance shortens every line of a multi-line headline, so it stopped well
+  short of the column edge (longest line 72–89% of the width) and read as squished left.
+- **H1 is 28px below md** (40px from md). The full-sentence headline is 5 lines on 360–430px phones at any size from 24 to
+  33px (Fraunces is wide) — so size buys height, not lines. Draft B would be 4 lines at 28px on a 390px phone.
+- **Stacked hero grid gap is 20px below md** (`gap-5 md:gap-10`) — 40px left a hole under the thumbnails.
+- **Gallery thumbs target 56px when the gallery is < 480px wide** (`THUMB_MIN_PHONE` / `PHONE_GALLERY_MAX` in
+  ProductGallery; the pre-measure reserve mirrors it with `@min-[480px]`). 480 sits under the narrowest desktop gallery
+  column (~503px at 1024px), so tablet/desktop thumbs are unchanged.
+- Result at 390px: headline ends 794px down (was 889px). Remaining lever if it must clear real phone browser chrome: a
+  shorter main image on phones (e.g. 4:3), which contradicts the hero doc's 4:5 recommendation.
 
 ## Security posture (public storefront)
 
