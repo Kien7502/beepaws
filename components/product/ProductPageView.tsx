@@ -435,7 +435,10 @@ export async function ProductPageView({
             so one unshrinkable element in either column pushes the shared track
             (and the gallery card with it) past the viewport on phones — seen
             live as the hero rendering off-frame. */}
-        <div className="grid gap-10 lg:grid-cols-[11fr_9fr] lg:gap-12 xl:gap-16">
+        {/* gap-5 on phones: stacked, the 40px gap left a hole between the thumbnail
+            strip and the eyebrow pill. Still wider than the gallery's own 12px
+            image→thumbs gap, so the gallery reads as one block. Unchanged from md. */}
+        <div className="grid gap-5 md:gap-10 lg:grid-cols-[11fr_9fr] lg:gap-12 xl:gap-16">
           <div className="min-w-0">
             <div className="lg:sticky lg:top-[7.5rem]">
               <ProductGallery
@@ -473,9 +476,12 @@ export async function ProductPageView({
                 lines stopped well short of the right edge while the subheadline
                 below filled the width (measured: the longest line held to 72–89%
                 of the column). Pretty keeps normal fill and still avoids a
-                one-word last line. */}
+                one-word last line.
+                28px on phones (was 33, sized for a short product title): the
+                full-sentence headline is 5 lines on a phone either way, so the
+                smaller size just stops it eating the fold. Desktop keeps 40. */}
             <h1
-              className={`font-display text-pretty text-[33px] font-bold leading-[1.1] tracking-tight text-cocoa md:text-[40px] ${
+              className={`font-display text-pretty text-[28px] font-bold leading-[1.1] tracking-tight text-cocoa md:text-[40px] ${
                 hero?.headline ? "mt-1.5" : "mt-3"
               }`}
             >
