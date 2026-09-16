@@ -468,8 +468,14 @@ export async function ProductPageView({
               </p>
             )}
 
+            {/* text-PRETTY, not text-balance. Balance evens out line lengths by
+                shortening them, so once the H1 became a full-sentence headline its
+                lines stopped well short of the right edge while the subheadline
+                below filled the width (measured: the longest line held to 72–89%
+                of the column). Pretty keeps normal fill and still avoids a
+                one-word last line. */}
             <h1
-              className={`font-display text-balance text-[33px] font-bold leading-[1.1] tracking-tight text-cocoa md:text-[40px] ${
+              className={`font-display text-pretty text-[33px] font-bold leading-[1.1] tracking-tight text-cocoa md:text-[40px] ${
                 hero?.headline ? "mt-1.5" : "mt-3"
               }`}
             >
