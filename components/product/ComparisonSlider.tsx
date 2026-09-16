@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, type ReactNode } from "react";
-import { useSlider, SliderControls, SLIDE_EASE } from "@/components/product/Slider";
+import { useSlider, SliderArrow, SliderDots, SLIDE_EASE } from "@/components/product/Slider";
 
 export interface SliderColumn {
   label: string;
@@ -70,7 +70,7 @@ export function ComparisonSlider({
   rows: SliderRow[];
 }) {
   // State, swipe and controls are shared with the card sliders (Slider.tsx).
-  const { active, last, go, swipe } = useSlider(columns.length);
+  const { active, last, go, step, swipe } = useSlider(columns.length);
 
   return (
     <div className="md:hidden">
@@ -79,29 +79,39 @@ export function ComparisonSlider({
           card's 1px border — without them the two 44% splits resolve against
           widths 2px apart and the header drifts off the column. */}
       <div {...swipe}>
-        {/* Header badge — above the card, like the desktop's column badges. */}
+        {/* Header badge — above the card, like the desktop's column badges. The
+            arrows flank it: the column title is the first thing you see of the
+            table, so switching options never needs a scroll. (They used to sit
+            under the last row — a full table's height below the fold.) */}
         <div className="mb-4 grid border-x border-transparent" style={{ gridTemplateColumns: GRID }}>
           <div />
-          <Strip active={active}>
-            {columns.map((col, i) => (
-              <div key={i} className="flex flex-col items-center gap-1.5">
-                <span
-                  className={`flex h-12 w-12 items-center justify-center rounded-full ${
-                    i === 0 ? "bg-cocoa" : "bg-cream"
-                  }`}
-                >
-                  {col.icon}
-                </span>
-                <span
-                  className={`text-center text-xs uppercase tracking-wider ${
-                    i === 0 ? "font-extrabold text-cocoa" : "font-bold text-brown"
-                  }`}
-                >
-                  {col.label}
-                </span>
-              </div>
-            ))}
-          </Strip>
+          <div className="relative">
+            <Strip active={active}>
+              {columns.map((col, i) => (
+                // px-9 keeps a long label ("Chews & Additives") wrapping clear of
+                // the arrows instead of running under them.
+                <div key={i} className="flex flex-col items-center gap-1.5 px-9">
+                  <span
+                    className={`flex h-12 w-12 items-center justify-center rounded-full ${
+                      i === 0 ? "bg-cocoa" : "bg-cream"
+                    }`}
+                  >
+                    {col.icon}
+                  </span>
+                  <span
+                    className={`text-center text-xs uppercase tracking-wider ${
+                      i === 0 ? "font-extrabold text-cocoa" : "font-bold text-brown"
+                    }`}
+                  >
+                    {col.label}
+                  </span>
+                </div>
+              ))}
+            </Strip>
+            {/* top-6 = the middle of the h-12 icon circle, so it reads ‹ icon ›. */}
+            <SliderArrow dir="prev" active={active} last={last} step={step} noun="option" className="absolute left-0 top-6 -translate-y-1/2" />
+            <SliderArrow dir="next" active={active} last={last} step={step} noun="option" className="absolute right-0 top-6 -translate-y-1/2" />
+          </div>
         </div>
 
         {/* Rows — the desktop's white card: border, radius, shadow, hairline
@@ -139,14 +149,9 @@ export function ComparisonSlider({
         </div>
       </div>
 
-      <SliderControls
-        active={active}
-        last={last}
-        go={go}
-        labels={columns.map((c) => c.label)}
-        noun="option"
-        className="mt-4"
-      />
+      {/* Dots stay under the table as the position indicator; the arrows moved up
+          beside the column title. */}
+      <SliderDots active={active} go={go} labels={columns.map((c) => c.label)} className="mt-4" />
     </div>
   );
 }

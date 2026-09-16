@@ -17,7 +17,12 @@ export const SLIDE_EASE = "duration-[420ms] ease-[cubic-bezier(0.22,0.61,0.36,1)
 export function useSlider(count: number) {
   const [active, setActive] = useState(0);
   const last = Math.max(0, count - 1);
-  const go = (i: number) => setActive(Math.max(0, Math.min(last, i)));
+  const clamp = (i: number) => Math.max(0, Math.min(last, i));
+  const go = (i: number) => setActive(clamp(i));
+  // Relative moves use a functional update. Computing `active + 1` from the render's
+  // closure dropped taps: two taps (or a swipe and a tap) landing before React
+  // re-rendered both read the same `active` and moved only one step.
+  const step = (delta: number) => setActive((a) => clamp(a + delta));
   const touch = useRef<{ x: number; y: number } | null>(null);
   const swipe = {
     onTouchStart: (e: TouchEvent) => {
@@ -31,13 +36,13 @@ export function useSlider(count: number) {
       const t = e.changedTouches[0];
       const dx = t.clientX - start.x;
       const dy = t.clientY - start.y;
-      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) go(active + (dx < 0 ? 1 : -1));
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) step(dx < 0 ? 1 : -1);
     },
   };
-  return { active, last, go, swipe };
+  return { active, last, go, step, swipe };
 }
 
-type SliderNav = { active: number; last: number; go: (i: number) => void };
+type SliderNav = { active: number; last: number; go: (i: number) => void; step: (delta: number) => void };
 
 /**
  * One prev/next arrow.
@@ -50,12 +55,12 @@ export function SliderArrow({
   dir,
   active,
   last,
-  go,
+  step,
   noun = "slide",
   variant = "inline",
   className = "",
   style,
-}: SliderNav & {
+}: Omit<SliderNav, "go"> & {
   dir: "prev" | "next";
   noun?: string;
   variant?: "inline" | "overlay";
@@ -70,7 +75,7 @@ export function SliderArrow({
   return (
     <button
       type="button"
-      onClick={() => go(active + (prev ? -1 : 1))}
+      onClick={() => step(prev ? -1 : 1)}
       disabled={prev ? active === 0 : active === last}
       aria-label={`${prev ? "Previous" : "Next"} ${noun}`}
       className={`flex items-center justify-center rounded-full transition-opacity ${look} ${className}`}
@@ -109,11 +114,12 @@ export function SliderControls({
   active,
   last,
   go,
+  step,
   labels,
   noun = "slide",
   className = "",
 }: SliderNav & { labels: string[]; noun?: string; className?: string }) {
-  const nav = { active, last, go, noun };
+  const nav = { active, last, step, noun };
   return (
     <div className={`flex items-center justify-center gap-4 ${className}`}>
       <SliderArrow dir="prev" {...nav} />
@@ -165,7 +171,7 @@ export function CardSlider({
    */
   overlayArrowsAt?: string;
 }) {
-  const { active, last, go, swipe } = useSlider(slides.length);
+  const { active, last, go, step, swipe } = useSlider(slides.length);
   const trackStyle = {
     gap,
     // One step = a full card plus the gap after it.
@@ -173,7 +179,7 @@ export function CardSlider({
   } as CSSProperties;
 
   const many = slides.length > 1;
-  const nav = { active, last, go, noun };
+  const nav = { active, last, step, noun };
   const side = { variant: "overlay" as const, style: { top: overlayArrowsAt } };
 
   return (
@@ -211,7 +217,7 @@ export function CardSlider({
         (overlayArrowsAt ? (
           <SliderDots active={active} go={go} labels={labels} className="mt-4 md:hidden" />
         ) : (
-          <SliderControls active={active} last={last} go={go} labels={labels} noun={noun} className="mt-5 md:hidden" />
+          <SliderControls active={active} last={last} go={go} step={step} labels={labels} noun={noun} className="mt-5 md:hidden" />
         ))}
     </div>
   );
