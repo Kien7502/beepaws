@@ -19,6 +19,15 @@ type Props = {
 
 const GAP = 8; // gap-2
 const THUMB_MIN = 90; // target minimum size — controls how many fit per row
+// Phone-width galleries target much smaller thumbs. The square main image already
+// fills a phone's width, and a row of three ~110px thumbs under it pushed the
+// headline below the fold. 56 → five or six ~57–63px thumbs per row on 360–430px
+// phones, still comfortably tappable.
+const THUMB_MIN_PHONE = 56;
+// Below this gallery width it's a phone layout. Kept under the narrowest desktop
+// gallery column (~503px, the two-column layout at 1024px) so tablet and desktop
+// thumbs are unchanged. Mirrored by the strip's `@min-[480px]` reserve below.
+const PHONE_GALLERY_MAX = 480;
 
 export function ProductGallery({ productTitle, images, fallbackUrl }: Props) {
   // Controlled-vs-uncontrolled: when wrapped in <ProductMediaSync>, the active
@@ -69,7 +78,8 @@ export function ProductGallery({ productTitle, images, fallbackUrl }: Props) {
 
     const recompute = () => {
       const available = el.clientWidth;
-      const n = Math.max(3, Math.min(6, Math.floor((available + GAP) / (THUMB_MIN + GAP))));
+      const min = available < PHONE_GALLERY_MAX ? THUMB_MIN_PHONE : THUMB_MIN;
+      const n = Math.max(3, Math.min(6, Math.floor((available + GAP) / (min + GAP))));
       setThumbSize((available - (n - 1) * GAP) / n);
     };
 
@@ -202,13 +212,15 @@ export function ProductGallery({ productTitle, images, fallbackUrl }: Props) {
       {/* Thumbnail strip — thumbs grow to fill container width with no leftover.
           measureRef is always mounted so we can read clientWidth; the inner
           strip stays hidden (opacity:0) until thumbSize is measured to avoid a
-          visible "default size → measured size" snap. We reserve the typical
-          square footprint via min-height so the layout doesn't shift either. */}
+          visible "default size → measured size" snap. Until then the classes
+          reserve the typical square footprint — ~60px on a phone-width gallery,
+          96px wider (the `@container` query mirrors PHONE_GALLERY_MAX) — so the
+          headline below doesn't jump when the measured size lands. */}
       {hasMultiple && (
         <div
           ref={measureRef}
-          className="w-full overflow-hidden"
-          style={{ minHeight: thumbSize ?? 96 }}
+          className="w-full overflow-hidden min-h-[60px] @min-[480px]:min-h-24"
+          style={thumbSize != null ? { minHeight: thumbSize } : undefined}
         >
           <div
             ref={stripRef}
