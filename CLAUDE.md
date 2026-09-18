@@ -196,6 +196,16 @@ swipe, one item per slide) instead of stacking three full-width cards.
   off-screen slides, desktop pixel-identical. Verify with screenshots at 390px and 1280px
   (method: admin repo memory "storefront screenshot harness").
 
+## Hero copy decisions (2026-09-18, owner)
+
+- **No price in the hero and no vet-bill anchor box.** Every purchase option shows its own price and the CTA carries the
+  selected one, so the hero number was a second source for the same fact; the box's opening also repeated the headline.
+  `DynamicHeroPrice` is unused but kept — restoring the price row is one line.
+- **Two FAQs sit under the buy box** (hero doc §8), collapsed `<details>`, pulled from the product's own `faq_items` by
+  keyword (scared/freak, slip/hurt) rather than retyped — edit the FAQ copy and both places follow. No match renders nothing.
+- **Still open:** the `tagline` metafield (the two-line text under a title on product CARDS — /collections/all, each
+  collection, and the PDP's "More from BeePaws") still holds the old anchor sentence and truncates mid-sentence.
+
 ## Phone hero sizing (2026-09-16, owner-approved)
 
 Set by measurement on a production build, not by eye — re-measure (admin memory "storefront screenshot harness") before
