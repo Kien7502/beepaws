@@ -5,7 +5,7 @@ import { getBeePawsAutoDiscounts } from "@/lib/shopify/discounts";
 import { getFullProductForPage, getPaymentMethods, getProduct, getProducts } from "@/lib/shopify/queries";
 import VariantSelector from "@/components/product/VariantSelector";
 import { ProductGallery } from "@/components/product/ProductGallery";
-import { Truck, ShieldCheck, RefreshCcw, Check } from "lucide-react";
+import { Truck, ShieldCheck, RefreshCcw, Check, Plus } from "lucide-react";
 import { contentIcon } from "@/lib/content-icons";
 import { ProductDetailsSections } from "@/components/product/ProductDetailsSections";
 import { FinalCTASection } from "@/components/product/FinalCTASection";
@@ -22,7 +22,6 @@ import ProductCard from "@/components/product/ProductCard";
 import { BundleContents } from "@/components/product/BundleContents";
 import { WaveDivider } from "@/components/ui/WaveDivider";
 import { ProductMediaSync } from "@/components/product/ProductMediaSync";
-import { DynamicHeroPrice } from "@/components/product/DynamicHeroPrice";
 import RevealObserver from "@/components/RevealObserver";
 
 type FullProduct = Awaited<ReturnType<typeof getFullProductForPage>>;
@@ -351,6 +350,16 @@ export async function ProductPageView({
       )
     : null;
 
+  // Hero doc §8: surface the two objections that actually stop the purchase right
+  // where the decision happens. Pulled from the product's OWN faq_items by keyword
+  // rather than retyped, so editing the FAQ copy carries here too and the two can
+  // never disagree. No match (e.g. a consumable) → nothing renders.
+  const faqItems = beepaws?.faqItems ?? [];
+  const pickFaq = (re: RegExp) => faqItems.find((f) => re.test(f?.q ?? ""));
+  const buyBoxFaqs = [...new Set([pickFaq(/scared|freak|nervous|afraid/i), pickFaq(/slip|hurt/i)])].filter(
+    (f): f is NonNullable<typeof f> => !!f?.q && !!f?.a,
+  );
+
   // Display price = the FIRST bundle tier's price when tier 0 is bundle-backed
   // (owner decision 2026-07-10, verification pass §2.1): the Starter tier IS
   // the entry offer, so the hero price, sticky bar, final CTA "From $X" and
@@ -530,30 +539,6 @@ export async function ProductPageView({
               </ul>
             )}
 
-            {/* Price row — strikethrough + sale pill + out-of-stock pill.
-                Lives inside ProductMediaSync; re-renders when VariantSelector
-                publishes the picked variant so the displayed price follows
-                color/accessory selection (just like the bundle picker total). */}
-            <DynamicHeroPrice
-              fallbackAmount={displayPriceAmount}
-              currencyCode={minVariantPrice.currencyCode}
-              compareAtAmount={product.compareAtPriceRange?.minVariantPrice?.amount ?? null}
-              fallbackAvailable={product.availableForSale}
-            />
-
-            {/* Vet-bill anchor — DEVICE ONLY (the copy literally claims
-                ultrasonic hardware; it was hardcoded and rendered on every
-                product, so a consumable PDP lied). Frames the price against
-                the $500-$1,400+ vet quote per plan §"Anchoring rule"; never
-                undercut against cheaper competitor devices. */}
-            {isDevice && (
-              <div className="mt-3 rounded-lg bg-honey-tint px-3.5 py-2.5 text-[13.5px] leading-snug text-brown">
-                The same ultrasonic tool your vet uses behind that closed door —
-                the one she charges <b className="text-rose-soft">$500–$1,400+</b>{" "}
-                to swing once a year. Now it lives in your hand.
-              </div>
-            )}
-
             {/* Buy area — bundle tier picker + Add/Buy + payment row. The
                 Add-to-cart button carries id="sticky-cta-trigger"; the
                 StickyAddToCart bar reveals the moment that button's bottom
@@ -599,6 +584,26 @@ export async function ProductPageView({
                 <span>30-day, no-questions-asked return</span>
               </li>
             </ul>
+
+            {/* The two questions that stop a purchase, answered at the buy box
+                (hero doc §8). Same answers as the FAQ section below — same
+                source — just surfaced earlier. <details> keeps this zero-JS. */}
+            {buyBoxFaqs.length > 0 && (
+              <div className="mt-5 border-t border-line pt-2">
+                {buyBoxFaqs.map((f, i) => (
+                  <details key={i} className="group border-b border-line py-2 last:border-0">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[13.5px] font-bold text-cocoa">
+                      {f.q}
+                      <Plus
+                        className="h-4 w-4 shrink-0 text-gold-deep transition-transform duration-200 group-open:rotate-45"
+                        aria-hidden
+                      />
+                    </summary>
+                    <p className="pt-2 text-[13px] leading-relaxed text-brown">{f.a}</p>
+                  </details>
+                ))}
+              </div>
+            )}
 
             {/* Description/Specs accordion and "Questions? Contact us" link
                 intentionally removed per device reference — pinfo ends at the
