@@ -87,25 +87,32 @@ export function Mechanism({
         {/* Intro grid: diagram + body copy. Diagram bg flipped from honey-tint
             (now too close to toffee) to card-white so it still reads as a
             distinct framed block on the warm mid-tone section. */}
-        <div className="mx-auto max-w-5xl rounded-2xl border border-line bg-card p-6 shadow-[0_18px_50px_-12px_rgba(74,46,22,0.22)] md:p-9">
-        <div className="grid items-center gap-8 md:grid-cols-[400px_minmax(0,1fr)]">
+        <div className="mx-auto max-w-5xl rounded-2xl border border-line bg-card p-6 md:p-7">
+        <div className="grid items-center gap-8 md:grid-cols-[340px_minmax(0,560px)] md:justify-center">
           {/* Diagram left (its original side), copy right. The first track is
               EXACTLY the figure's width (340px), not a fraction — a 1fr track
               left the capped figure centred inside a wider column, so dead
               gutter pushed the copy away from it.
 
+              The copy track is capped at 560px and the pair centred inside the
+              card: with the figure back at 340px a 1fr track stretched the
+              paragraphs to ~595px (~80 characters), past a comfortable measure.
+              Capping the track keeps the card's edge aligned with the steps
+              below while the text stays readable.
+
               The pair sits in a WHITE CARD (2026-09-19): on the wide toffee band
               the bare row read as empty next to the three solid step cards below
               it — ~330px of dead band each side, and the short copy column
               floating against a tall figure. The card gives it the same weight as
-              those cards. max-w-5xl minus p-9 keeps the copy at ~520px, the same
-              readable measure the bare max-w-4xl row had. */}
+              those cards. Flat (border, no shadow) and tighter padding since
+              2026-09-19: the raised card read clunky against the three step
+              cards, and every card in this section now shares one treatment. */}
           <div
             // Square — 4:3 cropped the diagram's own labels (SALIVA at the top,
             // HUMAN/DOG at the bottom sit close to its edges). Height is controlled
             // by CAPPING the slot (max-w) instead of cropping, so the figure stays
             // fully intact without towering over the copy beside it.
-            className={`relative mx-auto w-full max-w-[400px] ${
+            className={`relative mx-auto w-full max-w-[340px] ${
               "overflow-hidden rounded-2xl border border-line bg-card"
             } ${diagramImageUrl ? "aspect-square" : "min-h-[260px] md:min-h-[320px]"}`}
           >
@@ -115,7 +122,7 @@ export function Mechanism({
                 alt="Tooth cross-section showing visible crust above gumline and hidden tartar below"
                 fill
                 className="object-cover"
-                sizes="(max-width: 880px) 100vw, 400px"
+                sizes="(max-width: 880px) 100vw, 340px"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center p-6 text-center text-xs font-bold uppercase tracking-wider text-brown">
@@ -175,7 +182,7 @@ export function Mechanism({
             slides={data.map((step) => (
               <div
                 key={step.number + step.title}
-                className="h-full rounded-2xl border border-line bg-card p-6 text-center shadow-[0_12px_34px_-12px_rgba(74,46,22,0.18)] md:p-8"
+                className="h-full rounded-2xl border border-line bg-card p-6 text-center md:p-7"
               >
                 <div className="font-display text-3xl font-bold text-gold-deep md:text-[34px]">
                   {step.number}
