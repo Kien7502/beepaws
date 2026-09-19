@@ -20,3 +20,18 @@ export function withBold(text: string): ReactNode {
     i % 2 === 1 ? <strong key={i} className="font-bold text-cocoa">{part}</strong> : <Fragment key={i}>{part}</Fragment>,
   );
 }
+
+/**
+ * The same `**marker**`, for HEADINGS: the run renders in the brand accent
+ * instead of bold (a display heading is already bold, so weight says nothing
+ * there — colour does). One accented phrase gives a section heading a focal
+ * point without putting a label above it; the per-section uppercase kicker was
+ * removed on purpose in 78b04ab and is not coming back.
+ */
+export function withAccent(text: string): ReactNode {
+  if (!text.includes("**")) return text;
+  const parts = text.split(/\*\*([\s\S]+?)\*\*/g);
+  return parts.map((part, i) =>
+    i % 2 === 1 ? <span key={i} className="text-clay">{part}</span> : <Fragment key={i}>{part}</Fragment>,
+  );
+}

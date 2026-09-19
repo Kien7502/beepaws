@@ -1,7 +1,7 @@
 import type { MechanismStep } from "@/types/metafields";
 import { VolumeX } from "lucide-react";
 import Image from "next/image";
-import { withBold } from "@/lib/inline-format";
+import { withBold, withAccent } from "@/lib/inline-format";
 import { CardSlider } from "@/components/product/Slider";
 
 // Defaults are intentional Lorem ipsum placeholders. Per-product copy lives
@@ -78,7 +78,7 @@ export function Mechanism({
     <section className="ds-reveal-in bg-toffee py-14 md:py-20">
       <div className="container mx-auto max-w-6xl px-4 md:px-6">
         <h2 className="font-display mx-auto mb-3 max-w-3xl text-center text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[33px]">
-          {introHeading}
+          {withAccent(introHeading)}
         </h2>
         <p className="mx-auto mb-12 max-w-xl text-center text-base text-brown">
           {introLead}
@@ -155,8 +155,13 @@ export function Mechanism({
         </div>
 
         {/* Steps. Cards flipped from honey-tint to card-white — honey-tint sat
-            too close to the toffee section bg and washed out. White cards pop. */}
-        <div className="mt-16">
+            too close to the toffee section bg and washed out. White cards pop.
+
+            max-w-5xl matches the paradox card above, so the two blocks share an
+            edge instead of the steps running wider; with the same border and
+            shadow they read as one family rather than three lighter boxes
+            trailing a heavy card (owner: "intro vs steps looks unbalanced"). */}
+        <div className="mx-auto mt-16 max-w-5xl">
           <h2 className="font-display mx-auto mb-3 max-w-3xl text-center text-2xl font-semibold leading-tight tracking-tight text-cocoa md:text-3xl">
             {stepsHeading}
           </h2>
@@ -170,15 +175,15 @@ export function Mechanism({
             slides={data.map((step) => (
               <div
                 key={step.number + step.title}
-                className="rounded-2xl bg-card p-6 text-center shadow-[0_4px_20px_-10px_rgba(74,46,22,0.10)] md:p-7"
+                className="h-full rounded-2xl border border-line bg-card p-6 text-center shadow-[0_12px_34px_-12px_rgba(74,46,22,0.18)] md:p-8"
               >
                 <div className="font-display text-3xl font-bold text-gold-deep md:text-[34px]">
                   {step.number}
                 </div>
-                <h3 className="font-display mb-2 mt-1.5 text-lg font-semibold text-cocoa">
+                <h3 className="font-display mb-2 mt-1.5 text-[19px] font-semibold text-cocoa">
                   {step.title}
                 </h3>
-                <p className="text-sm leading-relaxed text-brown">
+                <p className="text-[15px] leading-relaxed text-brown">
                   {step.description}
                 </p>
               </div>
@@ -189,7 +194,7 @@ export function Mechanism({
         {/* Feels-broken callout — restructure plan §Task 3 (v2) — this is the
             page's single deliberate dark accent. Small cocoa inset with
             light text against the toffee section. One dark punch, not a slab. */}
-        <div className="mt-12 grid items-center gap-7 rounded-2xl bg-cocoa p-8 md:mt-14 md:grid-cols-[auto_1fr] md:gap-10 md:p-10">
+        <div className="mx-auto mt-12 grid max-w-5xl items-center gap-7 rounded-2xl bg-cocoa p-8 md:mt-14 md:grid-cols-[auto_1fr] md:gap-10 md:p-10">
           <div className="mx-auto md:mx-0">
             <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-gold bg-gold/15">
               <VolumeX className="h-11 w-11 text-amber" aria-hidden />
