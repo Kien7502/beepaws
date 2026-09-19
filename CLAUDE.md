@@ -196,6 +196,17 @@ swipe, one item per slide) instead of stacking three full-width cards.
   off-screen slides, desktop pixel-identical. Verify with screenshots at 390px and 1280px
   (method: admin repo memory "storefront screenshot harness").
 
+## Section eyebrows: deliberately NOT rendered (2026-07-05, `78b04ab`)
+
+Every below-fold section still receives an `eyebrow` (and Mechanism an `introEyebrow`) from ProductPageView, and every
+one of them ignores it **on purpose**. The same uppercase tracked kicker above all seven sections read as AI-scaffolding
+grammar (brand-register critique); each section leads with its display heading instead, and the background-colour rhythm
+carries the "new section" signal. **The hero pill is the one deliberate eyebrow on the page.** The props were kept only so
+a single named kicker could return one day.
+
+Do not "fix" the unused props — the authored copy in `*_intro.eyebrow` is intentionally dormant. (Re-added 2026-09-19 by
+mistake, reverted the same day: a heading reading flat is a typographic problem, not a missing kicker.)
+
 ## Hero copy decisions (2026-09-18, owner)
 
 - **No price in the hero and no vet-bill anchor box.** Every purchase option shows its own price and the CTA carries the
