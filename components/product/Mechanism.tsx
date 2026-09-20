@@ -100,19 +100,13 @@ export function Mechanism({
               left the capped figure centred inside a wider column, so dead
               gutter pushed the copy away from it.
 
-              The copy track is capped at 560px and the pair centred inside the
-              card: with the figure back at 340px a 1fr track stretched the
-              paragraphs to ~595px (~80 characters), past a comfortable measure.
-              Capping the track keeps the card's edge aligned with the steps
-              below while the text stays readable.
-
-              The pair sits in a WHITE CARD (2026-09-19): on the wide toffee band
-              the bare row read as empty next to the three solid step cards below
-              it — ~330px of dead band each side, and the short copy column
-              floating against a tall figure. The card gives it the same weight as
-              those cards. Flat (border, no shadow) and tighter padding since
-              2026-09-19: the raised card read clunky against the three step
-              cards, and every card in this section now shares one treatment. */}
+              NO CARD around the pair (2026-09-19 tried one, reverted the next
+              day): on the wide toffee band the short copy column did read as
+              thin next to the three step cards, but a card only made the block
+              clunky. The fix the owner wanted was the copy itself — the row
+              spans max-w-5xl so its edges line up with the steps below, and the
+              paradox body was written long enough to stand beside the figure
+              (2026-09-20: 239px of copy against a 340px figure → 377px). */}
           <div
             // Square — 4:3 cropped the diagram's own labels (SALIVA at the top,
             // HUMAN/DOG at the bottom sit close to its edges). Height is controlled
@@ -156,10 +150,9 @@ export function Mechanism({
         {/* Steps. Cards flipped from honey-tint to card-white — honey-tint sat
             too close to the toffee section bg and washed out. White cards pop.
 
-            max-w-5xl matches the paradox card above, so the two blocks share an
-            edge instead of the steps running wider; with the same border and
-            shadow they read as one family rather than three lighter boxes
-            trailing a heavy card (owner: "intro vs steps looks unbalanced"). */}
+            max-w-5xl matches the intro row above, so the two blocks share an
+            edge instead of the steps running wider (owner: "intro vs steps
+            looks unbalanced"). */}
         <div className="mx-auto mt-16 max-w-5xl">
           <h2 className="font-display mx-auto mb-3 max-w-3xl text-center text-2xl font-semibold leading-tight tracking-tight text-cocoa md:text-3xl">
             {stepsHeading}
