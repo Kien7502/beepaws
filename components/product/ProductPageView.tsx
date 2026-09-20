@@ -5,7 +5,7 @@ import { getBeePawsAutoDiscounts } from "@/lib/shopify/discounts";
 import { getFullProductForPage, getPaymentMethods, getProduct, getProducts } from "@/lib/shopify/queries";
 import VariantSelector from "@/components/product/VariantSelector";
 import { ProductGallery } from "@/components/product/ProductGallery";
-import { Truck, ShieldCheck, RefreshCcw, Check, Plus } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import { contentIcon } from "@/lib/content-icons";
 import { ProductDetailsSections } from "@/components/product/ProductDetailsSections";
 import { FinalCTASection } from "@/components/product/FinalCTASection";
@@ -361,22 +361,25 @@ export async function ProductPageView({
       )
     : null;
 
-  // Hero doc §8: surface the objections that actually stop the purchase right
+  // Hero doc §8: answer the objections that actually stop the purchase right
   // where the decision happens. Always the product's OWN faq_items — never
   // retyped — so editing the FAQ copy carries here and the two can't disagree.
-  // The editor marks which ones with `buyBox` (2026-09-20); before that flag
-  // existed the page guessed by keyword, so that stays as the fallback for
-  // products nobody has ticked yet. No match (e.g. a consumable) → nothing
-  // renders. Two is the cap either way: more turns the buy column into a page.
+  // The editor picks which ones (2026-09-20): `buyBox` puts an item in BOTH
+  // places, `buyBoxOnly` puts it ONLY here, for answers that don't need saying
+  // twice. NO CAP — capping at two silently swallowed a third tick, which reads
+  // as the toggle being broken. Nothing ticked → the page falls back to guessing
+  // the two objection questions by keyword, as it did before the flags existed;
+  // no match (e.g. a consumable) → nothing renders.
   const faqItems = beepaws?.faqItems ?? [];
   const usable = (f?: FaqItem) => !!f?.q && !!f?.a;
+  const atBuyBox = (f?: FaqItem) => !!(f?.buyBox || f?.buyBoxOnly);
   const pickFaq = (re: RegExp) => faqItems.find((f) => re.test(f?.q ?? ""));
-  const flagged = faqItems.filter((f) => f?.buyBox && usable(f));
+  const picked = faqItems.filter((f) => atBuyBox(f) && usable(f));
   const buyBoxFaqs = (
-    flagged.length ? flagged : [...new Set([pickFaq(/scared|freak|nervous|afraid/i), pickFaq(/slip|hurt/i)])]
-  )
-    .filter((f): f is FaqItem => usable(f))
-    .slice(0, 2);
+    picked.length ? picked : [...new Set([pickFaq(/scared|freak|nervous|afraid/i), pickFaq(/slip|hurt/i)])]
+  ).filter((f): f is FaqItem => usable(f));
+  // A buy-box-only item is answered up there INSTEAD of in the list below.
+  const sectionFaqs = faqItems.filter((f) => !f?.buyBoxOnly);
 
   // Display price = the FIRST bundle tier's price when tier 0 is bundle-backed
   // (owner decision 2026-07-10, verification pass §2.1): the Starter tier IS
@@ -582,30 +585,10 @@ export async function ProductPageView({
             {/* What's included — bundle products only (renders null otherwise) */}
             <BundleContents items={bundleItems} />
 
-            {/* Mini-trust 3-up — matches device reference .mini-trust. Smaller,
-                closer to the CTA than the previous full trust grid. */}
-            <ul className="mt-5 grid grid-cols-3 gap-2 border-t border-line pt-4">
-              {/* No forced <br/> — the columns get ~100px on a 320px phone and
-                  the hard breaks doubled up with natural wrapping there. */}
-              {/* Copy audit §1.10: "silent" is a banned absolute (honest hedges
-                  beat hype) — "quiet in the air" states the physical fact. */}
-              <li className="flex flex-col items-center gap-1 text-center text-[11.5px] font-bold text-brown">
-                <ShieldCheck className="h-5 w-5 text-clay" aria-hidden />
-                <span>Quiet in the air — even for skittish dogs</span>
-              </li>
-              <li className="flex flex-col items-center gap-1 text-center text-[11.5px] font-bold text-brown">
-                <Truck className="h-5 w-5 text-clay" aria-hidden />
-                <span>Free shipping over $50</span>
-              </li>
-              <li className="flex flex-col items-center gap-1 text-center text-[11.5px] font-bold text-brown">
-                <RefreshCcw className="h-5 w-5 text-clay" aria-hidden />
-                <span>30-day, no-questions-asked return</span>
-              </li>
-            </ul>
-
-            {/* The two questions that stop a purchase, answered at the buy box
-                (hero doc §8). Same answers as the FAQ section below — same
-                source — just surfaced earlier. <details> keeps this zero-JS. */}
+            {/* The questions that stop a purchase, answered at the buy box
+                (hero doc §8). Same faq_items as the section below — an item
+                marked buy-box-only is answered here and left out of that list,
+                so nothing is said twice. <details> keeps this zero-JS. */}
             {buyBoxFaqs.length > 0 && (
               <div className="mt-5 border-t border-line pt-2">
                 {buyBoxFaqs.map((f, i) => (
@@ -764,7 +747,7 @@ export async function ProductPageView({
       <WaveDivider from="#FFFFFF" to="#F2E7CC" flip />
       <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
         <FAQSection
-          items={beepaws?.faqItems}
+          items={sectionFaqs}
           eyebrow={blank(fi?.eyebrow)}
           heading={blank(fi?.heading)}
         />

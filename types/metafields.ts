@@ -45,9 +45,13 @@ export interface FaqItem {
   icon: string;
   q: string;
   a: string;
-  /** Also answer this one at the buy box. Unset on every item → the page falls
-   *  back to picking the two objection questions by keyword. */
+  /** Answer this one at the buy box too. Unset on every item (and no
+   *  `buyBoxOnly`) → the page falls back to picking the two objection
+   *  questions by keyword. */
   buyBox?: boolean;
+  /** Answer it at the buy box INSTEAD of in the FAQ list — for the ones that
+   *  don't need saying twice. Implies the buy box whatever `buyBox` says. */
+  buyBoxOnly?: boolean;
 }
 
 export interface Review {
