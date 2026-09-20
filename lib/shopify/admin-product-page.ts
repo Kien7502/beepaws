@@ -246,8 +246,6 @@ function normalizeMetafields(metafields: AdminMetafield[]) {
     useCases:         parseBeepaws("use_cases"),
     faqItems:         parseBeepaws("faq_items"),
     reviews:          parseBeepaws("reviews"),
-    stats:            parseBeepaws("stats"),
-    techSpecs:        parseBeepaws("tech_specs"),
     bullets:          parseBeepaws("product_bullets"),
     ingredients:      parseBeepaws("ingredients"),
     ingredientGroups: parseBeepaws("ingredient_groups"),

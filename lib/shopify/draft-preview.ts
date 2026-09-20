@@ -12,8 +12,6 @@ export function beepawsFromDraft(content: Record<string, unknown>): BeepawsMetaf
     useCases: g("use_cases"),
     faqItems: g("faq_items"),
     reviews: g("reviews"),
-    stats: g("stats"),
-    techSpecs: g("tech_specs"),
     bullets: g("product_bullets"),
     ingredients: g("ingredients"),
     ingredientGroups: g("ingredient_groups"),

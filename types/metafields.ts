@@ -45,6 +45,9 @@ export interface FaqItem {
   icon: string;
   q: string;
   a: string;
+  /** Also answer this one at the buy box. Unset on every item → the page falls
+   *  back to picking the two objection questions by keyword. */
+  buyBox?: boolean;
 }
 
 export interface Review {
@@ -55,16 +58,6 @@ export interface Review {
   comments: number;
   text: string;
   reply: string | null;
-}
-
-export interface StatItem {
-  value: string;
-  label: string;
-}
-
-export interface TechSpec {
-  label: string;
-  value: string;
 }
 
 export interface BeforeAfterSlide {
@@ -248,8 +241,6 @@ export interface BeepawsMetafields {
   useCases: UseCaseCard[] | null;
   faqItems: FaqItem[] | null;
   reviews: Review[] | null;
-  stats: StatItem[] | null;
-  techSpecs: TechSpec[] | null;
   // `{icon,text}` objects since per-bullet icons (2026-09-15); plain strings
   // before that. A product not re-pushed since still holds the strings, so
   // ProductPageView reads both.

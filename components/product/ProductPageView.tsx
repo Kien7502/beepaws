@@ -23,6 +23,7 @@ import { BundleContents } from "@/components/product/BundleContents";
 import { WaveDivider } from "@/components/ui/WaveDivider";
 import { ProductMediaSync } from "@/components/product/ProductMediaSync";
 import RevealObserver from "@/components/RevealObserver";
+import type { FaqItem } from "@/types/metafields";
 
 type FullProduct = Awaited<ReturnType<typeof getFullProductForPage>>;
 type Product = NonNullable<Awaited<ReturnType<typeof getProduct>>>;
@@ -360,15 +361,22 @@ export async function ProductPageView({
       )
     : null;
 
-  // Hero doc §8: surface the two objections that actually stop the purchase right
-  // where the decision happens. Pulled from the product's OWN faq_items by keyword
-  // rather than retyped, so editing the FAQ copy carries here too and the two can
-  // never disagree. No match (e.g. a consumable) → nothing renders.
+  // Hero doc §8: surface the objections that actually stop the purchase right
+  // where the decision happens. Always the product's OWN faq_items — never
+  // retyped — so editing the FAQ copy carries here and the two can't disagree.
+  // The editor marks which ones with `buyBox` (2026-09-20); before that flag
+  // existed the page guessed by keyword, so that stays as the fallback for
+  // products nobody has ticked yet. No match (e.g. a consumable) → nothing
+  // renders. Two is the cap either way: more turns the buy column into a page.
   const faqItems = beepaws?.faqItems ?? [];
+  const usable = (f?: FaqItem) => !!f?.q && !!f?.a;
   const pickFaq = (re: RegExp) => faqItems.find((f) => re.test(f?.q ?? ""));
-  const buyBoxFaqs = [...new Set([pickFaq(/scared|freak|nervous|afraid/i), pickFaq(/slip|hurt/i)])].filter(
-    (f): f is NonNullable<typeof f> => !!f?.q && !!f?.a,
-  );
+  const flagged = faqItems.filter((f) => f?.buyBox && usable(f));
+  const buyBoxFaqs = (
+    flagged.length ? flagged : [...new Set([pickFaq(/scared|freak|nervous|afraid/i), pickFaq(/slip|hurt/i)])]
+  )
+    .filter((f): f is FaqItem => usable(f))
+    .slice(0, 2);
 
   // Display price = the FIRST bundle tier's price when tier 0 is bundle-backed
   // (owner decision 2026-07-10, verification pass §2.1): the Starter tier IS
