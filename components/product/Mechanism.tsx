@@ -94,9 +94,9 @@ export function Mechanism({
         {/* Intro grid: diagram + body copy. Diagram bg flipped from honey-tint
             (now too close to toffee) to card-white so it still reads as a
             distinct framed block on the warm mid-tone section. */}
-        <div className="grid items-center gap-10 md:grid-cols-[340px_minmax(0,1fr)] md:gap-10">
+        <div className="grid items-center gap-10 md:grid-cols-[420px_minmax(0,1fr)] md:gap-10">
           {/* Diagram left (its original side), copy right. The first track is
-              EXACTLY the figure's width (340px), not a fraction — a 1fr track
+              EXACTLY the figure's width (420px), not a fraction — a 1fr track
               left the capped figure centred inside a wider column, so dead
               gutter pushed the copy away from it.
 
@@ -105,7 +105,9 @@ export function Mechanism({
               thin next to the three step cards, but a card only made the block
               clunky. The fix the owner wanted was the copy itself, written long
               enough to stand beside the figure (2026-09-20: 239px of copy
-              against a 340px figure, now 377px).
+              against a 340px figure, now 377px). The figure went 340 -> 420 when
+              the row widened, so the extra width lands on the diagram instead of
+              stretching the text past a readable measure.
 
               WIDTH: the row fills the section container. It was capped at
               max-w-5xl only to share an edge with the intro card; with the card
@@ -115,7 +117,7 @@ export function Mechanism({
             // HUMAN/DOG at the bottom sit close to its edges). Height is controlled
             // by CAPPING the slot (max-w) instead of cropping, so the figure stays
             // fully intact without towering over the copy beside it.
-            className={`relative mx-auto w-full max-w-[340px] ${
+            className={`relative mx-auto w-full max-w-[420px] ${
               "overflow-hidden rounded-2xl border border-line bg-card"
             } ${diagramImageUrl ? "aspect-square" : "min-h-[260px] md:min-h-[320px]"}`}
           >
