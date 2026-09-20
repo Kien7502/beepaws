@@ -44,8 +44,12 @@ interface Props {
   introHeading?: string;
   introLead?: string;
   paradoxHeading?: string;
-  paradoxParagraphs?: string[];
-  paradoxPullQuote?: string;
+  /** The paradox copy as ONE string; a blank line starts a new paragraph.
+   *  Replaces the old paragraph1 / pullQuote / paragraph2 slots — three fixed
+   *  boxes where the middle one was labelled "pull quote" but rendered as plain
+   *  body copy between the other two. ProductPageView still assembles those for
+   *  products whose content hasn't been re-saved. */
+  paradoxBody?: string;
   stepsHeading?: string;
   stepsLead?: string;
   diagramImageUrl?: string | null;
@@ -60,11 +64,7 @@ export function Mechanism({
   introHeading = "Lorem ipsum dolor sit amet",
   introLead = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
   paradoxHeading = "Lorem ipsum subheading",
-  paradoxParagraphs = [
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-    "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-  ],
-  paradoxPullQuote = "Lorem ipsum dolor sit amet, consectetur adipiscing elit — placeholder pull quote.",
+  paradoxBody = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\n\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
   stepsHeading = "Lorem ipsum steps heading",
   stepsLead = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
   diagramImageUrl = null,
@@ -72,6 +72,13 @@ export function Mechanism({
   feelsBrokenHeading = "Lorem ipsum — placeholder callout heading",
 }: Props) {
   const data = steps && steps.length > 0 ? steps : DEFAULT_STEPS;
+  // A blank line starts a new paragraph — the same convention the editor's field
+  // label states. Trailing/leading whitespace and stray extra blank lines are
+  // tolerated so authoring can't produce an empty <p>.
+  const paragraphs = paradoxBody
+    .split(/\n\s*\n/)
+    .map((para) => para.trim())
+    .filter(Boolean);
   const feelsBrokenBody = feelsBrokenNote?.trim() || DEFAULT_FEELS_BROKEN_NOTE;
 
   return (
@@ -87,8 +94,7 @@ export function Mechanism({
         {/* Intro grid: diagram + body copy. Diagram bg flipped from honey-tint
             (now too close to toffee) to card-white so it still reads as a
             distinct framed block on the warm mid-tone section. */}
-        <div className="mx-auto max-w-5xl rounded-2xl border border-line bg-card p-6 md:p-7">
-        <div className="grid items-center gap-8 md:grid-cols-[340px_minmax(0,560px)] md:justify-center">
+        <div className="mx-auto grid max-w-5xl items-center gap-10 md:grid-cols-[340px_minmax(0,1fr)] md:gap-10">
           {/* Diagram left (its original side), copy right. The first track is
               EXACTLY the figure's width (340px), not a fraction — a 1fr track
               left the capped figure centred inside a wider column, so dead
@@ -139,26 +145,12 @@ export function Mechanism({
                 purpose: justifying a ~520px column WITHOUT hyphenation stretches
                 word gaps into visible white "rivers". <html lang="en"> is set, so
                 the browser can actually hyphenate. */}
-            {paradoxParagraphs[0] && (
-              <p className="mb-3 text-justify hyphens-auto text-[15.5px] leading-relaxed text-brown">
-                {withBold(paradoxParagraphs[0])}
-              </p>
-            )}
-            {/* Deliberately NOT a blockquote: there's no attributed speaker, so
-                quote marks + rule + italic read as a citation that doesn't exist.
-                Renders as ordinary body copy (matching the paragraphs around it). */}
-            {paradoxPullQuote && (
-              <p className="mb-3 text-justify hyphens-auto text-[15.5px] leading-relaxed text-brown">
-                {withBold(paradoxPullQuote)}
-              </p>
-            )}
-            {paradoxParagraphs.slice(1).map((para, i) => (
+            {paragraphs.map((para, i) => (
               <p key={i} className="mb-3 text-justify hyphens-auto text-[15.5px] leading-relaxed text-brown">
                 {withBold(para)}
               </p>
             ))}
           </div>
-        </div>
         </div>
 
         {/* Steps. Cards flipped from honey-tint to card-white — honey-tint sat

@@ -73,9 +73,14 @@ export async function ProductPageView({
   const fcc = beepaws?.finalCtaCopy?.[0];
   const ii = beepaws?.ingredientsIntro?.[0];
   const blank = (s?: string) => (s && s.trim() ? s : undefined);
-  const mechParagraphs = [mi?.paradoxParagraph1, mi?.paradoxParagraph2].filter(
+  // Paradox copy is one authored body now (blank line = new paragraph). Products
+  // not re-saved since still carry the old three slots, and the one labelled
+  // "pull quote" rendered BETWEEN the other two — so they join in that order.
+  const mechLegacyParagraphs = [mi?.paradoxParagraph1, mi?.paradoxPullQuote, mi?.paradoxParagraph2].filter(
     (p): p is string => Boolean(p && p.trim()),
   );
+  const mechParadoxBody =
+    blank(mi?.paradoxBody) ?? (mechLegacyParagraphs.length ? mechLegacyParagraphs.join("\n\n") : undefined);
 
   // Device-only sections (Mechanism + SilentReassurance) gate on the Shopify
   // product tag "device". The seed-product-metafields script auto-applies
@@ -654,8 +659,7 @@ export async function ProductPageView({
               introHeading={blank(mi?.introHeading)}
               introLead={blank(mi?.introLead)}
               paradoxHeading={blank(mi?.paradoxHeading)}
-              paradoxParagraphs={mechParagraphs.length > 0 ? mechParagraphs : undefined}
-              paradoxPullQuote={blank(mi?.paradoxPullQuote)}
+              paradoxBody={mechParadoxBody}
               stepsHeading={blank(mi?.stepsHeading)}
               stepsLead={blank(mi?.stepsLead)}
               diagramImageUrl={blank(mi?.diagramImageUrl)}

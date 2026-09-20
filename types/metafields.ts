@@ -167,8 +167,8 @@ export interface MechanismStep {
 }
 
 // Section-level intro copy for Mechanism — single-entry list (index 0).
-// paradoxParagraph1/2 map to the component's paradoxParagraphs[] (the page
-// reconstructs the array). Missing fields fall back to in-code defaults.
+// paradoxBody is the current shape (blank line = paragraph); the legacy trio is
+// joined into it by ProductPageView for products not re-saved since 2026-09-20. Missing fields fall back to in-code defaults.
 /** Hero above-the-fold copy. Absent -> the hero falls back to the product title
  *  as H1 with no subheadline (how non-device PDPs render). */
 /** A hero bullet. `icon` is a key into BULLET_ICON_MAP (ProductPageView);
@@ -188,6 +188,10 @@ export interface MechanismIntro {
   introHeading?: string;
   introLead?: string;
   paradoxHeading?: string;
+  /** The paradox copy as one string, blank line between paragraphs (current shape). */
+  paradoxBody?: string;
+  /** Legacy trio, still present on products not re-saved since 2026-09-20. The
+   *  "pull quote" rendered BETWEEN paragraph 1 and 2, never as a quote. */
   paradoxParagraph1?: string;
   paradoxParagraph2?: string;
   paradoxPullQuote?: string;
