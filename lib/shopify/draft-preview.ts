@@ -30,6 +30,8 @@ export function beepawsFromDraft(content: Record<string, unknown>): BeepawsMetaf
     mechanismSteps: g("mechanism_steps"),
     heroCopy: g("hero_copy"),
     mechanismIntro: g("mechanism_intro"),
+    mechanismStepsIntro: g("mechanism_steps_intro"),
+    mechanismCallout: g("mechanism_callout"),
     guarantee: g("guarantee"),
     useCasesIntro: g("use_cases_intro"),
     comparisonIntro: g("comparison_intro"),

@@ -65,6 +65,11 @@ export async function ProductPageView({
     .filter((b): b is { icon?: string; text: string } => !!b?.text);
   const ppi = beepaws?.painPointsIntro?.[0];
   const mi = beepaws?.mechanismIntro?.[0];
+  // Steps header and callout live in their own metafields since 2026-09-20 —
+  // they head parts of the page the intro doesn't own. mechanism_intro still
+  // carries them on products not re-saved since, so read it as the fallback.
+  const msi = beepaws?.mechanismStepsIntro?.[0];
+  const mc = beepaws?.mechanismCallout?.[0];
   const uci = beepaws?.useCasesIntro?.[0];
   const ci = beepaws?.comparisonIntro?.[0];
   const fi = beepaws?.faqIntro?.[0];
@@ -650,20 +655,20 @@ export async function ProductPageView({
           <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
             <Mechanism
               steps={beepaws?.mechanismSteps}
-              // mechanism_intro.feelsBrokenBody, NOT education_note: that field
-              // now holds only the short buy-column reassurance (§1.5) while
-              // the callout gets its own long version (§4.10) — the two slots
-              // wanted different lengths of the same message.
-              feelsBrokenNote={blank(mi?.feelsBrokenBody)}
+              // The callout's own body, NOT education_note: that field holds
+              // only the short buy-column reassurance (§1.5) while the callout
+              // gets its own long version (§4.10) — the two slots wanted
+              // different lengths of the same message.
+              feelsBrokenNote={blank(mc?.body) ?? blank(mi?.feelsBrokenBody)}
               introEyebrow={blank(mi?.introEyebrow)}
               introHeading={blank(mi?.introHeading)}
               introLead={blank(mi?.introLead)}
               paradoxHeading={blank(mi?.paradoxHeading)}
               paradoxBody={mechParadoxBody}
-              stepsHeading={blank(mi?.stepsHeading)}
-              stepsLead={blank(mi?.stepsLead)}
+              stepsHeading={blank(msi?.heading) ?? blank(mi?.stepsHeading)}
+              stepsLead={blank(msi?.lead) ?? blank(mi?.stepsLead)}
               diagramImageUrl={blank(mi?.diagramImageUrl)}
-              feelsBrokenHeading={blank(mi?.feelsBrokenHeading)}
+              feelsBrokenHeading={blank(mc?.heading) ?? blank(mi?.feelsBrokenHeading)}
             />
           </div>
           {/* WAVE — toffee → card: into BeforeAfterSlider */}

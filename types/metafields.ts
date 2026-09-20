@@ -195,15 +195,24 @@ export interface MechanismIntro {
   paradoxParagraph1?: string;
   paradoxParagraph2?: string;
   paradoxPullQuote?: string;
-  stepsHeading?: string;
-  stepsLead?: string;
   /** Tooth cross-section beside the steps; falls back to the dev placeholder. */
   diagramImageUrl?: string;
+  /** Legacy homes for the steps header and the callout, moved out to their own
+   *  metafields 2026-09-20 (mechanism_steps_intro / mechanism_callout) so the
+   *  editor groups them with the part of the page they head. Read as a fallback
+   *  until every product has been re-saved. */
+  stepsHeading?: string;
+  stepsLead?: string;
   feelsBrokenHeading?: string;
-  /** Long-form callout body (audit §4.10). Split from education_note
-   * 2026-07-17 — that field kept the SHORT buy-column reassurance (§1.5)
-   * and this one holds the dark callout's longer version. */
   feelsBrokenBody?: string;
+}
+
+// The cocoa "it's supposed to feel broken" callout under the mechanism steps.
+// Body is the long version (audit §4.10); education_note keeps the SHORT
+// buy-column reassurance (§1.5) — the two slots want different lengths.
+export interface MechanismCallout {
+  heading?: string;
+  body?: string;
 }
 
 export interface Guarantee {
@@ -268,6 +277,9 @@ export interface BeepawsMetafields {
   mechanismSteps: MechanismStep[] | null;
   heroCopy: HeroCopy[] | null;
   mechanismIntro: MechanismIntro[] | null;
+  /** Header over the mechanism STEPS (its own metafield since 2026-09-20). */
+  mechanismStepsIntro: SectionIntro[] | null;
+  mechanismCallout: MechanismCallout[] | null;
   guarantee: Guarantee[] | null;
   // Section-header copy for the remaining sections (single-entry lists).
   useCasesIntro: SectionIntro[] | null;
