@@ -94,7 +94,7 @@ export function Mechanism({
         {/* Intro grid: diagram + body copy. Diagram bg flipped from honey-tint
             (now too close to toffee) to card-white so it still reads as a
             distinct framed block on the warm mid-tone section. */}
-        <div className="mx-auto grid max-w-5xl items-center gap-10 md:grid-cols-[340px_minmax(0,1fr)] md:gap-10">
+        <div className="grid items-center gap-10 md:grid-cols-[340px_minmax(0,1fr)] md:gap-10">
           {/* Diagram left (its original side), copy right. The first track is
               EXACTLY the figure's width (340px), not a fraction — a 1fr track
               left the capped figure centred inside a wider column, so dead
@@ -103,10 +103,13 @@ export function Mechanism({
               NO CARD around the pair (2026-09-19 tried one, reverted the next
               day): on the wide toffee band the short copy column did read as
               thin next to the three step cards, but a card only made the block
-              clunky. The fix the owner wanted was the copy itself — the row
-              spans max-w-5xl so its edges line up with the steps below, and the
-              paradox body was written long enough to stand beside the figure
-              (2026-09-20: 239px of copy against a 340px figure → 377px). */}
+              clunky. The fix the owner wanted was the copy itself, written long
+              enough to stand beside the figure (2026-09-20: 239px of copy
+              against a 340px figure, now 377px).
+
+              WIDTH: the row fills the section container. It was capped at
+              max-w-5xl only to share an edge with the intro card; with the card
+              gone the cap just left a gutter either side (owner, 2026-09-20). */}
           <div
             // Square — 4:3 cropped the diagram's own labels (SALIVA at the top,
             // HUMAN/DOG at the bottom sit close to its edges). Height is controlled
@@ -147,13 +150,15 @@ export function Mechanism({
           </div>
         </div>
 
-        {/* Steps. Cards flipped from honey-tint to card-white — honey-tint sat
+        {/* Steps. Cards flipped from honey-tint to card-white - honey-tint sat
             too close to the toffee section bg and washed out. White cards pop.
 
-            max-w-5xl matches the intro row above, so the two blocks share an
-            edge instead of the steps running wider (owner: "intro vs steps
-            looks unbalanced"). */}
-        <div className="mx-auto mt-16 max-w-5xl">
+            Shape restored 2026-09-20: the border + flattening came in to match
+            the intro card (b374139, b6f4373) and outlived it, so the soft shadow
+            is back and the type is at its original size. `h-full` STAYS - it
+            keeps the three equal inside the slider, which was never a card-era
+            change. Width matches the intro row: both fill the container. */}
+        <div className="mt-16">
           <h2 className="font-display mx-auto mb-3 max-w-3xl text-center text-2xl font-semibold leading-tight tracking-tight text-cocoa md:text-3xl">
             {stepsHeading}
           </h2>
@@ -167,15 +172,15 @@ export function Mechanism({
             slides={data.map((step) => (
               <div
                 key={step.number + step.title}
-                className="h-full rounded-2xl border border-line bg-card p-6 text-center md:p-7"
+                className="h-full rounded-2xl bg-card p-6 text-center shadow-[0_4px_20px_-10px_rgba(74,46,22,0.10)] md:p-7"
               >
                 <div className="font-display text-3xl font-bold text-gold-deep md:text-[34px]">
                   {step.number}
                 </div>
-                <h3 className="font-display mb-2 mt-1.5 text-[19px] font-semibold text-cocoa">
+                <h3 className="font-display mb-2 mt-1.5 text-lg font-semibold text-cocoa">
                   {step.title}
                 </h3>
-                <p className="text-[15px] leading-relaxed text-brown">
+                <p className="text-sm leading-relaxed text-brown">
                   {step.description}
                 </p>
               </div>
@@ -186,7 +191,7 @@ export function Mechanism({
         {/* Feels-broken callout — restructure plan §Task 3 (v2) — this is the
             page's single deliberate dark accent. Small cocoa inset with
             light text against the toffee section. One dark punch, not a slab. */}
-        <div className="mx-auto mt-12 grid max-w-5xl items-center gap-7 rounded-2xl bg-cocoa p-8 md:mt-14 md:grid-cols-[auto_1fr] md:gap-10 md:p-10">
+        <div className="mt-12 grid items-center gap-7 rounded-2xl bg-cocoa p-8 md:mt-14 md:grid-cols-[auto_1fr] md:gap-10 md:p-10">
           <div className="mx-auto md:mx-0">
             <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-gold bg-gold/15">
               <VolumeX className="h-11 w-11 text-amber" aria-hidden />
