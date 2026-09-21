@@ -68,38 +68,28 @@ export function BeforeAfterSlider({
 
   return (
     <section className="ds-reveal-in bg-card py-14 md:py-20">
-      <div className="container mx-auto grid max-w-6xl items-center gap-10 px-4 md:grid-cols-[43fr_57fr] md:gap-14 md:px-6">
-        {/* Left: the argument, the current pet's story, and how to read it. The
-            quote tracks the active slide, so the copy earns its column. */}
-        <div>
+      {/* items-START, not center (2026-09-21): the left column's height changes
+          with each slide's caption, and centring made the image column shift
+          up and down as you clicked through. The caption is also placed into
+          the second row so that on phones - where this stacks - the image
+          comes BEFORE it and stays put. grid-rows-[auto_1fr] keeps the quote
+          directly under the lead: without it the two left rows split the
+          image's height and left a hole between them. */}
+      <div className="container mx-auto grid max-w-6xl items-start gap-10 px-4 md:grid-cols-[43fr_57fr] md:grid-rows-[auto_1fr] md:gap-x-14 md:gap-y-6 md:px-6">
+        {/* Left, row 1: the argument. */}
+        <div className="md:col-start-1 md:row-start-1">
           <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[33px]">
             {heading}
           </h2>
           <p className="mt-3 max-w-md text-base leading-relaxed text-brown">
             {lead}
           </p>
-
-          {activeSlide.caption && (
-            <figure className="mt-6 border-t border-line pt-5">
-              <blockquote className="font-display text-lg italic leading-snug text-cocoa">
-                {activeSlide.caption}
-              </blockquote>
-              {activeSlide.petName && (
-                <figcaption className="mt-2 text-sm font-semibold text-brown">
-                  — {activeSlide.petName}
-                </figcaption>
-              )}
-            </figure>
-          )}
-
-          <p className="mt-6 inline-flex items-center gap-2 text-sm text-brown/70">
-            <ArrowLeftRight size={16} className="text-clay" aria-hidden />
-            Drag the handle to compare.
-          </p>
         </div>
 
-        {/* Right: the drag-to-reveal slider, filling the column. */}
-        <div>
+        {/* Right: the drag-to-reveal slider, filling the column. row-start-1 +
+            row-span-2 on desktop; in DOM order it sits between the heading and
+            the caption, which is exactly the phone stacking we want. */}
+        <div className="md:col-start-2 md:row-start-1 md:row-span-2">
           {/* Track viewport: clips overflow so the off-screen slides stay
               hidden, and rounds + shadows the visible image area. */}
           <div className="overflow-hidden rounded-2xl border border-line shadow-[0_14px_40px_-16px_rgba(74,46,22,0.22)]">
@@ -162,6 +152,28 @@ export function BeforeAfterSlider({
             </div>
           )}
         </div>
+        {/* Left, row 2 — BELOW the image on phones. The quote tracks the active
+            slide, so the copy earns its column. */}
+        <div className="md:col-start-1 md:row-start-2">
+          {activeSlide.caption && (
+            <figure className="border-t border-line pt-5 md:mt-0">
+              <blockquote className="font-display text-lg italic leading-snug text-cocoa">
+                {activeSlide.caption}
+              </blockquote>
+              {activeSlide.petName && (
+                <figcaption className="mt-2 text-sm font-semibold text-brown">
+                  — {activeSlide.petName}
+                </figcaption>
+              )}
+            </figure>
+          )}
+
+          <p className="mt-6 inline-flex items-center gap-2 text-sm text-brown/70">
+            <ArrowLeftRight size={16} className="text-clay" aria-hidden />
+            Drag the handle to compare.
+          </p>
+        </div>
+
       </div>
     </section>
   );
