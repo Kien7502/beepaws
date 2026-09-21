@@ -75,7 +75,7 @@ export function BeforeAfterSlider({
           comes BEFORE it and stays put. grid-rows-[auto_1fr] keeps the quote
           directly under the lead: without it the two left rows split the
           image's height and left a hole between them. */}
-      <div className="container mx-auto grid max-w-6xl items-start gap-10 px-4 md:grid-cols-[43fr_57fr] md:grid-rows-[auto_1fr] md:gap-x-14 md:gap-y-6 md:px-6">
+      <div className="container mx-auto grid max-w-6xl items-start gap-6 px-4 md:grid-cols-[43fr_57fr] md:grid-rows-[auto_1fr] md:gap-x-14 md:gap-y-6 md:px-6">
         {/* Left, row 1: the argument. */}
         <div className="md:col-start-1 md:row-start-1">
           <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[33px]">
@@ -83,6 +83,11 @@ export function BeforeAfterSlider({
           </h2>
           <p className="mt-3 max-w-md text-base leading-relaxed text-brown">
             {lead}
+          </p>
+
+          <p className="mt-5 inline-flex items-center gap-2 text-sm text-brown/70">
+            <ArrowLeftRight size={16} className="text-clay" aria-hidden />
+            Drag the handle to compare.
           </p>
         </div>
 
@@ -168,10 +173,6 @@ export function BeforeAfterSlider({
             </figure>
           )}
 
-          <p className="mt-6 inline-flex items-center gap-2 text-sm text-brown/70">
-            <ArrowLeftRight size={16} className="text-clay" aria-hidden />
-            Drag the handle to compare.
-          </p>
         </div>
 
       </div>
