@@ -92,14 +92,17 @@ export function ComparisonTable({
   return (
     <section className="ds-reveal-in bg-card py-14 md:py-20">
       <div className="container mx-auto max-w-7xl px-4 md:px-6">
-        <div className="flex flex-col items-center gap-12 md:flex-row md:items-start md:gap-12">
+        {/* md:gap-8, and the lead is no longer capped at max-w-xs: the copy
+            stopped 320px into a 411px column, so the intro read as stranded
+            ~139px from the table it introduces (owner, 2026-09-21). Now 48px. */}
+        <div className="flex flex-col items-center gap-12 md:flex-row md:items-start md:gap-8">
 
           {/* Left — heading */}
           <div className="shrink-0 text-center md:w-1/3 md:text-left">
             <h2 className="font-display mb-4 text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[33px]">
               {heading}
             </h2>
-            <p className="mx-auto max-w-xs leading-relaxed text-brown md:mx-0">
+            <p className="mx-auto max-w-sm leading-relaxed text-brown md:mx-0">
               {lead}
             </p>
           </div>
