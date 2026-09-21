@@ -94,32 +94,35 @@ export function Mechanism({
         {/* Intro grid: diagram + body copy. Diagram bg flipped from honey-tint
             (now too close to toffee) to card-white so it still reads as a
             distinct framed block on the warm mid-tone section. */}
+        <div className="rounded-2xl bg-card p-6 shadow-[0_4px_20px_-10px_rgba(74,46,22,0.10)] md:p-8">
         <div className="grid items-center gap-10 md:grid-cols-[420px_minmax(0,1fr)] md:gap-10">
           {/* Diagram left (its original side), copy right. The first track is
               EXACTLY the figure's width (420px), not a fraction — a 1fr track
               left the capped figure centred inside a wider column, so dead
               gutter pushed the copy away from it.
 
-              NO CARD around the pair (2026-09-19 tried one, reverted the next
-              day): on the wide toffee band the short copy column did read as
-              thin next to the three step cards, but a card only made the block
-              clunky. The fix the owner wanted was the copy itself, written long
-              enough to stand beside the figure (2026-09-20: 239px of copy
-              against a 340px figure, now 377px). The figure went 340 -> 420 when
-              the row widened, so the extra width lands on the diagram instead of
-              stretching the text past a readable measure.
+              THE CARD IS BACK (2026-09-21, owner: "it looked good"). It was
+              tried 2026-09-19 and dropped the next day because it read clunky -
+              but that card wrapped 436 characters against a 340px figure and was
+              mostly empty. It now holds 836 characters against a 420px figure,
+              and it wears the STEP CARDS' treatment (soft shadow, no border)
+              instead of the original heavy bordered one, so the section reads as
+              one family. On phones it is what gives the copy a container at all:
+              the paragraphs used to run bare down the toffee band.
 
-              WIDTH: the row fills the section container. It was capped at
-              max-w-5xl only to share an edge with the intro card; with the card
-              gone the cap just left a gutter either side (owner, 2026-09-20). */}
+              WIDTH: the card fills the section container, like the steps and the
+              callout. Its padding also pulls the copy measure in to ~78
+              characters a line, which is where body text wants to be. */}
           <div
             // Square — 4:3 cropped the diagram's own labels (SALIVA at the top,
             // HUMAN/DOG at the bottom sit close to its edges). Height is controlled
             // by CAPPING the slot (max-w) instead of cropping, so the figure stays
             // fully intact without towering over the copy beside it.
-            className={`relative mx-auto w-full max-w-[420px] ${
-              "overflow-hidden rounded-2xl border border-line bg-card"
-            } ${diagramImageUrl ? "aspect-square" : "min-h-[260px] md:min-h-[320px]"}`}
+            // No border/background of its own: it sits inside the white card,
+            // and the diagram's artwork already carries a cream field.
+            className={`relative mx-auto w-full max-w-[420px] overflow-hidden rounded-2xl ${
+              diagramImageUrl ? "aspect-square" : "min-h-[260px] md:min-h-[320px] bg-honey-tint"
+            }`}
           >
             {diagramImageUrl ? (
               <Image
@@ -150,6 +153,7 @@ export function Mechanism({
               </p>
             ))}
           </div>
+        </div>
         </div>
 
         {/* Steps. Cards flipped from honey-tint to card-white - honey-tint sat
