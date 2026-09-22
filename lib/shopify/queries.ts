@@ -15,10 +15,12 @@ import {
 import { hasAdminApiCredentials } from "./admin-credentials";
 import type { Collection, Product } from "@/types/shopify";
 
-// Shopify Admin GraphQL uses POST requests — Next.js cannot cache POST
-// at the fetch() level. unstable_cache wraps the whole function instead
-// and is invalidated via revalidateTag("products") from the webhook.
-// In dev we pass through so Shopify edits appear on the next request.
+// Shopify Admin GraphQL uses POST — Next.js cannot cache POST at the fetch() level.
+// unstable_cache wraps the whole function and is invalidated via revalidateTag("products").
+// Each cached variant also has a direct-fetch fallback in case the cache layer throws
+// (e.g. incrementalCache not yet initialised on first cold start).
+// The `cache()` helper below passes through in DEV so Shopify edits (and the admin's
+// live preview) appear on the very next request instead of waiting for a revalidate.
 const REVALIDATE = 3600;
 const cache = <Args extends unknown[], R>(
   fn: (...args: Args) => Promise<R>,
@@ -36,13 +38,15 @@ type GetProductsOpts = {
   sortKey?: string;
 };
 
-const _getCachedCollections = cache(
+// ─── cache wrappers (pass through in dev — see cache() above) ────────────────
+
+const _cachedGetCollections = cache(
   async (): Promise<Collection[]> => {
     if (!hasAdminApiCredentials()) return [];
     try {
       return await adminGetCollections();
     } catch (e) {
-      console.error("Admin GraphQL collections failed", e);
+      console.error("[shopify] collections fetch failed:", e);
       return [];
     }
   },
@@ -50,13 +54,13 @@ const _getCachedCollections = cache(
   { tags: ["collections"], revalidate: REVALIDATE },
 );
 
-const _getCachedProducts = cache(
+const _cachedGetProducts = cache(
   async (opts: GetProductsOpts): Promise<Product[]> => {
     if (!hasAdminApiCredentials()) return [];
     try {
       return await adminGetProducts(opts);
     } catch (e) {
-      console.error("Admin GraphQL products failed", e);
+      console.error("[shopify] products fetch failed:", e);
       return [];
     }
   },
@@ -64,51 +68,94 @@ const _getCachedProducts = cache(
   { tags: ["products"], revalidate: REVALIDATE },
 );
 
-const _getCachedProduct = cache(
-  async (handle: string): Promise<Product | undefined> => {
-    if (!hasAdminApiCredentials()) return undefined;
+const _cachedGetProduct = cache(
+  async (handle: string): Promise<Product | null> => {
+    if (!hasAdminApiCredentials()) return null;
     try {
-      return await adminGetProductByHandle(handle);
+      return (await adminGetProductByHandle(handle)) ?? null;
     } catch (e) {
-      console.error("Admin GraphQL product failed", e);
-      return undefined;
+      console.error("[shopify] product fetch failed:", e);
+      return null;
     }
   },
   ["shopify-product"],
   { tags: ["products"], revalidate: REVALIDATE },
 );
 
-const _getCachedFullProduct = cache(
-  async (handle: string): Promise<AdminFullProductForPage | undefined> => {
-    if (!hasAdminApiCredentials()) return undefined;
+const _cachedGetFullProduct = cache(
+  async (handle: string): Promise<AdminFullProductForPage | null> => {
+    if (!hasAdminApiCredentials()) return null;
     try {
       const products = await adminGetFullProductsForPage({ handle });
-      return products[0];
+      return products[0] ?? null;
     } catch (e) {
-      console.error("Admin GraphQL full product failed", e);
-      return undefined;
+      console.error("[shopify] full product fetch failed:", e);
+      return null;
     }
   },
   ["shopify-product-full"],
   { tags: ["products", "product-full"], revalidate: REVALIDATE },
 );
 
-export function getCollections(): Promise<Collection[]> {
-  return _getCachedCollections();
+// ─── Direct-fetch fallbacks (no cache layer) ──────────────────────────────────
+
+async function _directGetCollections(): Promise<Collection[]> {
+  if (!hasAdminApiCredentials()) return [];
+  try { return await adminGetCollections(); } catch { return []; }
 }
 
-export function getProducts(opts: GetProductsOpts = {}): Promise<Product[]> {
-  return _getCachedProducts(opts);
+async function _directGetProducts(opts: GetProductsOpts): Promise<Product[]> {
+  if (!hasAdminApiCredentials()) return [];
+  try { return await adminGetProducts(opts); } catch { return []; }
 }
 
-export function getProduct(handle: string): Promise<Product | undefined> {
-  return _getCachedProduct(handle);
+async function _directGetProduct(handle: string): Promise<Product | undefined> {
+  if (!hasAdminApiCredentials()) return undefined;
+  try { return await adminGetProductByHandle(handle); } catch { return undefined; }
 }
 
-export function getFullProductForPage(
+async function _directGetFullProduct(handle: string): Promise<AdminFullProductForPage | undefined> {
+  if (!hasAdminApiCredentials()) return undefined;
+  try {
+    const products = await adminGetFullProductsForPage({ handle });
+    return products[0];
+  } catch { return undefined; }
+}
+
+// ─── Public API (cache with direct-fetch fallback) ───────────────────────────
+
+export async function getCollections(): Promise<Collection[]> {
+  try {
+    return await _cachedGetCollections();
+  } catch {
+    return _directGetCollections();
+  }
+}
+
+export async function getProducts(opts: GetProductsOpts = {}): Promise<Product[]> {
+  try {
+    return await _cachedGetProducts(opts);
+  } catch {
+    return _directGetProducts(opts);
+  }
+}
+
+export async function getProduct(handle: string): Promise<Product | undefined> {
+  try {
+    return (await _cachedGetProduct(handle)) ?? undefined;
+  } catch {
+    return _directGetProduct(handle);
+  }
+}
+
+export async function getFullProductForPage(
   handle: string,
 ): Promise<AdminFullProductForPage | undefined> {
-  return _getCachedFullProduct(handle);
+  try {
+    return (await _cachedGetFullProduct(handle)) ?? undefined;
+  } catch {
+    return _directGetFullProduct(handle);
+  }
 }
 
 // UNCACHED reads for the admin's live preview. Same reasoning as

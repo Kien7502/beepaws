@@ -2,9 +2,10 @@
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { ArrowUpDown } from "lucide-react";
-import { SORT_OPTIONS, type SortValue } from "./sort-config";
+import { SORT_OPTIONS, type SortValue } from "@/lib/sort-options";
 
-export { SORT_OPTIONS, type SortValue };
+export { SORT_OPTIONS } from "@/lib/sort-options";
+export type { SortValue } from "@/lib/sort-options";
 
 export default function SortDropdown({ current }: { current: SortValue }) {
   const router = useRouter();
