@@ -1,4 +1,4 @@
-import { getFullProductForPage, getPaymentMethods, getProduct } from "@/lib/shopify/queries";
+import { getFullProductForPage, getPaymentMethods, getProduct, getProducts } from "@/lib/shopify/queries";
 import { getVariantGroupPrimary } from "@/lib/shopify/variant-groups";
 import { notFound } from "next/navigation";
 import { ProductPageView } from "@/components/product/ProductPageView";
@@ -6,6 +6,27 @@ import { ProductPageView } from "@/components/product/ProductPageView";
 // ISR: revalidate via webhook → revalidateTag("products")
 // Fallback: re-generate every 1 hour even without a webhook push
 export const revalidate = 3600;
+
+// Without this, `revalidate` above did nothing for the HTML: a dynamic segment
+// with no generateStaticParams is rendered on demand and NEVER enters the
+// full-route cache, so Vercel answered every PDP request with
+// `Cache-Control: private, no-cache, no-store` and a fresh server render
+// (measured 2026-09-22: 36ms warm, but 12.6s on a cold data cache — and a
+// dynamic page cannot serve stale while it refetches, so that 12.6s lands on a
+// real visitor). Misses are routine: every deploy, every hour, every cold
+// instance, and every Push from the admin (revalidateTag("products")).
+//
+// Listing the handles here prebuilds them at deploy time and, just as
+// importantly, opts the route into ISR: unlisted handles still render on
+// demand (dynamicParams defaults to true) and are cached afterwards, and a
+// revalidated page is served STALE while it regenerates in the background.
+//
+// getProducts() swallows its own errors and returns [], so a Shopify outage at
+// build time costs prerendering, never the build.
+export async function generateStaticParams() {
+  const products = await getProducts();
+  return products.map((p) => ({ handle: p.handle }));
+}
 
 export async function generateMetadata({
   params,
