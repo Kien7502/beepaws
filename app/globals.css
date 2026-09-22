@@ -405,3 +405,33 @@ body {
     text-align: left;
   }
 }
+
+/* ── Classes used ONLY by the interim hardcoded homepage (app/page.tsx) ───────
+   Kept alive 2026-09-22 because that homepage stays live until the
+   beepaws.homepage image blocks are authored; HomePageView is what replaces it.
+   When app/page.tsx switches back to <HomePageView>, delete this whole block. */
+.hero-gradient-heading {
+  background-image: linear-gradient(100deg, #f5a800 0%, #d89200 40%, #4a7c3f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+@layer components {
+  .icon-bg-primary {
+    background: linear-gradient(135deg, rgba(245,168,0,0.18) 0%, rgba(245,168,0,0.08) 100%);
+    box-shadow: 0 0 0 1px rgba(245,168,0,0.18);
+  }
+  .icon-bg-accent {
+    background: linear-gradient(135deg, rgba(74,124,63,0.18) 0%, rgba(74,124,63,0.08) 100%);
+    box-shadow: 0 0 0 1px rgba(74,124,63,0.18);
+  }
+  .newsletter-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2.5rem;
+  }
+  .dark .newsletter-section {
+    background: #223022;
+    border-color: #355135;
+  }
+}
