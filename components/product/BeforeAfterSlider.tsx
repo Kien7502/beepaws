@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import Image from "next/image";
 import { ArrowLeftRight, ChevronLeft, ChevronRight } from "lucide-react";
 import type { BeforeAfterSlide } from "@/types/metafields";
@@ -104,7 +104,7 @@ export function BeforeAfterSlider({
             >
               {data.map((slide, idx) => (
                 <div key={idx} className="w-full shrink-0">
-                  <BeforeAfterPanel slide={slide} />
+                  <BeforeAfterPanel slide={slide} hint={idx === 0} />
                 </div>
               ))}
             </div>
@@ -180,50 +180,139 @@ export function BeforeAfterSlider({
   );
 }
 
-// Per-slide drag-to-reveal panel. Each instance owns its own pct so revisiting
-// a previously-seen slide keeps the drag position the user left it at.
-function BeforeAfterPanel({ slide }: { slide: BeforeAfterSlide }) {
+// Per-slide drag-to-reveal panel. Each instance owns its own position so
+// revisiting a previously-seen slide keeps the divider where the user left it.
+//
+// SMOOTH DRAG (2026-09-30, owner asked for smoother sliding). The position used
+// to be React state, so every pointermove re-rendered the whole panel (both
+// photos), re-measured it, and moved the divider with `left` - layout work on
+// every event, 60-120 times a second on a phone. Now it lives in a ref and ONE
+// CSS variable, --pct, is written at most once per animation frame: the divider
+// and knob ride a `transform` (compositor only, no layout) and the after-photo a
+// clip-path. Nothing in the drag path touches React. The first-view hint below
+// writes through the same `apply`, so the two can never fight.
+function BeforeAfterPanel({ slide, hint = false }: { slide: BeforeAfterSlide; hint?: boolean }) {
   const wrapRef = useRef<HTMLDivElement>(null);
-  const [pct, setPct] = useState(50);
   const [loaded, setLoaded] = useState(false);
+  const pos = useRef(50); // divider position, 4-96 (%)
+  const rect = useRef<{ left: number; width: number } | null>(null);
+  const pendingX = useRef<number | null>(null);
+  const frame = useRef(0);
   const dragging = useRef(false);
+  const touched = useRef(false); // any user input stops (or pre-empts) the hint
+  const hintFrame = useRef(0);
 
   // Clamps to 4-96 so the before/after labels stay visible at either extreme.
-  const setFromClientX = useCallback((clientX: number) => {
+  const clamp = (p: number) => Math.max(4, Math.min(96, p));
+
+  // The ONE write path: the CSS variable plus the slider's accessible value.
+  // (React renders aria-valuenow and --pct once, at 50, and never rewrites
+  // them, so these imperative updates survive re-renders.)
+  const apply = useCallback((p: number) => {
+    pos.current = p;
     const el = wrapRef.current;
     if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const next = ((clientX - rect.left) / rect.width) * 100;
-    setPct(Math.max(4, Math.min(96, next)));
+    el.style.setProperty("--pct", String(p));
+    el.setAttribute("aria-valuenow", String(Math.round(p)));
   }, []);
 
+  function stopHint() {
+    touched.current = true;
+    if (hintFrame.current) cancelAnimationFrame(hintFrame.current);
+    hintFrame.current = 0;
+  }
+
+  // Many pointer events per frame, one write per frame.
+  function queue(clientX: number) {
+    pendingX.current = clientX;
+    if (frame.current) return;
+    frame.current = requestAnimationFrame(() => {
+      frame.current = 0;
+      const x = pendingX.current;
+      const r = rect.current;
+      if (x == null || !r || r.width === 0) return;
+      apply(clamp(((x - r.left) / r.width) * 100));
+    });
+  }
+
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    stopHint();
     e.currentTarget.setPointerCapture(e.pointerId);
+    // Measured once per drag, not per move: the panel doesn't move under a
+    // horizontal drag, and re-reading layout every event forced reflows.
+    const r = e.currentTarget.getBoundingClientRect();
+    rect.current = { left: r.left, width: r.width };
     dragging.current = true;
-    setFromClientX(e.clientX);
+    queue(e.clientX);
   }
   function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
-    if (!dragging.current) return;
-    setFromClientX(e.clientX);
+    if (dragging.current) queue(e.clientX);
   }
   function onPointerUp() {
     dragging.current = false;
   }
 
-  // Keyboard path for the divider — the drag handle is otherwise pointer-only,
+  // Keyboard path for the divider - the drag handle is otherwise pointer-only,
   // which locks out keyboard/AT users entirely. Arrow keys nudge, Shift jumps,
   // Home/End snap to the clamp extremes (4/96, same as the pointer clamp).
   function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
     const step = e.shiftKey ? 10 : 4;
     let next: number | null = null;
-    if (e.key === "ArrowLeft") next = pct - step;
-    else if (e.key === "ArrowRight") next = pct + step;
+    if (e.key === "ArrowLeft") next = pos.current - step;
+    else if (e.key === "ArrowRight") next = pos.current + step;
     else if (e.key === "Home") next = 4;
     else if (e.key === "End") next = 96;
     if (next === null) return;
     e.preventDefault();
-    setPct(Math.max(4, Math.min(96, next)));
+    stopHint();
+    apply(clamp(next));
   }
+
+  // First-view hint (owner, 2026-09-30): the first time the section is well into
+  // view, the divider sweeps left, right and back to centre - showing it can be
+  // dragged without a word of instruction. Only the first slide gets `hint`, so
+  // it plays once per page. It waits for the photos (a sweep over the loading
+  // placeholder would show nothing), stops the instant the user touches or
+  // presses a key, and never runs with reduced motion.
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!hint || !loaded || !el || touched.current) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let timer = 0;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        io.disconnect();
+        timer = window.setTimeout(() => {
+          if (touched.current) return;
+          const DURATION = 1600;
+          const AMP = 16;
+          const start = performance.now();
+          const tick = (now: number) => {
+            if (touched.current) return;
+            const t = Math.min(1, (now - start) / DURATION);
+            // Eased overall (starts and ends at rest), one full swing inside:
+            // 50 -> 34 (more "after" first, the payoff) -> 66 -> back to 50.
+            const eased = (1 - Math.cos(Math.PI * t)) / 2;
+            apply(50 - AMP * Math.sin(2 * Math.PI * eased));
+            if (t < 1) hintFrame.current = requestAnimationFrame(tick);
+            else {
+              hintFrame.current = 0;
+              apply(50);
+            }
+          };
+          hintFrame.current = requestAnimationFrame(tick);
+        }, 350);
+      },
+      { threshold: 0.6 },
+    );
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      clearTimeout(timer);
+      if (hintFrame.current) cancelAnimationFrame(hintFrame.current);
+    };
+  }, [hint, loaded, apply]);
 
   return (
     <div
@@ -233,16 +322,17 @@ function BeforeAfterPanel({ slide }: { slide: BeforeAfterSlide }) {
       aria-label="Before-and-after comparison. Arrow keys move the divider."
       aria-valuemin={4}
       aria-valuemax={96}
-      aria-valuenow={Math.round(pct)}
+      aria-valuenow={50}
       onKeyDown={onKeyDown}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
       // pan-y (not touch-none): horizontal drags drive the divider, but a
-      // vertical swipe starting on the image still scrolls the page — with
+      // vertical swipe starting on the image still scrolls the page - with
       // touch-none a near-full-width panel became a scroll trap on phones.
-      className="relative aspect-[4/3] cursor-ew-resize overflow-hidden select-none [touch-action:pan-y] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay focus-visible:ring-inset"
+      // [--pct:50] is the server-rendered start; `apply` overrides it inline.
+      className="relative aspect-[4/3] cursor-ew-resize overflow-hidden select-none [--pct:50] [touch-action:pan-y] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay focus-visible:ring-inset"
     >
       {/* Loading placeholder (2026-09-30). The panel had no background of its
           own, so until the photos arrived you saw the white section through it:
@@ -279,8 +369,8 @@ function BeforeAfterPanel({ slide }: { slide: BeforeAfterSlide }) {
         </div>
       )}
 
-      {/* AFTER (clipped from the right by pct) */}
-      <div className="absolute inset-0" style={{ clipPath: `inset(0 0 0 ${pct}%)` }}>
+      {/* AFTER (clipped from the left at --pct) */}
+      <div className="absolute inset-0" style={{ clipPath: "inset(0 0 0 calc(var(--pct) * 1%))" }}>
         {slide.afterImageUrl ? (
           <Image
             src={slide.afterImageUrl}
@@ -307,16 +397,18 @@ function BeforeAfterPanel({ slide }: { slide: BeforeAfterSlide }) {
         {slide.afterLabel ?? "After"}
       </span>
 
-      {/* Divider line + knob */}
+      {/* Divider line + knob, on ONE full-width layer translated by --pct% of its
+          own width (= the panel's), so moving them is a compositor transform
+          rather than layout. The panel's overflow-hidden clips the overhang. */}
       <div
-        className="pointer-events-none absolute inset-y-0 w-[3px] bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.12)]"
-        style={{ left: `${pct}%` }}
-      />
-      <div
-        className="pointer-events-none absolute top-1/2 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-clay shadow-[0_8px_24px_-8px_rgba(74,46,22,0.4)]"
-        style={{ left: `${pct}%` }}
+        aria-hidden
+        className="pointer-events-none absolute inset-0 will-change-transform"
+        style={{ transform: "translateX(calc(var(--pct) * 1%))" }}
       >
-        <ArrowLeftRight size={16} />
+        <div className="absolute inset-y-0 left-0 w-[3px] -translate-x-1/2 bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.12)]" />
+        <div className="absolute left-0 top-1/2 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-clay shadow-[0_8px_24px_-8px_rgba(74,46,22,0.4)]">
+          <ArrowLeftRight size={16} />
+        </div>
       </div>
     </div>
   );
