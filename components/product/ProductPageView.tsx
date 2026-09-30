@@ -15,6 +15,7 @@ import { UseCaseCards } from "@/components/product/UseCaseCards";
 import { FAQSection } from "@/components/product/FAQSection";
 import { FAQAccordion } from "@/components/product/FAQAccordion";
 import { UGCReviews } from "@/components/product/UGCReviews";
+import { SHOW_REVIEWS } from "@/lib/reviews";
 import { BeforeAfterSlider } from "@/components/product/BeforeAfterSlider";
 import { PainPoints } from "@/components/product/PainPoints";
 import { Mechanism } from "@/components/product/Mechanism";
@@ -703,17 +704,21 @@ export async function ProductPageView({
         </div>
       )}
 
-      {/* BeforeAfterSlider → UGCReviews — direct, hairline border. */}
-      <div className="border-t border-line">
-        <UGCReviews
-          reviews={beepaws?.reviews}
-          eyebrow={blank(ri?.eyebrow)}
-          heading={blank(ri?.heading)}
-          lead={blank(ri?.lead)}
-        />
-      </div>
+      {/* BeforeAfterSlider → UGCReviews — direct, hairline border. Hidden until
+          real customer reviews exist (lib/reviews.ts); with it off, the
+          before/after meets UseCaseCards over the same single hairline. */}
+      {SHOW_REVIEWS && (
+        <div className="border-t border-line">
+          <UGCReviews
+            reviews={beepaws?.reviews}
+            eyebrow={blank(ri?.eyebrow)}
+            heading={blank(ri?.heading)}
+            lead={blank(ri?.lead)}
+          />
+        </div>
+      )}
 
-      {/* UGCReviews → UseCaseCards — proof lands first, then "made for the pet
+      {/* (UGCReviews →) UseCaseCards — proof lands first, then "made for the pet
           you actually have" answers the fit question the proof raises. */}
       <div className="border-t border-line">
         <UseCaseCards

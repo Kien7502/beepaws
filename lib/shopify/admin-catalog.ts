@@ -3,6 +3,7 @@ import "server-only";
 import type { Collection, Image, Product, ProductVariant } from "@/types/shopify";
 import { adminGraphqlFetch } from "./admin-graphql";
 import { shopifyFetch } from "./index";
+import { SHOW_REVIEWS } from "@/lib/reviews";
 
 function stripHtml(html: string | null | undefined): string {
   const s = html ?? "";
@@ -209,9 +210,11 @@ function mapAdminProduct(node: AdminProductNode): Product {
   // Derive aggregate rating from beepaws.reviews. We do this server-side once
   // per catalog fetch rather than store a separate metafield, so the content
   // editor never has to keep two fields in sync.
+  // Gated by SHOW_REVIEWS: while reviews are off, no rating exists anywhere
+  // downstream (hero, product cards) — see lib/reviews.ts.
   let rating: { avg: number; count: number } | null = null;
   const reviewsRaw = node.reviewsMetafield?.value;
-  if (reviewsRaw) {
+  if (SHOW_REVIEWS && reviewsRaw) {
     try {
       const parsed = JSON.parse(reviewsRaw) as { rating?: number }[];
       if (Array.isArray(parsed) && parsed.length > 0) {
