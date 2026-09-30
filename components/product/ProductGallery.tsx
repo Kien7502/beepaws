@@ -2,8 +2,7 @@
 
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import Image from "next/image";
-import { Expand } from "lucide-react";
-import { ImageLightbox, type LightboxImage } from "@/components/ui/ImageLightbox";
+import { SliderArrow, useSwipe } from "./Slider";
 import type { Image as ShopifyImage } from "@/types/shopify";
 import { useIsInsideMediaSync, useProductMedia } from "./ProductMediaSync";
 
@@ -127,16 +126,20 @@ export function ProductGallery({ productTitle, images, fallbackUrl }: Props) {
     scrollActiveIntoView(index);
   }
 
-  // ── Lightbox ─────────────────────────────────────────────────────────────
-  // The viewer itself is shared (components/ui/ImageLightbox) with the
-  // before/after slider and the homepage proof photos. It reuses the gallery's
-  // OWN active index, so paging inside the viewer and then closing leaves the
-  // gallery on the image you ended on.
-  const [zoomOpen, setZoomOpen] = useState(false);
-  const zoomImages: LightboxImage[] = list.map((n) => ({
-    url: n.url,
-    alt: n.altText || productTitle,
-  }));
+  // Arrows + swipe step RELATIVE to the latest index. setActive only takes an
+  // absolute index, so two taps landing before a re-render would both read the
+  // same `active` and move once — the dropped-tap bug useSlider fixed with a
+  // functional update. Writing the ref immediately lets quick taps accumulate.
+  const last = list.length - 1;
+  const activeRef = useRef(active);
+  activeRef.current = active;
+  function step(delta: number) {
+    const next = Math.max(0, Math.min(last, activeRef.current + delta));
+    if (next === activeRef.current) return;
+    activeRef.current = next;
+    selectImage(next);
+  }
+  const swipe = useSwipe(step);
 
   // When `active` changes externally (variant pick → shared context → here),
   // mirror the same scroll behaviour clicks get.
@@ -153,7 +156,10 @@ export function ProductGallery({ productTitle, images, fallbackUrl }: Props) {
           image exits one way, the new image enters from the other. Picking a
           thumb to the right of current → image slides leftward (current exits
           left, new enters from right); vice versa. */}
-      <div className="group relative aspect-square lg:aspect-auto lg:flex-1 lg:max-h-[100cqi] overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+      <div
+        className="group relative aspect-square lg:aspect-auto lg:flex-1 lg:max-h-[100cqi] overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]"
+        {...(hasMultiple ? swipe : {})}
+      >
         {list.map((node, idx) => {
           const offset = (idx - active) * 100;
           const isActive = idx === active;
@@ -183,31 +189,36 @@ export function ProductGallery({ productTitle, images, fallbackUrl }: Props) {
           );
         })}
 
-        {/* Click-to-zoom. A transparent button over the whole frame rather than
-            an onClick on the image, so it is keyboard-reachable and announces
-            itself; the corner pill is the visual affordance (pointer devices
-            get it on hover, touch always, since there is no hover to reveal it). */}
-        <button
-          type="button"
-          onClick={() => setZoomOpen(true)}
-          className="absolute inset-0 z-10 cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
-          aria-label={`View ${list[active]?.altText || productTitle} full size`}
-        >
-          <span className="pointer-events-none absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-[var(--color-foreground)]/70 px-3 py-1.5 text-xs font-semibold text-white opacity-100 backdrop-blur-sm transition-opacity md:opacity-0 md:group-hover:opacity-100">
-            <Expand size={14} aria-hidden />
-            Full size
-          </span>
-        </button>
+        {/* Side arrows + swipe (2026-09-30). On a phone the only way to change
+            photo was the thumbnail strip — tapping the big image opened a
+            full-size viewer instead, which the owner found inconvenient and
+            redundant, so the viewer is gone from the gallery (it still serves
+            the homepage proof photos). Same overlay chip as the PDP's other
+            sliders, not rendered at the ends rather than ghosted. Always there
+            on touch; on larger screens they fade in on hover or keyboard focus. */}
+        {hasMultiple && active > 0 && (
+          <SliderArrow
+            dir="prev"
+            active={active}
+            last={last}
+            step={step}
+            noun="photo"
+            variant="overlay"
+            className="absolute left-3 top-1/2 z-10 -translate-y-1/2 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
+          />
+        )}
+        {hasMultiple && active < last && (
+          <SliderArrow
+            dir="next"
+            active={active}
+            last={last}
+            step={step}
+            noun="photo"
+            variant="overlay"
+            className="absolute right-3 top-1/2 z-10 -translate-y-1/2 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
+          />
+        )}
       </div>
-
-      <ImageLightbox
-        images={zoomImages}
-        index={active}
-        open={zoomOpen}
-        onIndexChange={selectImage}
-        onClose={() => setZoomOpen(false)}
-        label={`${productTitle} images, full size`}
-      />
 
       {/* Thumbnail strip — thumbs grow to fill container width with no leftover.
           measureRef is always mounted so we can read clientWidth; the inner

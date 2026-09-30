@@ -23,8 +23,18 @@ export function useSlider(count: number) {
   // closure dropped taps: two taps (or a swipe and a tap) landing before React
   // re-rendered both read the same `active` and moved only one step.
   const step = (delta: number) => setActive((a) => clamp(a + delta));
+  const swipe = useSwipe(step);
+  return { active, last, go, step, swipe };
+}
+
+/**
+ * The swipe half of useSlider, on its own for sliders that keep their index
+ * somewhere else (ProductGallery shares its index with the variant picker).
+ * Spread the result onto the element that should take the gesture.
+ */
+export function useSwipe(onStep: (delta: number) => void) {
   const touch = useRef<{ x: number; y: number } | null>(null);
-  const swipe = {
+  return {
     onTouchStart: (e: TouchEvent) => {
       const t = e.touches[0];
       touch.current = { x: t.clientX, y: t.clientY };
@@ -36,10 +46,9 @@ export function useSlider(count: number) {
       const t = e.changedTouches[0];
       const dx = t.clientX - start.x;
       const dy = t.clientY - start.y;
-      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) step(dx < 0 ? 1 : -1);
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) onStep(dx < 0 ? 1 : -1);
     },
   };
-  return { active, last, go, step, swipe };
 }
 
 type SliderNav = { active: number; last: number; go: (i: number) => void; step: (delta: number) => void };
