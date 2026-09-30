@@ -5,7 +5,7 @@ import { getBeePawsAutoDiscounts } from "@/lib/shopify/discounts";
 import { getFullProductForPage, getPaymentMethods, getProduct, getProducts } from "@/lib/shopify/queries";
 import VariantSelector from "@/components/product/VariantSelector";
 import { ProductGallery } from "@/components/product/ProductGallery";
-import { Check, Plus } from "lucide-react";
+import { Check } from "lucide-react";
 import { contentIcon } from "@/lib/content-icons";
 import { ProductDetailsSections } from "@/components/product/ProductDetailsSections";
 import { FinalCTASection } from "@/components/product/FinalCTASection";
@@ -13,6 +13,7 @@ import { StickyAddToCart } from "@/components/product/StickyAddToCart";
 import { ComparisonTable } from "@/components/product/ComparisonTable";
 import { UseCaseCards } from "@/components/product/UseCaseCards";
 import { FAQSection } from "@/components/product/FAQSection";
+import { FAQAccordion } from "@/components/product/FAQAccordion";
 import { UGCReviews } from "@/components/product/UGCReviews";
 import { BeforeAfterSlider } from "@/components/product/BeforeAfterSlider";
 import { PainPoints } from "@/components/product/PainPoints";
@@ -588,21 +589,11 @@ export async function ProductPageView({
             {/* The questions that stop a purchase, answered at the buy box
                 (hero doc §8). Same faq_items as the section below — an item
                 marked buy-box-only is answered here and left out of that list,
-                so nothing is said twice. <details> keeps this zero-JS. */}
+                so nothing is said twice. Same accordion as that section, in its
+                compact look, so they open and close with the same motion. */}
             {buyBoxFaqs.length > 0 && (
               <div className="mt-5 border-t border-line pt-2">
-                {buyBoxFaqs.map((f, i) => (
-                  <details key={i} className="group border-b border-line py-2 last:border-0">
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[13.5px] font-bold text-cocoa">
-                      {f.q}
-                      <Plus
-                        className="h-4 w-4 shrink-0 text-gold-deep transition-transform duration-200 group-open:rotate-45"
-                        aria-hidden
-                      />
-                    </summary>
-                    <p className="pt-2 text-[13px] leading-relaxed text-brown">{f.a}</p>
-                  </details>
-                ))}
+                <FAQAccordion variant="compact" rows={buyBoxFaqs.map((f) => ({ q: f.q, a: f.a }))} />
               </div>
             )}
 

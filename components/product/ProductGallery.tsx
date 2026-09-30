@@ -194,8 +194,9 @@ export function ProductGallery({ productTitle, images, fallbackUrl }: Props) {
             full-size viewer instead, which the owner found inconvenient and
             redundant, so the viewer is gone from the gallery (it still serves
             the homepage proof photos). Same overlay chip as the PDP's other
-            sliders, not rendered at the ends rather than ghosted. Always there
-            on touch; on larger screens they fade in on hover or keyboard focus. */}
+            sliders, not rendered at the ends rather than ghosted. DESKTOP ONLY:
+            phones swipe, and the owner found arrows unneeded there (2026-09-30).
+            On larger screens they fade in on hover or keyboard focus. */}
         {hasMultiple && active > 0 && (
           <SliderArrow
             dir="prev"
@@ -204,7 +205,7 @@ export function ProductGallery({ productTitle, images, fallbackUrl }: Props) {
             step={step}
             noun="photo"
             variant="overlay"
-            className="absolute left-3 top-1/2 z-10 -translate-y-1/2 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
+            className="absolute left-3 top-1/2 z-10 -translate-y-1/2 max-md:hidden md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
           />
         )}
         {hasMultiple && active < last && (
@@ -215,7 +216,7 @@ export function ProductGallery({ productTitle, images, fallbackUrl }: Props) {
             step={step}
             noun="photo"
             variant="overlay"
-            className="absolute right-3 top-1/2 z-10 -translate-y-1/2 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
+            className="absolute right-3 top-1/2 z-10 -translate-y-1/2 max-md:hidden md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
           />
         )}
       </div>

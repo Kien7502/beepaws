@@ -11,40 +11,62 @@ export interface FAQRow {
   // rather than a component because resolving it here would mean importing the
   // whole icon catalog into the client bundle — see lib/content-icons.ts. Colour
   // is applied by the wrapper below via currentColor, so the open/closed tint
-  // still animates even though the element itself is fixed.
-  icon: ReactNode;
+  // still animates even though the element itself is fixed. The compact
+  // variant shows no icon, so it may be omitted there.
+  icon?: ReactNode;
 }
 
 // The interactive half of the FAQ: which row is open. Deliberately the ONLY
 // client code in the section — heading, data and icons are all server-rendered.
-export function FAQAccordion({ rows }: { rows: FAQRow[] }) {
+//
+// Two looks, ONE behaviour (2026-09-30): `card` is the FAQ section; `compact`
+// is the buy box's short list under Add to cart. The buy box used to be a
+// native <details>, which snaps open while this animates — the owner noticed
+// the two didn't match. Sharing the component means the open/close motion can
+// never drift apart again, and it adds no JS (this already ships for the FAQ
+// section on the same page).
+export function FAQAccordion({ rows, variant = "card" }: { rows: FAQRow[]; variant?: "card" | "compact" }) {
   const [open, setOpen] = useState<number | null>(null);
+  const compact = variant === "compact";
 
   return (
-    <div className="space-y-3">
+    <div className={compact ? undefined : "space-y-3"}>
       {rows.map((faq, i) => {
         const isOpen = open === i;
         return (
           <div
             key={faq.q}
-            className="rounded-[13px] border border-line bg-card overflow-hidden transition-shadow duration-200 hover:shadow-[0_4px_20px_-10px_rgba(74,46,22,0.10)]"
+            className={
+              compact
+                ? "border-b border-line last:border-0"
+                : "rounded-[13px] border border-line bg-card overflow-hidden transition-shadow duration-200 hover:shadow-[0_4px_20px_-10px_rgba(74,46,22,0.10)]"
+            }
           >
             <button
               onClick={() => setOpen(isOpen ? null : i)}
-              className="flex w-full items-center gap-4 px-5 py-4 text-left"
+              className={
+                compact
+                  ? "flex w-full items-center justify-between gap-3 py-2 text-left"
+                  : "flex w-full items-center gap-4 px-5 py-4 text-left"
+              }
               aria-expanded={isOpen}
             >
-              <span
-                className={`inline-flex shrink-0 transition-colors duration-200 ${
-                  isOpen ? "text-clay" : "text-brown"
-                }`}
-              >
-                {faq.icon}
+              {!compact && (
+                <span
+                  className={`inline-flex shrink-0 transition-colors duration-200 ${
+                    isOpen ? "text-clay" : "text-brown"
+                  }`}
+                >
+                  {faq.icon}
+                </span>
+              )}
+              <span className={compact ? "text-[13.5px] font-bold text-cocoa" : "flex-1 font-extrabold text-cocoa"}>
+                {faq.q}
               </span>
-              <span className="flex-1 font-extrabold text-cocoa">{faq.q}</span>
               <Plus
-                className="h-5 w-5 shrink-0 text-gold-deep transition-transform duration-200"
+                className={`${compact ? "h-4 w-4" : "h-5 w-5"} shrink-0 text-gold-deep transition-transform duration-200`}
                 style={{ transform: isOpen ? "rotate(45deg)" : "rotate(0deg)" }}
+                aria-hidden
               />
             </button>
             <div
@@ -53,7 +75,9 @@ export function FAQAccordion({ rows }: { rows: FAQRow[] }) {
             >
               <div className="overflow-hidden">
                 <p
-                  className={`pb-5 pl-14 pr-5 text-[14.5px] leading-relaxed text-brown transition-opacity duration-200 ${
+                  className={`${
+                    compact ? "pb-2 text-[13px]" : "pb-5 pl-14 pr-5 text-[14.5px]"
+                  } leading-relaxed text-brown transition-opacity duration-200 ${
                     isOpen ? "opacity-100" : "opacity-0"
                   }`}
                 >
