@@ -185,6 +185,7 @@ export function BeforeAfterSlider({
 function BeforeAfterPanel({ slide }: { slide: BeforeAfterSlide }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [pct, setPct] = useState(50);
+  const [loaded, setLoaded] = useState(false);
   const dragging = useRef(false);
 
   // Clamps to 4-96 so the before/after labels stay visible at either extreme.
@@ -243,12 +244,27 @@ function BeforeAfterPanel({ slide }: { slide: BeforeAfterSlide }) {
       // touch-none a near-full-width panel became a scroll trap on phones.
       className="relative aspect-[4/3] cursor-ew-resize overflow-hidden select-none [touch-action:pan-y] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay focus-visible:ring-inset"
     >
+      {/* Loading placeholder (2026-09-30). The panel had no background of its
+          own, so until the photos arrived you saw the white section through it:
+          an empty box with two pills - on a phone that read as "nothing there"
+          (owner). Now it reads as loading, in the site's own skeleton idiom
+          (animate-pulse, like the cart drawer), and stops once the photo lands. */}
+      <div aria-hidden className={`absolute inset-0 bg-honey-tint ${loaded ? "" : "animate-pulse"}`} />
+
       {/* BEFORE (full background) */}
       {slide.beforeImageUrl ? (
         <Image
           src={slide.beforeImageUrl}
           alt={`${slide.petName ?? "Pet"} — before`}
           fill
+          // eager + LOW priority (2026-09-30): lazy made the fetch start only as
+          // the section arrived - iPhone Safari waits until an image is nearly on
+          // screen, and each phone-sized variant can also be a first-time MISS
+          // at Vercel's image optimizer (measured up to 1.3s just to transcode).
+          // Eager+low downloads them early without competing with the hero.
+          loading="eager"
+          fetchPriority="low"
+          onLoad={() => setLoaded(true)}
           // draggable=false + pointer-events-none: without them a mouse drag
           // starts the browser's native IMAGE drag (ghost image) instead of
           // moving the divider, which also leaves the page feeling unscrollable.
@@ -270,6 +286,8 @@ function BeforeAfterPanel({ slide }: { slide: BeforeAfterSlide }) {
             src={slide.afterImageUrl}
             alt={`${slide.petName ?? "Pet"} — after`}
             fill
+            loading="eager"
+            fetchPriority="low"
             draggable={false}
             className="pointer-events-none select-none object-cover"
             sizes="(max-width: 768px) 100vw, 620px"
