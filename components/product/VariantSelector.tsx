@@ -8,12 +8,10 @@ import type { BundleTierCopy } from "@/types/metafields";
 // Type-only import: the module itself is server-only, but `import type` is
 // fully erased at compile time so nothing server-side reaches the client.
 import type { SellingPlanOption } from "@/lib/shopify/selling-plans";
-import type { PaymentMethods } from "@/lib/shopify/queries";
 import Button from "@/components/ui/Button";
 import { CheckCircle2, Info, ShoppingBag, Loader2, Minus, Plus } from "lucide-react";
 import { useCart, type LocalCartItem } from "@/components/cart/CartProvider";
 import { useProductMedia } from "./ProductMediaSync";
-import { PaymentMethodsRow } from "./PaymentMethodsRow";
 
 // Color name → hex map for swatch rendering. Falls back to text button when a
 // value isn't recognized, so the picker degrades gracefully for unusual colors.
@@ -212,7 +210,6 @@ type Props = {
   addonProducts?: Product[];
   /** Enabled payment methods from Shopify shop.paymentSettings. Drives the
    * badge row under the buy button. Falls back to nothing rendered when empty. */
-  paymentMethods?: PaymentMethods;
   /** Short reassurance copy displayed directly above the CTA. Used to
    * pre-empt the most common refund reason ("I think it's broken") — for
    * the ultrasonic scaler, this is the "silent until tooth contact" note.
@@ -250,7 +247,6 @@ type Props = {
 export default function VariantSelector({
   product,
   addonProducts = [],
-  paymentMethods = { cards: [], wallets: [] },
   educationNote,
   bundleTiers,
   tierBundles,
@@ -443,6 +439,27 @@ export default function VariantSelector({
   );
   const [added, setAdded] = useState(false);
   const [buyingNow, setBuyingNow] = useState(false);
+  // A refused checkout used to reset the button silently, so it read as a dead
+  // button (owner, 2026-09-30: "buy now doesn't work"). Say why instead - the
+  // same pattern as the cart drawer's checkoutError.
+  const [buyNowError, setBuyNowError] = useState<string | null>(null);
+
+  // Reset the button after a bfcache restore. onBuyNow sets buyingNow=true and
+  // navigates to Shopify; the navigation tears down the promise chain before
+  // anything resets it, and Back restores React state exactly as it was - so the
+  // button kept spinning AND stayed dead (onBuyNow bails while buyingNow).
+  // pageshow.persisted is the canonical "came back from bfcache" signal; the
+  // cart drawer has had this fix all along, the button never got it.
+  useEffect(() => {
+    function onPageShow(e: PageTransitionEvent) {
+      if (e.persisted) {
+        setBuyingNow(false);
+        setBuyNowError(null);
+      }
+    }
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
   const { addItem, openDrawer } = useCart();
   // Destructure the stable setter so it can be a useEffect dep without firing
   // every time the parent's context value memo recreates (it would otherwise
@@ -878,6 +895,7 @@ export default function VariantSelector({
   // Same checkout-route pattern the retired BundleBuyCard used.
   async function onBuyNow() {
     if (buyingNow) return;
+    setBuyNowError(null);
 
     // Quantity mode → checkout with one line per chosen variant quantity.
     if (quantityMode) {
@@ -900,8 +918,9 @@ export default function VariantSelector({
           throw new Error(data.error || "Couldn't open checkout");
         }
         window.location.href = data.checkoutUrl;
-      } catch {
+      } catch (e) {
         setBuyingNow(false);
+        setBuyNowError(e instanceof Error ? e.message : "Couldn't open checkout");
       }
       return;
     }
@@ -923,8 +942,9 @@ export default function VariantSelector({
           throw new Error(data.error || "Couldn't open checkout");
         }
         window.location.href = data.checkoutUrl;
-      } catch {
+      } catch (e) {
         setBuyingNow(false);
+        setBuyNowError(e instanceof Error ? e.message : "Couldn't open checkout");
       }
       return;
     }
@@ -957,8 +977,9 @@ export default function VariantSelector({
           throw new Error(data.error || "Couldn't open checkout");
         }
         window.location.href = data.checkoutUrl;
-      } catch {
+      } catch (e) {
         setBuyingNow(false);
+        setBuyNowError(e instanceof Error ? e.message : "Couldn't open checkout");
       }
       return;
     }
@@ -992,8 +1013,9 @@ export default function VariantSelector({
         throw new Error(data.error || "Couldn't open checkout");
       }
       window.location.href = data.checkoutUrl;
-    } catch {
+    } catch (e) {
       setBuyingNow(false);
+      setBuyNowError(e instanceof Error ? e.message : "Couldn't open checkout");
     }
   }
 
@@ -1925,6 +1947,11 @@ export default function VariantSelector({
           {buyingNow && <Loader2 size={18} className="animate-spin" />}
           {buyingNow ? "Opening checkout…" : "Buy it now"}
         </button>
+        {buyNowError && (
+          <p role="alert" className="mt-2 text-center text-xs text-rose-600">
+            {buyNowError}
+          </p>
+        )}
 
         {/* Compact trust line — sits flush under the CTA at the decision moment. */}
         {/* Copy audit §1.9: "Secure checkout" is corporate-logistics voice;
@@ -1937,10 +1964,9 @@ export default function VariantSelector({
           <span>Real-person support</span>
         </p>
 
-        {/* Payment processor badges — card brands + wallets. ShopPay button
-            removed per redesign; ShopPay appears on the Shopify checkout
-            page as an express-checkout option for users who use it. */}
-        <PaymentMethodsRow methods={paymentMethods} />
+        {/* The payment-badge strip that sat here was removed 2026-09-30 (owner:
+            it took space and did little). Shopify's checkout already shows the
+            accepted cards and the express wallets, where the choice is made. */}
 
 
         {added && (

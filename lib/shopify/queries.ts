@@ -3,10 +3,8 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 import {
   adminGetCollections,
-  adminGetPaymentMethods,
   adminGetProductByHandle,
   adminGetProducts,
-  type PaymentMethods,
 } from "./admin-catalog";
 import {
   adminGetFullProductsForPage,
@@ -185,25 +183,3 @@ export async function getFullProductForPageUncached(
   }
 }
 
-// Payment methods rarely change — cache for the full revalidate window. Falls
-// back to an empty set when credentials are missing so the UI can render
-// nothing instead of crashing.
-const _getCachedPaymentMethods = cache(
-  async (): Promise<PaymentMethods> => {
-    if (!hasAdminApiCredentials()) return { cards: [], wallets: [] };
-    try {
-      return await adminGetPaymentMethods();
-    } catch (e) {
-      console.error("Admin GraphQL payment methods failed", e);
-      return { cards: [], wallets: [] };
-    }
-  },
-  ["shopify-payment-methods"],
-  { tags: ["shop"], revalidate: REVALIDATE },
-);
-
-export function getPaymentMethods(): Promise<PaymentMethods> {
-  return _getCachedPaymentMethods();
-}
-
-export type { PaymentMethods };

@@ -2,7 +2,7 @@ import { getBundleContents } from "@/lib/shopify/bundle-contents";
 import { getSellingPlans } from "@/lib/shopify/selling-plans";
 import { isSellableOnStorefront } from "@/lib/shopify/storefront-visibility";
 import { getBeePawsAutoDiscounts } from "@/lib/shopify/discounts";
-import { getFullProductForPage, getPaymentMethods, getProduct, getProducts } from "@/lib/shopify/queries";
+import { getFullProductForPage, getProduct, getProducts } from "@/lib/shopify/queries";
 import VariantSelector from "@/components/product/VariantSelector";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { Check } from "lucide-react";
@@ -29,7 +29,6 @@ import type { FaqItem } from "@/types/metafields";
 
 type FullProduct = Awaited<ReturnType<typeof getFullProductForPage>>;
 type Product = NonNullable<Awaited<ReturnType<typeof getProduct>>>;
-type PaymentMethods = Awaited<ReturnType<typeof getPaymentMethods>>;
 
 // The full PDP render, shared by the live product page and the admin draft
 // preview route (app/preview/products/[handle]). Async: it resolves the
@@ -39,12 +38,10 @@ type PaymentMethods = Awaited<ReturnType<typeof getPaymentMethods>>;
 export async function ProductPageView({
   product,
   fullProduct,
-  paymentMethods,
   handle,
 }: {
   product: Product;
   fullProduct: FullProduct;
-  paymentMethods: PaymentMethods;
   handle: string;
 }) {
   const fallbackUrl = "/product-placeholder.svg";
@@ -571,7 +568,6 @@ export async function ProductPageView({
               <VariantSelector
                 product={product}
                 addonProducts={recommendedBundleProducts}
-                paymentMethods={paymentMethods}
                 educationNote={beepaws?.educationNote}
                 bundleTiers={beepaws?.bundleTiers}
                 tierBundles={tierBundles}

@@ -1,4 +1,4 @@
-import { getFullProductForPage, getPaymentMethods, getProduct, getProducts } from "@/lib/shopify/queries";
+import { getFullProductForPage, getProduct, getProducts } from "@/lib/shopify/queries";
 import { getVariantGroupPrimary } from "@/lib/shopify/variant-groups";
 import { notFound } from "next/navigation";
 import { ProductPageView } from "@/components/product/ProductPageView";
@@ -85,10 +85,9 @@ export default async function ProductPage({
   const { handle } = await params;
   // Parallel fetch — payment methods are shop-wide so they don't need the
   // product to resolve. Single round-trip latency instead of stacked.
-  const [fullProduct, product, paymentMethods] = await Promise.all([
+  const [fullProduct, product] = await Promise.all([
     getFullProductForPage(handle),
     getProduct(handle),
-    getPaymentMethods(),
   ]);
 
   if (!product) return notFound();
@@ -100,6 +99,6 @@ export default async function ProductPage({
   if (product.tags?.includes("bundle")) return notFound();
 
   return (
-    <ProductPageView product={product} fullProduct={fullProduct} paymentMethods={paymentMethods} handle={handle} />
+    <ProductPageView product={product} fullProduct={fullProduct} handle={handle} />
   );
 }
