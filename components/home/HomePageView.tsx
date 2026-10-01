@@ -4,6 +4,7 @@ import { WaveDivider } from '@/components/ui/WaveDivider';
 import NewsletterPopup from '@/components/NewsletterPopup';
 import ProofCarousel from '@/components/ProofCarousel';
 import { HomeSlotImage } from '@/components/HomeSlotImage';
+import { SHOW_REVIEWS } from '@/lib/reviews';
 import { ShieldCheck, Tag, HandHeart, PawPrint, CalendarCheck, Heart, Search, Shield } from 'lucide-react';
 import type { HomepageBlocks } from '@/lib/shopify/homepage';
 
@@ -245,52 +246,63 @@ export function HomePageView({ blocks }: { blocks: HomepageBlocks }) {
           white testimonial cards pop hardest, the waves bridge a maximal
           lightness step, and the page regains the mid-page dark anchor it
           lost when the promise band was cut. */}
-      <WaveDivider from="#F2E7CC" to="#5E3C22" />
-      <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
-      {/* ───── Section 5 · Real proof - testimonials (consolidated spec §6) ───────
-          Flow rework 2026-07-10: proof FOLLOWS the pillars (brand-first page:
-          pitch → identity → evidence → action) — the reviews prove the pillar
-          claims, then the product spotlight closes the page. Path B
-          (testimonial-led): photo is the hero of each card, THREE large cards
-          in a row, breed-matched attribution. Photos MUST be real
-          customer-and-pet shots with permission - NEVER stock. Quotes are
-          brand-experience draft. Path A (guarantee-forward + founder note) is
-          a later funnel A/B - see the founder-note placeholder below. */}
-      <section className="bg-bark">
-        <div className="ds-reveal mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-24">
-          <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cream md:text-[2.6rem]">
-            Real pets. Real moms. Real photos.
-          </h2>
-          {/* Mobile: STAGED carousel with explicit prev/next + dot buttons
-              (owner decision 2026-07-10 — swipe misfired: accidental scrolls,
-              wet hands). Card markup + controls live in ProofCarousel;
-              ≥md it's the same 3-up grid as before. */}
-          {/* Photos + first names come from the proof-1/2/3 blocks when
-              published; the quote/breed fall back to the drafted defaults.
-              A published block's body overrides the quote, its heading the name. */}
-          <ProofCarousel
-            quotes={[
-              { quote: blocks['proof-1']?.body ?? "I never thought I'd be the kind of person who does this at home. Turns out I am, and I like it.", breed: "Goldendoodle mom", image: blocks['proof-1']?.image, alt: blocks['proof-1']?.alt, name: blocks['proof-1']?.heading },
-              { quote: blocks['proof-2']?.body ?? "I read every label before it goes near my pet. This is the first one I didn't put back.", breed: "Senior terrier mom", image: blocks['proof-2']?.image, alt: blocks['proof-2']?.alt, name: blocks['proof-2']?.heading },
-              { quote: blocks['proof-3']?.body ?? "No vet-office stress, no wrestling. We just do it on the couch now.", breed: "Cat mom", image: blocks['proof-3']?.image, alt: blocks['proof-3']?.alt, name: blocks['proof-3']?.heading },
-            ]}
-          />
-          <p className="mt-6 text-xs text-cream/70">
-            Placeholder proof. Replace with three real customer-and-pet photos (permission given) and verified, brand-experience testimonials before launch. Never stock.
-          </p>
+      {/* Proof band OFF until real customer photos + testimonials exist
+          (SHOW_REVIEWS, lib/reviews.ts - owner 2026-09-30/10-01). Its own copy
+          says the quotes and photos are placeholders, and the band is headed
+          "Real pets. Real moms. Real photos." With it off, the pillars band
+          meets the spotlight over one sand -> cream wave. */}
+      {SHOW_REVIEWS ? (
+        <>
+        <WaveDivider from="#F2E7CC" to="#5E3C22" />
+        <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
+        {/* ───── Section 5 · Real proof - testimonials (consolidated spec §6) ───────
+            Flow rework 2026-07-10: proof FOLLOWS the pillars (brand-first page:
+            pitch → identity → evidence → action) — the reviews prove the pillar
+            claims, then the product spotlight closes the page. Path B
+            (testimonial-led): photo is the hero of each card, THREE large cards
+            in a row, breed-matched attribution. Photos MUST be real
+            customer-and-pet shots with permission - NEVER stock. Quotes are
+            brand-experience draft. Path A (guarantee-forward + founder note) is
+            a later funnel A/B - see the founder-note placeholder below. */}
+        <section className="bg-bark">
+          <div className="ds-reveal mx-auto w-full max-w-7xl px-5 py-16 md:px-8 md:py-24">
+            <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cream md:text-[2.6rem]">
+              Real pets. Real moms. Real photos.
+            </h2>
+            {/* Mobile: STAGED carousel with explicit prev/next + dot buttons
+                (owner decision 2026-07-10 — swipe misfired: accidental scrolls,
+                wet hands). Card markup + controls live in ProofCarousel;
+                ≥md it's the same 3-up grid as before. */}
+            {/* Photos + first names come from the proof-1/2/3 blocks when
+                published; the quote/breed fall back to the drafted defaults.
+                A published block's body overrides the quote, its heading the name. */}
+            <ProofCarousel
+              quotes={[
+                { quote: blocks['proof-1']?.body ?? "I never thought I'd be the kind of person who does this at home. Turns out I am, and I like it.", breed: "Goldendoodle mom", image: blocks['proof-1']?.image, alt: blocks['proof-1']?.alt, name: blocks['proof-1']?.heading, focusX: blocks['proof-1']?.focusX, focusY: blocks['proof-1']?.focusY },
+                { quote: blocks['proof-2']?.body ?? "I read every label before it goes near my pet. This is the first one I didn't put back.", breed: "Senior terrier mom", image: blocks['proof-2']?.image, alt: blocks['proof-2']?.alt, name: blocks['proof-2']?.heading, focusX: blocks['proof-2']?.focusX, focusY: blocks['proof-2']?.focusY },
+                { quote: blocks['proof-3']?.body ?? "No vet-office stress, no wrestling. We just do it on the couch now.", breed: "Cat mom", image: blocks['proof-3']?.image, alt: blocks['proof-3']?.alt, name: blocks['proof-3']?.heading, focusX: blocks['proof-3']?.focusX, focusY: blocks['proof-3']?.focusY },
+              ]}
+            />
+            <p className="mt-6 text-xs text-cream/70">
+              Placeholder proof. Replace with three real customer-and-pet photos (permission given) and verified, brand-experience testimonials before launch. Never stock.
+            </p>
+          </div>
+        </section>
         </div>
-      </section>
-      </div>
 
-      {/* ───── Founder note - DEFERRED (Path A only, consolidated spec §7) ─────
-          Not built: Path B (chosen for launch) has no founder note, and Path A
-          needs a REAL founder photo + statement (never AI). When testing Path A,
-          add here a bg-cream band: real founder photo + name + 2-3 honest
-          sentences on why BeePaws exists and starts small. Stays proof-adjacent
-          after the §5↔§6 swap. */}
+        {/* ───── Founder note - DEFERRED (Path A only, consolidated spec §7) ─────
+            Not built: Path B (chosen for launch) has no founder note, and Path A
+            needs a REAL founder photo + statement (never AI). When testing Path A,
+            add here a bg-cream band: real founder photo + name + 2-3 honest
+            sentences on why BeePaws exists and starts small. Stays proof-adjacent
+            after the §5↔§6 swap. */}
 
-      {/* WAVE — bark → cream: closes the dark proof band into the spotlight. */}
-      <WaveDivider from="#5E3C22" to="#FBF3E1" flip />
+        {/* WAVE — bark → cream: closes the dark proof band into the spotlight. */}
+        <WaveDivider from="#5E3C22" to="#FBF3E1" flip />
+        </>
+      ) : (
+        <WaveDivider from="#F2E7CC" to="#FBF3E1" flip />
+      )}
 
       {/* ───── Section 6 · Routing band - "Start with their teeth" (spec §4) ──────
           MOVED TO THE CLOSE (flow rework 2026-07-10): the spotlight is the

@@ -22,6 +22,9 @@ export interface ProofQuote {
   image?: string;
   alt?: string;
   name?: string;
+  /** Focal point from the block (see lib/shopify/homepage.ts). */
+  focusX?: number;
+  focusY?: number;
 }
 
 export default function ProofCarousel({ quotes }: { quotes: ProofQuote[] }) {
@@ -78,6 +81,7 @@ export default function ProofCarousel({ quotes }: { quotes: ProofQuote[] }) {
                     fill
                     sizes="(max-width: 768px) 100vw, 33vw"
                     className="object-cover"
+                    style={{ objectPosition: t.focusX != null && t.focusY != null ? `${t.focusX}% ${t.focusY}%` : undefined }}
                   />
                   <ZoomHint />
                 </button>

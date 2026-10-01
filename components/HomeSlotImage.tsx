@@ -1,5 +1,5 @@
 import Image from "next/image";
-import type { HomepageBlock } from "@/lib/shopify/homepage";
+import { focusPosition, type HomepageBlock } from "@/lib/shopify/homepage";
 
 /**
  * Fills a homepage image slot: renders the admin-authored block image
@@ -28,6 +28,8 @@ export function HomeSlotImage({
         sizes={sizes}
         priority={priority}
         className="object-cover"
+        // Aim the crop at the admin-set focal point (centre when unset).
+        style={{ objectPosition: focusPosition(block) }}
       />
     );
   }
