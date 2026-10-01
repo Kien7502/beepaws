@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { revalidateTag } from "next/cache";
+import { isValidRevalidateKey } from "@/lib/revalidate-key";
 import { NextResponse } from "next/server";
 
 // ─── HMAC verification ────────────────────────────────────────────────────────
@@ -56,13 +57,14 @@ export async function POST(req: Request) {
     });
   }
 
-  // ── Path B: Manual trigger via secret query param ───────────────────────
-  // Usage: POST /api/revalidate?secret=YOUR_REVALIDATE_SECRET&tag=products
+  // ── Path B: Manual trigger (the admin tool after Push / Publish) ─────────
+  // Key in the `x-revalidate-key` header (kept out of URL logs) or ?secret=.
+  // Accepted: REVALIDATE_SECRET, or the key derived from the Shopify client
+  // secret both sides already share - see lib/revalidate-key.ts.
   const url = new URL(req.url);
-  const secret = url.searchParams.get("secret");
-  const manualSecret = process.env.REVALIDATE_SECRET?.trim();
+  const given = req.headers.get("x-revalidate-key") ?? url.searchParams.get("secret");
 
-  if (!manualSecret || secret !== manualSecret) {
+  if (!isValidRevalidateKey(given)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
