@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ImageLightbox, ZoomHint, type LightboxImage } from "@/components/ui/ImageLightbox";
+import { cropSizes, cropStyle } from "@/lib/home-crop";
 
 // Staged mobile carousel for the homepage proof cards (owner decision
 // 2026-07-10, replacing the scroll-snap swipe version): explicit prev/next +
@@ -22,9 +23,10 @@ export interface ProofQuote {
   image?: string;
   alt?: string;
   name?: string;
-  /** Focal point from the block (see lib/shopify/homepage.ts). */
+  /** Crop from the block: focal point + zoom (see lib/home-crop.ts). */
   focusX?: number;
   focusY?: number;
+  zoom?: number;
 }
 
 export default function ProofCarousel({ quotes }: { quotes: ProofQuote[] }) {
@@ -79,9 +81,9 @@ export default function ProofCarousel({ quotes }: { quotes: ProofQuote[] }) {
                     src={t.image}
                     alt={t.alt ?? ""}
                     fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
+                    sizes={cropSizes("(max-width: 768px) 100vw, 33vw", t.zoom)}
                     className="object-cover"
-                    style={{ objectPosition: t.focusX != null && t.focusY != null ? `${t.focusX}% ${t.focusY}%` : undefined }}
+                    style={cropStyle(t)}
                   />
                   <ZoomHint />
                 </button>

@@ -22,6 +22,9 @@ for the theme). Absent/empty = the built-in hardcoded homepage. Shape:
       "key": "hero",                   // UNIQUE slug — map the block to a slot by THIS
       "image": "https://cdn.shopify.com/…",  // "" = a text-only block
       "alt": "Golden retriever mid-brush",   // accessible alt; "" allowed
+      "focusX": 63.6,                  // optional focal point, % of the image (0-100);
+      "focusY": 49.8,                  //   both or neither — absent = centre
+      "zoom": 1.4,                     // optional, 1-2 around the focal point; absent = 1
       "heading": "Fresh breath, happy pet",  // optional
       "body": "The at-home dental tool.\nVet-loved.",  // optional, PLAIN text, may have \n
       "ctaLabel": "Shop now",          // optional
@@ -46,6 +49,17 @@ storefront **must** re-apply the same filter — treat the metafield as untruste
   a text-only block. Use `alt` for the `alt` attribute.
 - **`ctaHref`** may be an internal path (`/products/…`) or an absolute URL; render a
   link/button only when both `ctaLabel` and `ctaHref` are non-empty.
+- **Crop (`focusX`/`focusY`/`zoom`, 2026-10-01/02).** Every slot crops its image
+  with `object-fit: cover`, and one image lands in very different shapes (the hero
+  is ~2:1 on desktop but a ~0.55:1 strip on phones). Render with
+  `object-position: X% Y%` and, when `zoom > 1`, `transform: scale(zoom)` with
+  `transform-origin: X% Y%` (centre when no focal point) inside the slot's
+  `overflow: hidden` box. The focal point stays put and the slot stays filled.
+  Scale every `vw` length in the image's `sizes` hint by the zoom so a sharper
+  file is fetched. Sanitize: focal point kept only when BOTH halves are finite
+  (clamped 0–100); zoom kept only when > 1, capped at 2. Storefront:
+  `lib/home-crop.ts`; admin: `cropStyle` in `lib/homepage.ts` (the editor's
+  crop previews run the same CSS). Keep the two in sync.
 
 ## What the storefront builds (remaining work)
 

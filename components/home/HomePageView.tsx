@@ -278,9 +278,9 @@ export function HomePageView({ blocks }: { blocks: HomepageBlocks }) {
                 A published block's body overrides the quote, its heading the name. */}
             <ProofCarousel
               quotes={[
-                { quote: blocks['proof-1']?.body ?? "I never thought I'd be the kind of person who does this at home. Turns out I am, and I like it.", breed: "Goldendoodle mom", image: blocks['proof-1']?.image, alt: blocks['proof-1']?.alt, name: blocks['proof-1']?.heading, focusX: blocks['proof-1']?.focusX, focusY: blocks['proof-1']?.focusY },
-                { quote: blocks['proof-2']?.body ?? "I read every label before it goes near my pet. This is the first one I didn't put back.", breed: "Senior terrier mom", image: blocks['proof-2']?.image, alt: blocks['proof-2']?.alt, name: blocks['proof-2']?.heading, focusX: blocks['proof-2']?.focusX, focusY: blocks['proof-2']?.focusY },
-                { quote: blocks['proof-3']?.body ?? "No vet-office stress, no wrestling. We just do it on the couch now.", breed: "Cat mom", image: blocks['proof-3']?.image, alt: blocks['proof-3']?.alt, name: blocks['proof-3']?.heading, focusX: blocks['proof-3']?.focusX, focusY: blocks['proof-3']?.focusY },
+                { quote: blocks['proof-1']?.body ?? "I never thought I'd be the kind of person who does this at home. Turns out I am, and I like it.", breed: "Goldendoodle mom", image: blocks['proof-1']?.image, alt: blocks['proof-1']?.alt, name: blocks['proof-1']?.heading, focusX: blocks['proof-1']?.focusX, focusY: blocks['proof-1']?.focusY, zoom: blocks['proof-1']?.zoom },
+                { quote: blocks['proof-2']?.body ?? "I read every label before it goes near my pet. This is the first one I didn't put back.", breed: "Senior terrier mom", image: blocks['proof-2']?.image, alt: blocks['proof-2']?.alt, name: blocks['proof-2']?.heading, focusX: blocks['proof-2']?.focusX, focusY: blocks['proof-2']?.focusY, zoom: blocks['proof-2']?.zoom },
+                { quote: blocks['proof-3']?.body ?? "No vet-office stress, no wrestling. We just do it on the couch now.", breed: "Cat mom", image: blocks['proof-3']?.image, alt: blocks['proof-3']?.alt, name: blocks['proof-3']?.heading, focusX: blocks['proof-3']?.focusX, focusY: blocks['proof-3']?.focusY, zoom: blocks['proof-3']?.zoom },
               ]}
             />
             <p className="mt-6 text-xs text-cream/70">

@@ -40,6 +40,9 @@ export interface HomepageBlock {
    *  instead of the centre. Absent = centre. */
   focusX?: number;
   focusY?: number;
+  /** Zoom around the focal point, 1 (none) to 2. Absent = 1. Applied by
+   *  lib/home-crop.ts (2026-10-02). */
+  zoom?: number;
   /** Optional plain-text overrides (never HTML — render through the storefront's
    * own typography). `body` may contain \n line breaks. */
   heading?: string;
@@ -118,9 +121,13 @@ function focusOf(rec: Record<string, unknown>): { focusX?: number; focusY?: numb
   return { focusX: c(x), focusY: c(y) };
 }
 
-/** CSS object-position for a block's focal point (undefined = the centre default). */
-export function focusPosition(b?: { focusX?: number; focusY?: number }): string | undefined {
-  return b && b.focusX != null && b.focusY != null ? `${b.focusX}% ${b.focusY}%` : undefined;
+/** Zoom: 1 (none) to MAX_ZOOM, 2 decimals; absent or <= 1 = none (mirror of the
+ *  admin's zoomOf - the same cap on both sides). */
+const MAX_ZOOM = 2;
+function zoomOf(rec: Record<string, unknown>): { zoom?: number } {
+  const z = Math.round(Number(rec.zoom) * 100) / 100;
+  if (rec.zoom == null || !Number.isFinite(z) || z <= 1) return {};
+  return { zoom: Math.min(MAX_ZOOM, z) };
 }
 
 export function sanitizeHomepage(raw: unknown): HomepageBlocks {
@@ -144,6 +151,7 @@ export function sanitizeHomepage(raw: unknown): HomepageBlocks {
       heading: optText(rec.heading),
       body: optText(rec.body),
       ...focusOf(rec),
+      ...zoomOf(rec),
       // A CTA needs BOTH halves — one without the other renders nothing.
       ...(ctaLabel && ctaHref ? { ctaLabel, ctaHref } : {}),
     };
