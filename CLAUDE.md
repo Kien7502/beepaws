@@ -196,6 +196,17 @@ swipe, one item per slide) instead of stacking three full-width cards.
   off-screen slides, desktop pixel-identical. Verify with screenshots at 390px and 1280px
   (method: admin repo memory "storefront screenshot harness").
 
+## Print styles (2026-10-02, for the admin's PDF export)
+
+The admin tool's preview pane has a **PDF** button: Chromium prints the page onto US Letter, a faithful snapshot of
+the screen layout (`../beepaws-admin/electron/main.cjs` `renderPagePdf`; it also hides `position: fixed` overlays and
+un-sticks sticky bars itself). This repo's half is `@media print` at the end of `app/globals.css` plus `print:` classes:
+reveal-on-scroll content (`.ds-reveal`, `.ds-reveal-in > *`, `.ds-stagger > *`) forced visible — without it, sections
+printed as empty coloured bands; animations/transitions off; pictures, cards (`article`, block links), quotes and list
+items never split across pages; slider arrows/dots `print:hidden` (Slider.tsx, BeforeAfterSlider); a phone CardSlider
+stacks every card; the comparison prints the full desktop table at any width. **Keep:** a new scroll-triggered effect
+must start visible in print; a new slider needs its controls hidden and its slides laid out flat in print.
+
 ## Section eyebrows: deliberately NOT rendered (2026-07-05, `78b04ab`)
 
 Every below-fold section still receives an `eyebrow` (and Mechanism an `introEyebrow`) from ProductPageView, and every

@@ -112,7 +112,7 @@ export function BeforeAfterSlider({
 
           {multi && (
             <div
-              className="mt-5 flex items-center justify-center gap-4"
+              className="mt-5 flex items-center justify-center gap-4 print:hidden"
               role="tablist"
               aria-label="Before-and-after gallery"
             >

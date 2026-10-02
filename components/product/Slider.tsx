@@ -87,7 +87,7 @@ export function SliderArrow({
       onClick={() => step(prev ? -1 : 1)}
       disabled={prev ? active === 0 : active === last}
       aria-label={`${prev ? "Previous" : "Next"} ${noun}`}
-      className={`flex items-center justify-center rounded-full transition-opacity ${look} ${className}`}
+      className={`flex items-center justify-center rounded-full transition-opacity print:hidden ${look} ${className}`}
       style={style}
     >
       {prev ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -103,7 +103,7 @@ export function SliderDots({
   className = "",
 }: Pick<SliderNav, "active" | "go"> & { labels: string[]; className?: string }) {
   return (
-    <div className={`flex items-center justify-center gap-2 ${className}`}>
+    <div className={`flex items-center justify-center gap-2 print:hidden ${className}`}>
       {labels.map((label, i) => (
         <button
           key={i}
@@ -130,7 +130,7 @@ export function SliderControls({
 }: SliderNav & { labels: string[]; noun?: string; className?: string }) {
   const nav = { active, last, step, noun };
   return (
-    <div className={`flex items-center justify-center gap-4 ${className}`}>
+    <div className={`flex items-center justify-center gap-4 print:hidden ${className}`}>
       <SliderArrow dir="prev" {...nav} />
       <SliderDots active={active} go={go} labels={labels} />
       <SliderArrow dir="next" {...nav} />
@@ -201,14 +201,16 @@ export function CardSlider({
           drop shadows vertically and turn this into a scroll container. */}
       <div className="max-md:overflow-x-clip" {...swipe}>
         <div
-          className={`flex md:grid md:grid-cols-3 max-md:[transform:translateX(var(--slide-x))] max-md:transition-transform ${SLIDE_EASE}`}
+          // Print (the admin's PDF export): the phone strip stacks every card
+          // instead of showing the current one - paper can't be swiped.
+          className={`flex md:grid md:grid-cols-3 max-md:[transform:translateX(var(--slide-x))] max-md:transition-transform print:![transform:none] max-md:print:flex-col ${SLIDE_EASE}`}
           style={trackStyle}
         >
           {slides.map((slide, i) => (
             // `grid` so the card inside stretches: equal heights in the phone strip
             // (flex stretches the wrappers to the tallest card) and in the desktop
             // grid, as before.
-            <div key={i} className="grid w-full shrink-0 md:w-auto">
+            <div key={i} className="grid w-full shrink-0 break-inside-avoid md:w-auto">
               {slide}
             </div>
           ))}
