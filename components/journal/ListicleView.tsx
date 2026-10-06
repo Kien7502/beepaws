@@ -46,9 +46,22 @@ function Paragraphs({ text, className = "" }: { text: string; className?: string
   );
 }
 
-/** Full column width on desktop with 8px corners; full-bleed on phones. */
-function Figure({ image, priority }: { image: ListicleImage; priority?: boolean }) {
-  if (!image.src) return null;
+/** Full column width on desktop with 8px corners; full-bleed on phones. In the
+ *  admin's draft preview an empty slot shows as a dashed box naming the image,
+ *  so the page's structure can be judged before the pictures exist; the live
+ *  page skips empty slots. */
+function Figure({ image, priority, preview }: { image: ListicleImage; priority?: boolean; preview?: boolean }) {
+  if (!image.src) {
+    if (!preview) return null;
+    return (
+      <figure className="-mx-5 mt-8 md:mx-0">
+        <div className="flex aspect-[3/2] w-full items-center justify-center border-2 border-dashed border-line bg-cream px-8 text-center text-[13px] leading-snug text-brown/80 md:rounded-lg">
+          Image goes here{image.alt ? ` — ${image.alt}` : ""}
+        </div>
+        {image.caption && <figcaption className={`mt-2 px-5 text-[13px] italic md:px-0 ${MUTED}`}>{image.caption}</figcaption>}
+      </figure>
+    );
+  }
   return (
     <figure className="-mx-5 mt-8 md:mx-0">
       {image.width && image.height ? (
@@ -70,10 +83,11 @@ function Figure({ image, priority }: { image: ListicleImage; priority?: boolean 
   );
 }
 
-function Button({ href, label, note, end }: { href: string; label: string; note?: string; end?: boolean }) {
+function Button({ href, label, note }: { href: string; label: string; note?: string }) {
   if (!label || !href) return null;
   return (
-    <div className="mt-8 text-center" {...(end ? { "data-listicle-end": "" } : {})}>
+    // data-listicle-cta: the floating button hides while a page button is on screen.
+    <div className="mt-8 text-center" data-listicle-cta="">
       <Link
         href={href}
         className="inline-flex w-full items-center justify-center rounded-lg bg-gold px-8 py-4 text-[17px] font-bold text-cocoa transition-colors hover:bg-gold-deep md:w-auto"
@@ -92,7 +106,7 @@ function SubHeading({ text }: { text: string }) {
 /** Sand box on desktop; on phones a left honey border with no fill (less weight). */
 const BOX = "mt-8 border-l-[3px] border-gold pl-4 md:rounded md:border-l-0 md:bg-cream md:p-6";
 
-function Block({ b, products }: { b: ListicleBlock; products: Record<string, ListicleProductInfo> }) {
+function Block({ b, products, preview }: { b: ListicleBlock; products: Record<string, ListicleProductInfo>; preview?: boolean }) {
   switch (b.type) {
     case "text":
       return (
@@ -101,7 +115,7 @@ function Block({ b, products }: { b: ListicleBlock; products: Record<string, Lis
         </div>
       );
     case "image":
-      return <Figure image={b.image} />;
+      return <Figure image={b.image} preview={preview} />;
     case "quote":
       if (!b.text.trim()) return null;
       return (
@@ -174,12 +188,13 @@ function Block({ b, products }: { b: ListicleBlock; products: Record<string, Lis
           </p>
         );
       }
-      return <Button href={b.href} label={b.label} note={b.note} end />;
+      return <Button href={b.href} label={b.label} note={b.note} />;
     case "product": {
       const info = b.product ? products[b.product.handle] : undefined;
       const href = b.ctaHref || (b.product ? `/products/${b.product.handle}` : "");
       const image = b.image.src ? b.image : info?.image;
       return (
+        // data-listicle-end: the floating button is gone from here on.
         <section data-listicle-end="" className="mt-10 break-inside-avoid rounded-lg bg-cream px-5 py-7 text-center md:p-8">
           {image && <Figure image={image} />}
           <h3 className="mt-6 font-display text-[26px] font-bold leading-tight text-cocoa md:text-[30px]">
@@ -208,7 +223,16 @@ function Block({ b, products }: { b: ListicleBlock; products: Record<string, Lis
   }
 }
 
-export function ListicleView({ listicle: l, products }: { listicle: Listicle; products: Record<string, ListicleProductInfo> }) {
+export function ListicleView({
+  listicle: l,
+  products,
+  preview,
+}: {
+  listicle: Listicle;
+  products: Record<string, ListicleProductInfo>;
+  /** The admin's draft preview: empty image slots show as placeholders. */
+  preview?: boolean;
+}) {
   let reason = 0;
   let started = false;
   const byline = [l.byline.author, l.byline.date, l.byline.readTime].filter(Boolean).join(" · ");
@@ -231,7 +255,7 @@ export function ListicleView({ listicle: l, products }: { listicle: Listicle; pr
           </ul>
         )}
         <Button href={l.topCta.href} label={l.topCta.label} note={l.topCta.note} />
-        <Figure image={l.hero} priority />
+        <Figure image={l.hero} priority preview={preview} />
       </header>
 
       {l.sections.map((s, i) => {
@@ -250,7 +274,7 @@ export function ListicleView({ listicle: l, products }: { listicle: Listicle; pr
               </h2>
             )}
             {s.blocks.map((b) => (
-              <Block key={b.id} b={b} products={products} />
+              <Block key={b.id} b={b} products={products} preview={preview} />
             ))}
             {s.kind === "reason" && <hr aria-hidden className="mx-auto mt-14 w-20 border-0 border-t-2 border-gold/70 md:mt-20" />}
           </section>

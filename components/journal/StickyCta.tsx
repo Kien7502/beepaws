@@ -6,19 +6,21 @@ import Link from "next/link";
 /**
  * The listicle's floating button (visual guide §7, option B): a small honey pill
  * fixed to the bottom of the screen. It appears once the reader reaches the first
- * reason and is gone again from the first product card / button call to action
- * onward — by then the page's own button is on screen, and two buttons saying the
- * same thing is noise. Never more than 48px tall. Print: hidden.
+ * reason, steps aside while one of the page's own buttons is on screen (two
+ * buttons saying the same thing is noise), and is gone for good from the product
+ * card on — the final call to action. Never more than 48px tall. Print: hidden.
  *
- * Markers come from ListicleView: `data-listicle-start` (first reason heading)
- * and `data-listicle-end` (the first end-of-article call to action).
+ * Markers come from ListicleView: `data-listicle-start` (first reason heading),
+ * `data-listicle-cta` (every in-article button) and `data-listicle-end` (the
+ * product card; without one, the last button counts as the end).
  */
 export function StickyCta({ label, href }: { label: string; href: string }) {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
     const start = document.querySelector("[data-listicle-start]");
-    const end = document.querySelector("[data-listicle-end]");
+    const ctas = [...document.querySelectorAll("[data-listicle-cta]")];
+    const end = document.querySelector("[data-listicle-end]") ?? ctas[ctas.length - 1] ?? null;
     if (!start) return;
     let frame = 0;
     const update = () => {
@@ -26,7 +28,11 @@ export function StickyCta({ label, href }: { label: string; href: string }) {
       const vh = window.innerHeight;
       const started = start.getBoundingClientRect().top < vh * 0.6;
       const ended = !!end && end.getBoundingClientRect().top < vh;
-      setShow(started && !ended);
+      const buttonOnScreen = ctas.some((c) => {
+        const r = c.getBoundingClientRect();
+        return r.bottom > 0 && r.top < vh;
+      });
+      setShow(started && !ended && !buttonOnScreen);
     };
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(update);

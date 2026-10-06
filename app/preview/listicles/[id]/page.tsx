@@ -37,5 +37,5 @@ export default async function PreviewListicle({
 
   // The draft is untrusted input like any metafield — same filter as published.
   const listicle = sanitizeListicle(raw);
-  return <ListicleView listicle={listicle} products={await listicleProducts(listicle)} />;
+  return <ListicleView listicle={listicle} products={await listicleProducts(listicle)} preview />;
 }
