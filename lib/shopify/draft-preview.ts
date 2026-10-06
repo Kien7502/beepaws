@@ -84,3 +84,23 @@ export async function fetchAdminHomepageDraft(
     return null;
   }
 }
+
+// Listicle draft from the admin tool (its local working copy, by draft id):
+// GET /api/listicles/<id> → { draft: { listicle } }. Same `?admin=<port>`
+// override as the homepage. null when the admin isn't running, so the preview
+// route can say so rather than render something else.
+export async function fetchAdminListicleDraft(id: string, adminPort?: string): Promise<unknown | null> {
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(id)) return null;
+  const base =
+    adminPort && /^\d+$/.test(adminPort)
+      ? `http://localhost:${adminPort}`
+      : process.env.BEEPAWS_ADMIN_URL ?? "http://localhost:3000";
+  try {
+    const res = await fetch(`${base}/api/listicles/${id}`, { cache: "no-store" });
+    if (!res.ok) return null;
+    const json = (await res.json()) as { draft?: { listicle?: unknown } };
+    return json.draft?.listicle ?? null;
+  } catch {
+    return null;
+  }
+}

@@ -35,3 +35,47 @@ export function withAccent(text: string): ReactNode {
     i % 2 === 1 ? <span key={i} className="text-clay">{part}</span> : <Fragment key={i}>{part}</Fragment>,
   );
 }
+
+/**
+ * Editorial copy (the listicles, 2026-10-06): `**bold**`, `*italic*` and
+ * `[label](https://…)` links — still no HTML. Same safety rule as withBold: the
+ * text is split and handed to React, so it stays escaped, and a link only
+ * renders for an internal path or an http(s) URL (anything else stays literal
+ * text). External links open in a new tab.
+ */
+export function withInline(text: string): ReactNode {
+  if (!/[*[]/.test(text)) return text;
+  const out: ReactNode[] = [];
+  // bold before italic so `**x**` isn't read as two italics
+  const re = /\*\*([\s\S]+?)\*\*|\*([^*\n]+?)\*|\[([^\]\n]+)\]\(([^)\s]+)\)/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    if (m.index > last) out.push(text.slice(last, m.index));
+    const key = out.length;
+    if (m[1] !== undefined) out.push(<strong key={key} className="font-bold text-cocoa">{withInline(m[1])}</strong>);
+    else if (m[2] !== undefined) out.push(<em key={key}>{m[2]}</em>);
+    else {
+      const href = m[4];
+      const internal = href.startsWith("/") && !href.startsWith("//");
+      const external = /^https?:\/\//i.test(href);
+      out.push(
+        internal || external ? (
+          <a
+            key={key}
+            href={href}
+            className="underline decoration-gold decoration-2 underline-offset-2 hover:text-cocoa"
+            {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+          >
+            {m[3]}
+          </a>
+        ) : (
+          m[0]
+        ),
+      );
+    }
+    last = re.lastIndex;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return out.map((n, i) => (typeof n === "string" ? <Fragment key={`t${i}`}>{n}</Fragment> : n));
+}

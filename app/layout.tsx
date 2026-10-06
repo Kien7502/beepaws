@@ -6,6 +6,7 @@ import Footer from "@/components/layout/Footer";
 import { CartProvider } from "@/components/cart/CartProvider";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { ScrollToTopButton } from "@/components/ui/ScrollToTopButton";
+import { SiteChrome } from "@/components/layout/SiteChrome";
 import { activeSeason } from "@/lib/theme";
 
 // Warm Honey type system: Fraunces (display serif) for headings + brand
@@ -50,13 +51,21 @@ export default function RootLayout({
     <html lang="en" data-season={activeSeason()} suppressHydrationWarning>
       <body className={`${fraunces.variable} ${hankenGrotesk.variable} antialiased min-h-screen flex flex-col`}>
         <CartProvider>
-          <Header />
+          {/* SiteChrome drops the header/footer/back-to-top on the journal pages
+              (single-purpose editorial pages — see that component). */}
+          <SiteChrome>
+            <Header />
+          </SiteChrome>
           <main className="flex-grow">
             {children}
           </main>
-          <Footer />
+          <SiteChrome>
+            <Footer />
+          </SiteChrome>
           <CartDrawer />
-          <ScrollToTopButton />
+          <SiteChrome>
+            <ScrollToTopButton />
+          </SiteChrome>
         </CartProvider>
       </body>
     </html>

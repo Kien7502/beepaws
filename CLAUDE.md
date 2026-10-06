@@ -196,6 +196,20 @@ swipe, one item per slide) instead of stacking three full-width cards.
   off-screen slides, desktop pixel-identical. Verify with screenshots at 390px and 1280px
   (method: admin repo memory "storefront screenshot harness").
 
+## Listicles — /journal/<slug> (2026-10-06)
+
+Editorial ad landing pages authored in the admin app (contract: `docs/admin-handoff-listicles.md`). One shop
+metafield per listicle (`beepaws_listicles`, key = slug, value = our own JSON — portable to WooCommerce);
+`lib/shopify/listicles.ts` reads + re-sanitizes it (KEEP IN SYNC with the admin's `lib/listicle.ts`),
+`components/journal/ListicleView.tsx` renders it to the owner's visual reference: one 720px column, "01."
+reason headings in Fraunces, thin gold rules, sand callouts/quotes that become a left gold border on phones,
+full-bleed images on phones, a card stack and a timeline (line + dots on desktop only), a product card whose
+price is read live by handle. `StickyCta` = the floating pill (first reason → first end CTA). `withInline`
+(`lib/inline-format.tsx`) renders `**bold**`, `*italic*`, `[label](url)` — never HTML. ISR like the PDP, tag
+`listicles` (accepted by `/api/revalidate`). **No site header/footer/back-to-top on journal pages**
+(`components/layout/SiteChrome.tsx`): single-purpose pages, the guide bans nav/popups there. Draft preview:
+`/preview/listicles/[draft id]?admin=<port>`. Verified on a production build at 1280 + 390 (2026-10-06).
+
 ## Print styles (2026-10-02, for the admin's PDF export)
 
 The admin tool's preview pane has a **PDF** button: Chromium prints the page onto US Letter, a faithful snapshot of

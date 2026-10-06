@@ -73,7 +73,9 @@ export async function POST(req: Request) {
   // Publishing from the admin should ping `?secret=…&tag=homepage` so the new
   // blocks show without a redeploy (there's no Shopify webhook for shop
   // metafields, so this manual path is the trigger).
-  const allowedTags = ["products", "collections", "homepage"];
+  // `listicles` = the beepaws_listicles shop metafields (admin listicle editor,
+  // 2026-10-06), pinged the same way after a listicle Publish / Unpublish.
+  const allowedTags = ["products", "collections", "homepage", "listicles"];
   if (!allowedTags.includes(tag)) {
     return NextResponse.json({ error: `tag must be one of: ${allowedTags.join(", ")}` }, { status: 400 });
   }
