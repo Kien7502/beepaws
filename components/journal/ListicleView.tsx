@@ -65,7 +65,7 @@ function Figure({ image, priority }: { image: ListicleImage; priority?: boolean 
         // eslint-disable-next-line @next/next/no-img-element -- size unknown (older draft): let it size itself
         <img src={image.src} alt={image.alt} className="h-auto w-full md:rounded-lg" />
       )}
-      {image.caption && <figcaption className={`mt-2 px-5 text-[13px] md:px-0 ${MUTED}`}>{image.caption}</figcaption>}
+      {image.caption && <figcaption className={`mt-2 px-5 text-[13px] italic md:px-0 ${MUTED}`}>{image.caption}</figcaption>}
     </figure>
   );
 }
