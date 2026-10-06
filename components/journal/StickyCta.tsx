@@ -50,19 +50,22 @@ export function StickyCta({ label, href }: { label: string; href: string }) {
   return (
     <div
       aria-hidden={!show}
-      className={`pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center bg-gradient-to-t from-paper/90 to-transparent px-4 pb-4 pt-6 transition-[opacity,transform] duration-300 motion-reduce:transition-none print:hidden ${
+      className={`pointer-events-none fixed inset-x-0 bottom-4 z-40 flex justify-center px-4 transition-[opacity,transform] duration-300 motion-reduce:transition-none print:hidden ${
         show ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
       }`}
     >
-      <Link
-        href={href}
-        tabIndex={show ? 0 : -1}
-        className={`inline-flex h-11 items-center rounded-full bg-gold px-6 text-[15px] font-bold text-cocoa shadow-[0_6px_18px_-6px_rgb(74_46_22/0.45)] transition-colors hover:bg-gold-deep ${
-          show ? "pointer-events-auto" : ""
-        }`}
-      >
-        {label}
-      </Link>
+      {/* The guide's "semi-transparent background behind it": a small frosted
+          ring around the pill only. A full-width fade from the page colour
+          painted a pale strip across the dark band. */}
+      <div className={`rounded-full bg-paper/60 p-1.5 backdrop-blur-sm ${show ? "pointer-events-auto" : ""}`}>
+        <Link
+          href={href}
+          tabIndex={show ? 0 : -1}
+          className="inline-flex h-11 items-center rounded-full bg-gold px-6 text-[15px] font-bold text-cocoa shadow-[0_6px_18px_-6px_rgb(74_46_22/0.45)] transition-colors hover:bg-gold-deep"
+        >
+          {label}
+        </Link>
+      </div>
     </div>
   );
 }
