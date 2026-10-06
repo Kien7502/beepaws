@@ -49,8 +49,8 @@ export type ListicleBlock =
 export interface ListicleSection {
   id: string;
   kind: "intro" | "reason" | "plain";
-  /** "plain" = on the page; otherwise a full-width colour band. */
-  tone: "plain" | "sand" | "honey" | "dark";
+  /** "plain" = on the page; otherwise a full-width light band. */
+  tone: "plain" | "white" | "honey";
   heading: string;
   blocks: ListicleBlock[];
 }
@@ -216,7 +216,7 @@ export function sanitizeListicle(raw: unknown): Listicle {
     sections: arr(o.sections, 60).map((x, i) => {
       const s = obj(x);
       const kind = s.kind === "intro" || s.kind === "plain" ? s.kind : "reason";
-      const tone = s.tone === "sand" || s.tone === "honey" || s.tone === "dark" ? s.tone : "plain";
+      const tone = s.tone === "white" || s.tone === "honey" ? s.tone : "plain";
       return {
         id: str(s.id, 60) || `s-${i}`,
         kind,

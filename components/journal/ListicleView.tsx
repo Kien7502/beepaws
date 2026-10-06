@@ -23,15 +23,10 @@ export type ListicleProductInfo = { price: string | null; image: ListicleImage |
 const COLUMN = "mx-auto w-full max-w-[720px] px-5";
 const BODY = "text-[16px] leading-[1.7] text-ink md:text-[18px]";
 
-/** Section backgrounds: anything but "plain" is a full-width colour band. */
-const TONE_BG = { sand: "bg-sand", honey: "bg-honey-tint", dark: "bg-bark" } as const;
-/** On the dark band everything turns light. Descendant selectors beat the blocks'
- *  own colour classes, so the blocks stay tone-agnostic. Buttons keep their honey
- *  look (only links inside text turn white). `l-box` = always a box, `l-box-md` =
- *  a box from md up (the quote/callout are a left rule on phones). */
-const DARK =
-  "text-cream [&_p]:text-cream/90 [&_li]:text-cream/90 [&_h2]:text-white [&_h3]:text-white [&_strong]:text-white " +
-  "[&_figcaption]:text-cream/70 [&_p_a]:text-white [&_.l-box]:bg-white/10 md:[&_.l-box-md]:bg-white/10";
+/** Section backgrounds: anything but "plain" is a full-width band. Light bands
+ *  only — readability first: dark text on white or a pale honey (owner,
+ *  2026-10-06; sand read as dim and a dark band was hard to read). */
+const TONE_BG = { white: "bg-card", honey: "bg-honey-tint" } as const;
 const MUTED = "text-brown/80"; // the guide's "muted stone" role, AA on paper
 
 /** Blank line = new paragraph; a single line break stays a line break. */
@@ -114,7 +109,7 @@ function SubHeading({ text }: { text: string }) {
 }
 
 /** Sand box on desktop; on phones a left honey border with no fill (less weight). */
-const BOX = "l-box-md mt-8 border-l-[3px] border-gold pl-4 md:rounded md:border-l-0 md:bg-cream md:p-6";
+const BOX = "mt-8 border-l-[3px] border-gold pl-4 md:rounded md:border-l-0 md:bg-cream md:p-6";
 
 function Block({ b, products, preview }: { b: ListicleBlock; products: Record<string, ListicleProductInfo>; preview?: boolean }) {
   switch (b.type) {
@@ -151,7 +146,7 @@ function Block({ b, products, preview }: { b: ListicleBlock; products: Record<st
         {b.title && <SubHeading text={b.title} />}
         <div className="mt-8 flex flex-col gap-4">
           {b.items.map((c, i) => (
-            <div key={i} className="l-box break-inside-avoid rounded bg-cream p-4 md:p-5">
+            <div key={i} className="break-inside-avoid rounded bg-cream p-4 md:p-5">
               {c.title && <p className="text-[17px] font-bold leading-snug text-cocoa md:text-[18px]">{withInline(c.title)}</p>}
               {c.text && (
                 <div className={`mt-2 ${BODY}`}>
@@ -205,7 +200,7 @@ function Block({ b, products, preview }: { b: ListicleBlock; products: Record<st
       const image = b.image.src ? b.image : info?.image;
       return (
         // data-listicle-end: the floating button is gone from here on.
-        <section data-listicle-end="" className="l-box mt-10 break-inside-avoid rounded-lg bg-cream px-5 py-7 text-center md:p-8">
+        <section data-listicle-end="" className="mt-10 break-inside-avoid rounded-lg bg-cream px-5 py-7 text-center md:p-8">
           {image && <Figure image={image} />}
           <h3 className="mt-6 font-display text-[26px] font-bold leading-tight text-cocoa md:text-[30px]">
             {b.name || info?.title || b.product?.title}
@@ -290,10 +285,10 @@ export function ListicleView({
           </>
         );
         if (s.tone !== "plain") {
-          // A band: colour edge to edge, the text still in the one column. The
+          // A band: edge to edge, the text still in the one column. The
           // band's edges separate it from its neighbours, so no gold rule.
           return (
-            <section key={s.id} className={`${gap} ${TONE_BG[s.tone]} py-16 md:py-24 ${s.tone === "dark" ? DARK : ""}`}>
+            <section key={s.id} className={`${gap} ${TONE_BG[s.tone]} py-16 md:py-24`}>
               <div className={COLUMN}>{inner}</div>
             </section>
           );
