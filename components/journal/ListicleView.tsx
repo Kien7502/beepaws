@@ -275,7 +275,10 @@ export function ListicleView({
                 {...(first ? { "data-listicle-start": "" } : {})}
                 className={`font-display font-bold leading-tight text-cocoa ${s.kind === "intro" ? "text-[24px] md:text-[28px]" : "text-[26px] md:text-[34px]"}`}
               >
-                {n !== null && <>{String(n).padStart(2, "0")}. </>}
+                {/* The number in clay, the heading in brown: a colour cue for skimming,
+                    still the same serif on the same line (visual guide §3). Clay, not
+                    honey — honey gold is too pale to read on cream (3.6:1 vs 2:1). */}
+                {n !== null && <span className="text-clay">{String(n).padStart(2, "0")}. </span>}
                 {withInline(s.heading)}
               </h2>
             )}
