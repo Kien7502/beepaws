@@ -30,7 +30,8 @@ size budget, and no extra API scopes. Admin: `listListicles` / `setListicle` /
   "topCta": { "label": "See How It Works →", "href": "/products/…", "note": "small print" },
   "hero": Image,
   "sections": [
-    { "id": "s-…", "kind": "intro" | "reason" | "plain", "heading": "…", "blocks": [Block] }
+    { "id": "s-…", "kind": "intro" | "reason" | "plain", "tone": "plain" | "white" | "honey",
+      "heading": "…", "blocks": [Block] }
   ],
   "stickyCta": { "enabled": true, "label": "…", "href": "/products/…" },
   "footer": { "line": "…", "disclaimer": "…" }
@@ -54,7 +55,11 @@ Rules (both sides sanitize — the storefront treats the metafield as untrusted)
 - **Text is plain** with three inline markers: `**bold**`, `*italic*`, `[label](url)`. A
   blank line starts a new paragraph. Never rendered as HTML (`withInline` in
   `lib/inline-format.tsx`). Links render only for an internal path or http(s).
-- **Reasons are numbered by order** ("01. Heading"); `intro` and `plain` sections aren't.
+- **Reasons are numbered by order** ("01. Heading", the number in clay); `intro` and `plain`
+  sections aren't.
+- **`tone`**: `plain` sits on the page; `white` / `honey` make the section a full-width band
+  (text still in the one column). Light bands only — sand and dark brown were tried and
+  dropped for readability (2026-10-06); unknown tones read as `plain`.
 - **Images**: storefront keeps only `cdn.shopify.com` URLs. `width`/`height` are the natural
   size (the editor records them) so the page reserves the space; `caption` shows under the
   image — the owner's images are AI illustrations, captioned "Illustration".
@@ -63,8 +68,11 @@ Rules (both sides sanitize — the storefront treats the metafield as untrusted)
   there.
 - **Product card price is never authored**: the storefront reads the product (by handle)
   and shows its current price; image falls back to the product's photo.
-- **Floating button** (`stickyCta`): appears at the first reason, hidden from the first
-  product card / button CTA onward (`data-listicle-start` / `data-listicle-end` markers).
+- **Floating button** (`stickyCta`): appears at the first reason, steps aside while any
+  in-article button is on screen (`data-listicle-cta`), gone for good from the product card on
+  (`data-listicle-end`; without a product card, the last button counts as the end).
+- **Draft preview** shows each empty image slot as a dashed placeholder naming the image (so
+  the structure can be judged before pictures exist); the live page skips empty slots.
 - Unknown block types are dropped; strings are length-capped; hrefs must be `/…` or http(s).
 
 ## Storefront
