@@ -44,6 +44,8 @@ export type ListicleBlock =
       ctaLabel: string;
       ctaHref: string;
       ctaNote: string;
+      /** Small icons (content-icon names) + labels under the button. */
+      trust: { icon: string; label: string }[];
     };
 
 export interface ListicleSection {
@@ -191,6 +193,12 @@ function block(v: unknown, i: number): ListicleBlock | null {
         ctaLabel: str(o.ctaLabel, 200),
         ctaHref: safeHref(o.ctaHref),
         ctaNote: str(o.ctaNote, 300),
+        trust: arr(o.trust, 4)
+          .map((x) => {
+            const c = obj(x);
+            return { icon: str(c.icon, 60), label: str(c.label, 80) };
+          })
+          .filter((t) => t.label.trim()),
       };
     }
     default:

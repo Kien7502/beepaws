@@ -1,7 +1,8 @@
 import { Fragment, type CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Check } from "lucide-react";
+import { Check, ShieldCheck } from "lucide-react";
+import { contentIcon } from "@/lib/content-icons";
 import { withInline } from "@/lib/inline-format";
 import type { Listicle, ListicleBlock, ListicleImage } from "@/lib/shopify/listicles";
 import { StickyCta } from "@/components/journal/StickyCta";
@@ -231,6 +232,24 @@ function Block({ b, products, preview }: { b: ListicleBlock; products: Record<st
           {info?.price && <p className="mt-6 text-[28px] font-bold text-cocoa">{info.price}</p>}
           {b.compareLine && <p className={`mt-1 text-[14px] ${MUTED}`}>{b.compareLine}</p>}
           <Button href={href} label={b.ctaLabel} note={b.ctaNote} />
+          {/* Trust row (visual plan #6): the buy box's promises, at the decision
+              point. Icons resolve server-side from the content-icon catalog. */}
+          {b.trust.length > 0 && (
+            <ul
+              className="mx-auto mt-6 grid max-w-md gap-3"
+              style={{ gridTemplateColumns: `repeat(${b.trust.length}, minmax(0, 1fr))` }}
+            >
+              {b.trust.map((t, i) => {
+                const Icon = contentIcon(t.icon, ShieldCheck);
+                return (
+                  <li key={i} className="flex flex-col items-center gap-1.5 text-center">
+                    <Icon size={22} strokeWidth={1.8} className="text-clay" aria-hidden />
+                    <span className="text-balance text-[13px] font-medium leading-snug text-brown">{t.label}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </section>
       );
     }
