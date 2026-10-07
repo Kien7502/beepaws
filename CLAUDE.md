@@ -206,8 +206,10 @@ reason headings in Fraunces, thin gold rules, sand callouts/quotes that become a
 full-bleed images on phones, a card stack and a timeline (line + dots on desktop only), a product card whose
 price is read live by handle; reason numbers in clay; optional white/honey section bands (light only —
 sand and dark were dropped for readability). `StickyCta` = the floating pill: from the first reason, steps aside
-while an in-article button is on screen, gone from the product card on. The draft preview shows dashed
-placeholders for empty image slots (live pages skip them). `withInline`
+while an in-article button OR the soft text link is on screen, gone from the product card on. The draft preview
+shows dashed placeholders for empty image slots (live pages skip them). 2026-10-07: `==highlight==` (thin 4px
+band under the text, colour from the listicle's `highlight` via `--hl`), a trust row in the product card, and a
+collapsed plain-text Sources block (no links — readers stay on the page). `withInline`
 (`lib/inline-format.tsx`) renders `**bold**`, `*italic*`, `[label](url)` — never HTML. ISR like the PDP, tag
 `listicles` (accepted by `/api/revalidate`). **No site header/footer/back-to-top on journal pages**
 (`components/layout/SiteChrome.tsx`): single-purpose pages, the guide bans nav/popups there. Draft preview:
