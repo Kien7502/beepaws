@@ -62,10 +62,11 @@ export function withInline(text: string): ReactNode {
         // A thin honey band just BELOW the letters (owner, 2026-10-07: the first
         // version filled the lower half of the words and looked heavy). An
         // underline follows wrapped lines on its own and never covers the text;
-        // 5px translucent keeps it distinct from links (2px solid gold).
+        // 4px translucent keeps it distinct from links (2px solid gold). The
+        // colour is the listicle's choice, via --hl (honey when unset).
         <mark
           key={key}
-          className="bg-transparent text-inherit underline decoration-[rgb(231_169_47_/_0.6)] decoration-[5px] underline-offset-[3px] [text-decoration-skip-ink:none]"
+          className="bg-transparent text-inherit underline decoration-[var(--hl,rgb(231_169_47_/_0.6))] decoration-[4px] underline-offset-[3px] [text-decoration-skip-ink:none]"
         >
           {withInline(m[2])}
         </mark>,

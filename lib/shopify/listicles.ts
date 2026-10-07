@@ -69,6 +69,8 @@ export interface Listicle {
   sections: ListicleSection[];
   stickyCta: { enabled: boolean; label: string; href: string };
   footer: { line: string; disclaimer: string };
+  /** Colour of every ==highlight== on the page. */
+  highlight: "honey" | "amber" | "clay" | "brown";
 }
 
 // ─── Validation (mirror of the admin's sanitizeListicle) ────────────────────
@@ -229,6 +231,7 @@ export function sanitizeListicle(raw: unknown): Listicle {
     }),
     stickyCta: { enabled: sticky.enabled === true, label: str(sticky.label, 200), href: safeHref(sticky.href) },
     footer: { line: str(foot.line, 300), disclaimer: str(foot.disclaimer, 2000) },
+    highlight: o.highlight === "amber" || o.highlight === "clay" || o.highlight === "brown" ? o.highlight : "honey",
   };
 }
 

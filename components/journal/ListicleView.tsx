@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, type CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Check } from "lucide-react";
@@ -22,6 +22,15 @@ export type ListicleProductInfo = { price: string | null; image: ListicleImage |
 
 const COLUMN = "mx-auto w-full max-w-[720px] px-5";
 const BODY = "text-[16px] leading-[1.7] text-ink md:text-[18px]";
+
+/** The ==highlight== colours (the admin's HIGHLIGHT_COLORS — keep in sync). The
+ *  marker in lib/inline-format.tsx reads them through the --hl variable. */
+const HIGHLIGHT_CSS = {
+  honey: "rgb(231 169 47 / 0.6)",
+  amber: "rgb(221 138 56 / 0.6)",
+  clay: "rgb(197 106 30 / 0.5)",
+  brown: "rgb(74 46 22 / 0.35)",
+} as const;
 
 /** Section backgrounds: anything but "plain" is a full-width band. Light bands
  *  only — readability first: dark text on white or a pale honey (owner,
@@ -243,7 +252,7 @@ export function ListicleView({
   const byline = [l.byline.author, l.byline.date, l.byline.readTime].filter(Boolean).join(" · ");
 
   return (
-    <article className="bg-paper pb-16 md:pb-24">
+    <article className="bg-paper pb-16 md:pb-24" style={{ "--hl": HIGHLIGHT_CSS[l.highlight] } as CSSProperties}>
       <header className={`${COLUMN} pt-6 md:pt-10`}>
         {l.topStrip && <p className={`text-[13px] font-semibold ${MUTED}`}>{l.topStrip}</p>}
         <h1 className="mt-6 font-display text-[32px] font-bold leading-[1.12] text-cocoa md:mt-8 md:text-[46px]">{l.headline}</h1>

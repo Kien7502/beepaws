@@ -34,7 +34,8 @@ size budget, and no extra API scopes. Admin: `listListicles` / `setListicle` /
       "heading": "…", "blocks": [Block] }
   ],
   "stickyCta": { "enabled": true, "label": "…", "href": "/products/…" },
-  "footer": { "line": "…", "disclaimer": "…" }
+  "footer": { "line": "…", "disclaimer": "…" },
+  "highlight": "honey" | "amber" | "clay" | "brown"   // colour of every ==highlight==
 }
 // Image = { "src": "https://cdn.shopify.com/…", "alt", "caption", "width"?, "height"? }
 // Block (all carry "id"):
@@ -52,7 +53,9 @@ size budget, and no extra API scopes. Admin: `listListicles` / `setListicle` /
 
 Rules (both sides sanitize — the storefront treats the metafield as untrusted):
 
-- **Text is plain** with three inline markers: `**bold**`, `*italic*`, `[label](url)`. A
+- **Text is plain** with four inline markers: `**bold**`, `==highlight==` (a thin 4px band
+  under the line, in the listicle's `highlight` colour; can't start or end with a space),
+  `*italic*`, `[label](url)`. A
   blank line starts a new paragraph. Never rendered as HTML (`withInline` in
   `lib/inline-format.tsx`). Links render only for an internal path or http(s).
 - **Reasons are numbered by order** ("01. Heading", the number in clay); `intro` and `plain`
