@@ -59,9 +59,13 @@ export function withInline(text: string): ReactNode {
     if (m[1] !== undefined) out.push(<strong key={key} className="font-bold text-cocoa">{withInline(m[1])}</strong>);
     else if (m[2] !== undefined)
       out.push(
+        // A thin honey band just BELOW the letters (owner, 2026-10-07: the first
+        // version filled the lower half of the words and looked heavy). An
+        // underline follows wrapped lines on its own and never covers the text;
+        // 5px translucent keeps it distinct from links (2px solid gold).
         <mark
           key={key}
-          className="box-decoration-clone bg-transparent bg-[linear-gradient(transparent_55%,rgb(231_169_47_/_0.45)_55%)] px-0.5 text-inherit"
+          className="bg-transparent text-inherit underline decoration-[rgb(231_169_47_/_0.6)] decoration-[5px] underline-offset-[3px] [text-decoration-skip-ink:none]"
         >
           {withInline(m[2])}
         </mark>,
