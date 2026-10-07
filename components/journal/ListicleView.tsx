@@ -204,6 +204,22 @@ function Block({ b, products, preview }: { b: ListicleBlock; products: Record<st
         );
       }
       return <Button href={b.href} label={b.label} note={b.note} />;
+    case "sources":
+      if (!b.items.length) return null;
+      // Collapsed under one small line, after the story is over (visual plan #7):
+      // credibility for the sceptical reader, invisible to everyone else.
+      return (
+        <details className="mt-10 border-t border-line pt-5">
+          <summary className={`cursor-pointer text-[14px] font-semibold ${MUTED} hover:text-cocoa`}>
+            {b.title || "Sources"}
+          </summary>
+          <ol className={`mt-3 list-decimal space-y-1.5 pl-5 text-[13px] leading-relaxed ${MUTED}`}>
+            {b.items.map((x, i) => (
+              <li key={i}>{withInline(x)}</li>
+            ))}
+          </ol>
+        </details>
+      );
     case "product": {
       const info = b.product ? products[b.product.handle] : undefined;
       const href = b.ctaHref || (b.product ? `/products/${b.product.handle}` : "");

@@ -31,6 +31,7 @@ export type ListicleBlock =
   | { id: string; type: "cards"; title: string; items: { title: string; text: string; check: string }[] }
   | { id: string; type: "timeline"; title: string; items: { label: string; text: string }[] }
   | { id: string; type: "cta"; style: "button" | "link"; label: string; href: string; note: string }
+  | { id: string; type: "sources"; title: string; items: string[] }
   | {
       id: string;
       type: "product";
@@ -176,6 +177,15 @@ function block(v: unknown, i: number): ListicleBlock | null {
         label: str(o.label, 200),
         href: safeHref(o.href),
         note: str(o.note, 300),
+      };
+    case "sources":
+      return {
+        id,
+        type: "sources",
+        title: str(o.title, 200),
+        items: arr(o.items, 20)
+          .map((x) => str(x, 600))
+          .filter((x) => x.trim()),
       };
     case "product": {
       const p = obj(o.product);
