@@ -196,7 +196,9 @@ function Block({ b, products, preview }: { b: ListicleBlock; products: Record<st
       if (b.style === "link") {
         if (!b.label || !b.href) return null;
         return (
-          <p className={`mt-6 text-[15px] italic ${MUTED}`}>
+          // data-listicle-cta: the floating button steps aside here too — it
+          // said the same words right under this link (2026-10-07).
+          <p className={`mt-6 text-[15px] italic ${MUTED}`} data-listicle-cta="">
             <Link href={b.href} className="underline decoration-gold decoration-2 underline-offset-2 hover:text-cocoa">
               {b.label}
             </Link>
