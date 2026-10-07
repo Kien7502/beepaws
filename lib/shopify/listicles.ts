@@ -27,8 +27,6 @@ export type ListicleBlock =
   | { id: string; type: "text"; text: string }
   | { id: string; type: "image"; image: ListicleImage }
   | { id: string; type: "quote"; text: string; attribution: string }
-  | { id: string; type: "stats"; items: { value: string; label: string }[]; note: string }
-  | { id: string; type: "pullquote"; text: string; attribution: string }
   | { id: string; type: "callout"; title: string; text: string }
   | { id: string; type: "cards"; title: string; items: { title: string; text: string; check: string }[] }
   | { id: string; type: "timeline"; title: string; items: { label: string; text: string }[] }
@@ -144,18 +142,6 @@ function block(v: unknown, i: number): ListicleBlock | null {
       return { id, type: "image", image: image(o.image) };
     case "quote":
       return { id, type: "quote", text: str(o.text, 4000), attribution: str(o.attribution, 300) };
-    case "stats":
-      return {
-        id,
-        type: "stats",
-        items: arr(o.items, 3).map((x) => {
-          const c = obj(x);
-          return { value: str(c.value, 40), label: str(c.label, 300) };
-        }),
-        note: str(o.note, 300),
-      };
-    case "pullquote":
-      return { id, type: "pullquote", text: str(o.text, 600), attribution: str(o.attribution, 200) };
     case "callout":
       return { id, type: "callout", title: str(o.title, 300), text: str(o.text, 8000) };
     case "cards":

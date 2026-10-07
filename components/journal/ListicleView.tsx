@@ -131,41 +131,6 @@ function Block({ b, products, preview }: { b: ListicleBlock; products: Record<st
           {b.attribution && <figcaption className={`mt-3 text-[14px] ${MUTED}`}>{withInline(b.attribution)}</figcaption>}
         </figure>
       );
-    case "stats": {
-      // Big figures for skimmers: the clay of the reason numbers, framed by thin
-      // gold rules. Side by side from sm up; stacked on phones so a long figure
-      // ("1 in 1,849") is never squeezed.
-      const items = b.items.filter((x) => x.value.trim());
-      if (!items.length) return null;
-      const cols = items.length === 3 ? "sm:grid-cols-3" : items.length === 2 ? "sm:grid-cols-2" : "";
-      return (
-        <figure className="mt-10 break-inside-avoid border-y border-gold/50 py-7 text-center">
-          <div className={`grid gap-6 ${cols}`}>
-            {items.map((x, i) => (
-              <div key={i}>
-                <p className="font-display text-[40px] font-bold leading-none text-clay md:text-[48px]">{x.value}</p>
-                {x.label && <p className="mx-auto mt-2 max-w-xs text-balance text-[15px] leading-snug text-brown md:text-[16px]">{withInline(x.label)}</p>}
-              </div>
-            ))}
-          </div>
-          {b.note && <figcaption className={`mt-5 text-[13px] italic ${MUTED}`}>{withInline(b.note)}</figcaption>}
-        </figure>
-      );
-    }
-    case "pullquote":
-      if (!b.text.trim()) return null;
-      // A magazine pull quote: one line from the article, set large between two
-      // short gold rules. Bigger than the body, never decorative-small.
-      return (
-        <figure className="mx-auto mt-10 max-w-[600px] break-inside-avoid text-center">
-          <span aria-hidden className="mx-auto block h-0.5 w-12 bg-gold" />
-          <blockquote className="mt-5 text-balance font-display text-[24px] font-semibold leading-snug text-cocoa md:text-[30px]">
-            {withInline(b.text)}
-          </blockquote>
-          {b.attribution && <figcaption className={`mt-3 text-[14px] ${MUTED}`}>{withInline(b.attribution)}</figcaption>}
-          <span aria-hidden className="mx-auto mt-5 block h-0.5 w-12 bg-gold" />
-        </figure>
-      );
     case "callout":
       return (
         <aside className={BOX}>
