@@ -37,26 +37,38 @@ export function withAccent(text: string): ReactNode {
 }
 
 /**
- * Editorial copy (the listicles, 2026-10-06): `**bold**`, `*italic*` and
- * `[label](https://…)` links — still no HTML. Same safety rule as withBold: the
+ * Editorial copy (the listicles, 2026-10-06): `**bold**`, `==highlight==`,
+ * `*italic*` and `[label](https://…)` links — still no HTML. The highlight is a
+ * honey marker stroke over the lower half of the words (visual plan #5,
+ * 2026-10-07): for the one line a skimmer must not miss. Same safety rule as withBold: the
  * text is split and handed to React, so it stays escaped, and a link only
  * renders for an internal path or an http(s) URL (anything else stays literal
  * text). External links open in a new tab.
  */
 export function withInline(text: string): ReactNode {
-  if (!/[*[]/.test(text)) return text;
+  if (!/[*[=]/.test(text)) return text;
   const out: ReactNode[] = [];
   // bold before italic so `**x**` isn't read as two italics
-  const re = /\*\*([\s\S]+?)\*\*|\*([^*\n]+?)\*|\[([^\]\n]+)\]\(([^)\s]+)\)/g;
+  // A highlight can't start or end with a space ("a == b == c" is not one).
+  const re = /\*\*([\s\S]+?)\*\*|==(?=\S)([^=\n]*?\S)==|\*([^*\n]+?)\*|\[([^\]\n]+)\]\(([^)\s]+)\)/g;
   let last = 0;
   let m: RegExpExecArray | null;
   while ((m = re.exec(text))) {
     if (m.index > last) out.push(text.slice(last, m.index));
     const key = out.length;
     if (m[1] !== undefined) out.push(<strong key={key} className="font-bold text-cocoa">{withInline(m[1])}</strong>);
-    else if (m[2] !== undefined) out.push(<em key={key}>{m[2]}</em>);
+    else if (m[2] !== undefined)
+      out.push(
+        <mark
+          key={key}
+          className="box-decoration-clone bg-transparent bg-[linear-gradient(transparent_55%,rgb(231_169_47_/_0.45)_55%)] px-0.5 text-inherit"
+        >
+          {withInline(m[2])}
+        </mark>,
+      );
+    else if (m[3] !== undefined) out.push(<em key={key}>{m[3]}</em>);
     else {
-      const href = m[4];
+      const href = m[5];
       const internal = href.startsWith("/") && !href.startsWith("//");
       const external = /^https?:\/\//i.test(href);
       out.push(
@@ -67,7 +79,7 @@ export function withInline(text: string): ReactNode {
             className="underline decoration-gold decoration-2 underline-offset-2 hover:text-cocoa"
             {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
           >
-            {m[3]}
+            {m[4]}
           </a>
         ) : (
           m[0]
