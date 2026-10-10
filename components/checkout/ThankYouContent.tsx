@@ -36,6 +36,8 @@ export function ThankYouContent() {
     const storedCartId = getStoredCartId();
     if (storedCartId && storedCartId === returnedCartId) {
       clearCart();
+      // The cart id lives in localStorage, so this can only be known here.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCartCleared(true);
     }
     // Intentionally run once on mount — clearCart/markCartCompleted are

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
 import type { Product, ProductVariant } from "@/types/shopify";
@@ -203,6 +203,8 @@ export type TierGift = {
   currencyCode: string;
 };
 
+type CheckoutLine = { merchandiseId: string; quantity: number; sellingPlanId?: string };
+
 type Props = {
   product: Product;
   /** Pool of products eligible as cross-sell add-ons in higher tiers. Typically
@@ -378,7 +380,7 @@ export default function VariantSelector({
   // splits a single combined option into multiple separate options in Shopify
   // Admin, this picker automatically renders one section per option — no code
   // change needed here.
-  const optionGroups = useMemo(() => {
+  const optionGroups = (() => {
     const map = new Map<string, string[]>();
     for (const v of variants) {
       for (const opt of v.selectedOptions) {
@@ -388,7 +390,7 @@ export default function VariantSelector({
       }
     }
     return Array.from(map.entries()).map(([name, values]) => ({ name, values }));
-  }, [variants]);
+  })();
 
   // Currently selected value per option name (derived from selectedVariant).
   const selectedOptionValues: Record<string, string> = Object.fromEntries(
@@ -891,109 +893,61 @@ export default function VariantSelector({
     // Quantity mode → checkout with one line per chosen variant quantity.
     if (quantityMode) {
       if (qtyLines.length === 0) return;
-      setBuyingNow(true);
-      try {
-        const res = await fetch("/api/shopify/cart/checkout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            lines: qtyLines.map((l) => ({
-              merchandiseId: l.variant.id,
-              quantity: l.qty,
-              ...(activePlan ? { sellingPlanId: activePlan.id } : {}),
-            })),
-          }),
-        });
-        const data = (await res.json()) as { checkoutUrl?: string; error?: string };
-        if (!res.ok || !data.checkoutUrl) {
-          throw new Error(data.error || "Couldn't open checkout");
-        }
-        window.location.href = data.checkoutUrl;
-      } catch (e) {
-        setBuyingNow(false);
-        setBuyNowError(e instanceof Error ? e.message : "Couldn't open checkout");
-      }
-      return;
+      return checkoutWith(
+        qtyLines.map((l) => ({
+          merchandiseId: l.variant.id,
+          quantity: l.qty,
+          ...(activePlan ? { sellingPlanId: activePlan.id } : {}),
+        })),
+      );
     }
 
     // Bundle tier → checkout with just the bundle line (Shopify expands it).
     if (selectedTierBundle) {
       if (!chosenBundleVariant?.availableForSale) return;
-      setBuyingNow(true);
-      try {
-        const res = await fetch("/api/shopify/cart/checkout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            lines: [{ merchandiseId: chosenBundleVariant.id, quantity: 1 }],
-          }),
-        });
-        const data = (await res.json()) as { checkoutUrl?: string; error?: string };
-        if (!res.ok || !data.checkoutUrl) {
-          throw new Error(data.error || "Couldn't open checkout");
-        }
-        window.location.href = data.checkoutUrl;
-      } catch (e) {
-        setBuyingNow(false);
-        setBuyNowError(e instanceof Error ? e.message : "Couldn't open checkout");
-      }
-      return;
+      return checkoutWith([{ merchandiseId: chosenBundleVariant.id, quantity: 1 }]);
     }
 
     // Composed kit → checkout with one line per component (plan rides along
     // on subscribed lines; the route validates + passes sellingPlanId).
     if (selectedTierKit) {
       if (kitLines.length === 0 || kitLines.some((l) => !l.variant.availableForSale)) return;
-      setBuyingNow(true);
-      try {
-        const res = await fetch("/api/shopify/cart/checkout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            lines: [
-              ...kitLines.map((l) => ({
-                merchandiseId: l.variant.id,
-                quantity: l.component.quantity,
-                ...(l.plan ? { sellingPlanId: l.plan.id } : {}),
-              })),
-              // Gift line: zeroed by the backing Tier Gift discount at checkout.
-              ...(selectedTierGift
-                ? [{ merchandiseId: selectedTierGift.variantId, quantity: 1 }]
-                : []),
-            ],
-          }),
-        });
-        const data = (await res.json()) as { checkoutUrl?: string; error?: string };
-        if (!res.ok || !data.checkoutUrl) {
-          throw new Error(data.error || "Couldn't open checkout");
-        }
-        window.location.href = data.checkoutUrl;
-      } catch (e) {
-        setBuyingNow(false);
-        setBuyNowError(e instanceof Error ? e.message : "Couldn't open checkout");
-      }
-      return;
+      return checkoutWith([
+        ...kitLines.map((l) => ({
+          merchandiseId: l.variant.id,
+          quantity: l.component.quantity,
+          ...(l.plan ? { sellingPlanId: l.plan.id } : {}),
+        })),
+        // Gift line: zeroed by the backing Tier Gift discount at checkout.
+        ...(selectedTierGift ? [{ merchandiseId: selectedTierGift.variantId, quantity: 1 }] : []),
+      ]);
     }
 
     if (!selectedVariant?.availableForSale) return;
+    const counts = new Map<string, number>();
+    for (let i = 0; i < tier.mainQty; i++) {
+      const vid = unitVariantIds[i] ?? selectedVariant.id;
+      counts.set(vid, (counts.get(vid) ?? 0) + 1);
+    }
+    const lines: CheckoutLine[] = [];
+    for (const [merchandiseId, quantity] of counts) {
+      lines.push({ merchandiseId, quantity });
+    }
+    for (const addon of resolvedAddons) {
+      lines.push({ merchandiseId: addon.variant.id, quantity: addon.qty });
+    }
+    if (selectedTierGift) {
+      // Zeroed by the backing Tier Gift discount at checkout.
+      lines.push({ merchandiseId: selectedTierGift.variantId, quantity: 1 });
+    }
+    return checkoutWith(lines);
+  }
+
+  // The one POST + redirect behind every Buy-now path. A refused checkout
+  // resets the button and says why (buyNowError) instead of going quiet.
+  async function checkoutWith(lines: CheckoutLine[]) {
     setBuyingNow(true);
     try {
-      const counts = new Map<string, number>();
-      for (let i = 0; i < tier.mainQty; i++) {
-        const vid = unitVariantIds[i] ?? selectedVariant.id;
-        counts.set(vid, (counts.get(vid) ?? 0) + 1);
-      }
-      const lines: { merchandiseId: string; quantity: number }[] = [];
-      for (const [merchandiseId, quantity] of counts) {
-        lines.push({ merchandiseId, quantity });
-      }
-      for (const addon of resolvedAddons) {
-        lines.push({ merchandiseId: addon.variant.id, quantity: addon.qty });
-      }
-      if (selectedTierGift) {
-        // Zeroed by the backing Tier Gift discount at checkout.
-        lines.push({ merchandiseId: selectedTierGift.variantId, quantity: 1 });
-      }
       const res = await fetch("/api/shopify/cart/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1003,7 +957,7 @@ export default function VariantSelector({
       if (!res.ok || !data.checkoutUrl) {
         throw new Error(data.error || "Couldn't open checkout");
       }
-      window.location.href = data.checkoutUrl;
+      window.location.assign(data.checkoutUrl);
     } catch (e) {
       setBuyingNow(false);
       setBuyNowError(e instanceof Error ? e.message : "Couldn't open checkout");

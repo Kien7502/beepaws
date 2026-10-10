@@ -284,8 +284,12 @@ export function ListicleView({
   /** The admin's draft preview: empty image slots show as placeholders. */
   preview?: boolean;
 }) {
-  let reason = 0;
-  let started = false;
+  // Reasons are numbered by order; the first one marks where the floating
+  // button may start showing (data-listicle-start).
+  const reasonNo: (number | null)[] = [];
+  let count = 0;
+  for (const s of l.sections) reasonNo.push(s.kind === "reason" ? ++count : null);
+  const firstReason = reasonNo.findIndex((n) => n !== null);
   const byline = [l.byline.author, l.byline.date, l.byline.readTime].filter(Boolean).join(" · ");
 
   return (
@@ -310,9 +314,8 @@ export function ListicleView({
       </header>
 
       {l.sections.map((s, i) => {
-        const n = s.kind === "reason" ? ++reason : null;
-        const first = n !== null && !started;
-        if (first) started = true;
+        const n = reasonNo[i];
+        const first = i === firstReason;
         const gap = i === 0 ? "mt-12 md:mt-16" : "mt-20 md:mt-28";
         const inner = (
           <>

@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -260,21 +261,42 @@ function mergeLocalItem(prev: LocalCartItem[], next: LocalCartItem): LocalCartIt
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
+/** State mirrored to localStorage. It is loaded AFTER hydration: the server
+ *  can't see localStorage, so reading it into the initial state would make the
+ *  first client render disagree with the server's HTML. */
+function useStoredState<T>(key: string, initial: T) {
+  const [value, setValue] = useState<T>(initial);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(key);
+      // Syncing from browser storage is what this effect is for.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (raw) setValue(JSON.parse(raw) as T);
+    } catch {}
+  }, [key]);
+  useEffect(() => {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch {}
+  }, [key, value]);
+  return [value, setValue] as const;
+}
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [shopifyCart, setShopifyCart] = useState<ShopifyCart | null>(null);
   const [localItems, setLocalItems] = useState<LocalCartItem[]>([]);
   // Bundle components keyed by merchandiseId. Stored separately from the cart
   // lines so they survive Shopify syncs (mapShopifyToLocal rebuilds lines and
   // can't recover our component metadata). Persisted to localStorage.
-  const [bundleComponentsById, setBundleComponentsById] = useState<
+  const [bundleComponentsById, setBundleComponentsById] = useStoredState<
     Record<string, BundleComponentLite[]>
-  >({});
+  >(BUNDLE_COMPONENTS_KEY, {});
   // Variant-group display overrides keyed by merchandiseId — same rationale as
   // bundleComponentsById: survives Shopify syncs that would otherwise stamp the
   // member product's own title onto the line. Persisted to localStorage.
-  const [variantGroupById, setVariantGroupById] = useState<
+  const [variantGroupById, setVariantGroupById] = useStoredState<
     Record<string, NonNullable<LocalCartItem["variantGroup"]>>
-  >({});
+  >(VARIANT_GROUP_KEY, {});
   const [hydrated, setHydrated] = useState(false);
   const [isCartLoading, setIsCartLoading] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -286,9 +308,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Stable refs for stale-closure-safe debounce callbacks
   const shopifyCartRef = useRef<ShopifyCart | null>(null);
-  shopifyCartRef.current = shopifyCart;
   const localItemsRef = useRef<LocalCartItem[]>([]);
-  localItemsRef.current = localItems;
+  useLayoutEffect(() => {
+    shopifyCartRef.current = shopifyCart;
+    localItemsRef.current = localItems;
+  });
 
   const debounceTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   // Per-line sequence guard: each updateQuantity bumps the line's seq. A
@@ -384,34 +408,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [hydrated, localItems]);
 
-  // Load the bundle-components side-map once on mount, persist it on change.
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(BUNDLE_COMPONENTS_KEY);
-      if (raw) setBundleComponentsById(JSON.parse(raw) as Record<string, BundleComponentLite[]>);
-    } catch {}
-  }, []);
-  useEffect(() => {
-    try {
-      localStorage.setItem(BUNDLE_COMPONENTS_KEY, JSON.stringify(bundleComponentsById));
-    } catch {}
-  }, [bundleComponentsById]);
-
-  // Load + persist the variant-group side-map (same lifecycle as above).
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(VARIANT_GROUP_KEY);
-      if (raw)
-        setVariantGroupById(
-          JSON.parse(raw) as Record<string, NonNullable<LocalCartItem["variantGroup"]>>,
-        );
-    } catch {}
-  }, []);
-  useEffect(() => {
-    try {
-      localStorage.setItem(VARIANT_GROUP_KEY, JSON.stringify(variantGroupById));
-    } catch {}
-  }, [variantGroupById]);
 
   // ── addItem ───────────────────────────────────────────────────────────────
 
@@ -553,7 +549,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         }
       });
     });
-  }, []);
+  }, [setBundleComponentsById, setVariantGroupById]);
 
   // ── updateQuantity (optimistic + debounced API) ───────────────────────────
 
@@ -691,7 +687,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         console.error("[Cart] removeItem sync failed:", e);
       }
     });
-  }, []);
+  }, [setBundleComponentsById]);
 
   // ── clearCart ─────────────────────────────────────────────────────────────
 
@@ -701,7 +697,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setBundleComponentsById({});
     setVariantGroupById({});
     clearCartId();
-  }, []);
+  }, [setBundleComponentsById, setVariantGroupById]);
 
   // ── Derived values ────────────────────────────────────────────────────────
 
