@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, type ReactNode } from "react";
-import { useSlider, SliderArrow, SliderDots, SLIDE_EASE } from "@/components/product/Slider";
+import { useSlider, useSwipeTrack, SliderArrow, SliderDots } from "@/components/product/Slider";
 
 export interface SliderColumn {
   label: string;
@@ -37,10 +37,12 @@ function Strip({
   // `h-full` on the track resolves because the Strip is a stretched grid item
   // (definite height), so slides — and the tint inside them — fill the whole row.
   return (
-    <div className={`overflow-hidden ${className}`}>
+    <div data-strip className={`overflow-hidden ${className}`}>
+      {/* --drag (the finger's offset, set by useSwipeTrack on the slider) is
+          inherited, so every strip moves as one piece. */}
       <div
-        className={`flex h-full transition-transform ${SLIDE_EASE}`}
-        style={{ transform: `translateX(-${active * 100}%)` }}
+        className="flex h-full"
+        style={{ transform: `translateX(calc(-${active * 100}% + var(--drag, 0px)))` }}
       >
         {children.map((c, i) => (
           // `grid` (not plain block) so the cell inside stretches to the full row
@@ -70,7 +72,14 @@ export function ComparisonSlider({
   rows: SliderRow[];
 }) {
   // State, swipe and controls are shared with the card sliders (Slider.tsx).
-  const { active, last, go, step, swipe } = useSlider(columns.length);
+  const { active, last, go, step } = useSlider(columns.length);
+  const swipe = useSwipeTrack({
+    index: active,
+    last,
+    onIndex: go,
+    // One page = one value column.
+    measureStep: (host) => host.querySelector<HTMLElement>("[data-strip]")?.clientWidth ?? 0,
+  });
 
   return (
     <div className="md:hidden print:hidden">

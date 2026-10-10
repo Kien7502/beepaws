@@ -1,18 +1,21 @@
 "use client";
 
-import { useRef, useState, type CSSProperties, type ReactNode, type TouchEvent } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+} from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-/** Slide easing — the same curve and duration as ProductGallery. */
-export const SLIDE_EASE = "duration-[420ms] ease-[cubic-bezier(0.22,0.61,0.36,1)]";
-
 /**
- * Slider state + swipe, shared by every phone slider on the PDP (comparison
- * table, pain points, mechanism steps, use cases), so they all move alike.
- *
- * Swipe: phones expect it even with arrows. A 40px threshold plus a
- * horizontal-axis check is enough, and it leaves vertical page scrolling alone.
- * The touch origin lives in a ref — as state it re-rendered on every touchstart.
+ * Slider state, shared by every phone slider on the PDP (comparison table, pain
+ * points, mechanism steps, use cases), so they all move alike. The finger
+ * tracking is useSwipeTrack, below.
  */
 export function useSlider(count: number) {
   const [active, setActive] = useState(0);
@@ -23,30 +26,289 @@ export function useSlider(count: number) {
   // closure dropped taps: two taps (or a swipe and a tap) landing before React
   // re-rendered both read the same `active` and moved only one step.
   const step = (delta: number) => setActive((a) => clamp(a + delta));
-  const swipe = useSwipe(step);
-  return { active, last, go, step, swipe };
+  return { active, last, go, step };
+}
+
+// ─── Swipe that follows the finger ──────────────────────────────────────────
+// Numbers from Apple's "Designing Fluid Interfaces" (WWDC 2018), via the
+// apple-design skill.
+
+// The settle spring, in Apple's two designer terms: damping ratio 1 settles
+// without overshoot (a page landing shouldn't wobble); response is roughly how
+// long it takes to get there. The release velocity is what makes it feel thrown.
+const DAMPING = 1;
+const RESPONSE = 0.38; // s
+const STIFFNESS = ((2 * Math.PI) / RESPONSE) ** 2;
+const FRICTION = (4 * Math.PI * DAMPING) / RESPONSE;
+/** Movement (px) before a touch counts as a swipe or a scroll. */
+const LOCK = 8;
+/** Apple's scroll deceleration rate, for projecting where a flick would stop. */
+const DECELERATION = 0.998;
+const MAX_VELOCITY = 4000; // px/s
+
+/** Where a flick moving at `velocity` px/s would come to rest, px from here. */
+const project = (velocity: number) => ((velocity / 1000) * DECELERATION) / (1 - DECELERATION);
+
+/** Past an end the slide follows less and less, but never stops dead. */
+const rubberband = (overshoot: number, size: number) =>
+  (overshoot * size * 0.55) / (size + 0.55 * Math.abs(overshoot));
+
+type Gesture = {
+  id: number;
+  x0: number;
+  y0: number;
+  /** --drag when the finger came down (non-zero if it caught a settle). */
+  drag0: number;
+  /** Distance between two pages, px, measured at touch-down. */
+  page: number;
+  locked: boolean;
+  samples: { t: number; x: number }[];
+};
+
+type Track = {
+  host: HTMLElement | null;
+  drag: number;
+  velocity: number;
+  settleFrame: number;
+  moveFrame: number;
+  nextDrag: number;
+  gesture: Gesture | null;
+  /** Release velocity, waiting for the page change it caused. */
+  handoff: number | null;
+  swallowClickUntil: number;
+};
+
+function writeDrag(t: Track, x: number) {
+  t.drag = x;
+  t.host?.style.setProperty("--drag", `${x}px`);
+}
+
+function stopTrack(t: Track) {
+  if (t.settleFrame) cancelAnimationFrame(t.settleFrame);
+  if (t.moveFrame) cancelAnimationFrame(t.moveFrame);
+  t.settleFrame = 0;
+  t.moveFrame = 0;
+}
+
+/** Spring --drag home to 0 from where it is, starting at `v0` px/s. */
+function settle(t: Track, v0: number) {
+  stopTrack(t);
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    t.velocity = 0;
+    writeDrag(t, 0);
+    return;
+  }
+  let x = t.drag;
+  let v = v0;
+  let then = performance.now();
+  const tick = (now: number) => {
+    const dt = Math.min(0.05, (now - then) / 1000);
+    then = now;
+    // Small fixed sub-steps keep the integration stable on a slow frame.
+    const n = Math.max(1, Math.ceil(dt * 240));
+    for (let i = 0; i < n; i++) {
+      v += (-STIFFNESS * x - FRICTION * v) * (dt / n);
+      x += v * (dt / n);
+    }
+    t.velocity = v;
+    if (Math.abs(x) < 0.5 && Math.abs(v) < 20) {
+      t.settleFrame = 0;
+      t.velocity = 0;
+      writeDrag(t, 0);
+      return;
+    }
+    writeDrag(t, x);
+    t.settleFrame = requestAnimationFrame(tick);
+  };
+  t.settleFrame = requestAnimationFrame(tick);
+}
+
+/** Finger speed at lift-off, px/s — 0 if it paused before lifting. */
+function releaseVelocity(g: Gesture, e: ReactPointerEvent) {
+  const newest = g.samples[g.samples.length - 1];
+  const oldest = g.samples[0];
+  if (!newest || e.timeStamp - newest.t > 80) return 0;
+  const dt = (e.timeStamp - oldest.t) / 1000;
+  if (dt <= 0) return 0;
+  const v = (e.clientX - oldest.x) / dt;
+  return Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, v));
 }
 
 /**
- * The swipe half of useSlider, on its own for sliders that keep their index
- * somewhere else (ProductGallery shares its index with the variant picker).
- * Spread the result onto the element that should take the gesture.
+ * A paged slider that moves with the finger. Before this, a swipe was read only
+ * at lift-off: nothing moved under the finger, then a fixed 420ms slide played.
+ *
+ * - 1:1: the slides follow the finger from the moment a swipe is recognised.
+ * - Momentum: a flick lands where its speed projects (a short fast flick turns
+ *   the page; so does a slow drag past the middle), one page per swipe, and the
+ *   slide keeps the finger's speed as it settles: no seam between drag and
+ *   animation.
+ * - Past the first or last page it resists (rubber band) instead of stopping dead.
+ * - Interruptible: a touch during the settle catches the slide where it is.
+ * - Vertical swipes still scroll the page: the first 8px decide, and
+ *   `touch-action` leaves vertical pans to the browser.
+ * - Arrows, dots and outside changes (a variant pick) move with the same spring.
+ *
+ * The offset is ONE CSS variable, `--drag` (px), on the element the result is
+ * spread onto; the moving parts add `var(--drag, 0px)` to their own transform.
+ * Nothing in the gesture path re-renders React. Touch and pen only: desktop keeps
+ * its arrows.
  */
-export function useSwipe(onStep: (delta: number) => void) {
-  const touch = useRef<{ x: number; y: number } | null>(null);
+export function useSwipeTrack(options: {
+  index: number;
+  last: number;
+  onIndex: (i: number) => void;
+  /** Distance between two pages in px, measured from the bound element. */
+  measureStep: (host: HTMLElement) => number;
+  /** False where the layout isn't a slider right now (the desktop grid). */
+  enabled?: () => boolean;
+}) {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const track = useRef<Track>({
+    host: null,
+    drag: 0,
+    velocity: 0,
+    settleFrame: 0,
+    moveFrame: 0,
+    nextDrag: 0,
+    gesture: null,
+    handoff: null,
+    swallowClickUntil: 0,
+  });
+  const latest = useRef(options);
+  useLayoutEffect(() => {
+    latest.current = options;
+    track.current.host = hostRef.current;
+  });
+
+  // A page change moves the base position by whole pages. Shift --drag by the
+  // same amount so nothing jumps, then let the spring carry it home: from
+  // wherever it is, at whatever speed it already has (a swipe's release speed,
+  // or the speed of a settle that an arrow tap interrupted).
+  const prevIndex = useRef(options.index);
+  useLayoutEffect(() => {
+    const t = track.current;
+    const from = prevIndex.current;
+    prevIndex.current = options.index;
+    if (from === options.index || !t.host) return;
+    const shift = (options.index - from) * latest.current.measureStep(t.host);
+    writeDrag(t, t.drag + shift);
+    if (t.gesture) {
+      t.gesture.drag0 += shift;
+      return;
+    }
+    const v = t.handoff ?? t.velocity;
+    t.handoff = null;
+    settle(t, v);
+  }, [options.index]);
+
+  useEffect(() => {
+    const t = track.current;
+    return () => stopTrack(t);
+  }, []);
+
+  function end(e: ReactPointerEvent<HTMLElement>, lifted: boolean) {
+    const t = track.current;
+    const g = t.gesture;
+    if (!g || e.pointerId !== g.id) return;
+    t.gesture = null;
+    if (!g.locked) {
+      // A tap: if it caught a settle mid-flight, let it finish.
+      if (t.drag !== 0) settle(t, t.velocity);
+      return;
+    }
+    if (t.moveFrame) {
+      cancelAnimationFrame(t.moveFrame);
+      t.moveFrame = 0;
+      writeDrag(t, t.nextDrag);
+    }
+    t.swallowClickUntil = e.timeStamp + 400;
+    const v = lifted ? releaseVelocity(g, e) : 0;
+    const { index, last, onIndex } = latest.current;
+    const landing = t.drag + project(v);
+    let target = index;
+    if (landing < -g.page / 2) target = index + 1;
+    else if (landing > g.page / 2) target = index - 1;
+    target = Math.max(0, Math.min(last, target));
+    if (target === index) {
+      settle(t, v);
+      return;
+    }
+    t.handoff = v;
+    onIndex(target);
+    // If the page didn't change after all, don't leave the slide hanging.
+    requestAnimationFrame(() => {
+      if (t.handoff === null) return;
+      const hv = t.handoff;
+      t.handoff = null;
+      settle(t, hv);
+    });
+  }
+
   return {
-    onTouchStart: (e: TouchEvent) => {
-      const t = e.touches[0];
-      touch.current = { x: t.clientX, y: t.clientY };
+    ref: hostRef,
+    style: { touchAction: "pan-y pinch-zoom" } as CSSProperties,
+    onPointerDown(e: ReactPointerEvent<HTMLElement>) {
+      const t = track.current;
+      if (e.pointerType === "mouse" || t.gesture) return;
+      if (latest.current.enabled && !latest.current.enabled()) return;
+      stopTrack(t); // caught mid-settle: carry on from where it is
+      t.gesture = {
+        id: e.pointerId,
+        x0: e.clientX,
+        y0: e.clientY,
+        drag0: t.drag,
+        page: latest.current.measureStep(e.currentTarget),
+        locked: false,
+        samples: [],
+      };
     },
-    onTouchEnd: (e: TouchEvent) => {
-      const start = touch.current;
-      touch.current = null;
-      if (!start) return;
-      const t = e.changedTouches[0];
-      const dx = t.clientX - start.x;
-      const dy = t.clientY - start.y;
-      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) onStep(dx < 0 ? 1 : -1);
+    onPointerMove(e: ReactPointerEvent<HTMLElement>) {
+      const t = track.current;
+      const g = t.gesture;
+      if (!g || e.pointerId !== g.id) return;
+      if (!g.locked) {
+        const dx = e.clientX - g.x0;
+        const dy = e.clientY - g.y0;
+        if (Math.max(Math.abs(dx), Math.abs(dy)) < LOCK) return;
+        if (Math.abs(dy) > Math.abs(dx)) {
+          // A scroll: the page has it.
+          t.gesture = null;
+          if (t.drag !== 0) settle(t, t.velocity);
+          return;
+        }
+        g.locked = true;
+        g.x0 = e.clientX; // follow from here, so the lock distance isn't a jump
+        e.currentTarget.setPointerCapture(e.pointerId);
+      }
+      g.samples.push({ t: e.timeStamp, x: e.clientX });
+      while (g.samples.length > 2 && e.timeStamp - g.samples[0].t > 100) g.samples.shift();
+      const { index, last } = latest.current;
+      let d = g.drag0 + (e.clientX - g.x0);
+      const max = index * g.page; // page 0 lines up at this offset
+      const min = -(last - index) * g.page; // the last page lines up here
+      if (d > max) d = max + rubberband(d - max, g.page);
+      else if (d < min) d = min + rubberband(d - min, g.page);
+      t.nextDrag = d;
+      if (!t.moveFrame) {
+        t.moveFrame = requestAnimationFrame(() => {
+          t.moveFrame = 0;
+          writeDrag(t, t.nextDrag);
+        });
+      }
+    },
+    onPointerUp(e: ReactPointerEvent<HTMLElement>) {
+      end(e, true);
+    },
+    onPointerCancel(e: ReactPointerEvent<HTMLElement>) {
+      end(e, false);
+    },
+    // A swipe that ends over something clickable must not also click it.
+    onClickCapture(e: ReactMouseEvent<HTMLElement>) {
+      if (e.timeStamp > track.current.swallowClickUntil) return;
+      track.current.swallowClickUntil = 0;
+      e.preventDefault();
+      e.stopPropagation();
     },
   };
 }
@@ -180,11 +442,25 @@ export function CardSlider({
    */
   overlayArrowsAt?: string;
 }) {
-  const { active, last, go, step, swipe } = useSlider(slides.length);
+  const { active, last, go, step } = useSlider(slides.length);
+  const swipe = useSwipeTrack({
+    index: active,
+    last,
+    onIndex: go,
+    // One page = a card plus the gap after it: the distance between two cards.
+    measureStep: (host) => {
+      const cards = host.firstElementChild?.children;
+      if (!cards?.length) return 0;
+      const [a, b] = [cards[0] as HTMLElement, cards[1] as HTMLElement | undefined];
+      return b ? b.offsetLeft - a.offsetLeft : a.offsetWidth;
+    },
+    // From md up the cards are a grid, not a slider.
+    enabled: () => window.matchMedia("(max-width: 767.98px)").matches,
+  });
   const trackStyle = {
     gap,
-    // One step = a full card plus the gap after it.
-    "--slide-x": `calc(${active} * (-100% - ${gap}))`,
+    // One step = a full card plus the gap after it; --drag is the finger's offset.
+    "--slide-x": `calc(${active} * (-100% - ${gap}) + var(--drag, 0px))`,
   } as CSSProperties;
 
   const many = slides.length > 1;
@@ -203,7 +479,7 @@ export function CardSlider({
         <div
           // Print (the admin's PDF export): the phone strip stacks every card
           // instead of showing the current one - paper can't be swiped.
-          className={`flex md:grid md:grid-cols-3 max-md:[transform:translateX(var(--slide-x))] max-md:transition-transform print:![transform:none] max-md:print:flex-col ${SLIDE_EASE}`}
+          className="flex md:grid md:grid-cols-3 max-md:[transform:translateX(var(--slide-x))] print:![transform:none] max-md:print:flex-col"
           style={trackStyle}
         >
           {slides.map((slide, i) => (

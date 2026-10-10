@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import Image from "next/image";
-import { SliderArrow, useSwipe } from "./Slider";
+import { SliderArrow, useSwipeTrack } from "./Slider";
 import type { Image as ShopifyImage } from "@/types/shopify";
 import { useIsInsideMediaSync, useProductMedia } from "./ProductMediaSync";
 
@@ -143,7 +143,14 @@ export function ProductGallery({ productTitle, images, fallbackUrl }: Props) {
     activeRef.current = next;
     selectImage(next);
   }
-  const swipe = useSwipe(step);
+  // Swipe follows the finger and lands with a spring; arrows, thumbs and variant
+  // picks move with the same spring (Slider.tsx). One page = the frame's width.
+  const swipe = useSwipeTrack({
+    index: active,
+    last,
+    onIndex: selectImage,
+    measureStep: (host) => host.clientWidth,
+  });
 
   // When `active` changes externally (variant pick → shared context → here),
   // mirror the same scroll behaviour clicks get.
@@ -154,22 +161,23 @@ export function ProductGallery({ productTitle, images, fallbackUrl }: Props) {
   return (
     <div className="@container flex flex-col gap-3 lg:h-[calc(100svh-7.5rem)]">
       {/* Carousel-style slide: each image is absolutely stacked and translated
-          based on its distance from the active index. When active changes, the
-          CSS transition on `transform` slides them all together — the old
-          image exits one way, the new image enters from the other. Picking a
-          thumb to the right of current → image slides leftward (current exits
-          left, new enters from right); vice versa. */}
+          by its distance from the active index, and one wrapper carries the
+          finger's offset (--drag) for all of them. When active changes, the
+          swipe hook's spring slides them together — the old image exits one
+          way, the new one enters from the other. Picking a thumb to the right
+          of current → image slides leftward; vice versa. */}
       <div
         className="group relative aspect-square lg:aspect-auto lg:flex-1 lg:max-h-[100cqi] overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]"
         {...(hasMultiple ? swipe : {})}
       >
+        <div className="absolute inset-0" style={{ transform: "translateX(var(--drag, 0px))" }}>
         {list.map((node, idx) => {
           const offset = (idx - active) * 100;
           const isActive = idx === active;
           return (
             <div
               key={`${node.url}-${idx}`}
-              className="absolute inset-0 transition-transform duration-[420ms] ease-[cubic-bezier(0.22,0.61,0.36,1)]"
+              className="absolute inset-0"
               style={{ transform: `translateX(${offset}%)` }}
               aria-hidden={!isActive}
             >
@@ -191,6 +199,7 @@ export function ProductGallery({ productTitle, images, fallbackUrl }: Props) {
             </div>
           );
         })}
+        </div>
 
         {/* Side arrows + swipe (2026-09-30). On a phone the only way to change
             photo was the thumbnail strip — tapping the big image opened a
