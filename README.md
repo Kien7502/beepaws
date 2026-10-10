@@ -37,11 +37,13 @@ Stop the dev server first — both bind port 3000. If something stays bound afte
 Get-Process -Name node | Stop-Process -Force
 ```
 
-### Next.js version is pinned to 16.1.6
+### Next.js version is pinned (exact)
 
-`package.json` pins `"next"` and `"eslint-config-next"` to `16.1.6` exact (no caret). Next 16.2.x has a Turbopack dev-mode regression where `window.location.href` redirects to Shopify checkout, then Back, leaves the page un-hydrated (CSS works, nothing clickable) — production was unaffected, but dev was unusable for checkout testing.
+`package.json` pins `"next"` and `"eslint-config-next"` exact (no caret) — **16.4.0** since 2026-10-10. It sat at 16.1.6 until then, which by October carried 35 security advisories (two critical); the bump cleared every runtime one (what `npm audit` still lists is lint tooling only).
 
-Don't bump Next.js without confirming the fix has shipped (test: add to cart → drawer → Checkout securely → Shopify → Back → drawer items still interactive). To bump deliberately: `npm install --save-exact next@<version> eslint-config-next@<version>`.
+Why the pin exists: Next 16.2.x had a Turbopack dev-mode regression where the redirect to Shopify checkout, then Back, left the page un-hydrated (CSS works, nothing clickable). Production was never affected, but dev was unusable for checkout testing.
+
+To bump deliberately: `npm install --save-exact next@<version> eslint-config-next@<version>`, then run the checkout → Back test (add to cart → drawer → Checkout securely → Shopify → Back → the page still responds). On 2026-10-10 that test was automated in headless Chrome 154 against `next dev`: 16.4.0 passed — but so did 16.2.0, so the original bug no longer reproduces there and a pass proves less than it used to. One more check by hand in your everyday browser is the real test. (16.4 sends dev pages `no-store`, so Back reloads them instead of restoring them from the back/forward cache.)
 
 ## Environment
 
