@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { LOCK, prefersReducedMotion, project, rubberband, springStep } from "@/lib/motion";
 
 /**
  * Slider state, shared by every phone slider on the PDP (comparison table, pain
@@ -30,28 +31,10 @@ export function useSlider(count: number) {
 }
 
 // ─── Swipe that follows the finger ──────────────────────────────────────────
-// Numbers from Apple's "Designing Fluid Interfaces" (WWDC 2018), via the
-// apple-design skill.
+// The spring and gesture numbers live in lib/motion.ts (shared with the
+// before/after divider). The release velocity is what makes a page feel thrown.
 
-// The settle spring, in Apple's two designer terms: damping ratio 1 settles
-// without overshoot (a page landing shouldn't wobble); response is roughly how
-// long it takes to get there. The release velocity is what makes it feel thrown.
-const DAMPING = 1;
-const RESPONSE = 0.38; // s
-const STIFFNESS = ((2 * Math.PI) / RESPONSE) ** 2;
-const FRICTION = (4 * Math.PI * DAMPING) / RESPONSE;
-/** Movement (px) before a touch counts as a swipe or a scroll. */
-const LOCK = 8;
-/** Apple's scroll deceleration rate, for projecting where a flick would stop. */
-const DECELERATION = 0.998;
 const MAX_VELOCITY = 4000; // px/s
-
-/** Where a flick moving at `velocity` px/s would come to rest, px from here. */
-const project = (velocity: number) => ((velocity / 1000) * DECELERATION) / (1 - DECELERATION);
-
-/** Past an end the slide follows less and less, but never stops dead. */
-const rubberband = (overshoot: number, size: number) =>
-  (overshoot * size * 0.55) / (size + 0.55 * Math.abs(overshoot));
 
 type Gesture = {
   id: number;
@@ -93,7 +76,7 @@ function stopTrack(t: Track) {
 /** Spring --drag home to 0 from where it is, starting at `v0` px/s. */
 function settle(t: Track, v0: number) {
   stopTrack(t);
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  if (prefersReducedMotion()) {
     t.velocity = 0;
     writeDrag(t, 0);
     return;
@@ -104,12 +87,7 @@ function settle(t: Track, v0: number) {
   const tick = (now: number) => {
     const dt = Math.min(0.05, (now - then) / 1000);
     then = now;
-    // Small fixed sub-steps keep the integration stable on a slow frame.
-    const n = Math.max(1, Math.ceil(dt * 240));
-    for (let i = 0; i < n; i++) {
-      v += (-STIFFNESS * x - FRICTION * v) * (dt / n);
-      x += v * (dt / n);
-    }
+    [x, v] = springStep(x, v, dt);
     t.velocity = v;
     if (Math.abs(x) < 0.5 && Math.abs(v) < 20) {
       t.settleFrame = 0;

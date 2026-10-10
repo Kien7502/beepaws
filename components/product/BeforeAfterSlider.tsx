@@ -4,6 +4,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import Image from "next/image";
 import { ArrowLeftRight, ChevronLeft, ChevronRight } from "lucide-react";
 import type { BeforeAfterSlide } from "@/types/metafields";
+import { LOCK, prefersReducedMotion, rubberband, springStep } from "@/lib/motion";
 
 // Plan §Phase 4: drag-to-reveal slider, one card per Shopify
 // beepaws.before_after_slides entry. With more than one slide, the slider
@@ -191,19 +192,46 @@ export function BeforeAfterSlider({
 // and knob ride a `transform` (compositor only, no layout) and the after-photo a
 // clip-path. Nothing in the drag path touches React. The first-view hint below
 // writes through the same `apply`, so the two can never fight.
+//
+// FLUID DIVIDER (2026-10-10, apple-design pass). One loop drives --pct:
+// - glued: the divider follows the pointer 1:1, keeping where on the knob it was
+//   grabbed (no jump to the knob's centre), with a rubber band past 4/96 that
+//   springs back on release;
+// - otherwise a spring carries it to `target`: a tap or click GLIDES there
+//   instead of teleporting, and if the pointer stays down it hands over to 1:1
+//   once it has caught up. Keys glide too, and quick presses add up.
+// On a phone nothing moves until the finger has gone 8px sideways. Before, a
+// scroll that merely STARTED on the photo yanked the divider to the finger:
+// pointerdown fires before the browser claims the vertical pan. The knob grows
+// the moment it's pressed, so grabbing it answers at once.
+const MIN = 4; // the clamp keeps the before/after labels visible at either end
+const MAX = 96;
+const clampPct = (p: number) => Math.max(MIN, Math.min(MAX, p));
+/** How far (px) from the divider a press still counts as grabbing the knob:
+ *  the knob's 22px radius plus some slack for a thumb. */
+const KNOB_REACH = 32;
+
+type Press = {
+  id: number;
+  x0: number;
+  y0: number;
+  touch: boolean;
+  onKnob: boolean;
+  locked: boolean;
+  /** Divider minus pointer, px, so a grabbed knob doesn't jump to the finger. */
+  offset: number;
+  left: number;
+  width: number;
+};
+
 function BeforeAfterPanel({ slide, hint = false }: { slide: BeforeAfterSlide; hint?: boolean }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [loaded, setLoaded] = useState(false);
-  const pos = useRef(50); // divider position, 4-96 (%)
-  const rect = useRef<{ left: number; width: number } | null>(null);
-  const pendingX = useRef<number | null>(null);
-  const frame = useRef(0);
-  const dragging = useRef(false);
+  const pos = useRef(50); // divider position on screen, % (4-96 at rest)
   const touched = useRef(false); // any user input stops (or pre-empts) the hint
   const hintFrame = useRef(0);
-
-  // Clamps to 4-96 so the before/after labels stay visible at either extreme.
-  const clamp = (p: number) => Math.max(4, Math.min(96, p));
+  const press = useRef<Press | null>(null);
+  const drive = useRef({ target: 50, velocity: 0, frame: 0, glued: false, held: false });
 
   // The ONE write path: the CSS variable plus the slider's accessible value.
   // (React renders aria-valuenow and --pct once, at 50, and never rewrites
@@ -213,59 +241,184 @@ function BeforeAfterPanel({ slide, hint = false }: { slide: BeforeAfterSlide; hi
     const el = wrapRef.current;
     if (!el) return;
     el.style.setProperty("--pct", String(p));
-    el.setAttribute("aria-valuenow", String(Math.round(p)));
+    el.setAttribute("aria-valuenow", String(Math.round(clampPct(p))));
+  }, []);
+
+  useEffect(() => {
+    const d = drive.current;
+    return () => cancelAnimationFrame(d.frame);
   }, []);
 
   function stopHint() {
     touched.current = true;
     if (hintFrame.current) cancelAnimationFrame(hintFrame.current);
     hintFrame.current = 0;
+    // Anything that starts from here starts from where the divider really is.
+    if (!drive.current.frame) drive.current.target = pos.current;
   }
 
-  // Many pointer events per frame, one write per frame.
-  function queue(clientX: number) {
-    pendingX.current = clientX;
-    if (frame.current) return;
-    frame.current = requestAnimationFrame(() => {
-      frame.current = 0;
-      const x = pendingX.current;
-      const r = rect.current;
-      if (x == null || !r || r.width === 0) return;
-      apply(clamp(((x - r.left) / r.width) * 100));
-    });
+  function setGrabbed(on: boolean) {
+    wrapRef.current?.toggleAttribute("data-grabbed", on);
+  }
+
+  // One write per frame, however many pointer events arrive.
+  function run() {
+    const d = drive.current;
+    if (d.frame) return;
+    let then = performance.now();
+    const tick = (now: number) => {
+      const dt = Math.min(0.05, (now - then) / 1000);
+      then = now;
+      if (d.glued || prefersReducedMotion()) {
+        apply(d.target);
+        d.velocity = 0;
+      } else {
+        const [x, v] = springStep(pos.current - d.target, d.velocity, dt);
+        d.velocity = v;
+        // Held: within ~2px of the pointer is close enough to hand over to 1:1
+        // (a critically damped spring creeps the last pixels, so waiting for an
+        // exact match left the divider trailing a moving pointer).
+        const caughtUp = d.held ? Math.abs(x) < 0.6 : Math.abs(x) < 0.05 && Math.abs(v) < 0.5;
+        if (caughtUp) {
+          apply(d.target);
+          d.velocity = 0;
+          if (d.held) d.glued = true; // caught up with a held pointer: follow it 1:1
+        } else {
+          apply(d.target + x);
+        }
+      }
+      if (!d.held && d.velocity === 0 && pos.current === d.target) {
+        d.frame = 0;
+        return;
+      }
+      d.frame = requestAnimationFrame(tick);
+    };
+    d.frame = requestAnimationFrame(tick);
+  }
+
+  /** Where the pointer puts the divider, %, with a rubber band past 4/96. The
+   *  band's size is the 4% margin itself: it can approach the panel's edge but
+   *  never leave the photo. */
+  function follow(p: Press, clientX: number) {
+    const raw = ((clientX + p.offset - p.left) / p.width) * 100;
+    if (raw < MIN) return MIN - rubberband(MIN - raw, MIN);
+    if (raw > MAX) return MAX + rubberband(raw - MAX, 100 - MAX);
+    return raw;
+  }
+
+  function grab(p: Press, clientX: number) {
+    const d = drive.current;
+    // On the knob: hold the offset and follow at once. Anywhere else: the spring
+    // brings the divider over to the pointer first.
+    p.offset = p.onKnob ? p.left + (pos.current / 100) * p.width - clientX : 0;
+    d.held = true;
+    d.glued = p.onKnob;
+    d.target = follow(p, clientX);
+    setGrabbed(true);
+    run();
+  }
+
+  function release() {
+    const d = drive.current;
+    d.held = false;
+    d.glued = false;
+    d.target = clampPct(d.target); // a rubber-banded divider springs back
+    setGrabbed(false);
+    run();
   }
 
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
     stopHint();
-    e.currentTarget.setPointerCapture(e.pointerId);
-    // Measured once per drag, not per move: the panel doesn't move under a
+    // Measured once per press, not per move: the panel doesn't move under a
     // horizontal drag, and re-reading layout every event forced reflows.
     const r = e.currentTarget.getBoundingClientRect();
-    rect.current = { left: r.left, width: r.width };
-    dragging.current = true;
-    queue(e.clientX);
+    const knobX = r.left + (pos.current / 100) * r.width;
+    const p: Press = {
+      id: e.pointerId,
+      x0: e.clientX,
+      y0: e.clientY,
+      touch: e.pointerType !== "mouse",
+      onKnob: Math.abs(e.clientX - knobX) <= KNOB_REACH,
+      locked: false,
+      offset: 0,
+      left: r.left,
+      width: r.width,
+    };
+    press.current = p;
+    if (!p.touch) {
+      // A mouse has no scroll to tell apart: take it now.
+      p.locked = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
+      grab(p, e.clientX);
+      return;
+    }
+    // Touch waits for a direction, but a press on the knob answers at once.
+    if (p.onKnob) setGrabbed(true);
   }
+
   function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
-    if (dragging.current) queue(e.clientX);
+    const p = press.current;
+    if (!p || e.pointerId !== p.id) return;
+    if (!p.locked) {
+      const dx = e.clientX - p.x0;
+      const dy = e.clientY - p.y0;
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < LOCK) return;
+      if (Math.abs(dy) > Math.abs(dx)) {
+        // A scroll: the page has it, and the divider never moved.
+        press.current = null;
+        setGrabbed(false);
+        return;
+      }
+      p.locked = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
+      grab(p, e.clientX);
+      return;
+    }
+    drive.current.target = follow(p, e.clientX);
+    run();
   }
-  function onPointerUp() {
-    dragging.current = false;
+
+  function onPointerUp(e: React.PointerEvent<HTMLDivElement>) {
+    const p = press.current;
+    if (!p || e.pointerId !== p.id) return;
+    press.current = null;
+    if (p.locked) {
+      release();
+      return;
+    }
+    // A tap: glide the divider to it.
+    setGrabbed(false);
+    drive.current.target = clampPct(((e.clientX - p.left) / p.width) * 100);
+    run();
+  }
+
+  function onPointerCancel(e: React.PointerEvent<HTMLDivElement>) {
+    const p = press.current;
+    if (!p || e.pointerId !== p.id) return;
+    press.current = null;
+    if (p.locked) release();
+    else setGrabbed(false);
   }
 
   // Keyboard path for the divider - the drag handle is otherwise pointer-only,
   // which locks out keyboard/AT users entirely. Arrow keys nudge, Shift jumps,
-  // Home/End snap to the clamp extremes (4/96, same as the pointer clamp).
+  // Home/End go to the clamp extremes (4/96, same as the pointer clamp). Steps
+  // count from where the divider is HEADED, so quick presses add up.
   function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
     const step = e.shiftKey ? 10 : 4;
+    const d = drive.current;
     let next: number | null = null;
-    if (e.key === "ArrowLeft") next = pos.current - step;
-    else if (e.key === "ArrowRight") next = pos.current + step;
-    else if (e.key === "Home") next = 4;
-    else if (e.key === "End") next = 96;
+    if (e.key === "ArrowLeft") next = d.target - step;
+    else if (e.key === "ArrowRight") next = d.target + step;
+    else if (e.key === "Home") next = MIN;
+    else if (e.key === "End") next = MAX;
     if (next === null) return;
     e.preventDefault();
     stopHint();
-    apply(clamp(next));
+    d.glued = false;
+    d.target = clampPct(next);
+    run();
   }
 
   // First-view hint (owner, 2026-09-30): the first time the section is well into
@@ -327,12 +480,13 @@ function BeforeAfterPanel({ slide, hint = false }: { slide: BeforeAfterSlide; hi
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
+      onPointerCancel={onPointerCancel}
       // pan-y (not touch-none): horizontal drags drive the divider, but a
       // vertical swipe starting on the image still scrolls the page - with
       // touch-none a near-full-width panel became a scroll trap on phones.
+      // pinch-zoom keeps zooming in on the photo possible.
       // [--pct:50] is the server-rendered start; `apply` overrides it inline.
-      className="relative aspect-[4/3] cursor-ew-resize overflow-hidden select-none [--pct:50] [touch-action:pan-y] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay focus-visible:ring-inset"
+      className="group/ba relative aspect-[4/3] cursor-ew-resize overflow-hidden select-none [--pct:50] [touch-action:pan-y_pinch-zoom] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay focus-visible:ring-inset"
     >
       {/* Loading placeholder (2026-09-30). The panel had no background of its
           own, so until the photos arrived you saw the white section through it:
@@ -406,7 +560,9 @@ function BeforeAfterPanel({ slide, hint = false }: { slide: BeforeAfterSlide; hi
         style={{ transform: "translateX(calc(var(--pct) * 1%))" }}
       >
         <div className="absolute inset-y-0 left-0 w-[3px] -translate-x-1/2 bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.12)]" />
-        <div className="absolute left-0 top-1/2 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-clay shadow-[0_8px_24px_-8px_rgba(74,46,22,0.4)]">
+        {/* Grows while held (data-grabbed on the panel): the press answers at
+            once, before any movement. */}
+        <div className="absolute left-0 top-1/2 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-clay shadow-[0_8px_24px_-8px_rgba(74,46,22,0.4)] transition-[scale,box-shadow] duration-150 ease-out group-data-[grabbed]/ba:scale-110 group-data-[grabbed]/ba:shadow-[0_10px_28px_-8px_rgba(74,46,22,0.5)]">
           <ArrowLeftRight size={16} />
         </div>
       </div>
