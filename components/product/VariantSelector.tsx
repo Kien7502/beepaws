@@ -467,20 +467,11 @@ export default function VariantSelector({
   // changes → this effect re-runs → sets gallery back to current variant's
   // image → user's click is undone). The setter itself is identity-stable via
   // a ref inside ProductMediaSync, so depending on it is loop-free.
-  const { setActiveByUrl, setActiveVariant, activeUrl } = useProductMedia();
+  const { setActiveByUrl, activeUrl } = useProductMedia();
 
   useEffect(() => {
     setActiveByUrl(selectedVariant?.image?.url ?? null);
-    // Publish the selected variant's price + availability so DynamicHeroPrice
-    // can re-render the hero price when the user picks a different variant.
-    if (selectedVariant) {
-      setActiveVariant({
-        amount: selectedVariant.price.amount,
-        currencyCode: selectedVariant.price.currencyCode,
-        availableForSale: selectedVariant.availableForSale,
-      });
-    }
-  }, [selectedVariant, setActiveByUrl, setActiveVariant]);
+  }, [selectedVariant, setActiveByUrl]);
 
   const tier = TIERS[tierIdx];
   // When the selected tier links a real bundle, the buy actions add the bundle

@@ -7,19 +7,6 @@ export function variantGidToNumericId(variantGid: string): string | null {
   return m?.[1] ?? null;
 }
 
-export function buildStorefrontCartPermalink(
-  storeOrigin: string | undefined,
-  variantGid: string,
-  quantity = 1,
-): string | null {
-  if (!storeOrigin?.trim()) return null;
-  const id = variantGidToNumericId(variantGid);
-  if (!id) return null;
-  const base = storeOrigin.trim().replace(/\/$/, "");
-  const origin = base.startsWith("http") ? base : `https://${base}`;
-  return `${origin}/cart/${id}:${quantity}`;
-}
-
 export function buildStorefrontCartPermalinkFromLines(
   storeOrigin: string | undefined,
   lines: { merchandiseId: string; quantity: number }[],

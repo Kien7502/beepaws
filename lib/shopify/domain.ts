@@ -18,30 +18,3 @@ export function normalizeStorefrontApiHost(raw: string | undefined): string {
   }
   return h;
 }
-
-/**
- * Public origin for cart permalinks and storefront links.
- * Prefer NEXT_PUBLIC_SHOPIFY_ONLINE_STORE_URL when the online store uses a custom primary domain.
- */
-export function getOnlineStoreOrigin(): string {
-  const custom = process.env.NEXT_PUBLIC_SHOPIFY_ONLINE_STORE_URL?.trim();
-  if (custom) {
-    const u = custom.replace(/\/$/, "");
-    return u.startsWith("http") ? u : `https://${u}`;
-  }
-  const raw = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN?.trim();
-  if (!raw) return "";
-  const host = raw
-    .replace(/^https?:\/\//, "")
-    .split("/")[0]
-    .replace(/\/$/, "");
-  if (!host) return "";
-  return `https://${host}`;
-}
-
-/** Hosted Online Store cart URL (Shopify checkout starts from here). */
-export function getHostedStoreCartUrl(): string | null {
-  const origin = getOnlineStoreOrigin();
-  if (!origin) return null;
-  return `${origin.replace(/\/$/, "")}/cart`;
-}

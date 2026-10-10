@@ -6,7 +6,7 @@ import type { Guarantee } from "@/types/metafields";
 // Layout reorder (per user feedback): the buy button now sits directly under
 // the body copy (decision moment), and the guarantee card below is a clean
 // badge + title + description block — no button inside breaking up the seal/
-// text alignment. Matches the standalone GuaranteeBlock visual we had before
+// text alignment. Matches the standalone guarantee block visual we had before
 // the restructure plan merged it into this section.
 //
 // "use client" — the button does an onClick scrollIntoView to the hero buy

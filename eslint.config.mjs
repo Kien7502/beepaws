@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Agent tooling (installed skills — gitignored, third-party code): its 130+
+    // findings drowned out the repo's own lint results.
+    ".agents/**",
+    ".claude/**",
   ]),
 ]);
 

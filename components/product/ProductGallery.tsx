@@ -132,7 +132,11 @@ export function ProductGallery({ productTitle, images, fallbackUrl }: Props) {
   // functional update. Writing the ref immediately lets quick taps accumulate.
   const last = list.length - 1;
   const activeRef = useRef(active);
-  activeRef.current = active;
+  // Synced in a layout effect, not during render (react-hooks/refs): step()
+  // only runs from taps and swipes, which come after layout effects.
+  useLayoutEffect(() => {
+    activeRef.current = active;
+  });
   function step(delta: number) {
     const next = Math.max(0, Math.min(last, activeRef.current + delta));
     if (next === activeRef.current) return;
@@ -145,7 +149,6 @@ export function ProductGallery({ productTitle, images, fallbackUrl }: Props) {
   // mirror the same scroll behaviour clicks get.
   useEffect(() => {
     scrollActiveIntoView(active);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
   return (

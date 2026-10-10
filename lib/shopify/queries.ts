@@ -2,7 +2,6 @@ import "server-only";
 
 import { unstable_cache } from "next/cache";
 import {
-  adminGetCollections,
   adminGetProductByHandle,
   adminGetProducts,
 } from "./admin-catalog";
@@ -11,7 +10,7 @@ import {
   type AdminFullProductForPage,
 } from "./admin-product-page";
 import { hasAdminApiCredentials } from "./admin-credentials";
-import type { Collection, Product } from "@/types/shopify";
+import type { Product } from "@/types/shopify";
 
 // Shopify Admin GraphQL uses POST — Next.js cannot cache POST at the fetch() level.
 // unstable_cache wraps the whole function and is invalidated via revalidateTag("products").
@@ -37,20 +36,6 @@ type GetProductsOpts = {
 };
 
 // ─── cache wrappers (pass through in dev — see cache() above) ────────────────
-
-const _cachedGetCollections = cache(
-  async (): Promise<Collection[]> => {
-    if (!hasAdminApiCredentials()) return [];
-    try {
-      return await adminGetCollections();
-    } catch (e) {
-      console.error("[shopify] collections fetch failed:", e);
-      return [];
-    }
-  },
-  ["shopify-collections"],
-  { tags: ["collections"], revalidate: REVALIDATE },
-);
 
 const _cachedGetProducts = cache(
   async (opts: GetProductsOpts): Promise<Product[]> => {
@@ -97,11 +82,6 @@ const _cachedGetFullProduct = cache(
 
 // ─── Direct-fetch fallbacks (no cache layer) ──────────────────────────────────
 
-async function _directGetCollections(): Promise<Collection[]> {
-  if (!hasAdminApiCredentials()) return [];
-  try { return await adminGetCollections(); } catch { return []; }
-}
-
 async function _directGetProducts(opts: GetProductsOpts): Promise<Product[]> {
   if (!hasAdminApiCredentials()) return [];
   try { return await adminGetProducts(opts); } catch { return []; }
@@ -121,14 +101,6 @@ async function _directGetFullProduct(handle: string): Promise<AdminFullProductFo
 }
 
 // ─── Public API (cache with direct-fetch fallback) ───────────────────────────
-
-export async function getCollections(): Promise<Collection[]> {
-  try {
-    return await _cachedGetCollections();
-  } catch {
-    return _directGetCollections();
-  }
-}
 
 export async function getProducts(opts: GetProductsOpts = {}): Promise<Product[]> {
   try {

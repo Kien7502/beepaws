@@ -1,19 +1,11 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 // Shared client state for the product page's left (gallery) and right (selector)
-// columns. VariantSelector writes the matching variant image URL + the current
-// variant's price/availability here when the user picks; ProductGallery reads
-// activeIndex to render the matching image, and DynamicHeroPrice reads
-// activeVariant to render a live-updating price in the hero. Soft-fails outside
-// the provider so components stay usable standalone.
-
-type ActiveVariant = {
-  amount: string;
-  currencyCode: string;
-  availableForSale: boolean;
-};
+// columns. VariantSelector writes the matching variant image URL here when the
+// user picks; ProductGallery reads activeIndex to render the matching image.
+// Soft-fails outside the provider so components stay usable standalone.
 
 type Ctx = {
   activeIndex: number;
@@ -23,8 +15,6 @@ type Ctx = {
    * is already on an image they'd otherwise scroll to (and skip a redundant,
    * flicker-causing jump). */
   activeUrl: string | null;
-  activeVariant: ActiveVariant | null;
-  setActiveVariant: (v: ActiveVariant | null) => void;
 };
 
 const MediaCtx = createContext<Ctx | null>(null);
@@ -37,7 +27,6 @@ export function ProductMediaSync({
   children: ReactNode;
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [activeVariant, setActiveVariant] = useState<ActiveVariant | null>(null);
 
   // Keep a ref to the latest imageUrls so setActiveByUrl can stay stable —
   // otherwise its identity changes every render, which makes any consumer's
@@ -45,12 +34,17 @@ export function ProductMediaSync({
   // list is the combined reel of every member's images, so a member's own
   // image URL resolves to its index here.
   const urlsRef = useRef(imageUrls);
-  urlsRef.current = imageUrls;
   // Ref-mirror of activeIndex so setActiveByUrl can compare against the current
   // index without being recreated (it must stay identity-stable — consumers
   // depend on it in effects).
   const activeIndexRef = useRef(activeIndex);
-  activeIndexRef.current = activeIndex;
+  // Synced in a layout effect, not during render (react-hooks/refs). Layout
+  // effects run before any passive effect or event handler that calls
+  // setActiveByUrl, so it always sees the current values.
+  useLayoutEffect(() => {
+    urlsRef.current = imageUrls;
+    activeIndexRef.current = activeIndex;
+  });
 
   const setActiveByUrl = useCallback((url: string | null | undefined) => {
     if (!url) return;
@@ -70,10 +64,8 @@ export function ProductMediaSync({
       setActiveIndex,
       setActiveByUrl,
       activeUrl,
-      activeVariant,
-      setActiveVariant,
     }),
-    [activeIndex, setActiveByUrl, activeUrl, activeVariant],
+    [activeIndex, setActiveByUrl, activeUrl],
   );
 
   return <MediaCtx.Provider value={value}>{children}</MediaCtx.Provider>;
@@ -86,8 +78,6 @@ export function useProductMedia() {
     setActiveIndex: () => {},
     setActiveByUrl: () => {},
     activeUrl: null,
-    activeVariant: null,
-    setActiveVariant: () => {},
   };
 }
 

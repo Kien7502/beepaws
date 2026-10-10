@@ -65,112 +65,61 @@ NEXT_PUBLIC_SITE_URL=https://beepaws.com
 
 ## Architecture
 
-Product pages are server-rendered at `app/products/[handle]/page.tsx`. Data flow:
+Product pages are server-rendered at `app/products/[handle]/page.tsx` (ISR: every product is
+prerendered, `revalidate = 3600`, cache tag `products`). Data flow:
 
-1. `getFullProductForPage(handle)` calls Shopify Admin GraphQL, fetches the product plus all metafields in one query (`lib/shopify/admin-product-page.ts`)
-2. `normalizeMetafields()` parses the `beepaws.*` namespace into a typed `BeepawsMetafields` object (`types/metafields.ts`)
-3. Each section component accepts typed props with a `DEFAULT_*` fallback — if the metafield is null, the component renders sensible defaults
+1. `getFullProductForPage(handle)` fetches the product plus all `beepaws.*` metafields in one Admin
+   GraphQL query (`lib/shopify/admin-product-page.ts`).
+2. `normalizeMetafields()` parses them into a typed `BeepawsMetafields` object (`types/metafields.ts`).
+3. Each section component takes typed props with a `DEFAULT_*` fallback, so a missing metafield
+   never breaks the page.
 
-This means: a product page never breaks if a metafield is missing, and brand-level copy (stats, FAQs that apply to all products) can live in code instead of being copied into every product.
+**Content is authored in the admin app** ([`../beepaws-admin`](../beepaws-admin)) — product copy,
+the homepage blocks, listicles and the theme all go through its editor and are pushed to Shopify
+from there. The `beepaws.*` schema's single source of truth is the admin's `lib/schema.ts`; this
+repo only reads it. (The old `scripts/` content CLI was retired when the admin took over.)
 
-## Product page metafields
+- **Live refresh:** after a Push / Publish the admin calls `/api/revalidate` with a key derived from
+  the shared Shopify client secret (`lib/revalidate-key.ts`) — there's no Shopify webhook for
+  metafield content.
+- **Draft previews** (dev only, `BEEPAWS_PREVIEW_ENABLED=1`): `/preview/products/[handle]`,
+  `/preview/homepage` and `/preview/listicles/[id]` render the admin's unsaved draft
+  (`?admin=<port>`), for the admin's preview pane.
+- **Listicles:** `/journal/[slug]` renders admin-authored editorial pages
+  (`lib/shopify/listicles.ts`, `components/journal/`) without the site header and footer.
 
-All in the `beepaws.*` namespace, owner type `PRODUCT`:
-
-| Key | Type | Used by |
-|---|---|---|
-| `product_bullets` | `list.single_line_text_field` | Bullet checklist near buy button |
-| `ingredients` | `list.single_line_text_field` | Ingredients chips in description accordion |
-| `education_note` | `single_line_text_field` | Reserved for use near buy button |
-| `tech_specs` | `json` | Specifications section in description accordion |
-| `stats` | `json` | `StatsTrustBar` below the fold |
-| `comparison_rows` | `json` | `ComparisonTable` below the fold |
-| `use_cases` | `json` | `UseCaseCards` below the fold |
-| `faq_items` | `json` | `FAQSection` below the fold |
-| `reviews` | `json` | `UGCReviews` carousel below the fold |
-| `before_after_slides` | `json` | `BeforeAfterSection` below the fold |
-| `bundle_tiers` | `json` | Per-tier name + description overrides in VariantSelector. Shape: `[{name?, description?}]` — index 0 = Starter, 1 = Complete Care, 2 = Family Pack. Empty/missing entries fall back to defaults. |
-
-JSON shapes are defined in `types/metafields.ts`. The single source of truth for the schema (Shopify type + editor shape) is [`scripts/metafield-schemas.mjs`](scripts/metafield-schemas.mjs) — see [`scripts/README.md`](scripts/README.md) for the full workflow including how to add a new metafield end-to-end.
-
-## Adding content to a new product
-
-Quick reference below. Full details, the schema entry shape, and the utility scripts (Storefront token, payment-methods diagnostic, OAuth test) live in [`scripts/README.md`](scripts/README.md).
-
-### 1. One-time per shop — create metafield definitions
-
-```bash
-node --env-file=.env.local scripts/seed-metafield-definitions.mjs
-```
-
-Idempotent. Existing definitions report `SKIP`. New ones report `OK`.
-
-### 2. Per product — author the content interactively
-
-```bash
-node --env-file=.env.local scripts/edit-product-content.mjs [product-handle]
-```
-
-Interactive CLI that reads/writes `scripts/products/<handle>.json`. Menu lets you add/edit/delete items in each list (FAQ, reviews, etc.) one field at a time — no JSON typing required. Auto-saves after every change.
-
-- **No handle?** The script lists existing product files in `scripts/products/` so you can pick one, or `n` to create a new one.
-- **Tags editor**: edit Shopify product tags inline. `s` queries `shop.productTags` so you can pick from the shop-wide pool instead of typing duplicates. New products default to `["device"]` so the PDP renders the device-template sections (Mechanism + SilentReassurance).
-- **Push from inside the editor**: `p` from the main menu pushes metafields + tags directly — no separate seed command needed (skip step 3 below if you use this).
-- `--env-file=.env.local` is only required for `s` (suggest tags) and `p` (push). Pure local editing works without it.
-
-### 3. Push the content to Shopify
-
-```bash
-node --env-file=.env.local scripts/seed-product-metafields.mjs <product-handle>
-```
-
-If `scripts/products/<handle>.json` exists, that's the source. Otherwise the script falls back to built-in dental-scaler defaults (useful for first-time seeding before any JSON file exists). Tags come from `content.tags` in the JSON; if missing, defaults to `["device"]`. `productUpdate` replaces the full tag list — the local JSON is authoritative.
-
-### 4. Fresh machine — pull existing product content from Shopify
-
-```bash
-node --env-file=.env.local scripts/pull-product-metafields.mjs <product-handle> [--force]
-```
-
-Reverse of step 3: fetches `beepaws.*` metafields + tags from Shopify and writes `scripts/products/<handle>.json`. Use when cloning the repo to a new machine, or when someone has edited a product directly in Shopify Admin and you want the local file to catch up. Refuses to overwrite an existing local file without `--force`.
-
-### Alternative — Shopify Admin UI
-
-Once the definitions are seeded (step 1), every product has a Metafields panel in the Shopify Admin. For text and list fields the UI is friendly; for `json` fields you have to paste valid JSON (which is what step 2 helps avoid).
-
-Shopify's "Duplicate product" action copies metafields, so once one product is set up, duplicating it is the fastest way to start a similar product.
+Contracts between the two repos live in `docs/admin-handoff-*.md` and `docs/bundles-from-admin.md`;
+the current state of each feature is in [`CLAUDE.md`](CLAUDE.md).
 
 ## Project layout
 
 ```
 app/
-  products/[handle]/page.tsx      Main product page
-  globals.css                     Tailwind v4 theme + custom properties
+  products/[handle]/      Product page (ISR)
+  collections/            Catalog pages
+  journal/[slug]/         Admin-authored listicles
+  preview/                Draft previews for the admin tool (dev-gated)
+  api/                    Cart / checkout routes, /api/revalidate
+  globals.css             Tailwind v4 theme, Warm Honey tokens, print styles
 components/
-  product/                        Section components — each takes typed props
-                                  with DEFAULT_* fallback
-  layout/Footer.tsx
-  ui/WaveDivider.tsx              Animated SVG section divider
+  product/                Product-page sections (typed props + DEFAULT_* fallbacks)
+  home/                   Metafield-driven homepage (wired in via app/page.tsx later)
+  journal/                Listicle view + floating button
+  cart/ layout/ ui/       Cart drawer, header/footer, shared UI
 lib/
-  shopify/
-    admin-graphql.ts              Admin API fetch helper (OAuth or static token)
-    admin-credentials.ts          Token resolution + caching
-    admin-product-page.ts         normalizeMetafields() — parses beepaws.* namespace
-    queries.ts                    Public query functions
+  shopify/                Admin GraphQL fetch, catalog/product queries, cart, homepage,
+                          listicles, variant groups, discounts
+  inline-format.tsx       **bold** / ==highlight== / *italic* / [link](url) for authored copy
+  content-icons.ts        Server-side lucide catalog for authored icon names
 types/
-  metafields.ts                   BeepawsMetafields and all typed interfaces
-scripts/
-  shopify-admin.mjs               Shared: auth, GraphQL, common product mutations
-  metafield-schemas.mjs           Single source of truth for the beepaws.* schema
-  seed-metafield-definitions.mjs  One-time: create beepaws.* definitions
-  edit-product-content.mjs        Interactive editor (metafields + tags + push)
-  seed-product-metafields.mjs     Push JSON content to Shopify (metafields + tags)
-  pull-product-metafields.mjs     Pull metafields + tags FROM Shopify → local JSON
-  products/                       Per-product content files (committed)
+  metafields.ts           BeepawsMetafields and the typed metafield shapes
+docs/                     Admin ⇄ storefront contracts
 ```
 
 ## Notes
 
-- **Wave dividers between sections**: every divider has a 3px overlap (`marginTop: "-3px"`) on the following section to hide subpixel compositor gaps at non-100% zoom. Don't remove without testing at 90% / 110% zoom.
-- **Product page root**: uses `style={{ overflowX: "clip" }}` not `overflow-clip` — the latter creates a hard vertical paint boundary that causes a visible seam under the footer wave.
-- **Footer**: uses `marginTop: "-16px"` plus a cream gap-fill `background` so any compositor seam between the FAQ section and footer wave shows cream, not dark green.
+- **Wave dividers between sections**: every divider has a 3px overlap (`marginTop: "-3px"`) on the
+  following section to hide subpixel compositor gaps at non-100% zoom. Don't remove without
+  testing at 90% / 110% zoom.
+- **Product page root**: uses `style={{ overflowX: "clip" }}` not `overflow-clip` — the latter
+  creates a hard vertical paint boundary that causes a visible seam under the footer wave.

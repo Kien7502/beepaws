@@ -1,8 +1,7 @@
 import "server-only";
 
-import type { Collection, Image, Product, ProductVariant } from "@/types/shopify";
+import type { Image, Product, ProductVariant } from "@/types/shopify";
 import { adminGraphqlFetch } from "./admin-graphql";
-import { shopifyFetch } from "./index";
 import { SHOW_REVIEWS } from "@/lib/reviews";
 
 function stripHtml(html: string | null | undefined): string {
@@ -271,63 +270,6 @@ function mapAdminProduct(node: AdminProductNode): Product {
       description: (node.seo?.description || plain).slice(0, 320),
     },
   };
-}
-
-export async function adminGetCollections(): Promise<Collection[]> {
-  const query = `
-    query CollectionsForCatalog {
-      collections(first: 100, sortKey: TITLE) {
-        edges {
-          node {
-            id
-            title
-            handle
-            descriptionHtml
-            seo {
-              title
-              description
-            }
-          }
-        }
-      }
-    }
-  `;
-
-  const res = await adminGraphqlFetch<{
-    data: {
-      collections: {
-        edges: {
-          node: {
-            id: string;
-            handle: string;
-            title: string;
-            descriptionHtml: string | null;
-            seo: { title: string | null; description: string | null } | null;
-          };
-        }[];
-      };
-    };
-  }>({
-    // Cached read (CLAUDE.md: callers opt into force-cache + tags).
-    // Without this the default is `no-store`, which also defeats the
-    // unstable_cache wrapper in queries.ts — every render refetched.
-    cache: "force-cache",
-    tags: ["products"], query });
-
-  return res.body.data.collections.edges.map(({ node }) => {
-    const plain = stripHtml(node.descriptionHtml);
-    return {
-      id: node.id,
-      handle: node.handle,
-      title: node.title,
-      description: plain,
-      seo: {
-        title: node.seo?.title || node.title,
-        description: (node.seo?.description || plain).slice(0, 320),
-      },
-      products: { edges: [] },
-    };
-  });
 }
 
 /**

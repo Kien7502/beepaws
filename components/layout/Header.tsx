@@ -59,19 +59,24 @@ const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
   const { itemCount, hydrated, lastAddedAt, lastAddedQuantity, openDrawer } = useCart();
-  const [showCartPulse, setShowCartPulse] = useState(false);
-
+  // Cart pulse: on from each add-to-cart until 850ms later. Derived from which
+  // add the pulse has already finished for, so nothing is set synchronously in
+  // an effect (react-hooks/set-state-in-effect) — only in the timer.
+  const [pulseDoneFor, setPulseDoneFor] = useState<number | null>(null);
+  const showCartPulse = !!lastAddedAt && pulseDoneFor !== lastAddedAt;
   useEffect(() => {
     if (!lastAddedAt) return;
-    setShowCartPulse(true);
-    const t = window.setTimeout(() => setShowCartPulse(false), 850);
+    const t = window.setTimeout(() => setPulseDoneFor(lastAddedAt), 850);
     return () => window.clearTimeout(t);
   }, [lastAddedAt]);
 
-  // Close the menu on navigation (route change).
-  useEffect(() => {
+  // Close the menu on navigation: React's "adjust state when a prop changes"
+  // pattern (during render), rather than a setState inside an effect.
+  const [menuPath, setMenuPath] = useState(pathname);
+  if (menuPath !== pathname) {
+    setMenuPath(pathname);
     setMobileOpen(false);
-  }, [pathname]);
+  }
 
   return (
     // Warm Honey re-skin: paper bg + hairline border (no shadow). Sticky stays.

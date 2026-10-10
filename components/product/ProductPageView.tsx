@@ -87,10 +87,9 @@ export async function ProductPageView({
   const mechParadoxBody =
     blank(mi?.paradoxBody) ?? (mechLegacyParagraphs.length ? mechLegacyParagraphs.join("\n\n") : undefined);
 
-  // Device-only sections (Mechanism + SilentReassurance) gate on the Shopify
-  // product tag "device". The seed-product-metafields script auto-applies
-  // this tag on each product run, so new device launches pick it up without
-  // a manual Admin step. Consumables stay untagged → those sections skip.
+  // Device-only parts (the hero's "Vet-grade technology" pill and the Mechanism
+  // section) gate on the Shopify product tag "device", set in the admin tool's
+  // tag field. Consumables stay untagged → those parts skip.
   const isDevice = product.tags?.includes("device") ?? false;
 
   // Bundle products (Shopify Bundles / productBundleCreate) are tagged `bundle`
