@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShoppingBag } from "lucide-react";
+import { Check, ShoppingBag } from "lucide-react";
 import Image from "next/image";
 import type { Product } from "@/types/shopify";
 import { useCart } from "@/components/cart/CartProvider";
@@ -95,8 +95,32 @@ export function StickyAddToCart({ product }: { product: Product }) {
           onClick={onAdd}
           className="flex shrink-0 items-center gap-2 rounded-xl bg-gold px-5 py-3 md:px-7 text-[15px] font-extrabold text-cocoa transition-[transform,background-color,color] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-gold-deep hover:text-white hover:-translate-y-0.5 shadow-sm"
         >
-          <ShoppingBag size={18} />
-          {summary.added ? "Added!" : summary.available ? "Add to cart" : "Choose options"}
+          {summary.available ? (
+            // Both faces share one grid cell, so the button keeps the width of
+            // the wider one and the label cross-fades instead of the button
+            // resizing under the thumb (owner, 2026-10-11).
+            <span className="grid">
+              <span
+                aria-hidden={summary.added}
+                className={`col-start-1 row-start-1 flex items-center justify-center gap-2 transition-opacity duration-150 ${summary.added ? "opacity-0" : ""}`}
+              >
+                <ShoppingBag size={18} />
+                Add to cart
+              </span>
+              <span
+                aria-hidden={!summary.added}
+                className={`col-start-1 row-start-1 flex items-center justify-center gap-2 transition-opacity duration-150 ${summary.added ? "" : "opacity-0"}`}
+              >
+                <Check size={18} />
+                Added!
+              </span>
+            </span>
+          ) : (
+            <>
+              <ShoppingBag size={18} />
+              Choose options
+            </>
+          )}
         </button>
       </div>
     </div>

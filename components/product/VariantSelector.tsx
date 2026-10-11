@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
 import type { Product, ProductVariant } from "@/types/shopify";
@@ -440,7 +440,17 @@ export default function VariantSelector({
   const [unitVariantIds, setUnitVariantIds] = useState<string[]>(
     Array(3).fill(variants[0]?.id ?? ""),
   );
-  const [added, setAdded] = useState(false);
+  // Which button just added: the buy box's own, or the floating bar (which
+  // mirrors it). The buy box's "Added to cart!" note shows only for its own
+  // button - from the bar it would appear off-screen ABOVE the shopper, push
+  // the page down, then pull it back up 1.8s later (owner, 2026-10-11).
+  const [addedVia, setAddedVia] = useState<"box" | "bar" | null>(null);
+  const addedTimer = useRef(0);
+  function flashAdded(via: "box" | "bar") {
+    setAddedVia(via);
+    window.clearTimeout(addedTimer.current);
+    addedTimer.current = window.setTimeout(() => setAddedVia(null), 1800);
+  }
   const [buyingNow, setBuyingNow] = useState(false);
   // A refused checkout used to reset the button silently, so it read as a dead
   // button (owner, 2026-09-30: "buy now doesn't work"). Say why instead - the
@@ -743,7 +753,7 @@ export default function VariantSelector({
     });
   }
 
-  function onAddToCart() {
+  function onAddToCart(via: "box" | "bar" = "box") {
     // Quantity mode → one cart line per variant with a chosen quantity.
     if (quantityMode) {
       if (qtyLines.length === 0) return;
@@ -765,8 +775,7 @@ export default function VariantSelector({
           variantGroup: groupPresentation(),
         });
       }
-      setAdded(true);
-      window.setTimeout(() => setAdded(false), 1800);
+      flashAdded(via);
       return;
     }
 
@@ -806,8 +815,7 @@ export default function VariantSelector({
           options: valuesByTitle[c.title],
         })),
       });
-      setAdded(true);
-      window.setTimeout(() => setAdded(false), 1800);
+      flashAdded(via);
       return;
     }
 
@@ -836,8 +844,7 @@ export default function VariantSelector({
         });
       }
       if (selectedTierGift) addGiftLine(selectedTierGift);
-      setAdded(true);
-      window.setTimeout(() => setAdded(false), 1800);
+      flashAdded(via);
       return;
     }
 
@@ -880,8 +887,7 @@ export default function VariantSelector({
     }
 
     if (selectedTierGift) addGiftLine(selectedTierGift);
-    setAdded(true);
-    window.setTimeout(() => setAdded(false), 1800);
+    flashAdded(via);
   }
 
   // Buy It Now — bypass the local cart and POST the current bundle composition
@@ -996,9 +1002,9 @@ export default function VariantSelector({
         activeProduct.images.edges[0]?.node?.url ??
         null,
       available: !!isAvailable,
-      added,
+      added: addedVia !== null,
     },
-    onAddToCart,
+    () => onAddToCart("bar"),
   );
 
   return (
@@ -1900,7 +1906,7 @@ export default function VariantSelector({
           disabled={!isAvailable}
           leftIcon={<ShoppingBag size={22} />}
           className="min-h-[52px] rounded-xl text-base md:text-lg !bg-gold !text-cocoa hover:!bg-gold-deep hover:!text-white"
-          onClick={onAddToCart}
+          onClick={() => onAddToCart()}
         >
           {quantityMode && qtyLines.length === 0
             ? "Choose a quantity above"
@@ -1943,7 +1949,7 @@ export default function VariantSelector({
             accepted cards and the express wallets, where the choice is made. */}
 
 
-        {added && (
+        {addedVia === "box" && (
           <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-sm font-semibold text-positive">
             <CheckCircle2 size={16} />
             Added to cart!{" "}
