@@ -36,10 +36,11 @@ or layout change. The findings are mostly small craft fixes.
    Prices on the page are whatever Shopify holds — the source of truth is the
    admin's `docs/beepaws-pdp-revision-2026-10-05.md` (device $49.95, kits
    $49.95 / $59.95 / $109.95, spray $20) once the owner updates the store.
-3. **Tiny tap targets.** The slider dots are 8×8px (pain points, mechanism, use
-   cases, comparison) — Apple's minimum is 44px. Give them a ~40px hit area with
-   the dot staying small (the before/after dots already do this). The inline
-   arrows are 32px (→ 40px). Footer links are 19px tall on phones.
+3. ✓ **Tap targets** (2026-10-11): slider dots are 24×40px buttons with the
+   small dot drawn inside; arrows 40px; footer links fill their gaps; social
+   icons 38px and named for screen readers. (Still small: the kit rows'
+   product-name link, 16px tall, sits INSIDE the selectable tier card — a
+   near-miss tap opens another page. Worth a look with the copy revision.)
 4. **Low-contrast text** (WCAG AA wants 4.5:1 for small text, 3:1 for large):
    - hero pill "VET-GRADE TECHNOLOGY · AT HOME" — clay on honey, **3.1:1** at 12px
    - use-case badges "STRESS-FREE" etc. — white on amber, **2.0:1** at 10px
