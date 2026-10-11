@@ -26,7 +26,7 @@ export default function ProductError({
         </button>
         <Link
           href="/collections/all"
-          className="rounded-xl bg-[var(--color-primary)] px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+          className="rounded-xl bg-[var(--color-primary)] px-5 py-2.5 text-sm font-semibold text-white pressable hover:opacity-90"
         >
           Back to shop
         </Link>

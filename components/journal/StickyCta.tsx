@@ -61,7 +61,7 @@ export function StickyCta({ label, href }: { label: string; href: string }) {
         <Link
           href={href}
           tabIndex={show ? 0 : -1}
-          className="inline-flex h-11 items-center rounded-full bg-gold px-6 text-[15px] font-bold text-cocoa shadow-[0_6px_18px_-6px_rgb(74_46_22/0.45)] transition-colors hover:bg-gold-deep"
+          className="inline-flex h-11 items-center rounded-full bg-gold px-6 text-[15px] font-bold text-cocoa shadow-[0_6px_18px_-6px_rgb(74_46_22/0.45)] pressable hover:bg-gold-deep"
         >
           {label}
         </Link>

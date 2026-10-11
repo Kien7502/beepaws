@@ -139,7 +139,7 @@ export function ProductDetailsSections({
               <li key={item.id}>
                 <Link
                   href={`/products/${item.handle}`}
-                  className="flex min-h-[44px] items-center rounded-2xl border border-[var(--color-border)] px-4 py-3 text-sm font-semibold text-[var(--color-foreground)] transition hover:bg-[var(--color-surface-2)]"
+                  className="flex min-h-[44px] items-center rounded-2xl border border-[var(--color-border)] px-4 py-3 text-sm font-semibold text-[var(--color-foreground)] pressable hover:bg-[var(--color-surface-2)]"
                 >
                   {item.title}
                 </Link>

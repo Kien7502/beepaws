@@ -106,13 +106,13 @@ export function HomePageView({ blocks }: { blocks: HomepageBlocks }) {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href={blocks.hero?.ctaHref ?? "/collections/all"}
-                className="inline-flex h-14 items-center justify-center rounded-full bg-clay px-9 text-base font-bold text-white shadow-lg transition-colors duration-200 hover:bg-cocoa active:scale-[0.97]"
+                className="inline-flex h-14 items-center justify-center rounded-full bg-clay px-9 text-base font-bold text-white shadow-lg pressable hover:bg-cocoa"
               >
                 {blocks.hero?.ctaLabel ?? "Start now"}
               </Link>
               <Link
                 href="#why"
-                className="inline-flex h-14 items-center justify-center rounded-full border-2 border-white/40 px-9 text-base font-bold text-white backdrop-blur-sm transition-colors duration-200 hover:bg-white/10 active:scale-[0.97]"
+                className="inline-flex h-14 items-center justify-center rounded-full border-2 border-white/40 px-9 text-base font-bold text-white backdrop-blur-sm pressable hover:bg-white/10"
               >
                 Why BeePaws
               </Link>
@@ -354,7 +354,7 @@ export function HomePageView({ blocks }: { blocks: HomepageBlocks }) {
                 <p className="mt-2 text-sm text-brown">Ultrasonic · cordless · USB-C · 3 cleaning modes</p>
                 <Link
                   href={blocks['dental-spotlight']?.ctaHref ?? "/collections/all"}
-                  className="mt-6 inline-flex h-12 w-fit items-center rounded-full bg-clay px-6 font-bold text-white transition-colors hover:bg-cocoa active:scale-[0.97]"
+                  className="mt-6 inline-flex h-12 w-fit items-center rounded-full bg-clay px-6 font-bold text-white pressable hover:bg-cocoa"
                 >
                   {blocks['dental-spotlight']?.ctaLabel ?? "Shop dental"}
                 </Link>
@@ -381,7 +381,7 @@ export function HomePageView({ blocks }: { blocks: HomepageBlocks }) {
                   <p className="mt-3 font-semibold text-clay">A $40 device, or a $1,400 vet bill.</p>
                   <Link
                     href="/collections/all"
-                    className="mt-5 inline-flex h-12 items-center rounded-full bg-clay px-6 font-bold text-white transition-colors hover:bg-cocoa active:scale-[0.97]"
+                    className="mt-5 inline-flex h-12 items-center rounded-full bg-clay px-6 font-bold text-white pressable hover:bg-cocoa"
                   >
                     Shop dental
                   </Link>
@@ -399,7 +399,7 @@ export function HomePageView({ blocks }: { blocks: HomepageBlocks }) {
                   <p className="mt-3 font-semibold text-clay">Less than one professional groomer trip. Once.</p>
                   <Link
                     href="/collections/all"
-                    className="mt-5 inline-flex h-12 items-center rounded-full bg-clay px-6 font-bold text-white transition-colors hover:bg-cocoa active:scale-[0.97]"
+                    className="mt-5 inline-flex h-12 items-center rounded-full bg-clay px-6 font-bold text-white pressable hover:bg-cocoa"
                   >
                     Shop grooming
                   </Link>

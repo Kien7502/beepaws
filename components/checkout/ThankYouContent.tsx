@@ -58,7 +58,7 @@ export function ThankYouContent() {
       </p>
       <Link
         href="/collections/all"
-        className="mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-6 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
+        className="mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-6 py-2.5 text-sm font-bold text-white pressable hover:opacity-90"
       >
         Continue shopping
       </Link>

@@ -283,6 +283,29 @@ body {
   }
 }
 
+/* ─── Press feedback for LINKS styled as buttons ──────────────────────────
+   Calls to action that navigate are <a>/<Link>, so the button rule above never
+   reached them: a tap on a listicle button or the floating "shop" pill gave no
+   sign it had landed until the next page loaded (apple-design pass,
+   2026-10-11: feedback on press, instantly). Same 0.97 dip as a button, on the
+   `scale` property so it composes with any translate the element already has.
+   Includes the colour transitions, so use it INSTEAD of transition-colors. The
+   tap-highlight box is dropped where the dip replaces it. */
+@utility pressable {
+  transition-property: color, background-color, border-color, opacity, box-shadow, scale;
+  transition-duration: 140ms;
+  transition-timing-function: var(--ds-ease-out);
+  -webkit-tap-highlight-color: transparent;
+  &:active {
+    scale: 0.97;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &:active {
+      scale: none;
+    }
+  }
+}
+
 
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -105,7 +105,7 @@ function Button({ href, label, note }: { href: string; label: string; note?: str
     <div className="mt-8 text-center" data-listicle-cta="">
       <Link
         href={href}
-        className="inline-flex w-full items-center justify-center rounded-lg bg-gold px-8 py-4 text-[17px] font-bold text-cocoa transition-colors hover:bg-gold-deep md:w-auto"
+        className="inline-flex w-full items-center justify-center rounded-lg bg-gold px-8 py-4 text-[17px] font-bold text-cocoa pressable hover:bg-gold-deep md:w-auto"
       >
         {label}
       </Link>

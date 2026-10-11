@@ -167,7 +167,7 @@ export function CartDrawer() {
               <Link
                 href="/collections/all"
                 onClick={closeDrawer}
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-6 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-6 py-2.5 text-sm font-bold text-white pressable hover:opacity-90"
               >
                 Shop now <ArrowRight size={16} />
               </Link>
