@@ -10,6 +10,7 @@ import { contentIcon } from "@/lib/content-icons";
 import { ProductDetailsSections } from "@/components/product/ProductDetailsSections";
 import { FinalCTASection } from "@/components/product/FinalCTASection";
 import { StickyAddToCart } from "@/components/product/StickyAddToCart";
+import { BuyBoxSync } from "@/components/product/BuyBoxSync";
 import { ComparisonTable } from "@/components/product/ComparisonTable";
 import { UseCaseCards } from "@/components/product/UseCaseCards";
 import { FAQSection } from "@/components/product/FAQSection";
@@ -430,7 +431,9 @@ export async function ProductPageView({
   };
 
   return (
-    // overflowX:"clip" not overflow-clip — avoids hard vertical paint boundary that causes 1px compositor seam at sub-100% zoom
+    // BuyBoxSync: the floating add-to-cart bar (bottom) mirrors the buy box.
+    <BuyBoxSync>
+    {/* overflowX:"clip" not overflow-clip — avoids hard vertical paint boundary that causes 1px compositor seam at sub-100% zoom */}
     <div className="relative" style={{ overflowX: "clip" }}>
       <script
         type="application/ld+json"
@@ -805,32 +808,9 @@ export async function ProductPageView({
         />
       </div>
 
-      <StickyAddToCart
-        product={product}
-        // The sticky bar must ADD what it PRICES: when tier 0 is bundle-backed
-        // it quick-adds the Starter bundle (one line, Shopify expands it) at
-        // the same price the bar displays.
-        quickAddBundle={
-          tierZero
-            ? {
-                variantId: tierZero.variants[0].id,
-                variantTitle:
-                  tierZero.variants[0].selectedOptions.map((o) => o.value).join(" / ") || "Bundle",
-                priceAmount: tierZero.variants[0].priceAmount,
-                currencyCode: tierZero.currencyCode,
-                available: tierZero.variants[0].availableForSale,
-                handle: tierZero.handle,
-                title: tierZero.title,
-                imageUrl: tierZero.imageUrl,
-                components: tierZero.components.map((c) => ({
-                  quantity: c.quantity,
-                  title: c.title,
-                  imageUrl: c.imageUrl,
-                })),
-              }
-            : null
-        }
-      />
+      {/* Mirrors the buy box above (BuyBoxSync): same item, same price, same add. */}
+      <StickyAddToCart product={product} />
     </div>
+    </BuyBoxSync>
   );
 }

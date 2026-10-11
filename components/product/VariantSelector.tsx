@@ -12,6 +12,7 @@ import Button from "@/components/ui/Button";
 import { CheckCircle2, Info, ShoppingBag, Loader2, Minus, Plus } from "lucide-react";
 import { useCart, type LocalCartItem } from "@/components/cart/CartProvider";
 import { useProductMedia } from "./ProductMediaSync";
+import { usePublishBuyBox } from "./BuyBoxSync";
 
 // Color name → hex map for swatch rendering. Falls back to text button when a
 // value isn't recognized, so the picker degrades gracefully for unusual colors.
@@ -971,6 +972,34 @@ export default function VariantSelector({
       : selectedTierKit
         ? kitLines.length > 0 && kitLines.every((l) => l.variant.availableForSale)
         : selectedVariant?.availableForSale;
+
+  // The floating add-to-cart bar mirrors this buy box (BuyBoxSync): what the
+  // button below would add, at its price, and the add itself.
+  const pick = (v: ProductVariant) => (v.title === "Default Title" ? "" : v.title);
+  usePublishBuyBox(
+    {
+      title: quantityMode ? activeProduct.title : tierCopy(tierIdx, "name"),
+      detail: quantityMode
+        ? qtyLines.map((l) => `${l.qty} × ${pick(l.variant) || activeProduct.title}`).join(", ")
+        : selectedTierBundle
+          ? (chosenBundleVariant?.selectedOptions.map((o) => o.value).join(" / ") ?? "")
+          : selectedTierKit
+            ? kitLines.map((l) => pick(l.variant)).filter(Boolean).join(" + ")
+            : pick(selectedVariant),
+      price: formatMoney(totalPrice, displayCurrency),
+      imageUrl:
+        (selectedTierBundle
+          ? selectedTierBundle.imageUrl
+          : selectedTierKit
+            ? kitLines[0]?.variant.image?.url
+            : selectedVariant.image?.url) ??
+        activeProduct.images.edges[0]?.node?.url ??
+        null,
+      available: !!isAvailable,
+      added,
+    },
+    onAddToCart,
+  );
 
   return (
     <div className="flex flex-col gap-6">

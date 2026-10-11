@@ -5,48 +5,23 @@ import { ShoppingBag } from "lucide-react";
 import Image from "next/image";
 import type { Product } from "@/types/shopify";
 import { useCart } from "@/components/cart/CartProvider";
+import { prefersReducedMotion } from "@/lib/motion";
+import { useBuyBox } from "./BuyBoxSync";
 
-function formatMoney(amount: number, currencyCode: string) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: currencyCode || "USD",
-  }).format(amount);
-}
-
-// When the PDP's tier 0 is a real Shopify bundle, the sticky bar prices AND
-// adds that bundle (one cart line; Shopify expands the components) so the
-// number on the bar always matches what lands in the cart — part of the
-// pricing-coherence fix (verification pass §2.1).
-type QuickAddBundle = {
-  variantId: string;
-  variantTitle: string;
-  priceAmount: string;
-  currencyCode: string;
-  available: boolean;
-  handle: string;
-  title: string;
-  imageUrl: string;
-  components: { quantity: number; title: string; imageUrl: string | null }[];
-};
-
-export function StickyAddToCart({
-  product,
-  quickAddBundle,
-}: {
-  product: Product;
-  quickAddBundle?: QuickAddBundle | null;
-}) {
+/**
+ * The floating add-to-cart bar. It MIRRORS the buy box (owner, 2026-10-11): it
+ * shows what the buy box's own button would add — the chosen kit, its colours
+ * or flavours, and the same total — and its button runs that same add (both via
+ * BuyBoxSync). It used to add the product's first variant on its own, a white
+ * device at the base price, whatever the shopper had picked above.
+ *
+ * When the buy box has nothing addable (no quantity chosen, or sold out), the
+ * button takes the shopper back to it instead of sitting there disabled.
+ */
+export function StickyAddToCart({ product }: { product: Product }) {
   const [visible, setVisible] = useState(false);
-  const [added, setAdded] = useState(false);
-  const { addItem, closeDrawer, drawerOpen } = useCart();
-
-  const variant = product.variants.edges[0]?.node;
-  const price = quickAddBundle
-    ? parseFloat(quickAddBundle.priceAmount)
-    : parseFloat(variant?.price?.amount || "0");
-  const currencyCode = quickAddBundle?.currencyCode || variant?.price?.currencyCode || "USD";
-  const imageUrl = product.images.edges[0]?.node?.url || "/product-placeholder.svg";
-  const isAvailable = quickAddBundle ? quickAddBundle.available : variant?.availableForSale;
+  const { closeDrawer, drawerOpen } = useCart();
+  const { summary, add } = useBuyBox();
 
   useEffect(() => {
     // Watch the Add-to-cart button itself, not a zero-height sentinel —
@@ -72,74 +47,56 @@ export function StickyAddToCart({
     };
   }, []);
 
-  function onAdd() {
-    if (!isAvailable) return;
+  if (!summary) return null;
 
-    if (quickAddBundle) {
-      addItem({
-        merchandiseId: quickAddBundle.variantId,
-        productHandle: quickAddBundle.handle,
-        productTitle: quickAddBundle.title,
-        variantTitle: quickAddBundle.variantTitle,
-        imageUrl: quickAddBundle.imageUrl || imageUrl,
-        currencyCode: quickAddBundle.currencyCode,
-        unitPriceAmount: quickAddBundle.priceAmount,
-        quantity: 1,
-        // Carry the components so the cart line lists what's inside (and the
-        // line stays non-linking — bundle PDPs 404 by design).
-        bundleComponents: quickAddBundle.components,
-      });
-    } else {
-      if (!variant) return;
-      addItem({
-        merchandiseId: variant.id,
-        productHandle: product.handle,
-        productTitle: product.title,
-        variantTitle: variant.title,
-        imageUrl,
-        currencyCode: variant.price.currencyCode,
-        unitPriceAmount: variant.price.amount,
-        quantity: 1,
-      });
+  const imageUrl = summary.imageUrl || product.images.edges[0]?.node?.url || "/product-placeholder.svg";
+  const shown = visible && !drawerOpen;
+
+  function onAdd() {
+    if (!summary?.available) {
+      document
+        .getElementById("buy-box")
+        ?.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "start" });
+      return;
     }
-    // Don't open the drawer from the sticky bar — let the user stay on the page
+    add();
+    // The buy box's add opens the cart drawer; from the bar, stay on the page
+    // (the header's cart icon pulses instead).
     closeDrawer();
-    setAdded(true);
-    window.setTimeout(() => setAdded(false), 1800);
   }
 
   return (
     <div
       // Warm Honey re-skin per plan: paper bg, hairline line border,
-      // warm-brown shadow. Hides while the cart drawer is open.
+      // warm-brown shadow. Hides while the cart drawer is open, and is inert
+      // while hidden so keyboard focus can't land on an off-screen button.
       // pb-[env(safe-area-inset-bottom)] keeps the bar clear of the iPhone
       // home indicator when the page is installed / viewed edge-to-edge.
+      inert={!shown}
       className={`fixed bottom-0 left-0 right-0 z-50 border-t border-line bg-paper pb-[env(safe-area-inset-bottom)] shadow-[0_-6px_22px_-4px_rgba(74,46,22,0.12)] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
-        visible && !drawerOpen ? "translate-y-0" : "translate-y-full"
+        shown ? "translate-y-0" : "translate-y-full"
       }`}
     >
       <div className="container mx-auto flex max-w-7xl items-center gap-4 px-4 py-2.5 md:px-6">
         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-line">
-          <Image src={imageUrl} alt={product.title} fill className="object-cover" sizes="48px" />
+          <Image src={imageUrl} alt="" fill className="object-cover" sizes="48px" />
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm md:text-[14.5px] font-extrabold text-cocoa">
-            {product.title}
-          </p>
-          <p className="text-[13px] font-bold text-brown">
-            {formatMoney(price, currencyCode)}
+          <p className="truncate text-sm md:text-[14.5px] font-extrabold text-cocoa">{summary.title}</p>
+          <p className="truncate text-[13px] text-brown">
+            <span className="font-bold">{summary.price}</span>
+            {summary.detail && <span> · {summary.detail}</span>}
           </p>
         </div>
 
         <button
           type="button"
           onClick={onAdd}
-          disabled={!isAvailable}
-          className="flex shrink-0 items-center gap-2 rounded-xl bg-gold px-5 py-3 md:px-7 text-[15px] font-extrabold text-cocoa transition-[transform,background-color,color] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-gold-deep hover:text-white hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          className="flex shrink-0 items-center gap-2 rounded-xl bg-gold px-5 py-3 md:px-7 text-[15px] font-extrabold text-cocoa transition-[transform,background-color,color] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-gold-deep hover:text-white hover:-translate-y-0.5 shadow-sm"
         >
           <ShoppingBag size={18} />
-          {added ? "Added!" : isAvailable ? "Add to cart" : "Out of stock"}
+          {summary.added ? "Added!" : summary.available ? "Add to cart" : "Choose options"}
         </button>
       </div>
     </div>
