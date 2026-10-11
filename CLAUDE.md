@@ -67,13 +67,24 @@ The route always creates a **fresh** Shopify cart via `createCartWithLines` and 
 
 Real Shopify bundles (created by the sibling admin tool, always tagged `bundle`): they are hidden from collection listings; a bundle's own PDP renders a "What's included" section from `lib/shopify/bundle-contents.ts`; a regular product's pricing tier can link a bundle via `beepaws.bundle_tiers[i].bundle`, which drives an inline bundle picker in `VariantSelector` (Add/Buy adds the chosen bundle variant). Contract doc: `docs/bundles-from-admin.md`.
 
+**Decision 2026-10-11 (owner): BUNDLES ARE THE KIT MECHANISM; composed kits get scrapped (not built yet).** Found while testing: every tier on the flagship silently fell back to the code-defined `TIERS` composition (device + spray as separate lines, $74.90) — the published Complete Care kit pointed at the spray's OLD handle, and the linked `bundle` product is a Draft on no sales channel. The approved rule to build: a tier WITH a bundle link sells that bundle; a tier WITHOUT one sells the product alone (Starter Kit = device); a tier whose bundle can't be sold is HIDDEN, never faked. Removes `tierKits`/kit pickers/kit deals and the legacy `TIERS` fallback. Open: keep tier gifts? Family Pack bundle contents. Prices: the admin's `docs/beepaws-pdp-revision-2026-10-05.md` is the source of truth.
+
+**Cart "already sold out" (fixed 2026-10-11):** after the 2026-09-08 store move every cart line came back quantity 0 / $0 (`MERCHANDISE_OUT_OF_STOCK`) although Shopify showed stock + continue-selling: the stock sits at the HyperSKU app location, which wasn't in the shipping setup. Shopify had also moved the store to shipping-by-market, where the app location couldn't be added; the owner switched back to shipping profiles and added Hypersku. If carts start refusing everything again (e.g. when Shopify re-applies market shipping), check that first — ask the Storefront API for `cartCreate { warnings }`.
+
 ### Admin draft preview
 
 `app/preview/products/[handle]/page.tsx` (guarded, `force-dynamic`) renders the shared `components/product/ProductPageView.tsx` with the `beepaws.*` content (+ tags) overridden by a live draft fetched server-side from the admin tool at `BEEPAWS_ADMIN_URL` (default `http://localhost:3000`); price/images/variants stay from Shopify.
 
 ### Design tokens
 
-All colors and shadows are CSS variables in `app/globals.css` under `@theme inline` (Tailwind v4 syntax). Use `var(--color-primary)` etc. in classes — never hardcoded hex. Dark mode via next-themes, class strategy.
+All colors and shadows are CSS variables in `app/globals.css` under `@theme inline` (Tailwind v4 syntax). Use `var(--color-primary)` etc. in classes — never hardcoded hex. No dark mode (next-themes was never wired up and was removed in the 2026-10-10 sweep).
+
+### Gesture + buy-box pass (apple-design skill, 2026-10-10/11, branch `experiment/apple-design`, NOT yet merged)
+
+- **Motion:** `lib/motion.ts` holds the shared spring (damping 1, response 0.38s), momentum projection, rubber band and the 8px direction lock. `useSwipeTrack` (`components/product/Slider.tsx`) drives the gallery, card sliders and comparison table (1:1 swipe, flick projection, velocity handed to the spring, catch mid-settle) via one CSS variable `--drag`; the before/after divider uses the same maths (scroll-safe on phones, glides on tap, grabbable knob).
+- **Floating add-to-cart bar MIRRORS the buy box** (`components/product/BuyBoxSync.tsx`): `VariantSelector` publishes what its button would add; the bar shows that and runs the same add. The buy box's "Added to cart!" note shows only for its own button (from the bar it shifted the page above the viewport).
+- **Press feedback:** real `<button>`s dip via the base rule; links styled as buttons use the `pressable` utility (`globals.css`). Slider dots are 24×40 buttons, arrows 40px.
+- Running list + remaining items: `docs/pdp-visual-plan.md`. Verified with headless Chrome + CDP touch emulation; touch `:active` can't be driven there — check press feedback on a real phone.
 
 ### Key types
 
