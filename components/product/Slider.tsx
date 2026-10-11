@@ -317,10 +317,12 @@ export function SliderArrow({
   style?: CSSProperties;
 }) {
   const prev = dir === "prev";
+  // 40px, like the before/after arrows: 32/36px circles were under-sized for a
+  // thumb (2026-10-11 sweep; Apple's guidance is 44pt).
   const look =
     variant === "overlay"
-      ? "h-9 w-9 border border-line/60 bg-card/90 text-cocoa shadow-[0_4px_14px_-4px_rgba(74,46,22,0.35)] backdrop-blur-sm disabled:pointer-events-none disabled:opacity-0"
-      : "h-8 w-8 border border-line text-brown disabled:opacity-30";
+      ? "h-10 w-10 border border-line/60 bg-card/90 text-cocoa shadow-[0_4px_14px_-4px_rgba(74,46,22,0.35)] backdrop-blur-sm disabled:pointer-events-none disabled:opacity-0"
+      : "h-10 w-10 border border-line text-brown disabled:opacity-30";
   return (
     <button
       type="button"
@@ -330,12 +332,17 @@ export function SliderArrow({
       className={`flex items-center justify-center rounded-full transition-opacity print:hidden ${look} ${className}`}
       style={style}
     >
-      {prev ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+      {prev ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
     </button>
   );
 }
 
-/** Position dots. `labels` name each slide for the dots' aria-labels. */
+/**
+ * Position dots. `labels` name each slide for the dots' aria-labels. The dot is
+ * drawn small inside a 24×40px button: an 8×8px dot as its own tap target was
+ * near impossible to hit with a thumb (2026-10-11 sweep). Same pattern as the
+ * before/after slider's dots.
+ */
 export function SliderDots({
   active,
   go,
@@ -343,7 +350,7 @@ export function SliderDots({
   className = "",
 }: Pick<SliderNav, "active" | "go"> & { labels: string[]; className?: string }) {
   return (
-    <div className={`flex items-center justify-center gap-2 print:hidden ${className}`}>
+    <div className={`flex items-center justify-center print:hidden ${className}`}>
       {labels.map((label, i) => (
         <button
           key={i}
@@ -351,8 +358,14 @@ export function SliderDots({
           onClick={() => go(i)}
           aria-label={`Show ${label}`}
           aria-pressed={i === active}
-          className={`h-2 rounded-full transition-all duration-300 ${i === active ? "w-5 bg-cocoa" : "w-2 bg-line"}`}
-        />
+          className="group flex h-10 min-w-6 items-center justify-center"
+        >
+          <span
+            className={`h-2 rounded-full transition-all duration-300 ${
+              i === active ? "w-5 bg-cocoa" : "w-2 bg-line group-hover:bg-brown/40"
+            }`}
+          />
+        </button>
       ))}
     </div>
   );

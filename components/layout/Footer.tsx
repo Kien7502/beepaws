@@ -81,12 +81,12 @@ const Footer = () => {
                 catalog is big enough for recency to be a real facet. */}
             <div className="space-y-4">
               <h4 className="font-bold text-cream uppercase text-[13px] tracking-wider">Shop</h4>
-              <ul className="space-y-2">
-                <li><Link href="/collections/all" className="text-cream/75 hover:text-gold text-sm transition-colors">All products</Link></li>
+              <ul className="-my-1">
+                <li><Link href="/collections/all" className="inline-block py-1 text-cream/75 hover:text-gold text-sm transition-colors">All products</Link></li>
                 {SHOW_CATEGORY_LINKS && (
                   <>
-                    <li><Link href="/collections/dogs" className="text-cream/75 hover:text-gold text-sm transition-colors">For Dogs</Link></li>
-                    <li><Link href="/collections/cats" className="text-cream/75 hover:text-gold text-sm transition-colors">For Cats</Link></li>
+                    <li><Link href="/collections/dogs" className="inline-block py-1 text-cream/75 hover:text-gold text-sm transition-colors">For Dogs</Link></li>
+                    <li><Link href="/collections/cats" className="inline-block py-1 text-cream/75 hover:text-gold text-sm transition-colors">For Cats</Link></li>
                   </>
                 )}
               </ul>
@@ -95,11 +95,11 @@ const Footer = () => {
             {/* Support */}
             <div className="space-y-4">
               <h4 className="font-bold text-cream uppercase text-[13px] tracking-wider">Support</h4>
-              <ul className="space-y-2">
-                <li><Link href="/faq" className="text-cream/75 hover:text-gold text-sm transition-colors">FAQ</Link></li>
-                <li><Link href="/shipping" className="text-cream/75 hover:text-gold text-sm transition-colors">Shipping Policy</Link></li>
-                <li><Link href="/returns" className="text-cream/75 hover:text-gold text-sm transition-colors">Returns & Refunds</Link></li>
-                <li><Link href="/contact" className="text-cream/75 hover:text-gold text-sm transition-colors">Contact Us</Link></li>
+              <ul className="-my-1">
+                <li><Link href="/faq" className="inline-block py-1 text-cream/75 hover:text-gold text-sm transition-colors">FAQ</Link></li>
+                <li><Link href="/shipping" className="inline-block py-1 text-cream/75 hover:text-gold text-sm transition-colors">Shipping Policy</Link></li>
+                <li><Link href="/returns" className="inline-block py-1 text-cream/75 hover:text-gold text-sm transition-colors">Returns & Refunds</Link></li>
+                <li><Link href="/contact" className="inline-block py-1 text-cream/75 hover:text-gold text-sm transition-colors">Contact Us</Link></li>
               </ul>
             </div>
           </div>
@@ -109,15 +109,18 @@ const Footer = () => {
             <p className="text-cream/60 text-xs">
               © {new Date().getFullYear()} Beepaws. All rights reserved.
             </p>
+            {/* Icon-only links: each needs a name for screen readers, and p-2/-m-2
+                gives a ~38px tap area without moving the icons. (The URLs are
+                still generic placeholders - real accounts pending.) */}
             <div className="flex items-center space-x-6">
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-cream/60 hover:text-gold transition-colors">
-                <Instagram size={22} />
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="BeePaws on Instagram" className="-m-2 p-2 text-cream/60 hover:text-gold transition-colors">
+                <Instagram size={22} aria-hidden />
               </a>
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-cream/60 hover:text-gold transition-colors">
-                <Facebook size={22} />
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="BeePaws on Facebook" className="-m-2 p-2 text-cream/60 hover:text-gold transition-colors">
+                <Facebook size={22} aria-hidden />
               </a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-cream/60 hover:text-gold transition-colors">
-                <Twitter size={22} />
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="BeePaws on X (Twitter)" className="-m-2 p-2 text-cream/60 hover:text-gold transition-colors">
+                <Twitter size={22} aria-hidden />
               </a>
             </div>
           </div>

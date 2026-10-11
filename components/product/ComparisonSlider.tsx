@@ -97,9 +97,9 @@ export function ComparisonSlider({
           <div className="relative">
             <Strip active={active}>
               {columns.map((col, i) => (
-                // px-9 keeps a long label ("Chews & Additives") wrapping clear of
-                // the arrows instead of running under them.
-                <div key={i} className="flex flex-col items-center gap-1.5 px-9">
+                // px-10 keeps a long label ("Chews & Additives") wrapping clear of
+                // the 40px arrows instead of running under them.
+                <div key={i} className="flex flex-col items-center gap-1.5 px-10">
                   <span
                     className={`flex h-12 w-12 items-center justify-center rounded-full ${
                       i === 0 ? "bg-cocoa" : "bg-cream"
