@@ -28,13 +28,14 @@ or layout change. The findings are mostly small craft fixes.
 
 ## Found in the sweep — quick fixes
 
-2. **The sticky add-to-cart bar ignores the shopper's choice.** It always adds
-   the FIRST colour (White) as a single device at $44.95 — while the buy box
-   defaults to the Complete Care Kit at $74.90. A shopper who picked Pink and the
-   kit, then used the floating bar, gets a white device alone. It should mirror
-   the buy box (same item, same price as its button), or scroll back to it.
-   (`StickyAddToCart.tsx` uses `product.variants.edges[0]`.) Not covered by the
-   10-05 revision doc, which only changes the main button's price.
+2. ✓ **Sticky add-to-cart bar mirrors the buy box** (`52d577b`, 2026-10-11,
+   owner chose mirroring over scrolling back). It used to add the first colour
+   alone at the base price whatever was picked; now it shows the buy box's
+   kit, colours and total and runs the same add (`BuyBoxSync`). Verified by
+   capturing the cart requests: bar and main button send identical lines.
+   Prices on the page are whatever Shopify holds — the source of truth is the
+   admin's `docs/beepaws-pdp-revision-2026-10-05.md` (device $49.95, kits
+   $49.95 / $59.95 / $109.95, spray $20) once the owner updates the store.
 3. **Tiny tap targets.** The slider dots are 8×8px (pain points, mechanism, use
    cases, comparison) — Apple's minimum is 44px. Give them a ~40px hit area with
    the dot staying small (the before/after dots already do this). The inline
