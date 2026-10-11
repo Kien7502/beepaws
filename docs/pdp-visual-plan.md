@@ -15,12 +15,16 @@ or layout change. The findings are mostly small craft fixes.
   comparison table (`63601ba`). Owner: "very good, snappy, and smooth".
 - ✓ Before/after divider: scroll-safe, glides, grabbable knob (`d1e21d5`).
 
+- ✓ Press feedback on link buttons (`f271b20`, 2026-10-11): a shared `pressable`
+  utility in `globals.css` gives links styled as buttons the same 0.97 dip as
+  real buttons — listicle buttons + floating pill, cart/thank-you links, the
+  More-from rows, error pages; the homepage's one-off copies use it too.
+  Verified with a mouse press; touch needs a real phone (headless Chrome can't
+  drive touch `:active`, for buttons either).
+
 ## Next
 
-1. **Press feedback on link buttons** — real `<button>`s dip when pressed (global
-   rule in `globals.css`), but buttons that are links don't: the listicle's
-   calls to action and its floating button, and PDP/homepage links styled as
-   buttons. (Agreed 2026-10-10, to do first.)
+1. *(was press feedback — done, see above)*
 
 ## Found in the sweep — quick fixes
 
