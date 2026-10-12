@@ -53,7 +53,7 @@ Server Component → lib/shopify/queries.ts → admin-catalog.ts → admin-graph
 
 ### Caching / revalidation
 
-Catalog queries use `cache: "force-cache"` + `next: { tags: ["products"] }`. The webhook at `app/api/revalidate/route.ts` verifies the Shopify HMAC then calls `revalidateTag`. Pages declare `export const revalidate = 3600` as ISR fallback; pages still on `force-dynamic` bypass all caching.
+Catalog queries use `cache: "force-cache"` + `next: { tags: ["products"] }`. The webhook at `app/api/revalidate/route.ts` verifies the Shopify HMAC (or the admin's derived key) then calls `revalidateTag(tag, { expire: 0 })` — **immediate expiry, not `"max"`** (2026-10-12). With `"max"` (stale-while-revalidate) the caller's own warm-up request was served the OLD data while the refresh ran in the background: the admin's preview showed a bundle price the owner had just fixed until a second visit. Every caller here is an outside system announcing a change that already happened, which is exactly the case Next's docs give `{ expire: 0 }` for. Measured locally: with `"max"` the first visit after a refresh was as fast as the second (served stale); with `{ expire: 0 }` it waits for fresh data. Production keeps `"max"` until this branch deploys. Pages declare `export const revalidate = 3600` as ISR fallback; pages still on `force-dynamic` bypass all caching.
 
 ### Checkout
 

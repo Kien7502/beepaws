@@ -35,6 +35,16 @@ const TOPIC_TAG_MAP: Record<string, string[]> = {
 
 // ─── POST handler ─────────────────────────────────────────────────────────────
 
+// Expire tagged data NOW, not stale-while-revalidate. Every caller here is an
+// outside system announcing a change that already happened (a Shopify webhook,
+// the admin after a Push / Publish / bundle save), and it then requests the page
+// once to warm it. With profile "max" that request was served the OLD data while
+// the refresh ran in the background — the admin's preview kept showing a bundle
+// price the owner had just fixed until a second visit (2026-10-12). Next 16 docs
+// (revalidateTag): "{ expire: 0 }: the next request is a blocking revalidate —
+// use it when an external system requires immediate expiration."
+const EXPIRE_NOW = { expire: 0 };
+
 export async function POST(req: Request) {
   const rawBody = await req.text();
   const hmacHeader = req.headers.get("x-shopify-hmac-sha256") ?? "";
@@ -47,7 +57,7 @@ export async function POST(req: Request) {
     }
 
     const tags = TOPIC_TAG_MAP[topic] ?? ["products"];
-    for (const tag of tags) revalidateTag(tag, "max");
+    for (const tag of tags) revalidateTag(tag, EXPIRE_NOW);
 
     return NextResponse.json({
       revalidated: true,
@@ -80,7 +90,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: `tag must be one of: ${allowedTags.join(", ")}` }, { status: 400 });
   }
 
-  revalidateTag(tag, "max");
+  revalidateTag(tag, EXPIRE_NOW);
   return NextResponse.json({
     revalidated: true,
     tag,
