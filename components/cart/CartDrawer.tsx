@@ -188,17 +188,20 @@ export function CartDrawer() {
                 const lineDiscounted =
                   discountedTotal !== null && discountedTotal < baseTotal - 0.001;
                 const lineFree = lineTotal <= 0.001 && item.quantity > 0;
-                // Bundle lines don't link anywhere: bundles are offers, not
+                // Bundle lines never link to the bundle: bundles are offers, not
                 // destinations — their PDPs 404 by design (route guard), so a
-                // link here would dead-end mid-purchase.
+                // link there would dead-end mid-purchase. A pricing-tier bundle
+                // (item.kit) links to the product page it was sold from instead.
                 const isBundleLine = (item.bundleComponents?.length ?? 0) > 0;
                 // Group members present as the primary product everywhere in
                 // the line (title, thumb link), since that's how they were chosen.
-                const lineHandle = item.variantGroup?.primaryHandle ?? item.productHandle;
+                const lineHandle =
+                  item.kit?.productHandle ?? item.variantGroup?.primaryHandle ?? item.productHandle;
+                const linked = !isBundleLine || !!item.kit;
                 const thumb = (
                   <Image
                     src={item.imageUrl || "/product-placeholder.svg"}
-                    alt={item.variantGroup?.primaryTitle ?? item.productTitle}
+                    alt={item.kit?.name ?? item.variantGroup?.primaryTitle ?? item.productTitle}
                     fill
                     className="object-cover"
                     sizes="80px"
@@ -211,7 +214,7 @@ export function CartDrawer() {
                     key={cartLineKey(item)}
                     className="flex items-center gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--background)] p-3 transition-shadow hover:shadow-sm"
                   >
-                    {isBundleLine ? (
+                    {!linked ? (
                       <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-[var(--color-border)]">
                         {thumb}
                       </div>
@@ -235,6 +238,24 @@ export function CartDrawer() {
                             // is a separate product, but on the PDP it was chosen
                             // as a flavour of the group.
                             const displayTitle = item.variantGroup?.primaryTitle ?? item.productTitle;
+                            // A pricing tier: its name heads the line, with the
+                            // product it belongs to underneath, linked to its page.
+                            if (item.kit) {
+                              return (
+                                <>
+                                  <p className="truncate text-sm font-bold text-[var(--color-foreground)]">
+                                    {item.kit.name}
+                                  </p>
+                                  <Link
+                                    href={`/products/${lineHandle}`}
+                                    onClick={closeDrawer}
+                                    className="block truncate text-xs text-slate-500 hover:text-[var(--color-primary)]"
+                                  >
+                                    {item.kit.productTitle}
+                                  </Link>
+                                </>
+                              );
+                            }
                             return isBundleLine ? (
                               <p className="truncate text-sm font-bold text-[var(--color-foreground)]">
                                 {displayTitle}
@@ -279,7 +300,7 @@ export function CartDrawer() {
                           type="button"
                           onClick={() => removeItem(cartLineKey(item))}
                           className="shrink-0 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-500"
-                          aria-label={`Remove ${item.productTitle}`}
+                          aria-label={`Remove ${item.kit?.name ?? item.productTitle}`}
                         >
                           <Trash2 size={15} />
                         </button>

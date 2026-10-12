@@ -589,18 +589,21 @@ export default function VariantSelector({
       if (!chosenBundleVariant?.availableForSale) return;
       // Map each chosen option value to the component it belongs to (Shopify
       // prefixes the option name with the component title), so the cart shows
-      // e.g. "Green" under the scaler rather than on the bundle line.
-      const compTitles = selectedTierBundle.components
-        .map((c) => c.title)
-        .sort((a, z) => z.length - a.length);
-      const valuesByTitle: Record<string, string[]> = {};
+      // e.g. "Green" under the device rather than on the bundle line. When a
+      // product is in the bundle twice (two devices, a colour each), the admin
+      // names the later copies' options "<title> Color (2nd)" — so the ordinal
+      // picks WHICH copy; without one it's the first.
+      const comps = selectedTierBundle.components;
+      const compTitles = comps.map((c) => c.title).sort((a, z) => z.length - a.length);
+      const valuesByComponent: string[][] = comps.map(() => []);
       for (const o of chosenBundleVariant.selectedOptions) {
         const owner = compTitles.find((t) => o.name.toLowerCase().startsWith(t.toLowerCase()));
-        if (owner) {
-          if (!valuesByTitle[owner]) valuesByTitle[owner] = [];
-          valuesByTitle[owner].push(o.value);
-        }
+        if (!owner) continue;
+        const copy = Number(/\((\d+)(?:st|nd|rd|th)\)$/i.exec(o.name)?.[1] ?? 1);
+        const copies = comps.flatMap((c, ci) => (c.title === owner ? [ci] : []));
+        valuesByComponent[copies[copy - 1] ?? copies[0]].push(o.value);
       }
+      const kitName = selectedTier ? bundleTiers?.[selectedTier.i]?.name?.trim() : undefined;
       addItem({
         merchandiseId: chosenBundleVariant.id,
         productHandle: selectedTierBundle.handle,
@@ -612,12 +615,23 @@ export default function VariantSelector({
         unitPriceAmount: chosenBundleVariant.priceAmount,
         quantity: 1,
         // Carry the components so the cart line can list what's inside the bundle.
-        bundleComponents: selectedTierBundle.components.map((c) => ({
-          quantity: c.quantity,
-          title: c.title,
-          imageUrl: c.imageUrl,
-          options: valuesByTitle[c.title],
-        })),
+        // Copies of one product sit together (Shopify may store them apart),
+        // each with its own colour.
+        bundleComponents: comps
+          .map((c, ci) => ({ ci, first: comps.findIndex((x) => x.title === c.title) }))
+          .sort((a, z) => a.first - z.first || a.ci - z.ci)
+          .map(({ ci }) => ({
+            quantity: comps[ci].quantity,
+            title: comps[ci].title,
+            imageUrl: comps[ci].imageUrl,
+            options: valuesByComponent[ci].length ? valuesByComponent[ci] : undefined,
+          })),
+        // The drawer heads the line with the tier's authored name ("Complete
+        // Care Kit") over this page's product — the bundle's own title is
+        // "{product} — {tier}" and only needs to carry that at checkout.
+        ...(kitName
+          ? { kit: { name: kitName, productTitle: product.title, productHandle: product.handle } }
+          : {}),
       });
       flashAdded(via);
       return;
@@ -1077,7 +1091,7 @@ export default function VariantSelector({
                     stay a scannable name + price + description row. */}
                 {selected && (tb ? (
                   <ul className="mt-2 space-y-1 text-[12px] text-brown">
-                    {tb.components.map((c, ci) => (
+                    {mergeByProduct(tb.components).map((c, ci) => (
                       <li key={c.handle} className="flex items-center gap-2">
                         <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded-md border border-line bg-cream">
                           <Image
@@ -1329,4 +1343,17 @@ export default function VariantSelector({
       </div>
     </div>
   );
+}
+
+/** A bundle's contents with repeat products folded into one row ("2× device"),
+ *  in first-seen order. The Family Pack holds the device twice — two components
+ *  so each can have its own colour — which reads as a duplicate in a list. */
+function mergeByProduct<T extends { handle: string; quantity: number }>(components: T[]): T[] {
+  const merged: T[] = [];
+  for (const c of components) {
+    const prev = merged.find((m) => m.handle === c.handle);
+    if (prev) prev.quantity += c.quantity;
+    else merged.push({ ...c });
+  }
+  return merged;
 }

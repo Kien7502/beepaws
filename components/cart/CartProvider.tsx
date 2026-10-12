@@ -26,6 +26,7 @@ const CART_ID_KEY = "beepaws_shopify_cart_id";
 const LEGACY_KEY = "beepaws_local_cart_v1";
 const BUNDLE_COMPONENTS_KEY = "beepaws_bundle_components_v1";
 const VARIANT_GROUP_KEY = "beepaws_variant_group_v1";
+const KIT_KEY = "beepaws_kit_v1";
 /** Cart ids we know were already checked out — see markCartCompleted(). Shopify's
  * Cart API has no completedAt/equivalent field and keeps serving the same lines
  * for a cart id after its order completes (a documented platform gap, not
@@ -81,6 +82,17 @@ export type LocalCartItem = {
     primaryHandle: string;
     label: string;
     value: string;
+  };
+  /** A bundle sold as a product page's pricing tier. Its own title is
+   * "{product} — {tier}" (admin naming convention) — long, and the product
+   * part repeats — so the drawer shows the tier name as the heading with the
+   * product (linked to the page it came from) underneath. Side-mapped
+   * (kitById) like bundleComponents; display-only — checkout shows the
+   * bundle's own title. */
+  kit?: {
+    name: string;
+    productTitle: string;
+    productHandle: string;
   };
 };
 
@@ -297,6 +309,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [variantGroupById, setVariantGroupById] = useStoredState<
     Record<string, NonNullable<LocalCartItem["variantGroup"]>>
   >(VARIANT_GROUP_KEY, {});
+  // Pricing-tier display (tier name + the product it was sold from), keyed by
+  // the bundle's merchandiseId — same rationale again. Persisted to localStorage.
+  const [kitById, setKitById] = useStoredState<
+    Record<string, NonNullable<LocalCartItem["kit"]>>
+  >(KIT_KEY, {});
   const [hydrated, setHydrated] = useState(false);
   const [isCartLoading, setIsCartLoading] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -365,10 +382,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return base.map((it) => {
       const bc = bundleComponentsById[it.merchandiseId];
       const vg = variantGroupById[it.merchandiseId];
-      if (!bc && !vg) return it;
-      return { ...it, ...(bc ? { bundleComponents: bc } : {}), ...(vg ? { variantGroup: vg } : {}) };
+      const kit = kitById[it.merchandiseId];
+      if (!bc && !vg && !kit) return it;
+      return {
+        ...it,
+        ...(bc ? { bundleComponents: bc } : {}),
+        ...(vg ? { variantGroup: vg } : {}),
+        ...(kit ? { kit } : {}),
+      };
     });
-  }, [shopifyCart, localItems, bundleComponentsById, variantGroupById]);
+  }, [shopifyCart, localItems, bundleComponentsById, variantGroupById, kitById]);
 
   // ── Hydration: restore cart on mount ────────────────────────────────────
 
@@ -421,6 +444,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (next.bundleComponents?.length) {
       const components = next.bundleComponents;
       setBundleComponentsById((prev) => ({ ...prev, [next.merchandiseId]: components }));
+    }
+
+    // Remember a pricing-tier bundle's tier name + source product. Set or
+    // cleared on every bundle add, so a bundle re-added from somewhere without
+    // a tier name doesn't keep a stale one.
+    if (next.bundleComponents?.length) {
+      const kit = next.kit;
+      setKitById((prev) => {
+        if (kit) return { ...prev, [next.merchandiseId]: kit };
+        if (!(next.merchandiseId in prev)) return prev;
+        const rest = { ...prev };
+        delete rest[next.merchandiseId];
+        return rest;
+      });
     }
 
     // Remember a variant-group member's display override (keyed by
@@ -549,7 +586,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         }
       });
     });
-  }, [setBundleComponentsById, setVariantGroupById]);
+  }, [setBundleComponentsById, setVariantGroupById, setKitById]);
 
   // ── updateQuantity (optimistic + debounced API) ───────────────────────────
 
@@ -641,6 +678,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       delete next[lineKey];
       return next;
     });
+    setKitById((prev) => {
+      if (!(lineKey in prev)) return prev;
+      const next = { ...prev };
+      delete next[lineKey];
+      return next;
+    });
     setShopifyCart((prev) =>
       prev
         ? { ...prev, lines: prev.lines.filter((l) => cartLineKey(l) !== lineKey) }
@@ -687,7 +730,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         console.error("[Cart] removeItem sync failed:", e);
       }
     });
-  }, [setBundleComponentsById]);
+  }, [setBundleComponentsById, setKitById]);
 
   // ── clearCart ─────────────────────────────────────────────────────────────
 
@@ -696,8 +739,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setShopifyCart(null);
     setBundleComponentsById({});
     setVariantGroupById({});
+    setKitById({});
     clearCartId();
-  }, [setBundleComponentsById, setVariantGroupById]);
+  }, [setBundleComponentsById, setVariantGroupById, setKitById]);
 
   // ── Derived values ────────────────────────────────────────────────────────
 

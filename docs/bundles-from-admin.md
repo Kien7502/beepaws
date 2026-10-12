@@ -117,6 +117,12 @@ Every admin bundle is tagged **`bundle`**. Use it to:
 > FIRST tier without one sells the product alone; later unlinked tiers and tiers whose
 > bundle can't be sold on the storefront are hidden, never faked. A product with no tiers
 > keeps the per-variant quantity steppers. Tier copy may carry a `badge` ("Best value").
+>
+> **Naming (2026-10-12):** bundles are titled "{product} — {tier}" (checkout shows the bundle's
+> title; tier names repeat across products). The cart drawer shows the tier name as the line
+> heading with the product underneath. A bundle may hold the same product twice (a colour per
+> device): the later copy's option is named "<title> <Option> (2nd)" — treat the ordinal as
+> "which copy", and fold copies into one row when listing contents.
 
 The admin tool now lets editors link a **bundle product to each bundle tier**, stored *inside*
 the existing `beepaws.bundle_tiers` JSON metafield (no separate metafield). Each tier entry may
