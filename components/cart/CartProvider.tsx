@@ -275,9 +275,15 @@ function mergeLocalItem(prev: LocalCartItem[], next: LocalCartItem): LocalCartIt
 
 /** State mirrored to localStorage. It is loaded AFTER hydration: the server
  *  can't see localStorage, so reading it into the initial state would make the
- *  first client render disagree with the server's HTML. */
+ *  first client render disagree with the server's HTML.
+ *
+ *  Nothing is written until the stored value has been read. The first commit
+ *  still holds `initial`, and writing it overwrote what was stored; in dev,
+ *  React runs effects twice, so the second read found that `{}` and kept it —
+ *  every reload wiped the cart's side-maps (measured 2026-10-12). */
 function useStoredState<T>(key: string, initial: T) {
   const [value, setValue] = useState<T>(initial);
+  const [loaded, setLoaded] = useState(false);
   useEffect(() => {
     try {
       const raw = localStorage.getItem(key);
@@ -285,12 +291,14 @@ function useStoredState<T>(key: string, initial: T) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       if (raw) setValue(JSON.parse(raw) as T);
     } catch {}
+    setLoaded(true);
   }, [key]);
   useEffect(() => {
+    if (!loaded) return;
     try {
       localStorage.setItem(key, JSON.stringify(value));
     } catch {}
-  }, [key, value]);
+  }, [key, value, loaded]);
   return [value, setValue] as const;
 }
 
