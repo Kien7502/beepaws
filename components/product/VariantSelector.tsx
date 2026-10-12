@@ -85,55 +85,22 @@ function swatchBackground(colors: string[]): string {
   return `conic-gradient(${stops})`;
 }
 
-// Bundle tiers per Phase 3 Part B. Each tier composes a main-product quantity
-// with optional cross-sell add-ons (referenced by index into addonProducts).
-// Add-on indexes that don't resolve (e.g., addonProducts is empty) are silently
-// skipped — the tier still works as a pure quantity bundle.
-//
-// IMPORTANT: tier totals here are raw sums (mainPrice * qty + addon prices).
-// Visual "savings" tags are placeholders; actual checkout discounts must be
-// configured as Shopify Automatic Discounts to take effect.
-// Tier structure (mainQty + addonRefs + popular/bestValue flags) is fixed
-// because the bundle UX depends on it. Names + descriptions are intentional
-// Lorem ipsum placeholders so an unedited product reads as unedited — set
-// the beepaws.bundle_tiers metafield to override per-product copy.
-const TIERS = [
-  {
-    name: "Lorem ipsum tier 1",
-    description: "Lorem ipsum dolor sit amet — placeholder tier description.",
-    mainQty: 1,
-    addonRefs: [] as { idx: number; qty: number }[],
-  },
-  {
-    name: "Lorem ipsum tier 2",
-    description: "Consectetur adipiscing elit — placeholder tier description.",
-    mainQty: 1,
-    addonRefs: [{ idx: 0, qty: 1 }],
-    // B9: "Most Chosen" is a factual claim and there is no order data behind it
-    // yet, so it stays hidden until there is — and then only on whichever tier
-    // the data actually supports. Kept as `false` rather than deleted: the badge
-    // render narrows on `"popular" in t`, so removing the key entirely makes that
-    // expression `unknown` and breaks the build. Flip to true when data exists.
-    popular: false,
-  },
-  {
-    name: "Lorem ipsum tier 3",
-    description: "Sed do eiusmod tempor — placeholder tier description.",
-    mainQty: 2,
-    addonRefs: [{ idx: 1, qty: 1 }],
-    bestValue: true,
-  },
-] as const;
+// TIERS (owner, 2026-10-11): a pricing tier is a real Shopify bundle or the
+// product alone — nothing is composed or invented here any more. The old
+// code-defined fallback (device + whatever add-ons the collection offered) is
+// what made every tier look set up when none was: in October all three flagship
+// tiers silently ran on it.
+//   - WITH a bundle link: sells that bundle, when the page could resolve it as
+//     sellable on the storefront; otherwise the tier is HIDDEN, never faked.
+//   - WITHOUT a link: the FIRST such tier sells this product alone (×1, the
+//     picked variant). Any later unlinked tier is a kit not set up yet: hidden.
+// Copy (name, description, badge) comes from beepaws.bundle_tiers.
 
 function formatMoney(amount: number, currencyCode: string) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: currencyCode || "USD",
   }).format(amount);
-}
-
-function getPrimaryVariant(product: Product) {
-  return product.variants.edges[0]?.node;
 }
 
 export type TierBundleVariant = {
@@ -154,30 +121,6 @@ export type TierBundle = {
   imageUrl: string;
   components: { quantity: number; title: string; handle: string; imageUrl: string | null }[];
   variants: TierBundleVariant[];
-};
-
-/** A COMPOSED KIT authored in `beepaws.bundle_tiers[i].components` (admin
- * handoff 2026-07-19) and resolved by the page: one cart line per component.
- * This is how a tier offers a subscribable component — real bundle lines
- * can't carry selling plans. A component with sellingPlans gets its own
- * Subscribe & Save toggle; the kit total is always the sum of the chosen
- * component variant prices (plan-adjusted when subscribed) — never an
- * authored number, so checkout always matches. */
-export type TierKitComponent = {
-  product: Product;
-  quantity: number;
-  sellingPlans: SellingPlanOption[];
-};
-export type TierKit = { components: TierKitComponent[] };
-
-/** Admin-managed "BeePaws Kit" automatic BXGY, resolved per tier by the page.
- * Display math derives from it (never hardcoded) and mirrors Shopify's
- * allocation: % off up to unitQuantity add-on units, cheapest first,
- * ONE-TIME lines only (automatic BXGY can't touch subscription lines). */
-export type TierKitDeal = {
-  percentage: number;
-  unitQuantity: number;
-  getsProductIds: string[];
 };
 
 /** One option in a variant group (combined listing): a SEPARATE Shopify
@@ -208,9 +151,6 @@ type CheckoutLine = { merchandiseId: string; quantity: number; sellingPlanId?: s
 
 type Props = {
   product: Product;
-  /** Pool of products eligible as cross-sell add-ons in higher tiers. Typically
-   * supplied by the page as `recommendedBundleProducts` (collection siblings). */
-  addonProducts?: Product[];
   /** Enabled payment methods from Shopify shop.paymentSettings. Drives the
    * badge row under the buy button. Falls back to nothing rendered when empty. */
   /** Short reassurance copy displayed directly above the CTA. Used to
@@ -218,22 +158,12 @@ type Props = {
    * the ultrasonic scaler, this is the "silent until tooth contact" note.
    * Comes from the `beepaws.education_note` metafield. */
   educationNote?: string | null;
-  /** Per-tier copy overrides from the `beepaws.bundle_tiers` metafield.
-   * Index 0 = Starter, 1 = Complete Care, 2 = Family Pack. Missing entries
-   * or empty strings fall back to the in-code TIERS defaults so structure
-   * (qty/addons/badges) stays separate from editable text. */
+  /** The `beepaws.bundle_tiers` metafield: one entry per pricing tier (name,
+   * description, badge, bundle link, gift). No tiers = quantity mode. */
   bundleTiers?: BundleTierCopy[] | null;
   /** Per-tier resolved bundle (aligned by index with bundleTiers). When the
    * selected tier has one, Add/Buy adds the bundle product instead of items. */
   tierBundles?: (TierBundle | null)[] | null;
-  /** Per-tier resolved COMPOSED KIT (aligned by index; only populated when
-   * the tier has authored components and NO bundle link — bundle wins).
-   * Add/Buy composes one cart line per component. */
-  tierKits?: (TierKit | null)[] | null;
-  /** Per-tier kit discount (aligned by index), from the managed BeePaws Kit
-   * automatic discount. Applies in the cart itself — the drawer will show
-   * the same discounted lines. */
-  tierKitDeals?: (TierKitDeal | null)[] | null;
   /** Per-tier verified free gift (aligned by index). Selecting the tier adds
    * the gift line; the backing discount zeroes it in cart + checkout. */
   tierGifts?: (TierGift | null)[] | null;
@@ -249,24 +179,14 @@ type Props = {
 
 export default function VariantSelector({
   product,
-  addonProducts = [],
   educationNote,
   bundleTiers,
   tierBundles,
-  tierKits,
-  tierKitDeals,
   tierGifts,
   sellingPlans,
   variantGroup,
   variantGroupLabel,
 }: Props) {
-  // Resolve tier copy: metafield wins when set, else default. We do this
-  // here rather than mutating TIERS so the structural shape (and the
-  // (typeof TIERS)[number] type used by resolveAddons) stays untouched.
-  function tierCopy(i: number, field: "name" | "description"): string {
-    const custom = bundleTiers?.[i]?.[field]?.trim();
-    return custom || TIERS[i][field];
-  }
   // VARIANT GROUP (combined listing): the picked member decides which PRODUCT
   // this buy box sells. Everything below reads `activeProduct`, never the
   // `product` prop, so price, variants, images and the cart line all follow
@@ -287,40 +207,46 @@ export default function VariantSelector({
   const selectedVariant: ProductVariant =
     variants.find((v) => v.id === selectedVariantId) ?? variants[0];
   const setSelectedVariant = (v: ProductVariant) => setSelectedVariantId(v.id);
-  // Default to the "Most Popular" tier (Complete Care Kit) — common conversion pattern.
-  const [tierIdx, setTierIdx] = useState(1);
-  // When a tier links a (customer-choose) bundle, this is the chosen bundle
-  // variant. Init to the default tier's bundle's first variant; reset on tier change.
-  const [bundleVariantId, setBundleVariantId] = useState<string | null>(
-    () => tierBundles?.[1]?.variants[0]?.id ?? null,
-  );
-  // Composed-kit state for the SELECTED tier only (same lifecycle as
-  // bundleVariantId): per-component chosen variant + chosen selling plan
-  // (null = one-time). Reset on tier change.
-  const kitFirstVariantIds = (kit: TierKit | null) =>
-    kit ? kit.components.map((c) => c.product.variants.edges[0]?.node.id ?? "") : [];
-  const [kitVariantIds, setKitVariantIds] = useState<string[]>(() =>
-    kitFirstVariantIds(tierKits?.[1] ?? null),
-  );
-  const [kitPlanIds, setKitPlanIds] = useState<(string | null)[]>(() =>
-    (tierKits?.[1]?.components ?? []).map(() => null),
+  // The tiers that can actually be sold, in metafield order (the rule is at
+  // the top of the file). `i` stays the metafield index so copy and gifts
+  // line up.
+  type TierView = { i: number; kind: "bundle"; bundle: TierBundle } | { i: number; kind: "single" };
+  const tierViews: TierView[] = [];
+  let singleTaken = false;
+  (bundleTiers ?? []).forEach((t, i) => {
+    if (t?.bundle?.handle) {
+      const b = tierBundles?.[i];
+      if (b) tierViews.push({ i, kind: "bundle", bundle: b });
+    } else if (!singleTaken) {
+      singleTaken = true;
+      tierViews.push({ i, kind: "single" });
+    }
+  });
+  // A choice only when there's more than one tier to pick from; otherwise the
+  // colour picker and the button are the whole buy box.
+  const showTierChoice = tierViews.length > 1;
+  function tierName(view: TierView) {
+    return (
+      bundleTiers?.[view.i]?.name?.trim() ||
+      (view.kind === "bundle" ? view.bundle.title : activeProduct.title)
+    );
+  }
+
+  // Complete Care (tier index 1) is the pre-selected tier (PDP revision
+  // 2026-10-05); when it isn't visible, the first tier that is.
+  const defaultTier = tierViews.find((v) => v.i === 1) ?? tierViews[0] ?? null;
+  const [tierIdx, setTierIdx] = useState(defaultTier?.i ?? 0);
+  // A bundle tier's chosen variant (a customer-choose bundle is a normal
+  // multi-variant product). Reset when the tier changes.
+  const [bundleVariantId, setBundleVariantId] = useState<string | null>(() =>
+    defaultTier?.kind === "bundle" ? (defaultTier.bundle.variants[0]?.id ?? null) : null,
   );
 
-  // QUANTITY MODE (owner decision 2026-07-10): products with NO bundle wired
-  // to any tier (e.g. consumables like the spray) drop the tier cards
-  // entirely — the composed "Lorem ipsum tier" fallbacks never made sense
-  // there — and instead every variant gets its own quantity stepper (2× Beef
-  // + 1× Unflavored in one add). The rows replace the option picker too:
-  // a row IS the option.
-  // Keyed off the metafield WIRING (bundleTiers[i].bundle / .components), not
-  // the resolved tierBundles/tierKits: a wired tier that fails the sellability
-  // guard must degrade to COMPOSED tier cards, not flip the whole selector
-  // into quantity mode.
-  const tierWired = bundleTiers?.some(
-    (t) => t?.bundle?.handle || (t?.components?.length ?? 0) > 0,
-  );
-  const quantityMode =
-    !tierWired && !tierBundles?.some((tb) => tb) && !tierKits?.some(Boolean);
+  // QUANTITY MODE (owner decision 2026-07-10): a product with NO tiers (the
+  // consumables, e.g. the spray) has no tier cards — every variant gets its own
+  // quantity stepper instead (2× Beef + 1× Unflavored in one add). The rows
+  // replace the option picker too: a row IS the option.
+  const quantityMode = !(bundleTiers?.length ?? 0);
   const [variantQtys, setVariantQtys] = useState<Record<string, number>>(() => {
     const first = product.variants.edges[0]?.node;
     return first ? { [first.id]: 1 } : {};
@@ -333,7 +259,6 @@ export default function VariantSelector({
     const first = option.product.variants.edges[0]?.node;
     setSelectedVariantId(first?.id ?? "");
     setVariantQtys(first ? { [first.id]: 1 } : {});
-    setUnitVariantIds((prev) => prev.map(() => first?.id ?? ""));
     // The gallery is ONE combined reel of every member's images (built server-
     // side), so switching flavour just scrolls to this member's first image —
     // no set-swap, no reload flash. But if the reel is ALREADY on one of this
@@ -401,13 +326,12 @@ export default function VariantSelector({
   function pickOptionValue(name: string, value: string) {
     const next = { ...selectedOptionValues, [name]: value };
     const matched = matchVariantByOptions(next, name, value);
-    if (matched) selectTopVariant(matched);
+    if (matched) setSelectedVariant(matched);
   }
 
-  // Shared matcher used by both the top-level picker and the per-unit pickers
-  // inside Family Pack. Tries an exact option-combination match first, falls
-  // back to any variant containing the new option value (covers cases where
-  // Shopify doesn't have every combination generated).
+  // Matches a picked option combination to a variant: an exact match first,
+  // then any variant carrying the new option value (covers cases where Shopify
+  // doesn't have every combination generated).
   function matchVariantByOptions(
     next: Record<string, string>,
     optName: string,
@@ -424,22 +348,6 @@ export default function VariantSelector({
     return matched;
   }
 
-  // Look up the selected option values for a specific unit's variant ID.
-  function getUnitOptionValues(variantId: string): Record<string, string> {
-    const v = variants.find((vv) => vv.id === variantId);
-    if (!v) return {};
-    return Object.fromEntries(v.selectedOptions.map((o) => [o.name, o.value]));
-  }
-
-  function pickUnitOptionValue(unitIdx: number, name: string, value: string) {
-    const current = getUnitOptionValues(unitVariantIds[unitIdx] ?? "");
-    const next = { ...current, [name]: value };
-    const matched = matchVariantByOptions(next, name, value);
-    if (matched) setUnitVariant(unitIdx, matched.id);
-  }
-  const [unitVariantIds, setUnitVariantIds] = useState<string[]>(
-    Array(3).fill(variants[0]?.id ?? ""),
-  );
   // Which button just added: the buy box's own, or the floating bar (which
   // mirrors it). The buy box's "Added to cart!" note shows only for its own
   // button - from the bar it would appear off-screen ABOVE the shopper, push
@@ -486,108 +394,18 @@ export default function VariantSelector({
     setActiveByUrl(selectedVariant?.image?.url ?? null);
   }, [selectedVariant, setActiveByUrl]);
 
-  const tier = TIERS[tierIdx];
-  // When the selected tier links a real bundle, the buy actions add the bundle
-  // product (not the tier's separate items) and the price reflects the bundle.
-  const selectedTierBundle = tierBundles?.[tierIdx] ?? null;
-  // Composed kit for the selected tier. Bundle precedence is enforced at
-  // resolution time (a tier with a bundle never gets a kit), but guard here
-  // too so a data slip can't double-render.
-  const selectedTierKit = (!selectedTierBundle && tierKits?.[tierIdx]) || null;
-  // One entry per kit component: the chosen variant, the chosen plan (null =
-  // one-time) and the per-unit amount actually charged (plan allocation price
-  // when subscribed — Shopify's math, never recomputed here).
-  const kitLines = (selectedTierKit?.components ?? []).map((c, ci) => {
-    const cvs = c.product.variants.edges.map((e) => e.node);
-    const variant = cvs.find((v) => v.id === kitVariantIds[ci]) ?? cvs[0];
-    const plan = c.sellingPlans.find((p) => p.id === kitPlanIds[ci]) ?? null;
-    const unitAmount = plan?.pricesByVariant[variant.id]?.amount ?? variant.price.amount;
-    return { component: c, ci, variant, plan, unitAmount };
-  });
-  const kitTotal = kitLines.reduce(
-    (sum, l) => sum + parseFloat(l.unitAmount) * l.component.quantity,
-    0,
-  );
-
-  // Savings from a BeePaws Kit deal, mirroring Shopify's own allocation:
-  // % off up to unitQuantity eligible units, CHEAPEST first, one-time lines
-  // only (automatic BXGY never applies to subscription lines — the plan's
-  // own % is that line's discount).
-  function kitDealSavings(
-    lines: { productId: string; unitAmount: number; quantity: number; subscribed: boolean }[],
-    deal: TierKitDeal | null,
-  ): number {
-    if (!deal) return 0;
-    const units: number[] = [];
-    for (const l of lines) {
-      if (l.subscribed) continue;
-      if (!deal.getsProductIds.includes(l.productId)) continue;
-      for (let u = 0; u < l.quantity; u++) units.push(l.unitAmount);
-    }
-    units.sort((a, b) => a - b);
-    return units.slice(0, deal.unitQuantity).reduce((sum, u) => sum + u * deal.percentage, 0);
-  }
-
-  const selectedKitDeal = selectedTierKit ? (tierKitDeals?.[tierIdx] ?? null) : null;
-  const kitSavings = kitDealSavings(
-    kitLines.map((l) => ({
-      productId: l.component.product.id,
-      unitAmount: parseFloat(l.unitAmount),
-      quantity: l.component.quantity,
-      subscribed: !!l.plan,
-    })),
-    selectedKitDeal,
-  );
-  const kitDiscountedTotal = Math.max(0, kitTotal - kitSavings);
-  // The gift line is added with the tier but never charged (the backing
-  // discount zeroes it in cart + checkout), so it doesn't touch totals.
+  // The selected tier, if it's still visible (null = no tiers, or the product
+  // alone with nothing to choose).
+  const selectedTier = tierViews.find((v) => v.i === tierIdx) ?? defaultTier;
+  // A bundle tier's buy actions add the bundle product (one line; Shopify
+  // expands it at checkout) and its price is the bundle's.
+  const selectedTierBundle = selectedTier?.kind === "bundle" ? selectedTier.bundle : null;
+  // Tier gift: only on the product-alone tier — the backing discount fires when
+  // THIS product is a cart line, which a bundle tier's line isn't. Never
+  // charged (the discount zeroes it), so it doesn't touch totals.
   const selectedTierGift =
-    !quantityMode && !selectedTierBundle ? (tierGifts?.[tierIdx] ?? null) : null;
+    !quantityMode && selectedTier?.kind === "single" ? (tierGifts?.[selectedTier.i] ?? null) : null;
 
-  // Change one option value on one kit component → snap to the matching
-  // variant (mirror of pickBundleOption, scoped to that component's product).
-  function pickKitOption(ci: number, optName: string, optValue: string) {
-    const c = selectedTierKit?.components[ci];
-    if (!c) return;
-    const cvs = c.product.variants.edges.map((e) => e.node);
-    const current = cvs.find((v) => v.id === kitVariantIds[ci]) ?? cvs[0];
-    const next: Record<string, string> = Object.fromEntries(
-      current.selectedOptions.map((o) => [o.name, o.value]),
-    );
-    next[optName] = optValue;
-    const matched =
-      cvs.find((v) => v.selectedOptions.every((o) => next[o.name] === o.value)) ??
-      cvs.find((v) => v.selectedOptions.some((o) => o.name === optName && o.value === optValue));
-    if (matched) {
-      setKitVariantIds((prev) => {
-        const n = [...prev];
-        n[ci] = matched.id;
-        return n;
-      });
-    }
-  }
-
-  function setKitPlan(ci: number, planId: string | null) {
-    setKitPlanIds((prev) => {
-      const n = [...prev];
-      n[ci] = planId;
-      return n;
-    });
-  }
-
-  // Option groups of an arbitrary product's variants (kit components) —
-  // same derivation as the main product's optionGroups / bundleOptionGroups.
-  function variantOptionGroups(vs: ProductVariant[]) {
-    const map = new Map<string, string[]>();
-    for (const v of vs) {
-      for (const o of v.selectedOptions) {
-        if (!map.has(o.name)) map.set(o.name, []);
-        const arr = map.get(o.name)!;
-        if (!arr.includes(o.value)) arr.push(o.value);
-      }
-    }
-    return Array.from(map.entries()).map(([name, values]) => ({ name, values }));
-  }
   const chosenBundleVariant =
     selectedTierBundle?.variants.find((v) => v.id === bundleVariantId) ??
     selectedTierBundle?.variants[0] ??
@@ -652,36 +470,6 @@ export default function VariantSelector({
 
   const currencyCode = selectedVariant?.price?.currencyCode || "USD";
 
-  // Resolve tier's addon references to actual products + their primary variants.
-  // Unresolvable indexes (out-of-range) drop out — keeps the tier valid even
-  // when fewer add-on products are available than the tier expects.
-  function resolveAddons(t: (typeof TIERS)[number]) {
-    return t.addonRefs
-      .map((ref) => {
-        const p = addonProducts[ref.idx];
-        if (!p) return null;
-        const v = getPrimaryVariant(p);
-        if (!v?.availableForSale) return null;
-        return { product: p, variant: v, qty: ref.qty };
-      })
-      .filter((x): x is { product: Product; variant: ProductVariant; qty: number } => x !== null);
-  }
-
-  const resolvedAddons = resolveAddons(tier);
-  const addonsTotal = resolvedAddons.reduce(
-    (sum, a) => sum + parseFloat(a.variant.price.amount) * a.qty,
-    0,
-  );
-  // Sum the actual variant prices for each unit in the bundle. For Family Pack
-  // (mainQty=2), each unit can have its own variant picked inline → variants
-  // may have different prices, so we can't just multiply unitPrice * mainQty.
-  // For Starter Kit (mainQty=1), this collapses to selectedVariant.price.
-  let mainTotal = 0;
-  for (let i = 0; i < tier.mainQty; i++) {
-    const vid = unitVariantIds[i] ?? selectedVariant.id;
-    const v = variants.find((vv) => vv.id === vid) ?? selectedVariant;
-    mainTotal += parseFloat(v.price.amount);
-  }
   // Quantity-mode lines: every variant with a qty > 0, ready for add/checkout.
   const qtyLines = variants
     .map((v) => ({ variant: v, qty: variantQtys[v.id] ?? 0 }))
@@ -695,44 +483,14 @@ export default function VariantSelector({
     ? qtyTotal
     : selectedTierBundle
       ? parseFloat(chosenBundleVariant?.priceAmount ?? selectedTierBundle.variants[0].priceAmount)
-      : selectedTierKit
-        ? kitDiscountedTotal
-        : mainTotal + addonsTotal;
-  const displayCurrency =
-    selectedTierBundle?.currencyCode ||
-    kitLines[0]?.variant.price.currencyCode ||
-    currencyCode;
+      : parseFloat(selectedVariant.price.amount);
+  const displayCurrency = selectedTierBundle?.currencyCode || currencyCode;
 
   function selectTier(idx: number) {
     setTierIdx(idx);
-    // Reset every unit slot to the current top-level variant so the per-unit
-    // picker starts from a clean state. Without this, units 2+ keep their
-    // initial-render variant even after the top picker has moved on, which
-    // makes the displayed bundle total look wrong vs the visible unit pickers.
-    const fallbackId = selectedVariant?.id ?? "";
-    setUnitVariantIds((prev) => prev.map(() => fallbackId));
-    // Reset the bundle variant to the new tier's bundle default (or clear it).
+    // Start the new tier's bundle at its first variant (or clear it).
     const b = tierBundles?.[idx] ?? null;
-    setBundleVariantId(b ? b.variants[0]?.id ?? null : null);
-    // Reset composed-kit state to the new tier's kit defaults (or clear it).
-    const k = (!b && tierKits?.[idx]) || null;
-    setKitVariantIds(kitFirstVariantIds(k));
-    setKitPlanIds((k?.components ?? []).map(() => null));
-  }
-
-  function selectTopVariant(variant: ProductVariant) {
-    setSelectedVariant(variant);
-    // Broadcast to every unit slot — top picker behaves as the "default for
-    // all units in the bundle"; per-unit pickers still override individually.
-    setUnitVariantIds((prev) => prev.map(() => variant.id));
-  }
-
-  function setUnitVariant(unitIdx: number, variantId: string) {
-    setUnitVariantIds((prev) => {
-      const next = [...prev];
-      next[unitIdx] = variantId;
-      return next;
-    });
+    setBundleVariantId(b ? (b.variants[0]?.id ?? null) : null);
   }
 
 
@@ -819,73 +577,22 @@ export default function VariantSelector({
       return;
     }
 
-    // Composed kit → one cart line per component; a subscribed component's
-    // line carries its selling plan (the whole point of composing: bundle
-    // lines can't).
-    if (selectedTierKit) {
-      if (kitLines.length === 0 || kitLines.some((l) => !l.variant.availableForSale)) return;
-      for (const l of kitLines) {
-        addItem({
-          merchandiseId: l.variant.id,
-          productHandle: l.component.product.handle,
-          productTitle: l.component.product.title,
-          variantTitle: l.variant.title,
-          imageUrl:
-            l.variant.image?.url ||
-            l.component.product.images.edges[0]?.node?.url ||
-            "/product-placeholder.svg",
-          currencyCode: l.variant.price.currencyCode,
-          // Subscribed lines carry the plan allocation price so the drawer
-          // shows what is actually charged per delivery.
-          unitPriceAmount: l.unitAmount,
-          quantity: l.component.quantity,
-          sellingPlanId: l.plan?.id ?? null,
-          sellingPlanName: l.plan?.name ?? null,
-        });
-      }
-      if (selectedTierGift) addGiftLine(selectedTierGift);
-      flashAdded(via);
-      return;
-    }
-
+    // The product alone: the picked variant ×1, plus the tier's gift if any.
     if (!selectedVariant?.availableForSale) return;
-
-    // Add main product units (with per-unit variant picks when applicable)
-    const counts = new Map<string, number>();
-    for (let i = 0; i < tier.mainQty; i++) {
-      const vid = unitVariantIds[i] ?? selectedVariant.id;
-      counts.set(vid, (counts.get(vid) ?? 0) + 1);
-    }
-
-    for (const [variantId, qty] of counts) {
-      const v = variants.find((vv) => vv.id === variantId) ?? selectedVariant;
-      addItem({
-        merchandiseId: variantId,
-        productHandle: activeProduct.handle,
-        productTitle: activeProduct.title,
-        variantTitle: v.title,
-        imageUrl: activeProduct.images.edges[0]?.node?.url || "/product-placeholder.svg",
-        currencyCode: v.price.currencyCode,
-        unitPriceAmount: v.price.amount,
-        quantity: qty,
-        variantGroup: groupPresentation(),
-      });
-    }
-
-    // Add resolved cross-sell add-ons for the selected tier
-    for (const addon of resolvedAddons) {
-      addItem({
-        merchandiseId: addon.variant.id,
-        productHandle: addon.product.handle,
-        productTitle: addon.product.title,
-        variantTitle: addon.variant.title,
-        imageUrl: addon.product.images.edges[0]?.node?.url || "/product-placeholder.svg",
-        currencyCode: addon.variant.price.currencyCode,
-        unitPriceAmount: addon.variant.price.amount,
-        quantity: addon.qty,
-      });
-    }
-
+    addItem({
+      merchandiseId: selectedVariant.id,
+      productHandle: activeProduct.handle,
+      productTitle: activeProduct.title,
+      variantTitle: selectedVariant.title,
+      imageUrl:
+        selectedVariant.image?.url ||
+        activeProduct.images.edges[0]?.node?.url ||
+        "/product-placeholder.svg",
+      currencyCode: selectedVariant.price.currencyCode,
+      unitPriceAmount: selectedVariant.price.amount,
+      quantity: 1,
+      variantGroup: groupPresentation(),
+    });
     if (selectedTierGift) addGiftLine(selectedTierGift);
     flashAdded(via);
   }
@@ -915,39 +622,13 @@ export default function VariantSelector({
       return checkoutWith([{ merchandiseId: chosenBundleVariant.id, quantity: 1 }]);
     }
 
-    // Composed kit → checkout with one line per component (plan rides along
-    // on subscribed lines; the route validates + passes sellingPlanId).
-    if (selectedTierKit) {
-      if (kitLines.length === 0 || kitLines.some((l) => !l.variant.availableForSale)) return;
-      return checkoutWith([
-        ...kitLines.map((l) => ({
-          merchandiseId: l.variant.id,
-          quantity: l.component.quantity,
-          ...(l.plan ? { sellingPlanId: l.plan.id } : {}),
-        })),
-        // Gift line: zeroed by the backing Tier Gift discount at checkout.
-        ...(selectedTierGift ? [{ merchandiseId: selectedTierGift.variantId, quantity: 1 }] : []),
-      ]);
-    }
-
+    // The product alone, plus the tier's gift line (zeroed by the backing
+    // Tier Gift discount at checkout).
     if (!selectedVariant?.availableForSale) return;
-    const counts = new Map<string, number>();
-    for (let i = 0; i < tier.mainQty; i++) {
-      const vid = unitVariantIds[i] ?? selectedVariant.id;
-      counts.set(vid, (counts.get(vid) ?? 0) + 1);
-    }
-    const lines: CheckoutLine[] = [];
-    for (const [merchandiseId, quantity] of counts) {
-      lines.push({ merchandiseId, quantity });
-    }
-    for (const addon of resolvedAddons) {
-      lines.push({ merchandiseId: addon.variant.id, quantity: addon.qty });
-    }
-    if (selectedTierGift) {
-      // Zeroed by the backing Tier Gift discount at checkout.
-      lines.push({ merchandiseId: selectedTierGift.variantId, quantity: 1 });
-    }
-    return checkoutWith(lines);
+    return checkoutWith([
+      { merchandiseId: selectedVariant.id, quantity: 1 },
+      ...(selectedTierGift ? [{ merchandiseId: selectedTierGift.variantId, quantity: 1 }] : []),
+    ]);
   }
 
   // The one POST + redirect behind every Buy-now path. A refused checkout
@@ -975,30 +656,23 @@ export default function VariantSelector({
     ? qtyLines.length > 0
     : selectedTierBundle
       ? (chosenBundleVariant?.availableForSale ?? false)
-      : selectedTierKit
-        ? kitLines.length > 0 && kitLines.every((l) => l.variant.availableForSale)
-        : selectedVariant?.availableForSale;
+      : selectedVariant?.availableForSale;
 
   // The floating add-to-cart bar mirrors this buy box (BuyBoxSync): what the
   // button below would add, at its price, and the add itself.
   const pick = (v: ProductVariant) => (v.title === "Default Title" ? "" : v.title);
   usePublishBuyBox(
     {
-      title: quantityMode ? activeProduct.title : tierCopy(tierIdx, "name"),
+      title:
+        !quantityMode && showTierChoice && selectedTier ? tierName(selectedTier) : activeProduct.title,
       detail: quantityMode
         ? qtyLines.map((l) => `${l.qty} × ${pick(l.variant) || activeProduct.title}`).join(", ")
         : selectedTierBundle
           ? (chosenBundleVariant?.selectedOptions.map((o) => o.value).join(" / ") ?? "")
-          : selectedTierKit
-            ? kitLines.map((l) => pick(l.variant)).filter(Boolean).join(" + ")
-            : pick(selectedVariant),
+          : pick(selectedVariant),
       price: formatMoney(totalPrice, displayCurrency),
       imageUrl:
-        (selectedTierBundle
-          ? selectedTierBundle.imageUrl
-          : selectedTierKit
-            ? kitLines[0]?.variant.image?.url
-            : selectedVariant.image?.url) ??
+        (selectedTierBundle ? selectedTierBundle.imageUrl : selectedVariant.image?.url) ??
         activeProduct.images.edges[0]?.node?.url ??
         null,
       available: !!isAvailable,
@@ -1057,7 +731,7 @@ export default function VariantSelector({
 
       {quantityMode ? (
         /* Quantity rows — one per variant, each with its own stepper (owner
-           decision 2026-07-10 for bundle-less products): the row IS the
+           decision 2026-07-10, for products without tiers): the row IS the
            option, so the option picker and tier cards are skipped entirely. */
         <div>
           {/* Purchase options — Subscribe & Save (handoff §1). Copy guardrail:
@@ -1270,6 +944,10 @@ export default function VariantSelector({
         );
       })}
 
+      {/* Tier cards (Bundle & Save) — only when there is a real choice. With one
+          visible tier (e.g. before any bundle is set up) the colour picker
+          above and the button below are the whole buy box. */}
+      {showTierChoice && (
       <div>
         <div className="mb-4 flex items-center gap-3">
           <div className="h-px flex-1 bg-line" />
@@ -1280,78 +958,26 @@ export default function VariantSelector({
         </div>
 
         <div className="space-y-3">
-          {TIERS.map((t, i) => {
-            const selected = tierIdx === i;
-            const tb = tierBundles?.[i] ?? null;
-            const tAddons = resolveAddons(t);
-            // For the selected tier, use the actual per-unit picks (matches the
-            // top-level "Your selection" total). For other tiers, the user
-            // hasn't selected them yet, so default to selectedVariant × qty.
-            let tMainTotal = 0;
-            for (let u = 0; u < t.mainQty; u++) {
-              const vid = selected
-                ? unitVariantIds[u] ?? selectedVariant.id
-                : selectedVariant.id;
-              const v = variants.find((vv) => vv.id === vid) ?? selectedVariant;
-              tMainTotal += parseFloat(v.price.amount);
-            }
-            const kit = (!tb && tierKits?.[i]) || null;
-            const gift = selected ? (tierGifts?.[i] ?? null) : null;
-            // For a bundle tier, price reflects the chosen variant when this tier
-            // is selected, else its first variant. A composed kit reflects the
-            // chosen variants + plans when selected, else its base (first-variant,
-            // one-time) sum — both net of the kit deal, matching what the cart
-            // will actually charge (the deal applies in the cart, verified live).
-            // Otherwise the legacy composed total.
+          {tierViews.map((view) => {
+            const i = view.i;
+            const selected = selectedTier?.i === i;
+            const tb = view.kind === "bundle" ? view.bundle : null;
+            const gift = selected && !tb ? (tierGifts?.[i] ?? null) : null;
+            // A bundle tier quotes its chosen variant once selected (its first
+            // before that); the product-alone tier quotes the picked variant.
             const tbVariant = tb ? (selected ? chosenBundleVariant : tb.variants[0]) : null;
-            const kitBaseTotal = kit
-              ? kit.components.reduce(
-                  (sum, c) =>
-                    sum +
-                    parseFloat(c.product.variants.edges[0]?.node.price.amount ?? "0") * c.quantity,
-                  0,
-                )
-              : 0;
-            const kitBaseSavings = kit
-              ? kitDealSavings(
-                  kit.components.map((c) => ({
-                    productId: c.product.id,
-                    unitAmount: parseFloat(c.product.variants.edges[0]?.node.price.amount ?? "0"),
-                    quantity: c.quantity,
-                    subscribed: false,
-                  })),
-                  tierKitDeals?.[i] ?? null,
-                )
-              : 0;
             const tTotal = tb
               ? parseFloat(tbVariant?.priceAmount ?? tb.variants[0].priceAmount)
-              : kit
-                ? selected
-                  ? kitDiscountedTotal
-                  : Math.max(0, kitBaseTotal - kitBaseSavings)
-                : tMainTotal +
-                  tAddons.reduce((sum, a) => sum + parseFloat(a.variant.price.amount) * a.qty, 0);
-            // Pre-deal sum, struck beside the discounted price when a deal bites.
-            const tStruck = kit
-              ? selected
-                ? kitSavings > 0.005
-                  ? kitTotal
-                  : null
-                : kitBaseSavings > 0.005
-                  ? kitBaseTotal
-                  : null
-              : null;
-            const tCurrency = tb
-              ? tb.currencyCode
-              : kit
-                ? kit.components[0]?.product.variants.edges[0]?.node.price.currencyCode ||
-                  currencyCode
-                : currencyCode;
+              : parseFloat(selectedVariant.price.amount);
+            const tCurrency = tb ? tb.currencyCode : currencyCode;
             const bGroups = tb ? bundleOptionGroupsByProduct(tb) : [];
+            const description = bundleTiers?.[i]?.description?.trim();
+            // Authored per tier ("Best value"); no claim without the owner's say.
+            const badge = bundleTiers?.[i]?.badge?.trim();
 
             return (
               <div
-                key={t.name}
+                key={i}
                 onClick={() => selectTier(i)}
                 className={`relative cursor-pointer rounded-[13px] border-[1.8px] py-3.5 pl-12 pr-4 transition-all ${
                   selected
@@ -1374,120 +1000,28 @@ export default function VariantSelector({
                   }
                 />
 
-                {/* Floating flag — sits half-above the card border at top-right.
-                    Clay for "Most Chosen", cocoa for "Best Value". */}
-                {"popular" in t && t.popular && (
-                  <span className="absolute -top-2.5 right-3.5 rounded-full bg-clay px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.06em] text-white">
-                    Most Chosen
-                  </span>
-                )}
-                {"bestValue" in t && t.bestValue && (
+                {/* Floating flag — sits half-above the card border at top-right. */}
+                {badge && (
                   <span className="absolute -top-2.5 right-3.5 rounded-full bg-cocoa px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.06em] text-white">
-                    Best Value
+                    {badge}
                   </span>
                 )}
 
-                {/* Title row: tier name + price on one baseline. Mixed case per
-                    reference — no uppercase, the floating flag carries the
-                    visual emphasis. */}
+                {/* Title row: tier name + price on one baseline. */}
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-[15.5px] font-bold text-cocoa">
-                    {tierCopy(i, "name")}
-                  </span>
+                  <span className="text-[15.5px] font-bold text-cocoa">{tierName(view)}</span>
                   <span className="text-[15.5px] font-bold tabular-nums text-cocoa">
-                    {tStruck !== null && (
-                      <span className="mr-1.5 text-[12.5px] font-semibold text-brown/60 line-through">
-                        {formatMoney(tStruck, tCurrency)}
-                      </span>
-                    )}
                     {formatMoney(tTotal, tCurrency)}
                   </span>
                 </div>
 
-                <p className="mt-0.5 text-[12.5px] leading-snug text-brown">
-                  {tierCopy(i, "description")}
-                </p>
-
-                {/* What's included — main qty + resolved addons with thumbnails.
-                    Off-reference but kept because customers benefit from seeing
-                    the actual items per tier, especially when add-ons differ.
-                    Rendered only for the SELECTED tier so unselected tiers stay
-                    a scannable name + price + description row and the buy
-                    column keeps its height in check. */}
-                {selected && kit && (
-                  /* Composed-kit contents: one row per component with the line
-                     price actually charged (plan-adjusted when subscribed,
-                     struck base beside it). */
-                  <ul className="mt-2 space-y-1 text-[12px] text-brown">
-                    {kitLines.map((l) => {
-                      const lineTotal = parseFloat(l.unitAmount) * l.component.quantity;
-                      const baseTotal =
-                        parseFloat(l.variant.price.amount) * l.component.quantity;
-                      return (
-                        <li key={l.component.product.id} className="flex items-center gap-2">
-                          <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded-md border border-line bg-cream">
-                            <Image
-                              src={
-                                l.variant.image?.url ||
-                                l.component.product.images.edges[0]?.node?.url ||
-                                "/product-placeholder.svg"
-                              }
-                              alt=""
-                              fill
-                              className="object-cover"
-                              sizes="24px"
-                            />
-                          </span>
-                          <span className="min-w-0 truncate">
-                            {l.component.quantity}×{" "}
-                            <a
-                              href={`/products/${l.component.product.handle}`}
-                              target="_blank"
-                              rel="noopener"
-                              onClick={(e) => e.stopPropagation()}
-                              className="text-cocoa underline decoration-line underline-offset-2 hover:text-clay"
-                            >
-                              {l.component.product.title}
-                            </a>
-                          </span>
-                          <span className="ml-auto shrink-0 tabular-nums text-cocoa">
-                            {l.plan && lineTotal !== baseTotal && (
-                              <span className="mr-1.5 text-brown/60 line-through">
-                                {formatMoney(baseTotal, l.variant.price.currencyCode)}
-                              </span>
-                            )}
-                            {formatMoney(lineTotal, l.variant.price.currencyCode)}
-                          </span>
-                        </li>
-                      );
-                    })}
-                    {gift && (
-                      <li className="flex items-center gap-2">
-                        <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded-md border border-line bg-cream">
-                          <Image
-                            src={gift.imageUrl || "/product-placeholder.svg"}
-                            alt=""
-                            fill
-                            className="object-cover"
-                            sizes="24px"
-                          />
-                        </span>
-                        <span className="min-w-0 truncate">1× {gift.title}</span>
-                        <span className="shrink-0 rounded-full bg-honey-tint px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-gold-deep">
-                          Gift
-                        </span>
-                        <span className="ml-auto shrink-0 tabular-nums">
-                          <span className="mr-1.5 text-brown/60 line-through">
-                            {formatMoney(parseFloat(gift.priceAmount), gift.currencyCode)}
-                          </span>
-                          <span className="font-bold text-positive">FREE</span>
-                        </span>
-                      </li>
-                    )}
-                  </ul>
+                {description && (
+                  <p className="mt-0.5 text-[12.5px] leading-snug text-brown">{description}</p>
                 )}
 
-                {selected && !kit && (tb ? (
+                {/* What's included — for the SELECTED tier only, so the others
+                    stay a scannable name + price + description row. */}
+                {selected && (tb ? (
                   <ul className="mt-2 space-y-1 text-[12px] text-brown">
                     {tb.components.map((c, ci) => (
                       <li key={c.handle} className="flex items-center gap-2">
@@ -1528,7 +1062,11 @@ export default function VariantSelector({
                     <li className="flex items-center gap-2">
                       <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded-md border border-line bg-cream">
                         <Image
-                          src={activeProduct.images.edges[0]?.node?.url || "/product-placeholder.svg"}
+                          src={
+                            selectedVariant.image?.url ||
+                            activeProduct.images.edges[0]?.node?.url ||
+                            "/product-placeholder.svg"
+                          }
                           alt=""
                           fill
                           className="object-cover"
@@ -1536,34 +1074,9 @@ export default function VariantSelector({
                         />
                       </span>
                       <span className="min-w-0 truncate">
-                        <span className="font-bold">{t.mainQty}×</span> {activeProduct.title}
+                        <span className="font-bold">1×</span> {activeProduct.title}
                       </span>
                     </li>
-                    {tAddons.map((a) => (
-                      <li key={a.product.id} className="flex items-center gap-2">
-                        <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded-md border border-line bg-cream">
-                          <Image
-                            src={a.product.images.edges[0]?.node?.url || "/product-placeholder.svg"}
-                            alt=""
-                            fill
-                            className="object-cover"
-                            sizes="24px"
-                          />
-                        </span>
-                        <span className="min-w-0 truncate">
-                          <span className="font-bold">{a.qty}×</span>{" "}
-                          <a
-                            href={`/products/${a.product.handle}`}
-                            target="_blank"
-                            rel="noopener"
-                            onClick={(e) => e.stopPropagation()}
-                            className="underline decoration-line underline-offset-2 hover:text-clay"
-                          >
-                            {a.product.title}
-                          </a>
-                        </span>
-                      </li>
-                    ))}
                     {gift && (
                       <li className="flex items-center gap-2">
                         <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded-md border border-line bg-cream">
@@ -1589,86 +1102,6 @@ export default function VariantSelector({
                     )}
                   </ul>
                 ))}
-
-                {/* Per-unit pickers (Family Pack: pick color per device). Not in
-                    the reference template but kept as a real feature for multi-
-                    pet bundles — only renders when the user has selected this
-                    tier AND it has more than one main unit. */}
-                {selected && multi && t.mainQty > 1 && !tb && !kit && (
-                  <div className="mt-3 space-y-3 border-t border-line pt-3">
-                    {Array.from({ length: t.mainQty }, (_, j) => {
-                      const uid = unitVariantIds[j] ?? variants[0]?.id ?? "";
-                      const unitOpts = getUnitOptionValues(uid);
-                      return (
-                        <div key={j} className="space-y-1.5">
-                          <p className="text-[11px] font-extrabold uppercase tracking-wider text-brown">
-                            Unit #{j + 1}
-                          </p>
-                          {optionGroups.map((opt) => {
-                            const colorMode = isColorOption(opt.name);
-                            const unitSelected = unitOpts[opt.name];
-                            return (
-                              <div key={opt.name} className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
-                                <span className="text-[11px] font-semibold text-brown">
-                                  {opt.name}:
-                                </span>
-                                {opt.values.map((value) => {
-                                  const active = unitSelected === value;
-                                  if (colorMode) {
-                                    const colors = resolveSwatchColors(value);
-                                    if (colors) {
-                                      return (
-                                        <button
-                                          key={value}
-                                          type="button"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            pickUnitOptionValue(j, opt.name, value);
-                                          }}
-                                          title={value}
-                                          aria-label={value}
-                                          aria-pressed={active}
-                                          className={`relative flex h-9 w-9 items-center justify-center rounded-lg border-[1.8px] bg-[#EFE6CF] transition-all ${
-                                            active
-                                              ? "border-transparent ring-2 ring-clay"
-                                              : "border-line hover:border-clay/60"
-                                          }`}
-                                        >
-                                          <span
-                                            className="block h-6 w-6 rounded-full border border-black/25 shadow-[inset_0_-1px_2px_rgb(0_0_0_/_0.08)]"
-                                            style={{ background: swatchBackground(colors) }}
-                                          />
-                                        </button>
-                                      );
-                                    }
-                                  }
-                                  // Non-color option, or unknown color → compact text chip
-                                  return (
-                                    <button
-                                      key={value}
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        pickUnitOptionValue(j, opt.name, value);
-                                      }}
-                                      className={`rounded-lg border-[1.8px] px-3 py-1.5 text-xs font-bold transition-all ${
-                                        active
-                                          ? "border-clay bg-[#FCFBF4] text-cocoa"
-                                          : "border-line text-cocoa hover:border-clay/60"
-                                      }`}
-                                    >
-                                      {value}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
 
                 {/* Bundle option pickers — a customer-choose bundle is a normal
                     multi-variant product, so pick its options inline (reusing the
@@ -1749,135 +1182,12 @@ export default function VariantSelector({
                     ))}
                   </div>
                 )}
-
-                {/* Composed-kit per-component controls: option pickers for
-                    multi-variant components + a Delivery toggle for components
-                    with selling plans. Chip-scale (not the page-level radio
-                    cards) because this lives inside a tier card. */}
-                {selected && kit && (
-                  <div className="mt-3 space-y-3 border-t border-line pt-3">
-                    {kitLines.map((l) => {
-                      const cvs = l.component.product.variants.edges.map((e) => e.node);
-                      const groups = cvs.length > 1 ? variantOptionGroups(cvs) : [];
-                      const hasPlans = l.component.sellingPlans.length > 0;
-                      if (groups.length === 0 && !hasPlans) return null;
-                      const chosenValues: Record<string, string> = Object.fromEntries(
-                        l.variant.selectedOptions.map((o) => [o.name, o.value]),
-                      );
-                      return (
-                        <div key={l.component.product.id} className="space-y-1.5">
-                          <p className="text-[14.5px] font-bold text-cocoa">
-                            {l.component.product.title}
-                          </p>
-                          {groups.map((opt) => {
-                            const colorMode = isColorOption(opt.name);
-                            const sel = chosenValues[opt.name];
-                            return (
-                              <div
-                                key={opt.name}
-                                className="flex flex-wrap items-center gap-x-2 gap-y-1.5"
-                              >
-                                <span className="text-[11px] font-semibold text-brown">
-                                  {opt.name}:
-                                </span>
-                                {opt.values.map((value) => {
-                                  const active = sel === value;
-                                  if (colorMode) {
-                                    const colors = resolveSwatchColors(value);
-                                    if (colors) {
-                                      return (
-                                        <button
-                                          key={value}
-                                          type="button"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            pickKitOption(l.ci, opt.name, value);
-                                          }}
-                                          title={value}
-                                          aria-label={value}
-                                          aria-pressed={active}
-                                          className={`relative flex h-9 w-9 items-center justify-center rounded-lg border-[1.8px] bg-[#EFE6CF] transition-all ${
-                                            active
-                                              ? "border-transparent ring-2 ring-clay"
-                                              : "border-line hover:border-clay/60"
-                                          }`}
-                                        >
-                                          <span
-                                            className="block h-6 w-6 rounded-full border border-black/25 shadow-[inset_0_-1px_2px_rgb(0_0_0_/_0.08)]"
-                                            style={{ background: swatchBackground(colors) }}
-                                          />
-                                        </button>
-                                      );
-                                    }
-                                  }
-                                  return (
-                                    <button
-                                      key={value}
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        pickKitOption(l.ci, opt.name, value);
-                                      }}
-                                      className={`rounded-lg border-[1.8px] px-3 py-1.5 text-xs font-bold transition-all ${
-                                        active
-                                          ? "border-clay bg-[#FCFBF4] text-cocoa"
-                                          : "border-line text-cocoa hover:border-clay/60"
-                                      }`}
-                                    >
-                                      {value}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            );
-                          })}
-                          {hasPlans && (
-                            /* Copy guardrail (same as the quantity-mode radio):
-                               cadence + discount come from the plan name —
-                               Shopify's own string, never recomputed here. */
-                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
-                              <span className="text-[11px] font-semibold text-brown">
-                                Delivery:
-                              </span>
-                              {[
-                                { id: null as string | null, label: "One-time" },
-                                ...l.component.sellingPlans.map((p) => ({
-                                  id: p.id as string | null,
-                                  label: p.name,
-                                })),
-                              ].map((opt) => {
-                                const active = (l.plan?.id ?? null) === opt.id;
-                                return (
-                                  <button
-                                    key={opt.id ?? "one-time"}
-                                    type="button"
-                                    aria-pressed={active}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setKitPlan(l.ci, opt.id);
-                                    }}
-                                    className={`rounded-lg border-[1.8px] px-3 py-1.5 text-xs font-bold transition-all ${
-                                      active
-                                        ? "border-clay bg-[#FCFBF4] text-cocoa"
-                                        : "border-line text-cocoa hover:border-clay/60"
-                                    }`}
-                                  >
-                                    {opt.label}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
               </div>
             );
           })}
         </div>
       </div>
+      )}
         </>
       )}
 

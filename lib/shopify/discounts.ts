@@ -5,30 +5,16 @@ import { adminGraphqlFetch } from "./admin-graphql";
 import { hasAdminApiCredentials } from "./admin-credentials";
 
 // Managed automatic BXGY discounts created by the beepaws-admin tool. Their
-// title prefixes + shapes are CROSS-REPO CONTRACTS (see beepaws-admin
-// docs/storefront-handoff-composed-kits.md):
+// title prefix + shape is a CROSS-REPO CONTRACT (see beepaws-admin
+// docs/storefront-handoff-composed-kits.md §tier gifts):
 //
-// - "BeePaws Kit"       — kit pricing: buy the main product → N add-on units
-//                         % off (cheapest first). Display math derives from
-//                         the discount, never hardcoded. NOT applicable to
-//                         subscribed lines (platform limit, verified live).
 // - "BeePaws Tier Gift" — tier gift: buy the product → 1 gift unit 100% off.
 //                         The storefront adds the gift line; this discount is
 //                         what makes it free — never render FREE without it.
 //
-// ("BeePaws Free Gift" = the order-threshold gift, a separate future tool.)
-
-export type KitDiscount = {
-  title: string;
-  /** Products on the customerBuys side (the kit's main product). */
-  buysProductIds: string[];
-  /** Products eligible for the discount (the kit's add-ons). */
-  getsProductIds: string[];
-  /** TOTAL discounted units across the gets set (cheapest first). */
-  unitQuantity: number;
-  /** 0..1 — Shopify's DiscountPercentage. */
-  percentage: number;
-};
+// ("BeePaws Kit" kit-pricing discounts belonged to composed kits, scrapped
+// 2026-10-11 — kits are Shopify bundles now, priced on the bundle itself.
+// "BeePaws Free Gift" = the order-threshold gift, a separate future tool.)
 
 export type TierGiftDiscount = {
   title: string;
@@ -49,10 +35,6 @@ type DiscountNodesBody = {
           };
           customerGets?: {
             items?: { products?: { nodes?: { id?: string }[] } };
-            value?: {
-              quantity?: { quantity?: string | number };
-              effect?: { percentage?: number };
-            };
           };
         };
       }[];
@@ -78,12 +60,6 @@ const DISCOUNTS_QUERY = `
               items {
                 ... on DiscountProducts { products(first: 20) { nodes { id } } }
               }
-              value {
-                ... on DiscountOnQuantity {
-                  quantity { quantity }
-                  effect { ... on DiscountPercentage { percentage } }
-                }
-              }
             }
           }
         }
@@ -92,24 +68,19 @@ const DISCOUNTS_QUERY = `
   }
 `;
 
-async function fetchBeePawsAutoDiscounts(): Promise<{
-  kits: KitDiscount[];
-  tierGifts: TierGiftDiscount[];
-}> {
-  const empty = { kits: [], tierGifts: [] };
+async function fetchBeePawsAutoDiscounts(): Promise<{ tierGifts: TierGiftDiscount[] }> {
+  const empty = { tierGifts: [] };
   if (!hasAdminApiCredentials()) return empty;
 
   try {
     const res = await adminGraphqlFetch<DiscountNodesBody>({ query: DISCOUNTS_QUERY });
     const nodes = res.body.data?.discountNodes?.nodes ?? [];
 
-    const kits: KitDiscount[] = [];
     const tierGifts: TierGiftDiscount[] = [];
-
     for (const n of nodes) {
       const d = n.discount;
       if (d?.__typename !== "DiscountAutomaticBxgy") continue;
-      if (d.status !== "ACTIVE" || !d.title) continue;
+      if (d.status !== "ACTIVE" || !d.title?.startsWith("BeePaws Tier Gift")) continue;
 
       const buysProductIds = (d.customerBuys?.items?.products?.nodes ?? [])
         .map((p) => p.id)
@@ -119,18 +90,10 @@ async function fetchBeePawsAutoDiscounts(): Promise<{
         .filter((id): id is string => !!id);
       if (buysProductIds.length === 0 || getsProductIds.length === 0) continue;
 
-      if (d.title.startsWith("BeePaws Kit")) {
-        const percentage = d.customerGets?.value?.effect?.percentage ?? 0;
-        const unitQuantity = Number(d.customerGets?.value?.quantity?.quantity ?? 0);
-        if (percentage > 0 && unitQuantity > 0) {
-          kits.push({ title: d.title, buysProductIds, getsProductIds, unitQuantity, percentage });
-        }
-      } else if (d.title.startsWith("BeePaws Tier Gift")) {
-        tierGifts.push({ title: d.title, buysProductIds, getsProductIds });
-      }
+      tierGifts.push({ title: d.title, buysProductIds, getsProductIds });
     }
 
-    return { kits, tierGifts };
+    return { tierGifts };
   } catch {
     // Discounts are display enhancements — never a page blocker.
     return empty;

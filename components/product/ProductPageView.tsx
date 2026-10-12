@@ -2,7 +2,7 @@ import { getBundleContents } from "@/lib/shopify/bundle-contents";
 import { getSellingPlans } from "@/lib/shopify/selling-plans";
 import { isSellableOnStorefront } from "@/lib/shopify/storefront-visibility";
 import { getBeePawsAutoDiscounts } from "@/lib/shopify/discounts";
-import { getFullProductForPage, getProduct, getProducts } from "@/lib/shopify/queries";
+import { getFullProductForPage, getProduct } from "@/lib/shopify/queries";
 import VariantSelector from "@/components/product/VariantSelector";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { Check } from "lucide-react";
@@ -98,7 +98,6 @@ export async function ProductPageView({
   // bundles so normal products skip the extra query. See docs/bundles-from-admin.md.
   const isBundle = product.tags?.includes("bundle") ?? false;
   // Inputs the parallel wave needs, computed up front (pure, no I/O).
-  const primaryCollectionHandle = fullProduct?.collections?.edges?.[0]?.node?.handle;
   const curatedHandles = [
     ...new Set(
       (beepaws?.discoveryProducts ?? [])
@@ -124,8 +123,9 @@ export async function ProductPageView({
 
   // Resolve any bundle linked from a tier (beepaws.bundle_tiers[i].bundle) to its
   // cart-ready variant + price/image, aligned by tier index, so the tier picker
-  // can "add the bundle" (one line; Shopify expands it) instead of separate items.
-  // null when no link OR the storefront channel can't sell the bundle. The
+  // can "add the bundle" (one line; Shopify expands it). null when no link OR the
+  // storefront channel can't sell the bundle — the tier is then HIDDEN, never
+  // faked (tier rule in VariantSelector.tsx). The
   // Admin API behind getProduct returns ARCHIVED/unpublished products too, and
   // offering those makes the Storefront Cart API create GHOST lines (invisible
   // in cart.lines, still charged in subtotal) — hence isSellableOnStorefront.
@@ -161,42 +161,6 @@ export async function ProductPageView({
       )
     : null;
 
-  // Resolve composed kits (beepaws.bundle_tiers[i].components — admin handoff
-  // 2026-07-19, beepaws-admin backlog #20): full product + selling plans per
-  // component so the tier can compose one cart line each, with a subscribe
-  // toggle on plan-bearing components. Precedence: a bundle link wins. Any
-  // unsellable/unresolvable component nulls the WHOLE kit — the tier then
-  // falls back to the legacy code-defined composition (contract rule 3).
-  const tierKitsP = beepaws?.bundleTiers
-    ? Promise.all(
-        beepaws.bundleTiers.map(async (t) => {
-          if (t?.bundle?.handle) return null;
-          const refs = (t?.components ?? []).flatMap((c) => {
-            const handle = c?.product?.handle;
-            return handle
-              ? [{ handle, quantity: Math.max(1, Math.round(c?.quantity ?? 1)) }]
-              : [];
-          });
-          if (refs.length === 0) return null;
-          const resolved = await Promise.all(
-            refs.map(async (ref) => {
-              const [p, sellable, plans] = await Promise.all([
-                getProduct(ref.handle),
-                isSellableOnStorefront(ref.handle),
-                getSellingPlans(ref.handle),
-              ]);
-              if (!p || p.variants.edges.length === 0 || sellable === false) return null;
-              return { product: p, quantity: ref.quantity, sellingPlans: plans };
-            }),
-          );
-          const components = resolved.filter(
-            (r): r is NonNullable<(typeof resolved)[number]> => r !== null,
-          );
-          return components.length === resolved.length ? { components } : null;
-        }),
-      )
-    : null;
-
   // VARIANT GROUP (combined listings, storefront-side — admin handoff
   // 2026-07-21). Members are SEPARATE Shopify products presented as options on
   // this page; each keeps its own price/images/variants/availability. The list
@@ -224,15 +188,13 @@ export async function ProductPageView({
     : Promise.resolve([]);
 
 
-  // Managed automatic discounts (BeePaws Kit* / BeePaws Tier Gift* — created
-  // by the admin tool). ALL kit/gift money math derives from these, never
-  // hardcoded (cross-repo contract). Fetched only when a tier wires either.
-  const wantsDiscounts = beepaws?.bundleTiers?.some(
-    (t) => t?.gift?.handle || (t?.components?.length ?? 0) > 0,
-  );
+  // Managed "BeePaws Tier Gift" automatic discounts (created by the admin
+  // tool): a gift is offered only when one of these actively backs it (the
+  // discount is what makes it free). Fetched only when a tier has a gift.
+  const wantsDiscounts = beepaws?.bundleTiers?.some((t) => t?.gift?.handle);
   const autoDiscountsP = wantsDiscounts
     ? getBeePawsAutoDiscounts()
-    : Promise.resolve({ kits: [], tierGifts: [] });
+    : Promise.resolve({ tierGifts: [] });
 
   // ── ONE PARALLEL WAVE ──────────────────────────────────────────────────────
   // PERF (2026-08-19): these were ~8 separate top-level `await`s, so each
@@ -241,32 +203,20 @@ export async function ProductPageView({
   // hid). They are mutually independent: each reads only `beepaws` / `product` /
   // `handle` / `fullProduct`, all resolved above. Nothing about WHAT is fetched
   // changed — only that they now overlap. Genuinely dependent work still
-  // follows: tierGifts needs tierKits + autoDiscounts, tierKitDeals computes
-  // over both.
+  // follows: tierGifts needs autoDiscounts.
   const [
     bundleItems,
     sellingPlans,
     tierBundles,
-    tierKits,
     variantGroupRaw,
     autoDiscounts,
-    collectionRecsRaw,
-    catalogFallbackRaw,
     discoveryRaw,
   ] = await Promise.all([
     bundleItemsP,
     sellingPlansP,
     tierBundlesP,
-    tierKitsP,
     variantGroupP,
     autoDiscountsP,
-    primaryCollectionHandle
-      ? getProducts({ collectionHandle: primaryCollectionHandle })
-      : Promise.resolve([]),
-    // Catalog fallback fetched alongside rather than only-on-miss: it is a
-    // small cached query, and making it conditional would reintroduce a serial
-    // hop for the common case where the collection yields nothing usable.
-    getProducts(),
     curatedHandles.length
       ? Promise.all(curatedHandles.map((h) => getProduct(h)))
       : Promise.resolve([]),
@@ -300,43 +250,17 @@ export async function ProductPageView({
       })()
     : product.images.edges;
 
-  // Kit-discount deal per tier (contract matching rule): buys-product = the
-  // tier's FIRST component; gets set intersects the remaining components.
-  // Subscribed lines never get the kit % (BXGY platform limit).
-  const tierKitDeals = tierKits
-    ? tierKits.map((kit) => {
-        if (!kit) return null;
-        const firstId = kit.components[0]?.product.id;
-        const otherIds = kit.components.slice(1).map((c) => c.product.id);
-        const deal = autoDiscounts.kits.find(
-          (k) =>
-            firstId &&
-            k.buysProductIds.includes(firstId) &&
-            otherIds.some((o) => k.getsProductIds.includes(o)),
-        );
-        return deal
-          ? {
-              percentage: deal.percentage,
-              unitQuantity: deal.unitQuantity,
-              getsProductIds: deal.getsProductIds,
-            }
-          : null;
-      })
-    : null;
-
   // Tier gifts. Tier gating is storefront behavior (Shopify can't see tiers);
   // the discount fires whenever the MAIN product is a cart line + the gift
   // line exists. So: no gift on bundle tiers (main product isn't a line — the
-  // bundle is) or on kits that don't include the main product; and never
-  // offered without the backing ACTIVE discount or a sellable gift product.
+  // bundle is), and never offered without the backing ACTIVE discount or a
+  // sellable gift product.
   const tierGifts = beepaws?.bundleTiers
     ? await Promise.all(
-        beepaws.bundleTiers.map(async (t, i) => {
+        beepaws.bundleTiers.map(async (t) => {
           const giftHandle = t?.gift?.handle;
           if (!giftHandle) return null;
           if (t?.bundle?.handle) return null;
-          const kit = tierKits?.[i] ?? null;
-          if (kit && !kit.components.some((c) => c.product.id === product.id)) return null;
           const [gp, sellable] = await Promise.all([
             getProduct(giftHandle),
             isSellableOnStorefront(giftHandle),
@@ -384,20 +308,13 @@ export async function ProductPageView({
   // (owner decision 2026-07-10, verification pass §2.1): the Starter tier IS
   // the entry offer, so the hero price, sticky bar, final CTA "From $X" and
   // JSON-LD all quote it instead of the raw Shopify variant price. Falls back
-  // to minVariantPrice when no tier-0 bundle exists (a composed tier 0 is
+  // to minVariantPrice when no tier-0 bundle exists (a product-alone tier 0 is
   // 1× device = the same number anyway). NOTE: collection/discovery
   // ProductCards still show minVariantPrice — if that drifts from the Starter
   // price in Shopify, the cross-page mismatch returns (punch-listed).
   const tierZero = tierBundles?.[0] ?? null;
   const displayPriceAmount = tierZero?.variants[0]?.priceAmount ?? minVariantPrice.amount;
 
-  const collectionRecommendations = collectionRecsRaw
-    .filter((p) => p.handle !== product.handle)
-    .slice(0, 3);
-  const recommendedBundleProducts =
-    collectionRecommendations.length > 0
-      ? collectionRecommendations
-      : catalogFallbackRaw.filter((p) => p.handle !== product.handle).slice(0, 3);
 
   // "More from BeePaws" discovery band — CURATED ONLY (user decision
   // 2026-07-08): the band renders solely from beepaws.discovery_products
@@ -569,12 +486,9 @@ export async function ProductPageView({
             <div className="mt-6" id="buy-box" style={{ scrollMarginTop: "7.5rem" }}>
               <VariantSelector
                 product={product}
-                addonProducts={recommendedBundleProducts}
                 educationNote={beepaws?.educationNote}
                 bundleTiers={beepaws?.bundleTiers}
                 tierBundles={tierBundles}
-                tierKits={tierKits}
-                tierKitDeals={tierKitDeals}
                 tierGifts={tierGifts}
                 sellingPlans={sellingPlans}
                 variantGroup={variantGroup.length > 1 ? variantGroup : null}

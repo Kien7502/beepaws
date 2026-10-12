@@ -112,6 +112,12 @@ Every admin bundle is tagged **`bundle`**. Use it to:
 
 ## Bundle links inside `bundle_tiers` (new)
 
+> **Tier rule (2026-10-12, owner-approved):** tiers are Shopify bundles or the product
+> alone — composed kits were scrapped. A tier WITH a bundle link sells that bundle; the
+> FIRST tier without one sells the product alone; later unlinked tiers and tiers whose
+> bundle can't be sold on the storefront are hidden, never faked. A product with no tiers
+> keeps the per-variant quantity steppers. Tier copy may carry a `badge` ("Best value").
+
 The admin tool now lets editors link a **bundle product to each bundle tier**, stored *inside*
 the existing `beepaws.bundle_tiers` JSON metafield (no separate metafield). Each tier entry may
 now carry an optional `bundle`:

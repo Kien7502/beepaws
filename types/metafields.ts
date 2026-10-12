@@ -78,33 +78,27 @@ export interface BeforeAfterSlide {
 // overridable so editors can A/B copy without breaking pricing/composition.
 // Index 0 = Starter, 1 = Complete Care, 2 = Family Pack. Missing entries or
 // empty strings fall back to the in-code defaults in VariantSelector.
+/** One pricing tier (`beepaws.bundle_tiers[i]`). Since 2026-10-11 a tier is
+ * a real Shopify bundle or the product alone (rule in VariantSelector.tsx);
+ * composed kits (`components`) were scrapped, and any still in old published
+ * data are ignored. */
 export interface BundleTierCopy {
   name?: string;
   description?: string;
-  /** Optional link to a real Shopify bundle product, stored inside the
+  /** Floating flag on the tier card ("Best value"). Authored, never assumed —
+   * a claim like "Most chosen" needs data behind it. */
+  badge?: string;
+  /** Link to a real Shopify bundle product, stored inside the
    * `beepaws.bundle_tiers` JSON by beepaws-admin (plain data, NOT a Shopify
-   * reference — resolve via handle/id storefront-side). When present, selecting
-   * this tier adds the bundle product to the cart (one line; Shopify expands it)
-   * instead of the tier's separate items. */
+   * reference — resolve via handle/id storefront-side). Selecting the tier adds
+   * the bundle (one line; Shopify expands it). No link = the product alone. */
   bundle?: { id: string; handle: string; title: string } | null;
-  /** COMPOSED KIT contents (admin handoff 2026-07-19, beepaws-admin backlog
-   * #20): one cart line per component — this is how a tier offers a
-   * subscribable component (bundle lines can't carry selling plans). Same
-   * nested product_ref shape as discovery_products. Precedence: `bundle`
-   * wins over `components`; both empty → legacy code-defined composition.
-   * Pricing is NEVER authored here — the kit total is the sum of the real
-   * component line prices. */
-  components?:
-    | {
-        product?: { id?: string; handle?: string; title?: string } | null;
-        quantity?: number;
-      }[]
-    | null;
   /** Tier gift (admin handoff 2026-07-19): selecting this tier adds the gift
-   * product's line alongside the tier's lines, rendered FREE — but ONLY when
-   * backed by the admin-managed "BeePaws Tier Gift" automatic discount (the
-   * discount is what makes it free at checkout; without it the line would
-   * charge full price, so the storefront must not offer it). */
+   * product's line, rendered FREE — but ONLY when backed by the admin-managed
+   * "BeePaws Tier Gift" automatic discount (the discount is what makes it free
+   * at checkout; without it the line would charge full price, so the
+   * storefront must not offer it). Product-alone tiers only: the discount fires
+   * when THIS product is a cart line, which a bundle tier's line isn't. */
   gift?: { id?: string; handle?: string; title?: string } | null;
 }
 
