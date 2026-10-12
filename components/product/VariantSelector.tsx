@@ -406,10 +406,50 @@ export default function VariantSelector({
   const selectedTierGift =
     !quantityMode && selectedTier?.kind === "single" ? (tierGifts?.[selectedTier.i] ?? null) : null;
 
-  const chosenBundleVariant =
-    selectedTierBundle?.variants.find((v) => v.id === bundleVariantId) ??
-    selectedTierBundle?.variants[0] ??
-    null;
+  // A bundle's options that are THIS product's own options. Shopify names a
+  // customer-choose option "<component title> <option name>" ("BeePaws
+  // Ultrasonic Plaque Remover Color"); those follow the colour picker above, so
+  // a shopper who picked Pink gets a Pink device in the kit too — it used to
+  // add the bundle's first variant (White) whatever the picker said (owner test,
+  // 2026-10-12). Matched by "<title> <option>", or — if the product was renamed
+  // after the bundle was made — by the option name ending the same way with
+  // values the product actually has. Bundle option name → product option name.
+  function ownBundleOptions(b: TierBundle): Map<string, string> {
+    const own = new Map<string, string>();
+    if (!b.components.some((c) => c.handle === activeProduct.handle)) return own;
+    const title = activeProduct.title.toLowerCase();
+    for (const bo of bundleOptionGroups(b)) {
+      const n = bo.name.toLowerCase();
+      const po = optionGroups.find(
+        (o) =>
+          n === `${title} ${o.name.toLowerCase()}` ||
+          (n.endsWith(` ${o.name.toLowerCase()}`) && bo.values.every((v) => o.values.includes(v))),
+      );
+      if (po) own.set(bo.name, po.name);
+    }
+    return own;
+  }
+
+  const chosenBundleVariant = (() => {
+    if (!selectedTierBundle) return null;
+    const base =
+      selectedTierBundle.variants.find((v) => v.id === bundleVariantId) ??
+      selectedTierBundle.variants[0];
+    const own = ownBundleOptions(selectedTierBundle);
+    if (own.size === 0) return base;
+    const wanted: Record<string, string> = Object.fromEntries(
+      base.selectedOptions.map((o) => [o.name, o.value]),
+    );
+    for (const [bundleOpt, productOpt] of own) {
+      const v = selectedOptionValues[productOpt];
+      if (v) wanted[bundleOpt] = v;
+    }
+    return (
+      selectedTierBundle.variants.find((v) =>
+        v.selectedOptions.every((o) => wanted[o.name] === o.value),
+      ) ?? base
+    );
+  })();
   const chosenBundleOptionValues: Record<string, string> = Object.fromEntries(
     chosenBundleVariant?.selectedOptions.map((o) => [o.name, o.value]) ?? [],
   );
@@ -970,7 +1010,15 @@ export default function VariantSelector({
               ? parseFloat(tbVariant?.priceAmount ?? tb.variants[0].priceAmount)
               : parseFloat(selectedVariant.price.amount);
             const tCurrency = tb ? tb.currencyCode : currencyCode;
-            const bGroups = tb ? bundleOptionGroupsByProduct(tb) : [];
+            // Inline pickers only for options the picker above doesn't already
+            // drive (e.g. another component's flavour); this product's own
+            // colour comes from the top picker.
+            const ownOpts = tb ? ownBundleOptions(tb) : null;
+            const bGroups = tb
+              ? bundleOptionGroupsByProduct(tb)
+                  .map((g) => ({ ...g, opts: g.opts.filter((o) => !ownOpts?.has(o.name)) }))
+                  .filter((g) => g.opts.length > 0)
+              : [];
             const description = bundleTiers?.[i]?.description?.trim();
             // Authored per tier ("Best value"); no claim without the owner's say.
             const badge = bundleTiers?.[i]?.badge?.trim();
