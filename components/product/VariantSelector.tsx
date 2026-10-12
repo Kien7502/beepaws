@@ -406,26 +406,32 @@ export default function VariantSelector({
   const selectedTierGift =
     !quantityMode && selectedTier?.kind === "single" ? (tierGifts?.[selectedTier.i] ?? null) : null;
 
-  // A bundle's options that are THIS product's own options. Shopify names a
-  // customer-choose option "<component title> <option name>" ("BeePaws
-  // Ultrasonic Plaque Remover Color"); those follow the colour picker above, so
-  // a shopper who picked Pink gets a Pink device in the kit too — it used to
-  // add the bundle's first variant (White) whatever the picker said (owner test,
-  // 2026-10-12). Matched by "<title> <option>", or — if the product was renamed
+  // The bundle option that is THIS product's own option — the FIRST device's
+  // colour. Shopify names a customer-choose option "<component title> <option
+  // name>" ("BeePaws Ultrasonic Plaque Remover Color"); it follows the colour
+  // picker above, so a shopper who picked Pink gets a Pink device in the kit too
+  // — it used to add the bundle's first variant (White) whatever the picker said
+  // (owner test, 2026-10-12). Only the first match per option: when a bundle
+  // lets a SECOND device have its own colour, that option keeps its inline
+  // picker inside the tier card (owner: those aren't duplicates).
+  // Matched by "<title> <option>" first; failing that — the product renamed
   // after the bundle was made — by the option name ending the same way with
   // values the product actually has. Bundle option name → product option name.
   function ownBundleOptions(b: TierBundle): Map<string, string> {
     const own = new Map<string, string>();
     if (!b.components.some((c) => c.handle === activeProduct.handle)) return own;
     const title = activeProduct.title.toLowerCase();
-    for (const bo of bundleOptionGroups(b)) {
-      const n = bo.name.toLowerCase();
-      const po = optionGroups.find(
-        (o) =>
-          n === `${title} ${o.name.toLowerCase()}` ||
-          (n.endsWith(` ${o.name.toLowerCase()}`) && bo.values.every((v) => o.values.includes(v))),
-      );
-      if (po) own.set(bo.name, po.name);
+    const bundleOpts = bundleOptionGroups(b);
+    for (const po of optionGroups) {
+      const name = po.name.toLowerCase();
+      const match =
+        bundleOpts.find((bo) => bo.name.toLowerCase() === `${title} ${name}`) ??
+        bundleOpts.find(
+          (bo) =>
+            bo.name.toLowerCase().endsWith(` ${name}`) &&
+            bo.values.every((v) => po.values.includes(v)),
+        );
+      if (match) own.set(match.name, po.name);
     }
     return own;
   }
