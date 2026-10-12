@@ -200,7 +200,7 @@ export function CartDrawer() {
                 const linked = !isBundleLine || !!item.kit;
                 const thumb = (
                   <Image
-                    src={item.imageUrl || "/product-placeholder.svg"}
+                    src={item.kit?.imageUrl || item.imageUrl || "/product-placeholder.svg"}
                     alt={item.kit?.name ?? item.variantGroup?.primaryTitle ?? item.productTitle}
                     fill
                     className="object-cover"

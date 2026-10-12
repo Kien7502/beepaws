@@ -148,7 +148,9 @@ export async function ProductPageView({
             handle: bp.handle,
             title: bp.title,
             currencyCode: vs[0].price.currencyCode,
-            imageUrl: bp.images.edges[0]?.node?.url ?? "/product-placeholder.svg",
+            // null = the bundle has no image of its own; the buy box then shows
+            // this product's photo in the picked colour (VariantSelector).
+            imageUrl: bp.images.edges[0]?.node?.url ?? null,
             components,
             variants: vs.map((v) => ({
               id: v.id,

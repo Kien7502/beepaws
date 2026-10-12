@@ -93,6 +93,10 @@ export type LocalCartItem = {
     name: string;
     productTitle: string;
     productHandle: string;
+    /** The kit's picture: the bundle's own image, else the product's photo in
+     * the chosen colour. Kept here because a synced line carries the bundle's
+     * image from Shopify, which is empty for a bundle without one. */
+    imageUrl?: string | null;
   };
 };
 

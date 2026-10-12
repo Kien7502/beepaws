@@ -118,7 +118,8 @@ export type TierBundle = {
   handle: string;
   title: string;
   currencyCode: string;
-  imageUrl: string;
+  /** null when the bundle has no image of its own (see kitImage). */
+  imageUrl: string | null;
   components: { quantity: number; title: string; handle: string; imageUrl: string | null }[];
   variants: TierBundleVariant[];
 };
@@ -436,6 +437,13 @@ export default function VariantSelector({
     return own;
   }
 
+  // A kit's picture: the bundle's own image, else this product's photo in the
+  // colour picked above (owner, 2026-10-12: no per-product kit images to make —
+  // the device's photo stands in). Checkout still shows the bundle's own image.
+  const productPhoto =
+    selectedVariant?.image?.url || activeProduct.images.edges[0]?.node?.url || null;
+  const kitImage = selectedTierBundle ? (selectedTierBundle.imageUrl ?? productPhoto) : null;
+
   const chosenBundleVariant = (() => {
     if (!selectedTierBundle) return null;
     const base =
@@ -610,7 +618,7 @@ export default function VariantSelector({
         productTitle: selectedTierBundle.title,
         variantTitle:
           chosenBundleVariant.selectedOptions.map((o) => o.value).join(" / ") || "Bundle",
-        imageUrl: selectedTierBundle.imageUrl,
+        imageUrl: kitImage ?? "/product-placeholder.svg",
         currencyCode: selectedTierBundle.currencyCode,
         unitPriceAmount: chosenBundleVariant.priceAmount,
         quantity: 1,
@@ -630,7 +638,14 @@ export default function VariantSelector({
         // Care Kit") over this page's product — the bundle's own title is
         // "{product} — {tier}" and only needs to carry that at checkout.
         ...(kitName
-          ? { kit: { name: kitName, productTitle: product.title, productHandle: product.handle } }
+          ? {
+              kit: {
+                name: kitName,
+                productTitle: product.title,
+                productHandle: product.handle,
+                imageUrl: kitImage,
+              },
+            }
           : {}),
       });
       flashAdded(via);
@@ -731,10 +746,7 @@ export default function VariantSelector({
           ? (chosenBundleVariant?.selectedOptions.map((o) => o.value).join(" / ") ?? "")
           : pick(selectedVariant),
       price: formatMoney(totalPrice, displayCurrency),
-      imageUrl:
-        (selectedTierBundle ? selectedTierBundle.imageUrl : selectedVariant.image?.url) ??
-        activeProduct.images.edges[0]?.node?.url ??
-        null,
+      imageUrl: (selectedTierBundle ? kitImage : selectedVariant.image?.url) ?? productPhoto,
       available: !!isAvailable,
       added: addedVia !== null,
     },
