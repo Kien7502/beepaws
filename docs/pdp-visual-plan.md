@@ -41,14 +41,21 @@ or layout change. The findings are mostly small craft fixes.
    icons 38px and named for screen readers. (Still small: the kit rows'
    product-name link, 16px tall, sits INSIDE the selectable tier card — a
    near-miss tap opens another page. Worth a look with the copy revision.)
-4. **Low-contrast text** (WCAG AA wants 4.5:1 for small text, 3:1 for large):
-   - hero pill "VET-GRADE TECHNOLOGY · AT HOME" — clay on honey, **3.1:1** at 12px
-   - use-case badges "STRESS-FREE" etc. — white on amber, **2.0:1** at 10px
-   - "**brushing harder**" accent — clay on the honey band, **2.3:1** at 30px
-   - comparison "$45" — clay on cream, **3.5:1**; "$500–$1,400+" rose on white 4.4:1
-   - pain-point numbers 01/02/03 — gold on honey, 2.3:1 (decorative, lowest priority)
-   Fix with the existing palette: a deeper clay/brown for small text on honey,
-   dark text on the amber badges.
+4. ✓ **Low-contrast text** (2026-10-13; WCAG AA: 4.5:1 small text, 3:1 large).
+   Re-measured from rendered colours first (the sweep's numbers held). Two new
+   tokens, same hues, for SMALL TEXT only — `--clay-deep #9E4F17` and
+   `--rose-deep #A44E2C`; brand clay stays for shapes, borders, icons. Both pass
+   on the seasonal honey/toffee variants too.
+   - hero pill: clay → clay-deep, 3.13 → 4.76
+   - use-case badges: white text kept; a badge colour too light for white (the
+     amber card, 2.0) takes clay-deep instead → 5.86; brown/dark cards keep
+     their own (5.6 / 14.5). Owner tried dark text on the amber (harder to
+     read) and a deepened amber (too pale) first — chose this.
+   - "brushing harder" (`withAccent`, toffee band, large): clay → clay-deep, 2.33 → 3.54
+   - comparison text cells: clay → clay-deep (3.46 → 5.27), rose → rose-deep (4.38 → 5.67)
+   - pain-point numbers: gold-deep → clay-deep, 2.29 → 4.76
+   Content, same day: comparison "$45" → "Under $50" (revision doc; pushed). The
+   final CTA's "From $X" is computed from the device price — already "From $50".
 5. **Justified text on phones.** The Canine Saliva Paradox paragraphs are
    justified and hyphenated; on a phone's narrow column that leaves uneven gaps
    and split words ("en-zyme", "be-gins"). Left-align below `md`.

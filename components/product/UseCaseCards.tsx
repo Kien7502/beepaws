@@ -31,6 +31,26 @@ const DEFAULT_USE_CASES: UseCaseCard[] = [
   },
 ];
 
+/**
+ * The badge's background. White text on the authored card colour, as designed,
+ * unless that colour is too light for white to read — the amber card's white
+ * badge was 2.0:1 (visual plan #4, 2026-10-13). Then the badge takes the deeper
+ * clay instead (5.9:1 with white); the owner preferred that over dark text on
+ * the amber (harder to read) and a deepened amber (too pale). The brown and
+ * dark cards pass and keep their own colour. Unknown formats are left as-is.
+ */
+function badgeBackground(color: string | undefined): string | undefined {
+  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(color?.trim() ?? "");
+  if (!m) return color;
+  const hex = m[1].length === 3 ? [...m[1]].map((c) => c + c).join("") : m[1];
+  const [r, g, b] = [0, 2, 4].map((i) => {
+    const v = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  });
+  const whiteContrast = 1.05 / (0.2126 * r + 0.7152 * g + 0.0722 * b + 0.05);
+  return whiteContrast >= 4.5 ? color : "var(--clay-deep)";
+}
+
 interface Props {
   cards?: UseCaseCard[] | null;
   eyebrow?: string;
@@ -94,7 +114,7 @@ export function UseCaseCards({
               >
                 <span
                   className="absolute left-4 top-4 z-10 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white"
-                  style={{ background: c.from }}
+                  style={{ background: badgeBackground(c.from) }}
                 >
                   {c.label}
                 </span>

@@ -405,7 +405,7 @@ export async function ProductPageView({
                 wrong. Consumables run without an eyebrow until a metafield
                 makes it authorable per product. */}
             {isDevice && (
-              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-honey-tint px-3 py-1.5 text-[12px] font-bold uppercase tracking-[0.07em] text-clay">
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-honey-tint px-3 py-1.5 text-[12px] font-bold uppercase tracking-[0.07em] text-clay-deep">
                 Vet-grade technology · At home
               </span>
             )}

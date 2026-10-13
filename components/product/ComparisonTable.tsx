@@ -77,7 +77,8 @@ export function ComparisonTable({
   // renders in place of the ✓/✕ icon; the boolean still drives the color.
   function cell(active: boolean, text?: string | null) {
     if (text) {
-      return <span className={`text-sm font-bold ${active ? "text-clay" : "text-rose-soft"}`}>{text}</span>;
+      // Deep variants: these are 14px words, not icons (visual plan #4).
+      return <span className={`text-sm font-bold ${active ? "text-clay-deep" : "text-rose-deep"}`}>{text}</span>;
     }
     return active ? (
       <Check className="h-5 w-5 text-clay" strokeWidth={3} />

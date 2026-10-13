@@ -10,6 +10,7 @@
   --color-paper:      var(--paper);
   --color-card:       var(--card);
   --color-clay:       var(--clay);
+  --color-clay-deep:  var(--clay-deep);
   --color-cocoa:      var(--cocoa);
   --color-gold:       var(--gold);
   --color-gold-deep:  var(--gold-deep);
@@ -19,6 +20,7 @@
   --color-honey-tint: var(--honey-tint);
   --color-line:       var(--line);
   --color-rose-soft:  var(--rose-soft);
+  --color-rose-deep:  var(--rose-deep);
   --color-sage:       var(--sage);
   --color-moss:       var(--moss);
   --color-positive:   var(--positive);
@@ -60,6 +62,12 @@
   --paper:      #FDF8EC;   /* base page background                        */
   --card:       #FFFFFF;
   --clay:       #C56A1E;   /* burnt amber — logo fur, brand primary       */
+  /* Clay for SMALL TEXT on the light grounds (visual plan #4, 2026-10-13).
+     Clay itself is 3.1:1 on honey-tint and 2.3:1 on toffee — fine for shapes,
+     borders and icons, too light for words. Same hue, darker: 4.8:1 on
+     honey-tint, 5.3 on cream, 5.9 on white, 3.5 on toffee (large text only
+     there) — and it holds on the seasonal honey/toffee variants below. */
+  --clay-deep:  #9E4F17;
   --cocoa:      #4A2E16;   /* deep brown — dark sections, headings        */
   --gold:       #E7A92F;   /* honey gold — CTAs + highlights              */
   --gold-deep:  #C8901C;   /* gold hover                                  */
@@ -69,6 +77,7 @@
   --honey-tint: #F6E6C6;   /* light warm tint — cards, bands              */
   --line:       #EADEC2;   /* hairline border                             */
   --rose-soft:  #BC5E38;   /* warm alert tone — never harsh red           */
+  --rose-deep:  #A44E2C;   /* rose for small text: 5.7:1 on white (soft is 4.4) */
   /* GREEN IS BOTANICAL, NOT A BRAND ACCENT (palette pass 2026-07-21).
      Green used to be a general accent (the forest footer, left over from the
      abandoned Forest experiment) while nothing else on the site was green, so

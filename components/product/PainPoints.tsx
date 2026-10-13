@@ -63,7 +63,7 @@ export function PainPoints({
               key={p.number + p.title}
               className="rounded-2xl border border-line bg-card p-6 md:p-7 shadow-[0_4px_20px_-10px_rgba(74,46,22,0.08)]"
             >
-              <div className="font-display mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-honey-tint text-[15px] font-bold text-gold-deep">
+              <div className="font-display mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-honey-tint text-[15px] font-bold text-clay-deep">
                 {p.number}
               </div>
               <h3 className="font-display text-lg font-semibold text-cocoa md:text-[19px] mb-1.5">

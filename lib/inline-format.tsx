@@ -32,7 +32,9 @@ export function withAccent(text: string): ReactNode {
   if (!text.includes("**")) return text;
   const parts = text.split(/\*\*([\s\S]+?)\*\*/g);
   return parts.map((part, i) =>
-    i % 2 === 1 ? <span key={i} className="text-clay">{part}</span> : <Fragment key={i}>{part}</Fragment>,
+    // clay-deep, not clay: the accented heading sits on the toffee band, where
+    // clay is 2.3:1 (visual plan #4). Only light grounds use this today.
+    i % 2 === 1 ? <span key={i} className="text-clay-deep">{part}</span> : <Fragment key={i}>{part}</Fragment>,
   );
 }
 
