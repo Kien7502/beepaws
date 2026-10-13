@@ -269,6 +269,14 @@ body {
 .ds-hero-stagger > *:nth-child(2) { animation-delay: 180ms; }
 .ds-hero-stagger > *:nth-child(3) { animation-delay: 260ms; }
 .ds-hero-stagger > *:nth-child(4) { animation-delay: 340ms; }
+/* The listicle checklist's boxes (ListicleView TickBox): a small pop as each
+   one fills — a success moment, so a touch of overshoot, then settle. */
+@keyframes tick-pop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.16); }
+  100% { transform: scale(1); }
+}
+
 @keyframes ds-hero-in {
   from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }

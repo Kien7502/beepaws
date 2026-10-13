@@ -6,6 +6,7 @@ import { contentIcon } from "@/lib/content-icons";
 import { withInline } from "@/lib/inline-format";
 import type { Listicle, ListicleBlock, ListicleImage } from "@/lib/shopify/listicles";
 import { StickyCta } from "@/components/journal/StickyCta";
+import { ChecklistTicks } from "@/components/journal/ChecklistTicks";
 
 /**
  * An admin-authored listicle (/journal/<slug>), built to the visual reference
@@ -13,7 +14,8 @@ import { StickyCta } from "@/components/journal/StickyCta";
  * a magazine feature, not a landing page. One 720px column, no sidebar, no grid;
  * reasons read top to bottom, each "01. Heading" in the display serif, a thin
  * honey rule after it. Site fonts and colours (Fraunces / Hanken Grotesk, Warm
- * Honey tokens). No motion except the floating button and hover states.
+ * Honey tokens). No motion except the floating button, the checklist's ticks
+ * (they fill once the reader finishes the list) and hover states.
  *
  * Server component. Product prices come in resolved from the store (`products`),
  * so the card can't show a stale number.
@@ -153,6 +155,34 @@ function Button({ href, label, note }: { href: string; label: string; note?: str
   );
 }
 
+/** An empty checkbox that fills honey and draws its tick when the sheet around
+ *  it is ticked (ChecklistTicks sets data-ticked). `delay` staggers the rows. */
+function TickBox({ tick, delay }: { tick: boolean; delay: number }) {
+  return (
+    <span
+      aria-hidden
+      className={`mt-[2px] flex size-[22px] flex-none items-center justify-center rounded-[6px] border-2 border-brown/45 bg-paper-soft md:mt-[3px] md:size-6 ${
+        tick
+          ? "transition-[background-color,border-color] duration-200 group-data-[ticked]/sheet:animate-[tick-pop_360ms_ease-out_both] group-data-[ticked]/sheet:border-gold group-data-[ticked]/sheet:bg-gold motion-reduce:transition-none group-data-[ticked]/sheet:motion-reduce:animate-none print:border-gold print:bg-gold"
+          : ""
+      }`}
+      style={tick ? { transitionDelay: `${delay}ms`, animationDelay: `${delay}ms` } : undefined}
+    >
+      {tick && (
+        <svg viewBox="0 0 24 24" className="size-[15px] text-cocoa md:size-4" fill="none" stroke="currentColor" strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round">
+          {/* pathLength 1: the dash trick draws the tick from its short arm. */}
+          <path
+            d="M4 12.5 9.5 18 20 6.5"
+            pathLength={1}
+            className="transition-[stroke-dashoffset] duration-300 ease-out [stroke-dasharray:1] [stroke-dashoffset:1] group-data-[ticked]/sheet:[stroke-dashoffset:0] motion-reduce:transition-none print:[stroke-dashoffset:0]"
+            style={{ transitionDelay: `${delay + 120}ms` }}
+          />
+        </svg>
+      )}
+    </span>
+  );
+}
+
 function SubHeading({ text }: { text: string }) {
   return <h3 className="mt-10 font-display text-[21px] font-bold text-cocoa md:text-[24px]">{withInline(text)}</h3>;
 }
@@ -189,30 +219,52 @@ function Block({ b, products, preview }: { b: ListicleBlock; products: Record<st
           </div>
         </aside>
       );
-    case "cards":
-      return (
+    case "cards": {
+      // ONE sheet with tick boxes, not a stack of cards (owner, 2026-10-13:
+      // "just a bunch of cards"). The copy calls it a checklist and pays it
+      // off with "checks every box above", so the boxes start empty — the
+      // list stays neutral while it's read — and, with tickOnRead, tick in a
+      // quick cascade once the reader finishes it (ChecklistTicks). The
+      // BeePaws answer under an item stays visible in muted brown and turns
+      // clay as its box ticks — hiding it until then left an empty gap in
+      // every row, and growing the row at the tick would push the text the
+      // reader is on down the screen.
+      const tick = b.tickOnRead ?? true;
+      const sheet = (
         <>
-        {b.title && <SubHeading text={b.title} />}
-        <div className="mt-8 flex flex-col gap-4">
-          {b.items.map((c, i) => (
-            <div key={i} className="break-inside-avoid rounded bg-cream p-4 md:p-5">
-              {c.title && <p className="text-[17px] font-bold leading-snug text-cocoa md:text-[18px]">{withInline(c.title)}</p>}
-              {c.text && (
-                <div className={`mt-2 ${BODY}`}>
-                  <Paragraphs text={c.text} />
+          {b.title && <h3 className="font-display text-[20px] font-bold leading-tight text-cocoa md:text-[23px]">{withInline(b.title)}</h3>}
+          <ul className={b.title ? "mt-4 border-t border-line" : ""}>
+            {b.items.map((c, i) => (
+              <li key={i} className={`flex break-inside-avoid gap-3 border-line py-4 last:pb-0 md:gap-4 md:py-5 ${i > 0 ? "border-t" : ""} ${!b.title && i === 0 ? "pt-0" : ""}`}>
+                <TickBox tick={tick} delay={i * 90} />
+                <div className="min-w-0 flex-1">
+                  {c.title && <p className="text-[17px] font-bold leading-snug text-cocoa md:text-[18px]">{withInline(c.title)}</p>}
+                  {c.text && (
+                    <div className={`mt-1.5 ${BODY}`}>
+                      <Paragraphs text={c.text} />
+                    </div>
+                  )}
+                  {c.check && (
+                    <p
+                      className={`mt-2.5 text-[14px] font-semibold md:text-[15px] ${tick ? `${MUTED} transition-colors duration-300 group-data-[ticked]/sheet:text-clay-deep motion-reduce:transition-none print:text-clay-deep` : "text-clay-deep"}`}
+                      style={tick ? { transitionDelay: `${i * 90 + 150}ms` } : undefined}
+                    >
+                      {c.check}
+                    </p>
+                  )}
                 </div>
-              )}
-              {c.check && (
-                <p className="mt-3 flex items-center gap-1.5 text-[14px] font-semibold text-cocoa">
-                  <Check size={16} className="text-gold" strokeWidth={3} aria-hidden />
-                  {c.check}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
+              </li>
+            ))}
+          </ul>
         </>
       );
+      // On phones the sheet reaches out like the images (8px from the screen
+      // edge, tighter padding): inside the text margins the tick-box column
+      // left ~274px for the text and the sheet came out taller than the
+      // cards it replaced.
+      const frame = "-mx-3 mt-8 rounded-lg bg-cream px-4 py-6 md:mx-0 md:px-8 md:py-7";
+      return tick ? <ChecklistTicks className={frame}>{sheet}</ChecklistTicks> : <div className={frame}>{sheet}</div>;
+    }
     case "timeline":
       // Stops on a path, at every width (sweep S4, 2026-10-13 — the guide asks
       // for "a visual timeline or stepped cards"; phones used to get plain
