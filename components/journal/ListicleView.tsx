@@ -77,41 +77,55 @@ function Figure({
   image: ListicleImage;
   priority?: boolean;
   preview?: boolean;
-  /** At the top of a padded card: run to the card's top edge on phones (as it
-   *  already does sideways) and sit inside the padding from md — no extra
-   *  margin. The default 32px top margin stacked on the card's own padding
-   *  left a ~60px empty band above the product photo (sweep S5, 2026-10-13). */
+  /** At the top of a padded card (the product card): run to the card's top
+   *  edge on phones and sit inside the padding from md — no extra margin and
+   *  no frame, the card is the frame (sweep S5, 2026-10-13). */
   flushTop?: boolean;
 }) {
-  const place = flushTop ? "-mx-5 -mt-7 md:mx-0 md:mt-0" : "-mx-5 mt-8 md:mx-0";
+  // Every other image is FRAMED inside the text margins (owner, 2026-10-13:
+  // edge-to-edge photos on phones looked too big; "smaller, with a border
+  // outside"): a white mat, a hairline border, rounded corners and a soft
+  // shadow — a print laid on the page. The caption sits under the frame.
+  const place = flushTop ? "-mx-5 -mt-7 md:mx-0 md:mt-0" : "mt-8";
+  const frame = flushTop
+    ? ""
+    : "rounded-xl border border-line bg-card p-1.5 shadow-[0_3px_14px_-8px_rgba(74,46,22,0.28)]";
+  const radius = flushTop ? "md:rounded-lg" : "rounded-lg";
+  const caption = image.caption && (
+    <figcaption className={`mt-2 text-[13px] italic ${flushTop ? "px-5 md:px-0" : ""} ${MUTED}`}>{image.caption}</figcaption>
+  );
   if (!image.src) {
     if (!preview) return null;
     return (
       <figure className={place}>
-        <div className="flex aspect-[3/2] w-full items-center justify-center border-2 border-dashed border-line bg-cream px-8 text-center text-[13px] leading-snug text-brown/80 md:rounded-lg">
-          Image goes here{image.alt ? ` — ${image.alt}` : ""}
+        <div className={frame}>
+          <div className={`flex aspect-[3/2] w-full items-center justify-center border-2 border-dashed border-line bg-cream px-8 text-center text-[13px] leading-snug text-brown/80 ${radius}`}>
+            Image goes here{image.alt ? ` — ${image.alt}` : ""}
+          </div>
         </div>
-        {image.caption && <figcaption className={`mt-2 px-5 text-[13px] italic md:px-0 ${MUTED}`}>{image.caption}</figcaption>}
+        {caption}
       </figure>
     );
   }
   return (
     <figure className={place}>
-      {image.width && image.height ? (
-        <Image
-          src={image.src}
-          alt={image.alt}
-          width={image.width}
-          height={image.height}
-          sizes="(max-width: 768px) 100vw, 620px"
-          priority={priority}
-          className="h-auto w-full md:rounded-lg"
-        />
-      ) : (
-        // eslint-disable-next-line @next/next/no-img-element -- size unknown (older draft): let it size itself
-        <img src={image.src} alt={image.alt} className="h-auto w-full md:rounded-lg" />
-      )}
-      {image.caption && <figcaption className={`mt-2 px-5 text-[13px] italic md:px-0 ${MUTED}`}>{image.caption}</figcaption>}
+      <div className={frame}>
+        {image.width && image.height ? (
+          <Image
+            src={image.src}
+            alt={image.alt}
+            width={image.width}
+            height={image.height}
+            sizes="(max-width: 768px) 92vw, 620px"
+            priority={priority}
+            className={`h-auto w-full ${radius}`}
+          />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element -- size unknown (older draft): let it size itself
+          <img src={image.src} alt={image.alt} className={`h-auto w-full ${radius}`} />
+        )}
+      </div>
+      {caption}
     </figure>
   );
 }
@@ -347,7 +361,10 @@ export function ListicleView({
   const byline = [l.byline.author, l.byline.date, l.byline.readTime].filter(Boolean).join(" · ");
 
   return (
-    <article className="bg-paper pb-16 md:pb-24" style={{ "--hl": HIGHLIGHT_CSS[l.highlight] } as CSSProperties}>
+    // White page, not the site's cream (owner, 2026-10-13: the cream read "a
+    // bit too heavy" over a ten-minute read). The cream now marks the boxes —
+    // product card, checklist cards, callouts — which stand out more on white.
+    <article className="bg-card pb-16 md:pb-24" style={{ "--hl": HIGHLIGHT_CSS[l.highlight] } as CSSProperties}>
       <header className={`${COLUMN} pt-6 md:pt-10`}>
         {l.topStrip && <p className={`text-[13px] font-semibold ${MUTED}`}>{l.topStrip}</p>}
         {/* tracking-tight on the large serif (sweep S8): at 32–46px default
