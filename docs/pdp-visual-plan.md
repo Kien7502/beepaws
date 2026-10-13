@@ -57,9 +57,10 @@ or layout change. The findings are mostly small craft fixes.
    - pain-point numbers: gold-deep → clay-deep, 2.29 → 4.76
    Content, same day: comparison "$45" → "Under $50" (revision doc; pushed). The
    final CTA's "From $X" is computed from the device price — already "From $50".
-5. **Justified text on phones.** The Canine Saliva Paradox paragraphs are
-   justified and hyphenated; on a phone's narrow column that leaves uneven gaps
-   and split words ("en-zyme", "be-gins"). Left-align below `md`.
+5. ✓ **Justified text on phones** (2026-10-13). The Canine Saliva Paradox
+   paragraphs are justified and hyphenated; on a phone's narrow column that left
+   uneven gaps and split words ("en-zyme", "be-gins"). Now left-aligned with no
+   hyphenation below `md`; justified + hyphenated from `md` up, as before.
 6. **One-word last lines.** Centred leads end with a lone word ("…at 2 / a.m.",
    "…the hard / stuff.", the comparison heading's "tried"). One CSS rule:
    `text-wrap: balance` on headings and short leads, `pretty` on paragraphs.

@@ -143,12 +143,15 @@ export function Mechanism({
             <h3 className="font-display mb-3 text-2xl font-semibold text-cocoa md:text-[30px]">
               {paradoxHeading}
             </h3>
-            {/* Justified (Word-style flush edges). hyphens-auto rides along on
-                purpose: justifying a ~520px column WITHOUT hyphenation stretches
-                word gaps into visible white "rivers". <html lang="en"> is set, so
-                the browser can actually hyphenate. */}
+            {/* Justified (Word-style flush edges) from md up. hyphens-auto rides
+                along on purpose: justifying a ~520px column WITHOUT hyphenation
+                stretches word gaps into visible white "rivers". <html lang="en">
+                is set, so the browser can actually hyphenate. On phones the
+                column is too narrow for either: justified it left uneven gaps
+                and split words ("en-zyme", "be-gins") — so left-aligned, no
+                hyphens, below md (visual plan #5, 2026-10-13). */}
             {paragraphs.map((para, i) => (
-              <p key={i} className="mb-3 text-justify hyphens-auto text-[15.5px] leading-relaxed text-brown">
+              <p key={i} className="mb-3 text-left hyphens-manual md:text-justify md:hyphens-auto text-[15.5px] leading-relaxed text-brown">
                 {withBold(para)}
               </p>
             ))}
