@@ -1,7 +1,7 @@
 import { Fragment, type CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Check, ChevronDown, ShieldCheck } from "lucide-react";
+import { Check, ShieldCheck } from "lucide-react";
 import { contentIcon } from "@/lib/content-icons";
 import { withInline } from "@/lib/inline-format";
 import type { Listicle, ListicleBlock, ListicleImage } from "@/lib/shopify/listicles";
@@ -324,28 +324,19 @@ function Block({ b, products, preview }: { b: ListicleBlock; products: Record<st
       return <Button href={b.href} label={b.label} note={b.note} />;
     case "sources":
       if (!b.items.length) return null;
-      // Collapsed under one small line, after the story is over (visual plan #7):
-      // credibility for the sceptical reader, invisible to everyone else.
+      // After the story is over, in small muted type: credibility for the
+      // sceptical reader without competing with the copy. Always shown (owner,
+      // 2026-10-13) — it was collapsed under one line (visual plan #7), which
+      // hid the very numbers it backs up.
       return (
-        // The toggle is a full-width 44px row with a chevron that turns when
-        // open: the bare 21px line gave no sign it opens (sweep S6, 2026-10-13).
-        <details className="group mt-10 border-t border-line pt-2">
-          <summary
-            className={`flex cursor-pointer list-none items-center justify-between gap-3 py-3 text-[14px] font-semibold ${MUTED} hover:text-cocoa [&::-webkit-details-marker]:hidden`}
-          >
-            {b.title || "Sources"}
-            <ChevronDown
-              size={18}
-              className="shrink-0 transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none"
-              aria-hidden
-            />
-          </summary>
+        <section className="mt-10 border-t border-line pt-5">
+          <h3 className={`text-[14px] font-semibold ${MUTED}`}>{b.title || "Sources"}</h3>
           <ol className={`mt-3 list-decimal space-y-1.5 pl-5 text-[13px] leading-relaxed ${MUTED}`}>
             {b.items.map((x, i) => (
               <li key={i}>{withInline(x)}</li>
             ))}
           </ol>
-        </details>
+        </section>
       );
     case "product": {
       const info = b.product ? products[b.product.handle] : undefined;

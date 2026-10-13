@@ -46,7 +46,7 @@ size budget, and no extra API scopes. Admin: `listListicles` / `setListicle` /
 //   { "type": "cards", "title", "items": [{ "title", "text", "check" }] }
 //   { "type": "timeline", "title", "items": [{ "label", "text" }] }
 //   { "type": "cta", "style": "button" | "link", "label", "href", "note" }
-//   { "type": "sources", "title", "items": [string] }   // collapsed, plain-text citations
+//   { "type": "sources", "title", "items": [string] }   // plain-text citations, always shown
 //   { "type": "product", "product": { "handle", "title" } | null, "name", "image": Image,
 //     "contentsTitle", "contents": [string], "note", "compareLine",
 //     "ctaLabel", "ctaHref", "ctaNote", "trust": [{ "icon", "label" }] }  // trust ≤ 4
@@ -72,7 +72,8 @@ Rules (both sides sanitize — the storefront treats the metafield as untrusted)
   there.
 - **Trust row** (`product.trust`, ≤ 4): content-icon names (lucide, resolved server-side like
   the PDP bullets) + short labels, one row under the card's button; empty labels dropped.
-- **Sources** (2026-10-07): collapsed `<details>` with PLAIN-TEXT citations — no links on
+- **Sources** (2026-10-07): a small muted list (collapsed `<details>` until 2026-10-13, now
+  always shown — owner) with PLAIN-TEXT citations — no links on
   purpose (the owner didn't want readers led off the site); meant for after the final button.
 - **Product card price is never authored**: the storefront reads the product (by handle)
   and shows its current price; image falls back to the product's photo.
