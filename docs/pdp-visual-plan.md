@@ -47,10 +47,11 @@ or layout change. The findings are mostly small craft fixes.
    `--rose-deep #A44E2C`; brand clay stays for shapes, borders, icons. Both pass
    on the seasonal honey/toffee variants too.
    - hero pill: clay → clay-deep, 3.13 → 4.76
-   - use-case badges: white text kept; a badge colour too light for white (the
-     amber card, 2.0) takes clay-deep instead → 5.86; brown/dark cards keep
-     their own (5.6 / 14.5). Owner tried dark text on the amber (harder to
-     read) and a deepened amber (too pale) first — chose this.
+   - use-case badges: ONE colour for every card now — white on clay-deep, 5.86
+     (the amber card's white badge was 2.0). Owner tried dark text on the amber
+     (harder to read) and a deepened amber (too pale), picked clay-deep, then
+     asked for all three badges to match. Card colours still drive the
+     gradient and the title rule.
    - "brushing harder" (`withAccent`, toffee band, large): clay → clay-deep, 2.33 → 3.54
    - comparison text cells: clay → clay-deep (3.46 → 5.27), rose → rose-deep (4.38 → 5.67)
    - pain-point numbers: gold-deep → clay-deep, 2.29 → 4.76
