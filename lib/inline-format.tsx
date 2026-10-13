@@ -71,7 +71,10 @@ export function withAccent(text: string): ReactNode {
  * text). External links open in a new tab.
  */
 export function withInline(text: string): ReactNode {
-  if (!/[*[=]/.test(text)) return text;
+  // Plain runs keep hyphenated words whole ("dog-mom", "at-home"): the global
+  // text-wrap: pretty broke four of them at the hyphen on phones (listicle
+  // sweep S3, 2026-10-13) — the break the owner rejected on the PDP.
+  if (!/[*[=]/.test(text)) return keepHyphenated(text);
   const out: ReactNode[] = [];
   // bold before italic so `**x**` isn't read as two italics
   // A highlight can't start or end with a space ("a == b == c" is not one).
@@ -96,7 +99,7 @@ export function withInline(text: string): ReactNode {
           {withInline(m[2])}
         </mark>,
       );
-    else if (m[3] !== undefined) out.push(<em key={key}>{m[3]}</em>);
+    else if (m[3] !== undefined) out.push(<em key={key}>{keepHyphenated(m[3])}</em>);
     else {
       const href = m[5];
       const internal = href.startsWith("/") && !href.startsWith("//");
@@ -119,5 +122,5 @@ export function withInline(text: string): ReactNode {
     last = re.lastIndex;
   }
   if (last < text.length) out.push(text.slice(last));
-  return out.map((n, i) => (typeof n === "string" ? <Fragment key={`t${i}`}>{n}</Fragment> : n));
+  return out.map((n, i) => (typeof n === "string" ? <Fragment key={`t${i}`}>{keepHyphenated(n)}</Fragment> : n));
 }

@@ -1,7 +1,7 @@
 import { Fragment, type CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Check, ShieldCheck } from "lucide-react";
+import { Check, ChevronDown, ShieldCheck } from "lucide-react";
 import { contentIcon } from "@/lib/content-icons";
 import { withInline } from "@/lib/inline-format";
 import type { Listicle, ListicleBlock, ListicleImage } from "@/lib/shopify/listicles";
@@ -65,11 +65,26 @@ function Paragraphs({ text, className = "" }: { text: string; className?: string
  *  admin's draft preview an empty slot shows as a dashed box naming the image,
  *  so the page's structure can be judged before the pictures exist; the live
  *  page skips empty slots. */
-function Figure({ image, priority, preview }: { image: ListicleImage; priority?: boolean; preview?: boolean }) {
+function Figure({
+  image,
+  priority,
+  preview,
+  flushTop,
+}: {
+  image: ListicleImage;
+  priority?: boolean;
+  preview?: boolean;
+  /** At the top of a padded card: run to the card's top edge on phones (as it
+   *  already does sideways) and sit inside the padding from md — no extra
+   *  margin. The default 32px top margin stacked on the card's own padding
+   *  left a ~60px empty band above the product photo (sweep S5, 2026-10-13). */
+  flushTop?: boolean;
+}) {
+  const place = flushTop ? "-mx-5 -mt-7 md:mx-0 md:mt-0" : "-mx-5 mt-8 md:mx-0";
   if (!image.src) {
     if (!preview) return null;
     return (
-      <figure className="-mx-5 mt-8 md:mx-0">
+      <figure className={place}>
         <div className="flex aspect-[3/2] w-full items-center justify-center border-2 border-dashed border-line bg-cream px-8 text-center text-[13px] leading-snug text-brown/80 md:rounded-lg">
           Image goes here{image.alt ? ` — ${image.alt}` : ""}
         </div>
@@ -78,7 +93,7 @@ function Figure({ image, priority, preview }: { image: ListicleImage; priority?:
     );
   }
   return (
-    <figure className="-mx-5 mt-8 md:mx-0">
+    <figure className={place}>
       {image.width && image.height ? (
         <Image
           src={image.src}
@@ -199,7 +214,8 @@ function Block({ b, products, preview }: { b: ListicleBlock; products: Record<st
           // data-listicle-cta: the floating button steps aside here too — it
           // said the same words right under this link (2026-10-07).
           <p className={`mt-6 text-[15px] italic ${MUTED}`} data-listicle-cta="">
-            <Link href={b.href} className="underline decoration-gold decoration-2 underline-offset-2 hover:text-cocoa">
+            {/* -my-3 py-3: a ~44px tall hit area (was 20px) on the same line. */}
+            <Link href={b.href} className="-my-3 inline-block py-3 underline decoration-gold decoration-2 underline-offset-2 hover:text-cocoa">
               {b.label}
             </Link>
           </p>
@@ -211,9 +227,18 @@ function Block({ b, products, preview }: { b: ListicleBlock; products: Record<st
       // Collapsed under one small line, after the story is over (visual plan #7):
       // credibility for the sceptical reader, invisible to everyone else.
       return (
-        <details className="mt-10 border-t border-line pt-5">
-          <summary className={`cursor-pointer text-[14px] font-semibold ${MUTED} hover:text-cocoa`}>
+        // The toggle is a full-width 44px row with a chevron that turns when
+        // open: the bare 21px line gave no sign it opens (sweep S6, 2026-10-13).
+        <details className="group mt-10 border-t border-line pt-2">
+          <summary
+            className={`flex cursor-pointer list-none items-center justify-between gap-3 py-3 text-[14px] font-semibold ${MUTED} hover:text-cocoa [&::-webkit-details-marker]:hidden`}
+          >
             {b.title || "Sources"}
+            <ChevronDown
+              size={18}
+              className="shrink-0 transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none"
+              aria-hidden
+            />
           </summary>
           <ol className={`mt-3 list-decimal space-y-1.5 pl-5 text-[13px] leading-relaxed ${MUTED}`}>
             {b.items.map((x, i) => (
@@ -228,8 +253,8 @@ function Block({ b, products, preview }: { b: ListicleBlock; products: Record<st
       const image = b.image.src ? b.image : info?.image;
       return (
         // data-listicle-end: the floating button is gone from here on.
-        <section data-listicle-end="" className="mt-10 break-inside-avoid rounded-lg bg-cream px-5 py-7 text-center md:p-8">
-          {image && <Figure image={image} />}
+        <section data-listicle-end="" className="mt-10 break-inside-avoid overflow-hidden rounded-lg bg-cream px-5 py-7 text-center md:p-8">
+          {image && <Figure image={image} flushTop />}
           <h3 className="mt-6 font-display text-[26px] font-bold leading-tight text-cocoa md:text-[30px]">
             {b.name || info?.title || b.product?.title}
           </h3>
