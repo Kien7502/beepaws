@@ -361,10 +361,11 @@ export function ListicleView({
   const byline = [l.byline.author, l.byline.date, l.byline.readTime].filter(Boolean).join(" · ");
 
   return (
-    // White page, not the site's cream (owner, 2026-10-13: the cream read "a
-    // bit too heavy" over a ten-minute read). The cream now marks the boxes —
-    // product card, checklist cards, callouts — which stand out more on white.
-    <article className="bg-card pb-16 md:pb-24" style={{ "--hl": HIGHLIGHT_CSS[l.highlight] } as CSSProperties}>
+    // A soft warm white, halfway between white and the site's cream (owner,
+    // 2026-10-13: the cream read "a bit too heavy" over a ten-minute read;
+    // pure white was too stark). The cream marks the boxes — product card,
+    // checklist cards, callouts — which stand out more against it.
+    <article className="bg-paper-soft pb-16 md:pb-24" style={{ "--hl": HIGHLIGHT_CSS[l.highlight] } as CSSProperties}>
       <header className={`${COLUMN} pt-6 md:pt-10`}>
         {l.topStrip && <p className={`text-[13px] font-semibold ${MUTED}`}>{l.topStrip}</p>}
         {/* tracking-tight on the large serif (sweep S8): at 32–46px default

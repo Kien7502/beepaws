@@ -81,6 +81,14 @@ or layout change. The findings are mostly small craft fixes.
    **Revisit (owner):** How it works now ends on the step slider and "feels a bit
    hanging" — look again during the owner's full-page pass.
 
+## To test (owner, 2026-10-13)
+
+- **Lighter page colour.** The owner found the listicle's cream page "a bit too heavy" and
+  spotted the same on the PDP. The listicle now uses `--paper-soft` (`#FEFBF5`, halfway
+  between white and the cream `--paper`; pure white was too stark). Try it on the PDP: the
+  page base and the sections that sit on `paper`/`cream`, keeping the toffee / honey / dark
+  bands as they are. Judge readability over a full scroll on a phone.
+
 ## Bigger tidy — later
 
 8. **Type scale.** 50 distinct text styles on the page, including half-pixel

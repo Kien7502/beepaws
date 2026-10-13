@@ -8,6 +8,7 @@
      place. */
   --color-cream:      var(--cream);
   --color-paper:      var(--paper);
+  --color-paper-soft: var(--paper-soft);
   --color-card:       var(--card);
   --color-clay:       var(--clay);
   --color-clay-deep:  var(--clay-deep);
@@ -60,6 +61,10 @@
   /* ─── Warm Honey palette — raw hex values (single source of truth) ────── */
   --cream:      #FBF3E1;   /* warm cream — page sections                  */
   --paper:      #FDF8EC;   /* base page background                        */
+  /* Halfway between white and paper: the listicle's page (owner, 2026-10-13 —
+     the cream read "too heavy" over a long read, pure white too stark). To be
+     tested on the PDP too (visual plan). */
+  --paper-soft: #FEFBF5;
   --card:       #FFFFFF;
   --clay:       #C56A1E;   /* burnt amber — logo fur, brand primary       */
   /* Clay for SMALL TEXT on the light grounds (visual plan #4, 2026-10-13).
