@@ -108,13 +108,20 @@ export function CartDrawer() {
         }`}
       />
 
+      {/* Closed = slid off the right edge AND invisible: its 50px shadow
+          otherwise bled ~38px back onto every page as a grey edge (owner saw
+          a "vignette on the right side", 2026-10-13), and the closed dialog
+          stayed reachable by Tab and screen readers. Visibility rides the
+          transition, so it's visible from the first frame of opening and
+          hides only once the slide-out ends. (`translate`, not `transform`:
+          Tailwind v4's translate-x-* set the translate property.) */}
       <aside
         ref={drawerRef}
         role="dialog"
         aria-modal
         aria-label="Shopping cart"
-        className={`fixed right-0 top-0 z-50 flex h-full w-full max-w-sm flex-col bg-[var(--color-surface)] shadow-2xl transition-transform duration-300 ease-out ${
-          drawerOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed right-0 top-0 z-50 flex h-full w-full max-w-sm flex-col bg-[var(--color-surface)] shadow-2xl transition-[translate,visibility] duration-300 ease-out ${
+          drawerOpen ? "visible translate-x-0" : "invisible translate-x-full"
         }`}
       >
         {/* Header */}
