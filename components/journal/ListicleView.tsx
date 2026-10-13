@@ -336,12 +336,14 @@ export function ListicleView({
   /** The admin's draft preview: empty image slots show as placeholders. */
   preview?: boolean;
 }) {
-  // Reasons are numbered by order; the first one marks where the floating
-  // button may start showing (data-listicle-start).
+  // Reasons are numbered by order. The floating button may start showing at
+  // reason `stickyCta.fromReason` (data-listicle-start) — the first reason when
+  // that one doesn't exist.
   const reasonNo: (number | null)[] = [];
   let count = 0;
   for (const s of l.sections) reasonNo.push(s.kind === "reason" ? ++count : null);
-  const firstReason = reasonNo.findIndex((n) => n !== null);
+  const wanted = reasonNo.indexOf(l.stickyCta.fromReason ?? 1);
+  const startAt = wanted >= 0 ? wanted : reasonNo.findIndex((n) => n !== null);
   const byline = [l.byline.author, l.byline.date, l.byline.readTime].filter(Boolean).join(" · ");
 
   return (
@@ -369,8 +371,11 @@ export function ListicleView({
 
       {l.sections.map((s, i) => {
         const n = reasonNo[i];
-        const first = i === firstReason;
-        const gap = i === 0 ? "mt-12 md:mt-16" : "mt-20 md:mt-28";
+        const first = i === startAt;
+        // Section breaks halved (owner, 2026-10-13: the gaps "cut off the flow
+        // of the copy"): 80/112px before a section plus 56/80px after a
+        // reason's gold rule read as a stop, against ~18px between paragraphs.
+        const gap = "mt-10 md:mt-14";
         const inner = (
           <>
             {s.heading && (
@@ -402,7 +407,7 @@ export function ListicleView({
         return (
           <section key={s.id} className={`${COLUMN} ${gap}`}>
             {inner}
-            {s.kind === "reason" && <hr aria-hidden className="mx-auto mt-14 w-20 border-0 border-t-2 border-gold/70 md:mt-20" />}
+            {s.kind === "reason" && <hr aria-hidden className="mx-auto mt-10 w-20 border-0 border-t-2 border-gold/70 md:mt-14" />}
           </section>
         );
       })}

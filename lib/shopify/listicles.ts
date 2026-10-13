@@ -70,7 +70,8 @@ export interface Listicle {
   topCta: { label: string; href: string; note: string };
   hero: ListicleImage;
   sections: ListicleSection[];
-  stickyCta: { enabled: boolean; label: string; href: string };
+  /** fromReason: the pill appears once the reader reaches this reason (1-based). */
+  stickyCta: { enabled: boolean; label: string; href: string; fromReason: number };
   footer: { line: string; disclaimer: string };
   /** Colour of every ==highlight== on the page. */
   highlight: "honey" | "amber" | "clay" | "brown";
@@ -247,7 +248,12 @@ export function sanitizeListicle(raw: unknown): Listicle {
           .filter((b): b is ListicleBlock => !!b),
       };
     }),
-    stickyCta: { enabled: sticky.enabled === true, label: str(sticky.label, 200), href: safeHref(sticky.href) },
+    stickyCta: {
+      enabled: sticky.enabled === true,
+      label: str(sticky.label, 200),
+      href: safeHref(sticky.href),
+      fromReason: Number.isInteger(sticky.fromReason) ? Math.min(50, Math.max(1, sticky.fromReason as number)) : 1,
+    },
     footer: { line: str(foot.line, 300), disclaimer: str(foot.disclaimer, 2000) },
     highlight: o.highlight === "amber" || o.highlight === "clay" || o.highlight === "brown" ? o.highlight : "honey",
   };
