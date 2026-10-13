@@ -5,6 +5,7 @@ import { getBeePawsAutoDiscounts } from "@/lib/shopify/discounts";
 import { getFullProductForPage, getProduct } from "@/lib/shopify/queries";
 import VariantSelector from "@/components/product/VariantSelector";
 import { ProductGallery } from "@/components/product/ProductGallery";
+import { CalmStart } from "@/components/product/CalmStart";
 import { Check } from "lucide-react";
 import { contentIcon } from "@/lib/content-icons";
 import { ProductDetailsSections } from "@/components/product/ProductDetailsSections";
@@ -70,6 +71,11 @@ export async function ProductPageView({
   // they head parts of the page the intro doesn't own. mechanism_intro still
   // carries them on products not re-saved since, so read it as the fallback.
   const msi = beepaws?.mechanismStepsIntro?.[0];
+  // Same rule as CalmStart's own early return, so its cream band and waves only
+  // appear when the section does.
+  const calmStartShown =
+    !!beepaws?.calmStartIntro?.[0]?.heading?.trim() ||
+    (beepaws?.calmStartDays ?? []).some((d) => d?.title?.trim() || d?.body?.trim());
   const mc = beepaws?.mechanismCallout?.[0];
   const uci = beepaws?.useCasesIntro?.[0];
   const ci = beepaws?.comparisonIntro?.[0];
@@ -568,8 +574,22 @@ export async function ProductPageView({
               feelsBrokenHeading={blank(mc?.heading) ?? blank(mi?.feelsBrokenHeading)}
             />
           </div>
-          {/* WAVE — toffee → card: into BeforeAfterSlider */}
-          <WaveDivider from="#E5C58C" to="#FFFFFF" flip />
+          {/* Calm Start Protocol right under How it works (whose callout is about
+              the first use): toffee → cream → card. Without the protocol's
+              content the section and its cream band are skipped, and the old
+              toffee → card wave joins the two sections directly. */}
+          {calmStartShown ? (
+            <>
+              <WaveDivider from="#E5C58C" to="#FBF3E1" flip />
+              <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
+                <CalmStart intro={beepaws?.calmStartIntro?.[0]} days={beepaws?.calmStartDays} />
+              </div>
+              <WaveDivider from="#FBF3E1" to="#FFFFFF" />
+            </>
+          ) : (
+            /* WAVE — toffee → card: into BeforeAfterSlider */
+            <WaveDivider from="#E5C58C" to="#FFFFFF" flip />
+          )}
           <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
             <BeforeAfterSlider
               slides={beepaws?.beforeAfterSlides}

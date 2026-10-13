@@ -264,6 +264,8 @@ function normalizeMetafields(metafields: AdminMetafield[]) {
     mechanismIntro:   parseBeepaws("mechanism_intro"),
     mechanismStepsIntro: parseBeepaws("mechanism_steps_intro"),
     mechanismCallout: parseBeepaws("mechanism_callout"),
+    calmStartIntro:   parseBeepaws("calm_start_intro"),
+    calmStartDays:    parseBeepaws("calm_start_days"),
     guarantee:        parseBeepaws("guarantee"),
     useCasesIntro:    parseBeepaws("use_cases_intro"),
     comparisonIntro:  parseBeepaws("comparison_intro"),

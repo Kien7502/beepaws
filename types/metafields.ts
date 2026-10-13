@@ -217,6 +217,20 @@ export interface Guarantee {
 // single-entry list (index 0) like Guarantee. Shared by UseCases, Comparison,
 // FAQ, Reviews, and Before/After. Empty/missing fields fall back to each
 // component's in-code Lorem default per-field.
+// Calm Start Protocol (revision doc 2026-10-05 §3) — beepaws.calm_start_intro
+// (single entry) + beepaws.calm_start_days (one entry per day, in order).
+export interface CalmStartIntro {
+  heading?: string;
+  /** Blank line = new paragraph; **bold** supported. */
+  lead?: string;
+  closing?: string;
+  emailNote?: string;
+}
+export interface CalmStartDay {
+  title?: string;
+  body?: string;
+}
+
 export interface SectionIntro {
   eyebrow?: string;
   heading?: string;
@@ -269,6 +283,8 @@ export interface BeepawsMetafields {
   /** Header over the mechanism STEPS (its own metafield since 2026-09-20). */
   mechanismStepsIntro: SectionIntro[] | null;
   mechanismCallout: MechanismCallout[] | null;
+  calmStartIntro: CalmStartIntro[] | null;
+  calmStartDays: CalmStartDay[] | null;
   guarantee: Guarantee[] | null;
   // Section-header copy for the remaining sections (single-entry lists).
   useCasesIntro: SectionIntro[] | null;
