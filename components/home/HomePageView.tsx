@@ -362,7 +362,7 @@ export function HomePageView({ blocks }: { blocks: HomepageBlocks }) {
                     cut as redundant with the PDP; the guarantee still shows
                     where the click happens. */}
                 <p className="mt-4 text-xs font-semibold text-brown">
-                  30-day money-back guarantee · Free shipping over $50
+                  60-day money-back guarantee · Real-person support
                 </p>
               </div>
             </article>

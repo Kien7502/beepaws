@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import ProductCard from '@/components/product/ProductCard';
-import { Sparkles, ShoppingBag, Shield, Truck, RefreshCcw, Star, ArrowRight, Scissors, Heart, Zap, TrendingUp, BadgeCheck } from 'lucide-react';
+import { Sparkles, ShoppingBag, Shield, MessageCircle, RefreshCcw, Star, ArrowRight, Scissors, Heart, Zap, TrendingUp, BadgeCheck } from 'lucide-react';
 
 import { getProducts } from '@/lib/shopify/queries';
 
@@ -88,9 +88,11 @@ export default async function Home() {
 
             {/* Quick trust strip */}
             <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-white/60 text-xs font-medium">
-              <span className="flex items-center gap-1.5"><Truck size={14} /> Free shipping over $50</span>
-              <span className="flex items-center gap-1.5"><Shield size={14} /> Safe &amp; vet-approved</span>
-              <span className="flex items-center gap-1.5"><RefreshCcw size={14} /> 30-day returns</span>
+              {/* No free-shipping promise, and no "vet-approved" claim without a vet
+                  behind it (owner, 2026-10-13). */}
+              <span className="flex items-center gap-1.5"><MessageCircle size={14} /> Real-person support</span>
+              <span className="flex items-center gap-1.5"><Shield size={14} /> No anesthesia needed</span>
+              <span className="flex items-center gap-1.5"><RefreshCcw size={14} /> 60-day returns</span>
             </div>
           </div>
         </div>

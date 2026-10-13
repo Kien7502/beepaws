@@ -1327,10 +1327,12 @@ export default function VariantSelector({
         {/* Compact trust line — sits flush under the CTA at the decision moment. */}
         {/* Copy audit §1.9: "Secure checkout" is corporate-logistics voice;
             a named human behind the warranty is the trust signal. */}
+        {/* No free-shipping promise (owner, 2026-10-13); 60-day guarantee per the
+            revision doc. */}
         <p className="mt-2.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs font-medium text-brown">
-          <span>30-day return, no questions asked</span>
+          <span>60-day returns, no questions asked</span>
           <span aria-hidden className="text-brown/40">·</span>
-          <span>Free shipping over $50</span>
+          <span>No anesthesia needed</span>
           <span aria-hidden className="text-brown/40">·</span>
           <span>Real-person support</span>
         </p>
