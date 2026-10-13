@@ -227,6 +227,10 @@ export interface CalmStartIntro {
   emailNote?: string;
 }
 export interface CalmStartDay {
+  /** lucide icon name (resolved server-side, like FAQ icons). */
+  icon?: string;
+  /** Short tag that shows the routine growing, e.g. "1 tooth · 2 seconds". */
+  dose?: string;
   title?: string;
   body?: string;
 }

@@ -1,5 +1,6 @@
-import { Mail } from "lucide-react";
+import { Cookie, Mail, Sofa } from "lucide-react";
 import type { CalmStartDay, CalmStartIntro } from "@/types/metafields";
+import { contentIcon } from "@/lib/content-icons";
 import { keepHyphenated, withAccent, withBold } from "@/lib/inline-format";
 
 /**
@@ -8,9 +9,16 @@ import { keepHyphenated, withAccent, withBold } from "@/lib/inline-format";
  * still for this" — the #1 purchase objection and the #1 return reason — so it
  * sits right after How it works, whose callout is about the first use.
  *
+ * Laid out as a journey, not an article (owner, 2026-10-13: the first cut —
+ * centred text over three equal cards — read "bland, like a boring article"):
+ * the pitch on the left, and on the right a timeline whose stops are the days
+ * (each with an icon and a short "dose" that grows: 1 tooth → half the mouth)
+ * and whose last stop is the closing line — the goal the routine leads to.
+ * On phones the same parts stack: pitch, timeline, then the email guide.
+ *
  * Authored in the admin (beepaws.calm_start_intro + beepaws.calm_start_days).
- * No placeholder copy: with neither a heading nor a day, the section is not
- * rendered at all, so a product without a protocol never shows an empty band.
+ * No placeholder copy: with neither a heading nor a day, nothing renders.
+ * Server component — contentIcon is server-only.
  */
 export function CalmStart({
   intro,
@@ -32,52 +40,90 @@ export function CalmStart({
   const emailNote = intro?.emailNote?.trim();
 
   return (
-    <section className="ds-reveal-in bg-cream pb-10 pt-14 md:pb-14 md:pt-20">
-      <div className="container mx-auto max-w-5xl px-4 md:px-6">
-        {heading && (
-          <h2 className="font-display mx-auto mb-4 max-w-3xl text-center text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[33px]">
-            {withAccent(heading)}
-          </h2>
-        )}
-        {paragraphs.map((p, i) => (
-          <p key={i} className="mx-auto mb-3 max-w-2xl text-center text-base leading-relaxed text-brown">
-            {withBold(p)}
-          </p>
-        ))}
+    <section className="ds-reveal-in bg-cream py-14 md:py-20">
+      <div className="container mx-auto grid max-w-6xl gap-10 px-4 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:grid-rows-[auto_1fr] md:gap-x-14 md:gap-y-8 md:px-6">
+        {/* The pitch — top left on desktop, first on phones. */}
+        <div className="md:col-start-1 md:row-start-1">
+          {heading && (
+            <h2 className="font-display mb-4 text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[33px]">
+              {withAccent(heading)}
+            </h2>
+          )}
+          {paragraphs.map((p, i) => (
+            <p key={i} className="mb-3 text-base leading-relaxed text-brown">
+              {withBold(p)}
+            </p>
+          ))}
+        </div>
 
-        {steps.length > 0 && (
-          // A sequence, so an ordered list: stacked on phones (Day 1 → 2 → 3
-          // reads top to bottom), three across from md up.
-          <ol className="mt-10 grid gap-4 md:grid-cols-3 md:gap-5">
-            {steps.map((d, i) => (
-              <li
-                key={i}
-                className="rounded-2xl bg-card p-6 shadow-[0_4px_20px_-10px_rgba(74,46,22,0.10)] md:p-7"
-              >
-                <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-clay-deep">Day {i + 1}</p>
-                {d.title?.trim() && (
-                  <h3 className="font-display mb-2 mt-1.5 text-lg font-semibold text-cocoa">{d.title.trim()}</h3>
-                )}
-                {d.body?.trim() && (
-                  <p className="text-[15px] leading-relaxed text-brown">{withBold(d.body.trim())}</p>
-                )}
+        {/* The journey — right column on desktop (spans both rows). */}
+        {(steps.length > 0 || closing) && (
+          <ol className="relative md:col-start-2 md:row-span-2 md:row-start-1">
+            {steps.map((d, i) => {
+              const Icon = contentIcon(d.icon, Cookie);
+              // The path to the NEXT stop: a segment from under this marker to
+              // the bottom of this row, where the next marker starts. Drawn per
+              // row (not one line for the list) so it ends exactly at the last
+              // stop instead of running past it. Warms from gold to clay-deep.
+              const hasNext = i < steps.length - 1 || !!closing;
+              const segment = ["from-gold to-amber", "from-amber to-clay", "from-clay to-clay-deep"][Math.min(i, 2)];
+              return (
+                <li key={i} className="relative flex gap-4 pb-5">
+                  {hasNext && (
+                    <span
+                      aria-hidden
+                      className={`absolute bottom-0 left-[21px] top-11 w-[3px] bg-gradient-to-b ${segment}`}
+                    />
+                  )}
+                  <span className="relative z-10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-card text-clay-deep shadow-[0_2px_10px_-4px_rgba(74,46,22,0.35)] ring-2 ring-gold">
+                    <Icon size={20} strokeWidth={2} aria-hidden />
+                  </span>
+                  <div className="min-w-0 flex-1 rounded-2xl bg-card p-5 shadow-[0_4px_20px_-10px_rgba(74,46,22,0.12)] md:p-6">
+                    <div className="mb-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                      <span className="text-xs font-extrabold uppercase tracking-[0.12em] text-clay-deep">Day {i + 1}</span>
+                      {d.dose?.trim() && (
+                        <span className="rounded-full bg-honey-tint px-2.5 py-0.5 text-xs font-semibold text-cocoa">
+                          {keepHyphenated(d.dose.trim())}
+                        </span>
+                      )}
+                    </div>
+                    {d.title?.trim() && (
+                      <h3 className="font-display mb-1.5 text-lg font-semibold text-cocoa md:text-xl">{d.title.trim()}</h3>
+                    )}
+                    {d.body?.trim() && (
+                      <p className="text-[15px] leading-relaxed text-brown">{withBold(d.body.trim())}</p>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+            {/* The goal — the closing line as the last stop, in the dark
+                finale card the page uses for its callouts. */}
+            {closing && (
+              <li className="relative flex gap-4">
+                <span className="relative z-10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-clay-deep text-cream shadow-[0_2px_10px_-4px_rgba(74,46,22,0.45)]">
+                  <Sofa size={20} strokeWidth={2} aria-hidden />
+                </span>
+                <div className="min-w-0 flex-1 rounded-2xl bg-cocoa p-5 md:p-6">
+                  <p className="font-display text-lg font-semibold leading-snug text-cream md:text-xl">
+                    {keepHyphenated(closing)}
+                  </p>
+                </div>
               </li>
-            ))}
+            )}
           </ol>
         )}
 
-        {closing && (
-          <p className="font-display mx-auto mt-10 max-w-2xl text-center text-xl font-semibold leading-snug text-cocoa md:text-2xl">
-            {keepHyphenated(closing)}
-          </p>
-        )}
+        {/* The email guide — under the pitch on desktop, last on phones. */}
         {emailNote && (
-          // Icon inline at the start of the text, so it stays with the first
-          // word in a centred, wrapping note (a flex row left it stranded).
-          <p className="mx-auto mt-5 max-w-xl text-center text-sm leading-relaxed text-brown">
-            <Mail size={16} className="-mt-0.5 mr-1.5 inline-block align-middle text-clay-deep" aria-hidden />
-            {keepHyphenated(emailNote)}
-          </p>
+          // self-end: on desktop it sits level with the timeline's finale, so
+          // the left column doesn't leave its bottom half empty.
+          <div className="flex items-start gap-3.5 rounded-2xl bg-honey-tint p-5 md:col-start-1 md:row-start-2 md:self-end">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card text-clay-deep">
+              <Mail size={18} aria-hidden />
+            </span>
+            <p className="text-sm leading-relaxed text-cocoa">{keepHyphenated(emailNote)}</p>
+          </div>
         )}
       </div>
     </section>
