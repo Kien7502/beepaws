@@ -1,6 +1,21 @@
 import { Fragment, type ReactNode } from "react";
 
 /**
+ * Keeps hyphenated words ("30-day", "no-questions") on one line. The page-wide
+ * `text-wrap: pretty` (visual plan #6, 2026-10-13) re-wraps a paragraph's last
+ * lines to avoid a one-word last line, and on phones it did that by breaking
+ * such words at their hyphen ("30- / day guarantee") — the owner found that
+ * worse than the lone word. Only ASCII hyphens between non-spaces match, so a
+ * spaced dash (" — ") or a range ("$500–$1,400+") is untouched.
+ */
+export function keepHyphenated(text: string): ReactNode {
+  if (!/\S-\S/.test(text)) return text;
+  return text.split(/(\S+-\S+)/g).map((part, i) =>
+    i % 2 === 1 ? <span key={i} className="whitespace-nowrap">{part}</span> : <Fragment key={i}>{part}</Fragment>,
+  );
+}
+
+/**
  * Renders `**bold**` markers inside authored copy — and nothing else.
  *
  * Body copy on the PDP is authored in Shopify metafields as PLAIN TEXT (the
@@ -13,11 +28,15 @@ import { Fragment, type ReactNode } from "react";
  * escaped. Unmatched `**` is left as literal text rather than swallowed.
  */
 export function withBold(text: string): ReactNode {
-  if (!text.includes("**")) return text;
+  if (!text.includes("**")) return keepHyphenated(text);
   const parts = text.split(/\*\*([\s\S]+?)\*\*/g)  // [\s\S] not /s — the dotAll flag needs a newer TS target;
   return parts.map((part, i) =>
     // odd indices are the captured groups = the bolded runs
-    i % 2 === 1 ? <strong key={i} className="font-bold text-cocoa">{part}</strong> : <Fragment key={i}>{part}</Fragment>,
+    i % 2 === 1 ? (
+      <strong key={i} className="font-bold text-cocoa">{keepHyphenated(part)}</strong>
+    ) : (
+      <Fragment key={i}>{keepHyphenated(part)}</Fragment>
+    ),
   );
 }
 
@@ -29,12 +48,16 @@ export function withBold(text: string): ReactNode {
  * removed on purpose in 78b04ab and is not coming back.
  */
 export function withAccent(text: string): ReactNode {
-  if (!text.includes("**")) return text;
+  if (!text.includes("**")) return keepHyphenated(text);
   const parts = text.split(/\*\*([\s\S]+?)\*\*/g);
   return parts.map((part, i) =>
     // clay-deep, not clay: the accented heading sits on the toffee band, where
     // clay is 2.3:1 (visual plan #4). Only light grounds use this today.
-    i % 2 === 1 ? <span key={i} className="text-clay-deep">{part}</span> : <Fragment key={i}>{part}</Fragment>,
+    i % 2 === 1 ? (
+      <span key={i} className="text-clay-deep">{keepHyphenated(part)}</span>
+    ) : (
+      <Fragment key={i}>{keepHyphenated(part)}</Fragment>
+    ),
   );
 }
 

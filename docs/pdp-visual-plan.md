@@ -61,9 +61,16 @@ or layout change. The findings are mostly small craft fixes.
    paragraphs are justified and hyphenated; on a phone's narrow column that left
    uneven gaps and split words ("en-zyme", "be-gins"). Now left-aligned with no
    hyphenation below `md`; justified + hyphenated from `md` up, as before.
-6. **One-word last lines.** Centred leads end with a lone word ("…at 2 / a.m.",
-   "…the hard / stuff.", the comparison heading's "tried"). One CSS rule:
-   `text-wrap: balance` on headings and short leads, `pretty` on paragraphs.
+6. ✓ **One-word last lines** (2026-10-13). Measured 10 on a phone, 3 on desktop
+   ("…at 2 / a.m.", "…the hard / stuff."). One base rule in `globals.css`:
+   `text-wrap: pretty` on h1–h4, p, li, blockquote → 1 and 0. Not `balance`: it
+   shortens lines (the H1 lesson) and would break "before-and- / after" in the
+   one heading left ("…speak for / themselves" on phones — kept, owner OK'd).
+   Follow-up: `pretty` then broke hyphenated words at the hyphen on phones
+   ("30- / day", "no- / questions"; owner: looks weird) → `keepHyphenated()` in
+   `lib/inline-format.tsx` keeps them whole (tier descriptions, final-CTA small
+   print, pain-point cards, and inside withBold/withAccent). Measured 0 splits at
+   both widths — "per-tooth" on desktop, which split before this item too, included.
 7. **Over-long lines.** The dark "Read this before your first use" callout runs
    ~118 characters per line on desktop (comfortable is 60–80). Cap its width.
 

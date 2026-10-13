@@ -285,6 +285,24 @@ body {
   button:not(:disabled):not([aria-disabled="true"]):not([aria-expanded]):not([aria-haspopup]):active {
     transform: scale(0.97);
   }
+
+  /* ─── No one-word last lines ───────────────────────────────────────────────
+     Text ended on a lone word all over the page ("…at 2 / a.m.", "…the hard /
+     stuff.": 10 on a phone, 3 on desktop — visual plan #6, 2026-10-13).
+     `pretty` re-wraps the last few lines so the final one keeps company, and
+     leaves the rest at normal fill. Not `balance`: on the hero H1 that evened
+     the lines by SHORTENING them (held to 72–89% of the column), see the note
+     on the H1 in ProductPageView. A component's text-balance utility still
+     wins (utilities layer). Browsers without support just wrap as before. */
+  h1,
+  h2,
+  h3,
+  h4,
+  p,
+  li,
+  blockquote {
+    text-wrap: pretty;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   button:active {

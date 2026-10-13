@@ -1,5 +1,6 @@
 import type { PainPoint } from "@/types/metafields";
 import { CardSlider } from "@/components/product/Slider";
+import { keepHyphenated } from "@/lib/inline-format";
 
 // Defaults are intentional Lorem ipsum placeholders so an unedited product
 // reads as unedited at a glance. Per-product copy lives in the
@@ -70,7 +71,7 @@ export function PainPoints({
                 {p.title}
               </h3>
               <p className="text-[14.5px] leading-relaxed text-brown">
-                {p.description}
+                {keepHyphenated(p.description)}
               </p>
             </div>
           ))}

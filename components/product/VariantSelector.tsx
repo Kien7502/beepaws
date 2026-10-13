@@ -13,6 +13,7 @@ import { CheckCircle2, Info, ShoppingBag, Loader2, Minus, Plus } from "lucide-re
 import { useCart, type LocalCartItem } from "@/components/cart/CartProvider";
 import { useProductMedia } from "./ProductMediaSync";
 import { usePublishBuyBox } from "./BuyBoxSync";
+import { keepHyphenated } from "@/lib/inline-format";
 
 // Color name → hex map for swatch rendering. Falls back to text button when a
 // value isn't recognized, so the picker degrades gracefully for unusual colors.
@@ -1096,7 +1097,7 @@ export default function VariantSelector({
                 </div>
 
                 {description && (
-                  <p className="mt-0.5 text-[12.5px] leading-snug text-brown">{description}</p>
+                  <p className="mt-0.5 text-[12.5px] leading-snug text-brown">{keepHyphenated(description)}</p>
                 )}
 
                 {/* What's included — for the SELECTED tier only, so the others

@@ -1,6 +1,7 @@
 "use client";
 
 import type { Guarantee } from "@/types/metafields";
+import { keepHyphenated } from "@/lib/inline-format";
 
 // Lean final-CTA: bark band, headline + body + ONE gold CTA + guarantee card.
 // Layout reorder (per user feedback): the buy button now sits directly under
@@ -110,7 +111,7 @@ export function FinalCTASection({
           {/* cream/70 (not the old #A8A48F) — that hex sat at ~3.9:1 on bark,
               under the 4.5:1 AA floor for text this small. */}
           <p className="mt-7 text-xs font-bold uppercase tracking-[0.08em] text-cream/70">
-            {smallPrint}
+            {keepHyphenated(smallPrint)}
           </p>
         </div>
       </div>
