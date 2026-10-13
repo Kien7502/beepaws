@@ -7,8 +7,8 @@ import { ThankYouContent } from "@/components/checkout/ThankYouContent";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Thank you | Beepaws",
-  description: "Your Beepaws order is confirmed.",
+  title: "Thank you | BeePaws",
+  description: "Your BeePaws order is confirmed.",
 };
 
 export default function ThankYouPage() {

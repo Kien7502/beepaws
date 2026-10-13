@@ -1,8 +1,8 @@
 import { SimpleArticle } from "@/components/layout/SimpleArticle";
 
 export const metadata = {
-  title: "FAQ | Beepaws",
-  description: "Answers to common questions about shopping at Beepaws.",
+  title: "FAQ | BeePaws",
+  description: "Answers to common questions about shopping at BeePaws.",
 };
 
 export default function FaqPage() {

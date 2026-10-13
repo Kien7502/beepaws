@@ -2,8 +2,8 @@ import { SimpleArticle } from "@/components/layout/SimpleArticle";
 import { ContactForm } from "@/components/contact/ContactForm";
 
 export const metadata = {
-  title: "Contact | Beepaws",
-  description: "Get in touch with Beepaws for order help and questions.",
+  title: "Contact | BeePaws",
+  description: "Get in touch with BeePaws for order help and questions.",
 };
 
 export default function ContactPage() {

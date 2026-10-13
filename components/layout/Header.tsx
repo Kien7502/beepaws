@@ -119,7 +119,7 @@ const Header = () => {
             <Link href="/" className="inline-block">
               <Image
                 src={titleIcon}
-                alt="Beepaws"
+                alt="BeePaws"
                 className="h-9 w-auto md:h-11"
                 priority
               />

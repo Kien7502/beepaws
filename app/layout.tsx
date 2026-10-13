@@ -30,7 +30,7 @@ const hankenGrotesk = Hanken_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Beepaws | Pet E-commerce",
+  title: "BeePaws",
   description: "Your pet deserves the best - Shop premium pet supplies.",
   icons: {
     icon: "/icon.png",

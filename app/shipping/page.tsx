@@ -2,8 +2,8 @@ import Link from "next/link";
 import { SimpleArticle } from "@/components/layout/SimpleArticle";
 
 export const metadata = {
-  title: "Shipping | Beepaws",
-  description: "Shipping options and delivery information for Beepaws orders.",
+  title: "Shipping | BeePaws",
+  description: "Shipping options and delivery information for BeePaws orders.",
 };
 
 export default function ShippingPage() {

@@ -1117,18 +1117,27 @@ export default function VariantSelector({
                         </span>
                         <span className="min-w-0 truncate">
                           {c.quantity}×{" "}
-                          {/* New tab so the configured tier/variant state
-                              survives; stopPropagation so the card's
-                              selectTier onClick doesn't also fire. */}
-                          <a
-                            href={`/products/${c.handle}`}
-                            target="_blank"
-                            rel="noopener"
-                            onClick={(e) => e.stopPropagation()}
-                            className="text-cocoa underline decoration-line underline-offset-2 hover:text-clay"
-                          >
-                            {c.title}
-                          </a>
+                          {/* This page's own product is plain text: its link
+                              only reopened the page you're on, in a new tab,
+                              and sat inside the selectable card — the likeliest
+                              accidental tap (visual plan #3 note, 2026-10-13).
+                              Other products keep a link (new tab, so the tier
+                              state survives; stopPropagation so the card's
+                              selectTier doesn't fire), with a taller hit area
+                              (py-1 -my-1) for a deliberate tap. */}
+                          {c.handle === product.handle ? (
+                            <span className="text-cocoa">{c.title}</span>
+                          ) : (
+                            <a
+                              href={`/products/${c.handle}`}
+                              target="_blank"
+                              rel="noopener"
+                              onClick={(e) => e.stopPropagation()}
+                              className="-my-1 inline-block py-1 text-cocoa underline decoration-line underline-offset-2 hover:text-clay"
+                            >
+                              {c.title}
+                            </a>
+                          )}
                         </span>
                         {ci === 0 && (
                           <span className="ml-auto shrink-0 rounded-full bg-honey-tint px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-gold-deep">

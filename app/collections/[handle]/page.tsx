@@ -18,8 +18,8 @@ export async function generateMetadata({
   const resolvedParams = await params;
   const title = formatCollectionTitle(resolvedParams.handle);
   return {
-    title: `${title} | Beepaws`,
-    description: `Shop ${title.toLowerCase()} — premium pet supplies at Beepaws.`,
+    title: `${title} | BeePaws`,
+    description: `Shop ${title.toLowerCase()} — premium pet supplies at BeePaws.`,
   };
 }
 

@@ -2,8 +2,8 @@ import Link from "next/link";
 import { SimpleArticle } from "@/components/layout/SimpleArticle";
 
 export const metadata = {
-  title: "Returns & Refunds | Beepaws",
-  description: "Returns, exchanges, and refund information for Beepaws.",
+  title: "Returns & Refunds | BeePaws",
+  description: "Returns, exchanges, and refund information for BeePaws.",
 };
 
 export default function ReturnsPage() {

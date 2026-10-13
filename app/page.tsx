@@ -309,11 +309,11 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ───── Why Beepaws ───── */}
+      {/* ───── Why BeePaws ───── */}
       <section className="container mx-auto px-4 md:px-6 max-w-7xl py-16 md:py-20 lg:py-24">
         <div className="text-center mb-12">
           <span className="inline-block text-xs font-bold uppercase tracking-widest text-[var(--color-primary)] mb-3 px-3 py-1 rounded-full bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20">
-            Why Beepaws
+            Why BeePaws
           </span>
           <h2 className="text-3xl md:text-4xl font-black text-[var(--color-foreground)] leading-tight">
             Grooming made easy, at home
@@ -504,10 +504,10 @@ export default async function Home() {
         <div className="newsletter-section p-8 md:p-14 flex flex-col md:flex-row items-center justify-between gap-10">
           <div className="md:w-1/2 text-center md:text-left">
             <div className="inline-flex items-center gap-2 bg-[var(--color-primary)]/10 rounded-full px-4 py-1.5 text-[var(--color-primary)] text-xs font-bold mb-4 border border-[var(--color-primary)]/20">
-              <Sparkles size={12} /> Beepaws Newsletter
+              <Sparkles size={12} /> BeePaws Newsletter
             </div>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-[var(--color-foreground)] mb-4 leading-tight">
-              Join the <br className="hidden md:block" />Beepaws Family
+              Join the <br className="hidden md:block" />BeePaws Family
             </h2>
             <p className="text-slate-600 dark:text-slate-400 text-base md:text-lg font-medium max-w-md">
               Sign up today and get <span className="font-extrabold text-[var(--color-primary)]">15% off</span> your first order, plus expert pet care tips delivered weekly.

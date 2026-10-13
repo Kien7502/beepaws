@@ -38,7 +38,7 @@ export async function generateMetadata({
     getProduct(handle),
     getVariantGroupPrimary(handle),
   ]);
-  if (!product) return { title: "Not found | Beepaws" };
+  if (!product) return { title: "Not found | BeePaws" };
 
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
   const pageUrl = `${siteUrl}/products/${handle}`;
@@ -48,7 +48,7 @@ export async function generateMetadata({
   const canonicalUrl = variantGroupPrimary
     ? `${siteUrl}/products/${variantGroupPrimary}`
     : pageUrl;
-  const title = `${product.seo?.title || product.title} | Beepaws`;
+  const title = `${product.seo?.title || product.title} | BeePaws`;
   const description = (product.seo?.description || product.description || "").slice(0, 160);
   const ogImage = product.images.edges[0]?.node?.url;
 
@@ -63,7 +63,7 @@ export async function generateMetadata({
       description,
       url: pageUrl,
       type: "website",
-      siteName: "Beepaws",
+      siteName: "BeePaws",
       ...(ogImage && {
         images: [{ url: ogImage, width: 1200, height: 1200, alt: product.title }],
       }),

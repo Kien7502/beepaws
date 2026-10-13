@@ -10,8 +10,8 @@ import Link from "next/link";
 import Button from "@/components/ui/Button";
 
 export const metadata = {
-  title: "Shop All | Beepaws",
-  description: "Shop all premium pet supplies and accessories at Beepaws.",
+  title: "Shop All | BeePaws",
+  description: "Shop all premium pet supplies and accessories at BeePaws.",
 };
 
 // ISR: revalidate via webhook → revalidateTag("products")

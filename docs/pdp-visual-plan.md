@@ -38,9 +38,10 @@ or layout change. The findings are mostly small craft fixes.
    $49.95 / $59.95 / $109.95, spray $20) once the owner updates the store.
 3. ✓ **Tap targets** (2026-10-11): slider dots are 24×40px buttons with the
    small dot drawn inside; arrows 40px; footer links fill their gaps; social
-   icons 38px and named for screen readers. (Still small: the kit rows'
-   product-name link, 16px tall, sits INSIDE the selectable tier card — a
-   near-miss tap opens another page. Worth a look with the copy revision.)
+   icons 38px and named for screen readers. Follow-up 2026-10-13: in the tier
+   cards, the row for the page's OWN product is plain text now (its link only
+   reopened this page in a new tab — the likeliest accidental tap inside the
+   selectable card); other products keep a link with a 26px hit area (was 16).
 4. ✓ **Low-contrast text** (2026-10-13; WCAG AA: 4.5:1 small text, 3:1 large).
    Re-measured from rendered colours first (the sweep's numbers held). Two new
    tokens, same hues, for SMALL TEXT only — `--clay-deep #9E4F17` and
@@ -91,9 +92,13 @@ or layout change. The findings are mostly small craft fixes.
 
 ## Content noticed along the way (not visual)
 
-9. Brand spelling: the spray's Shopify title is "**Beepaws** Dental Spray"
-   (shows in the kit rows), and the footer says "© 2026 **Beepaws**" — both
-   should be "BeePaws".
-10. Footer social icons: the Twitter bird (now X) — and are the links real yet?
+9. ✓ Brand spelling (2026-10-13): the spray's Shopify title is fixed (owner);
+   in code every stand-alone "Beepaws" → "BeePaws" — page titles + descriptions,
+   share-card site name, JSON-LD brand/seller, logo alts, footer ©, homepage
+   copy (27 in 13 files; code names like `BeepawsMetafields` untouched). The
+   default tab title "Beepaws | Pet E-commerce" (scaffold text) → "BeePaws".
+10. ✓ Footer social icons (2026-10-13): the links went to bare instagram.com /
+   facebook.com / twitter.com, so they're HIDDEN until real URLs are filled into
+   `SOCIAL` in Footer.tsx (an empty url hides its icon); the bird is the X mark.
 11. 30-day → 60-day guarantee and the shipping wording are already in the owner's
     10-05 PDP revision list (buy box, guarantee box, FAQ, footer strip).

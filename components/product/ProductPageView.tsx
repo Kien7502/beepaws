@@ -342,7 +342,7 @@ export async function ProductPageView({
     description: product.description,
     image: product.images.edges.map((e) => e.node.url),
     url: `${siteUrl}/products/${product.handle}`,
-    brand: { "@type": "Brand", name: "Beepaws" },
+    brand: { "@type": "Brand", name: "BeePaws" },
     offers: {
       "@type": "Offer",
       priceCurrency: product.priceRange.minVariantPrice.currencyCode,
@@ -350,7 +350,7 @@ export async function ProductPageView({
       availability: product.availableForSale
         ? "https://schema.org/InStock"
         : "https://schema.org/OutOfStock",
-      seller: { "@type": "Organization", name: "Beepaws" },
+      seller: { "@type": "Organization", name: "BeePaws" },
     },
   };
 

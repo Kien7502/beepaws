@@ -4,9 +4,28 @@ import React from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Instagram, Facebook, Twitter } from 'lucide-react';
+import { Instagram, Facebook } from 'lucide-react';
 import { WaveDivider } from '@/components/ui/WaveDivider';
 import titleIcon from '@/app/Title_icon.png';
+
+/** The X (formerly Twitter) mark — lucide only has the old bird. */
+function XLogo({ size = 22 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
+}
+
+// BeePaws' own accounts. An EMPTY url hides that icon: the old links went to the
+// bare instagram.com / facebook.com / twitter.com — accounts that didn't exist
+// (revision doc: "needs real URLs"; hidden 2026-10-13). Fill a url in and its
+// icon appears.
+const SOCIAL: { name: string; url: string; icon: React.ReactNode }[] = [
+  { name: 'Instagram', url: '', icon: <Instagram size={22} aria-hidden /> },
+  { name: 'Facebook', url: '', icon: <Facebook size={22} aria-hidden /> },
+  { name: 'X', url: '', icon: <XLogo /> },
+];
 
 // Paired with Header.tsx's flag of the same name — flip BOTH together when
 // the dogs/cats collections are populated.
@@ -46,7 +65,7 @@ const Footer = () => {
             {/* Brand & Newsletter */}
             <div className="col-span-1 md:col-span-2">
               <Link href="/" className="inline-block mb-4">
-                <Image src={titleIcon} alt="Beepaws" className="h-9 w-auto" />
+                <Image src={titleIcon} alt="BeePaws" className="h-9 w-auto" />
               </Link>
               {/* Category-neutral on purpose: no grooming mention while that
                   line is unlaunched (never-tease rule; deliberate deviation
@@ -107,22 +126,27 @@ const Footer = () => {
           {/* Bottom */}
           <div className="pt-8 border-t border-cream/15 flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-cream/60 text-xs">
-              © {new Date().getFullYear()} Beepaws. All rights reserved.
+              © {new Date().getFullYear()} BeePaws. All rights reserved.
             </p>
             {/* Icon-only links: each needs a name for screen readers, and p-2/-m-2
-                gives a ~38px tap area without moving the icons. (The URLs are
-                still generic placeholders - real accounts pending.) */}
-            <div className="flex items-center space-x-6">
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="BeePaws on Instagram" className="-m-2 p-2 text-cream/60 hover:text-gold transition-colors">
-                <Instagram size={22} aria-hidden />
-              </a>
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="BeePaws on Facebook" className="-m-2 p-2 text-cream/60 hover:text-gold transition-colors">
-                <Facebook size={22} aria-hidden />
-              </a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="BeePaws on X (Twitter)" className="-m-2 p-2 text-cream/60 hover:text-gold transition-colors">
-                <Twitter size={22} aria-hidden />
-              </a>
-            </div>
+                gives a ~38px tap area without moving the icons. Only accounts
+                with a real url render (see SOCIAL). */}
+            {SOCIAL.some((s) => s.url) && (
+              <div className="flex items-center space-x-6">
+                {SOCIAL.filter((s) => s.url).map((s) => (
+                  <a
+                    key={s.name}
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`BeePaws on ${s.name}`}
+                    className="-m-2 p-2 text-cream/60 hover:text-gold transition-colors"
+                  >
+                    {s.icon}
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
