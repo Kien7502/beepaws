@@ -21,8 +21,11 @@ import { StickyCta } from "@/components/journal/StickyCta";
 
 export type ListicleProductInfo = { price: string | null; image: ListicleImage | null; title: string };
 
-const COLUMN = "mx-auto w-full max-w-[720px] px-5";
-const BODY = "text-[16px] leading-[1.7] text-ink md:text-[18px]";
+// Desktop measure (sweep S7, 2026-10-13): 18px in a 680px text column held ~87
+// characters per full line; 19px in 620px holds ~73 (comfortable is 60–75).
+// Phones are unchanged (16px, full width).
+const COLUMN = "mx-auto w-full max-w-[660px] px-5";
+const BODY = "text-[16px] leading-[1.7] text-ink md:text-[19px]";
 
 /** The ==highlight== colours (the admin's HIGHLIGHT_COLORS — keep in sync). The
  *  marker in lib/inline-format.tsx reads them through the --hl variable. */
@@ -100,7 +103,7 @@ function Figure({
           alt={image.alt}
           width={image.width}
           height={image.height}
-          sizes="(max-width: 768px) 100vw, 680px"
+          sizes="(max-width: 768px) 100vw, 620px"
           priority={priority}
           className="h-auto w-full md:rounded-lg"
         />
@@ -190,20 +193,44 @@ function Block({ b, products, preview }: { b: ListicleBlock; products: Record<st
         </>
       );
     case "timeline":
-      // Desktop: a thin honey line with small dots. Phones: plain stacked blocks.
+      // Stops on a path, at every width (sweep S4, 2026-10-13 — the guide asks
+      // for "a visual timeline or stepped cards"; phones used to get plain
+      // stacked blocks). Same language as the PDP's Calm Start timeline, lighter
+      // for a reading column: no cards, dots not numbers (the reasons already
+      // count 01–08), and the LAST stop filled in as the goal. The path is drawn
+      // per segment, from under one marker to the next, so it ends exactly at
+      // the last stop; it warms from gold to clay-deep.
       return (
         <>
         {b.title && <SubHeading text={b.title} />}
-        <ol className="relative mt-8 flex flex-col gap-6 md:pl-8 md:before:absolute md:before:bottom-2 md:before:left-[3px] md:before:top-2 md:before:w-0.5 md:before:bg-gold">
-          {b.items.map((s, i) => (
-            <li key={i} className="relative break-inside-avoid">
-              <span aria-hidden className="absolute -left-8 top-[0.55em] hidden h-2 w-2 rounded-full bg-gold md:block" />
-              {s.label && <p className="text-[17px] font-bold text-cocoa md:text-[18px]">{s.label}</p>}
-              <div className={`mt-1 ${BODY}`}>
-                <Paragraphs text={s.text} />
-              </div>
-            </li>
-          ))}
+        <ol className="mt-8">
+          {b.items.map((s, i) => {
+            const last = i === b.items.length - 1;
+            const segment = ["from-gold to-amber", "from-amber to-amber", "from-amber to-clay", "from-clay to-clay-deep"][Math.min(i, 3)];
+            return (
+              <li key={i} className="relative flex gap-4 break-inside-avoid pb-8 last:pb-0 md:gap-5">
+                {!last && (
+                  <span aria-hidden className={`absolute bottom-0 left-[11px] top-7 w-[3px] bg-gradient-to-b ${segment}`} />
+                )}
+                <span
+                  aria-hidden
+                  className={`relative z-10 mt-[3px] flex h-[25px] w-[25px] shrink-0 items-center justify-center rounded-full ${
+                    last ? "bg-clay-deep" : "bg-card ring-2 ring-gold"
+                  }`}
+                >
+                  <span className={`h-2 w-2 rounded-full ${last ? "bg-cream" : "bg-gold"}`} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  {s.label && (
+                    <p className="font-display text-[19px] font-bold leading-snug text-cocoa md:text-[21px]">{withInline(s.label)}</p>
+                  )}
+                  <div className={`mt-1.5 ${BODY}`}>
+                    <Paragraphs text={s.text} />
+                  </div>
+                </div>
+              </li>
+            );
+          })}
         </ol>
         </>
       );
@@ -255,7 +282,7 @@ function Block({ b, products, preview }: { b: ListicleBlock; products: Record<st
         // data-listicle-end: the floating button is gone from here on.
         <section data-listicle-end="" className="mt-10 break-inside-avoid overflow-hidden rounded-lg bg-cream px-5 py-7 text-center md:p-8">
           {image && <Figure image={image} flushTop />}
-          <h3 className="mt-6 font-display text-[26px] font-bold leading-tight text-cocoa md:text-[30px]">
+          <h3 className="mt-6 font-display text-[26px] font-bold leading-tight tracking-tight text-cocoa md:text-[30px]">
             {b.name || info?.title || b.product?.title}
           </h3>
           {b.contents.length > 0 && (
@@ -321,7 +348,9 @@ export function ListicleView({
     <article className="bg-paper pb-16 md:pb-24" style={{ "--hl": HIGHLIGHT_CSS[l.highlight] } as CSSProperties}>
       <header className={`${COLUMN} pt-6 md:pt-10`}>
         {l.topStrip && <p className={`text-[13px] font-semibold ${MUTED}`}>{l.topStrip}</p>}
-        <h1 className="mt-6 font-display text-[32px] font-bold leading-[1.12] text-cocoa md:mt-8 md:text-[46px]">{l.headline}</h1>
+        {/* tracking-tight on the large serif (sweep S8): at 32–46px default
+            letter-spacing reads loose; the PDP's headings are tightened too. */}
+        <h1 className="mt-6 font-display text-[32px] font-bold leading-[1.12] tracking-tight text-cocoa md:mt-8 md:text-[46px]">{l.headline}</h1>
         {l.subhead && <p className="mt-4 text-[18px] leading-snug text-brown md:text-[21px]">{withInline(l.subhead)}</p>}
         {byline && <p className={`mt-5 text-[14px] ${MUTED}`}>{byline}</p>}
         {l.checklist.length > 0 && (
@@ -347,7 +376,7 @@ export function ListicleView({
             {s.heading && (
               <h2
                 {...(first ? { "data-listicle-start": "" } : {})}
-                className={`font-display font-bold leading-tight text-cocoa ${s.kind === "intro" ? "text-[24px] md:text-[28px]" : "text-[26px] md:text-[34px]"}`}
+                className={`font-display font-bold leading-tight tracking-tight text-cocoa ${s.kind === "intro" ? "text-[24px] md:text-[28px]" : "text-[26px] md:text-[34px]"}`}
               >
                 {/* The number in clay, the heading in brown: a colour cue for skimming,
                     still the same serif on the same line (visual guide §3). Clay, not
