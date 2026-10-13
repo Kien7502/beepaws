@@ -1,5 +1,4 @@
 import type { MechanismStep } from "@/types/metafields";
-import { VolumeX } from "lucide-react";
 import Image from "next/image";
 import { withBold, withAccent } from "@/lib/inline-format";
 import { CardSlider } from "@/components/product/Slider";
@@ -29,12 +28,6 @@ const DEFAULT_STEPS: MechanismStep[] = [
   },
 ];
 
-// Default body for the "feels broken" callout. Set the mechanism_intro
-// metafield's feelsBrokenBody to override (split from education_note
-// 2026-07-17 — that field feeds only the buy-column reassurance now).
-const DEFAULT_FEELS_BROKEN_NOTE =
-  "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.";
-
 interface Props {
   steps?: MechanismStep[] | null;
   // Optional intro overrides; defaults keep the dental-scaler narrative.
@@ -53,10 +46,6 @@ interface Props {
   stepsHeading?: string;
   stepsLead?: string;
   diagramImageUrl?: string | null;
-  // "Feels broken" callout — pulls from beepaws.education_note when set.
-  // Heading is hard-coded brand copy; body is editor-overridable.
-  feelsBrokenNote?: string | null;
-  feelsBrokenHeading?: string;
 }
 
 export function Mechanism({
@@ -68,8 +57,6 @@ export function Mechanism({
   stepsHeading = "Lorem ipsum steps heading",
   stepsLead = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
   diagramImageUrl = null,
-  feelsBrokenNote,
-  feelsBrokenHeading = "Lorem ipsum — placeholder callout heading",
 }: Props) {
   const data = steps && steps.length > 0 ? steps : DEFAULT_STEPS;
   // A blank line starts a new paragraph — the same convention the editor's field
@@ -79,7 +66,6 @@ export function Mechanism({
     .split(/\n\s*\n/)
     .map((para) => para.trim())
     .filter(Boolean);
-  const feelsBrokenBody = feelsBrokenNote?.trim() || DEFAULT_FEELS_BROKEN_NOTE;
 
   return (
     <section className="ds-reveal-in bg-toffee py-14 md:py-20">
@@ -197,24 +183,6 @@ export function Mechanism({
           />
         </div>
 
-        {/* Feels-broken callout — restructure plan §Task 3 (v2) — this is the
-            page's single deliberate dark accent. Small cocoa inset with
-            light text against the toffee section. One dark punch, not a slab. */}
-        <div className="mt-12 grid items-center gap-7 rounded-2xl bg-cocoa p-8 md:mt-14 md:grid-cols-[auto_1fr] md:gap-10 md:p-10">
-          <div className="mx-auto md:mx-0">
-            <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-gold bg-gold/15">
-              <VolumeX className="h-11 w-11 text-amber" aria-hidden />
-            </div>
-          </div>
-          <div className="text-center md:text-left">
-            <h3 className="font-display mb-2 text-2xl font-semibold text-cream md:text-[24px]">
-              {feelsBrokenHeading}
-            </h3>
-            <p className="text-[15px] leading-relaxed text-cream/80">
-              {feelsBrokenBody}
-            </p>
-          </div>
-        </div>
       </div>
     </section>
   );

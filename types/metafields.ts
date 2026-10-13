@@ -188,22 +188,12 @@ export interface MechanismIntro {
   paradoxPullQuote?: string;
   /** Tooth cross-section beside the steps; falls back to the dev placeholder. */
   diagramImageUrl?: string;
-  /** Legacy homes for the steps header and the callout, moved out to their own
-   *  metafields 2026-09-20 (mechanism_steps_intro / mechanism_callout) so the
-   *  editor groups them with the part of the page they head. Read as a fallback
-   *  until every product has been re-saved. */
+  /** Legacy home for the steps header, moved out to its own metafield
+   *  2026-09-20 (mechanism_steps_intro) so the editor groups it with the part
+   *  of the page it heads. Read as a fallback until every product is re-saved.
+   *  (The "feels broken" callout that lived here too was removed 2026-10-13.) */
   stepsHeading?: string;
   stepsLead?: string;
-  feelsBrokenHeading?: string;
-  feelsBrokenBody?: string;
-}
-
-// The cocoa "it's supposed to feel broken" callout under the mechanism steps.
-// Body is the long version (audit §4.10); education_note keeps the SHORT
-// buy-column reassurance (§1.5) — the two slots want different lengths.
-export interface MechanismCallout {
-  heading?: string;
-  body?: string;
 }
 
 export interface Guarantee {
@@ -286,7 +276,6 @@ export interface BeepawsMetafields {
   mechanismIntro: MechanismIntro[] | null;
   /** Header over the mechanism STEPS (its own metafield since 2026-09-20). */
   mechanismStepsIntro: SectionIntro[] | null;
-  mechanismCallout: MechanismCallout[] | null;
   calmStartIntro: CalmStartIntro[] | null;
   calmStartDays: CalmStartDay[] | null;
   guarantee: Guarantee[] | null;

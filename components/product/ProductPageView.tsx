@@ -76,7 +76,6 @@ export async function ProductPageView({
   const calmStartShown =
     !!beepaws?.calmStartIntro?.[0]?.heading?.trim() ||
     (beepaws?.calmStartDays ?? []).some((d) => d?.title?.trim() || d?.body?.trim());
-  const mc = beepaws?.mechanismCallout?.[0];
   const uci = beepaws?.useCasesIntro?.[0];
   const ci = beepaws?.comparisonIntro?.[0];
   const fi = beepaws?.faqIntro?.[0];
@@ -558,11 +557,6 @@ export async function ProductPageView({
           <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
             <Mechanism
               steps={beepaws?.mechanismSteps}
-              // The callout's own body, NOT education_note: that field holds
-              // only the short buy-column reassurance (§1.5) while the callout
-              // gets its own long version (§4.10) — the two slots wanted
-              // different lengths of the same message.
-              feelsBrokenNote={blank(mc?.body) ?? blank(mi?.feelsBrokenBody)}
               introEyebrow={blank(mi?.introEyebrow)}
               introHeading={blank(mi?.introHeading)}
               introLead={blank(mi?.introLead)}
@@ -571,7 +565,6 @@ export async function ProductPageView({
               stepsHeading={blank(msi?.heading) ?? blank(mi?.stepsHeading)}
               stepsLead={blank(msi?.lead) ?? blank(mi?.stepsLead)}
               diagramImageUrl={blank(mi?.diagramImageUrl)}
-              feelsBrokenHeading={blank(mc?.heading) ?? blank(mi?.feelsBrokenHeading)}
             />
           </div>
           {/* Calm Start Protocol right under How it works (whose callout is about
