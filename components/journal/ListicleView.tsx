@@ -26,11 +26,11 @@ export type ListicleProductInfo = { price: string | null; image: ListicleImage |
 // Desktop measure (sweep S7, 2026-10-13): 18px in a 680px text column held ~87
 // characters per full line; 19px in 620px holds ~73 (comfortable is 60–75).
 // Phones are unchanged (16px, full width).
-// From lg the column widens to 700px of text at 20px (owner, 2026-10-14:
-// "stretch the middle to the sides a little" — the sheet still read empty and
-// the article is long). Measured ~70 characters a line (text length /
-// rendered lines); phones and tablets keep 16/19px in 350/620px.
-const COLUMN = "mx-auto w-full max-w-[660px] px-5 lg:max-w-[740px]";
+// From lg the column widens to 860px of text at 20px (owner, 2026-10-14:
+// "stretch the middle to the sides" — the sheet still read empty and the
+// article is long; then "raise the cap to 80–85" characters a line). Measured
+// as text length / rendered lines; phones and tablets keep 16/19px in 350/620px.
+const COLUMN = "mx-auto w-full max-w-[660px] px-5 lg:max-w-[900px]";
 const BODY = "text-[16px] leading-[1.7] text-ink md:text-[19px] lg:text-[20px]";
 
 /** The ==highlight== colours (the admin's HIGHLIGHT_COLORS — keep in sync). The
@@ -96,7 +96,7 @@ function Figure({
   // wide as the text. The same on EVERY screen (owner, 2026-10-14 evening):
   // a bigger reach on desktop (70–130px) made the images "way bigger than the
   // text line length", which phones never had. Image ≈ text width + 10px:
-  // 364px on a 390px phone, 630px from md, 710px from lg. The caption stays in the text
+  // 364px on a 390px phone, 630px from md, 870px from lg. The caption stays in the text
   // column, under the picture.
   const place = flushTop ? "-mx-5 -mt-7 md:mx-0 md:mt-0" : "-mx-3 mt-8";
   const frame = flushTop
@@ -130,7 +130,7 @@ function Figure({
             alt={image.alt}
             width={image.width}
             height={image.height}
-            sizes={flushTop ? "(max-width: 768px) 92vw, 620px" :"(max-width: 767px) 94vw, (max-width: 1023px) 630px, 710px"}
+            sizes={flushTop ? "(max-width: 768px) 92vw, 620px" :"(max-width: 767px) 94vw, (max-width: 1023px) 630px, 870px"}
             priority={priority}
             className={`h-auto w-full ${radius}`}
           />
