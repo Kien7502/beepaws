@@ -69,8 +69,11 @@ export function FAQAccordion({ rows, variant = "card" }: { rows: FAQRow[]; varia
                 aria-hidden
               />
             </button>
+            {/* print:hidden when closed: Chromium's print layout doesn't squeeze
+                the 0fr row, so a closed answer printed as an invisible gap
+                under its question (found in the PDF export, 2026-10-14). */}
             <div
-              className="grid transition-[grid-template-rows] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]"
+              className={`grid transition-[grid-template-rows] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] ${isOpen ? "" : "print:hidden"}`}
               style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
             >
               <div className="overflow-hidden">

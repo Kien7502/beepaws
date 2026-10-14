@@ -527,7 +527,11 @@ body {
   a,
   blockquote,
   li,
-  tr {
+  tr,
+  /* A next/image `fill` picture is absolutely positioned inside its box, so
+     the rule on img never applies — the box has to hold it (the PDP's saliva
+     diagram printed half on one page, half on the next; 2026-10-14). */
+  :has(> img[data-nimg="fill"]) {
     break-inside: avoid;
   }
   h1,
