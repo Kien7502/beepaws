@@ -27,9 +27,9 @@ export type ListicleProductInfo = { price: string | null; image: ListicleImage |
 // characters per full line; 19px in 620px holds ~73 (comfortable is 60–75).
 // Phones are unchanged (16px, full width).
 // Wide screens (owner, 2026-10-14: on a 1920px display the 620px column read
-// "squished in the middle"): the whole article scales up from xl and 2xl —
-// column, body size, headings and images together — so it fills more of the
-// screen while lines stay ~70 characters (700px at 20px, 740px at 21px).
+// "squished in the middle"): the column, body size and headings scale up
+// from xl and 2xl, so the article fills more of the screen while lines stay
+// ~70 characters (700px at 20px, 740px at 21px). Images follow the column.
 const COLUMN = "mx-auto w-full max-w-[660px] px-5 xl:max-w-[740px] 2xl:max-w-[780px]";
 const BODY = "text-[16px] leading-[1.7] text-ink md:text-[19px] xl:text-[20px] 2xl:text-[21px]";
 
@@ -92,18 +92,19 @@ function Figure({
   // phones looked too big; "smaller, with a border outside"): a white mat, a
   // hairline border, rounded corners and a soft shadow — a print laid on the
   // page. Inside the text margins it then read too small, so the frame reaches
-  // PAST the column while the text stays put: 8px from the screen edge on
-  // phones (thinner mat), 32px out on tablets (a 768px screen leaves 54px
-  // beside the 660px column), 70px out from lg — image ~364px wide on a 390px
-  // phone (was 336), ~746px on desktop (was 606). The caption stays in the
-  // text column, under the picture.
-  const place = flushTop ? "-mx-5 -mt-7 md:mx-0 md:mt-0" : "-mx-3 mt-8 md:-mx-8 lg:-mx-[70px] xl:-mx-[110px] 2xl:-mx-[130px]";
+  // 12px past the text column on each side, so the picture itself is about as
+  // wide as the text. The same on EVERY screen (owner, 2026-10-14 evening):
+  // a bigger reach on desktop (70–130px) made the images "way bigger than the
+  // text line length", which phones never had. Image ≈ text width + 10px:
+  // 364px on a 390px phone, 630px on a laptop, 750px on a 1920 screen. The
+  // caption stays in the text column, under the picture.
+  const place = flushTop ? "-mx-5 -mt-7 md:mx-0 md:mt-0" : "-mx-3 mt-8";
   const frame = flushTop
     ? ""
     : "rounded-xl border border-line bg-card p-1 shadow-[0_3px_14px_-8px_rgba(74,46,22,0.28)] md:p-1.5";
   const radius = flushTop ? "md:rounded-lg" : "rounded-lg";
   const caption = image.caption && (
-    <figcaption className={`mt-2 text-[13px] italic ${flushTop ? "px-5 md:px-0" : "px-3 md:px-8 lg:px-[70px] xl:px-[110px] 2xl:px-[130px]"} ${MUTED}`}>
+    <figcaption className={`mt-2 text-[13px] italic ${flushTop ? "px-5 md:px-0" : "px-3"} ${MUTED}`}>
       {image.caption}
     </figcaption>
   );
@@ -129,7 +130,7 @@ function Figure({
             alt={image.alt}
             width={image.width}
             height={image.height}
-            sizes={flushTop ? "(max-width: 768px) 92vw, 620px" :"(max-width: 767px) 94vw, (max-width: 1023px) 670px, (max-width: 1279px) 746px, (max-width: 1535px) 906px, 986px"}
+            sizes={flushTop ? "(max-width: 768px) 92vw, 620px" :"(max-width: 767px) 94vw, (max-width: 1279px) 630px, (max-width: 1535px) 710px, 750px"}
             priority={priority}
             className={`h-auto w-full ${radius}`}
           />
