@@ -93,7 +93,12 @@ FAQ band one step lighter (it now reads as the darkest light band).
 
 ## Bigger tidy — later
 
-8. **Type scale.** 50 distinct text styles on the page, including half-pixel
+8. **Type scale — DONE except the buy box (owner, 2026-10-14).** Ten named roles
+   (`type-*`, see DESIGN.md → Typography) applied to every section and the hero: 51 → 37
+   styles and 18 → 14 sizes on phones, all 10 section headings one style. Owner: "mostly
+   looks the same, which is good"; the paradox read spaced out at the body role's 16px, so
+   it uses the card role (15px). Left: `VariantSelector` (15.5 / 14.5 / 12.5px).
+   Original note: 50 distinct text styles on the page, including half-pixel
    sizes (12.5, 13.5, 14.5, 15.5, 16.5px), and same-size headings with different
    tracking (30px "You smelled it first…" is tightened, 30px "Your vet's $1,400
    quote…" isn't). Consolidate to ~8 sizes with one tracking + leading per size

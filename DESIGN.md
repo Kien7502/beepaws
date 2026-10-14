@@ -68,6 +68,13 @@ cream on cocoa 11.2:1, `cream/75` on cocoa 7.1:1, `cream/60` on cocoa 5.1:1, gol
 - **Body:** Hanken Grotesk (humanist sans) → `--font-body` / `font-sans` (default).
 - Headings: semibold Fraunces, tight but not cramped tracking. Body: Hanken, relaxed line-height
   on the warm grounds.
+- **Type roles (2026-10-14, `app/globals.css` → `@utility type-*`):** use a role, not a raw size, for
+  PDP text. Serif: `type-h2` section heading 30→36px · `type-h3` sub-heading 24→28 · `type-title`
+  card title 18→20. Sans: `type-lead` section intro 16→18 · `type-body` running text 16 ·
+  `type-card` text inside cards 15 · `type-small` notes 14 · `type-caption` 13 · `type-label`
+  small caps 12 (+0.08em) · `type-badge` pills 11 (+0.08em). Phone → desktop at md. Tracking
+  tightens as type grows; leading loosens as it shrinks. The hero headline keeps its own style;
+  the buy box (`VariantSelector`) is not converted yet.
 - No per-section uppercase eyebrows (removed in `78b04ab`); keep at most the one hero eyebrow.
 - Cap line length ~65–75ch. Two families only; no third.
 

@@ -136,8 +136,11 @@ export function Mechanism({
                 column is too narrow for either: justified it left uneven gaps
                 and split words ("en-zyme", "be-gins") — so left-aligned, no
                 hyphens, below md (visual plan #5, 2026-10-13). */}
+            {/* type-card, not type-body: it's text in a card, and the body
+                role's 16px/1.65 made the justified paragraphs read spaced
+                out and empty (owner, 2026-10-14). */}
             {paragraphs.map((para, i) => (
-              <p key={i} className="mb-3 text-left hyphens-manual md:text-justify md:hyphens-auto type-body text-brown">
+              <p key={i} className="mb-3 text-left hyphens-manual md:text-justify md:hyphens-auto type-card text-brown">
                 {withBold(para)}
               </p>
             ))}
