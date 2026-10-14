@@ -26,8 +26,12 @@ export type ListicleProductInfo = { price: string | null; image: ListicleImage |
 // Desktop measure (sweep S7, 2026-10-13): 18px in a 680px text column held ~87
 // characters per full line; 19px in 620px holds ~73 (comfortable is 60–75).
 // Phones are unchanged (16px, full width).
-const COLUMN = "mx-auto w-full max-w-[660px] px-5";
-const BODY = "text-[16px] leading-[1.7] text-ink md:text-[19px]";
+// From lg the column widens to 700px of text at 20px (owner, 2026-10-14:
+// "stretch the middle to the sides a little" — the sheet still read empty and
+// the article is long). Measured ~70 characters a line (text length /
+// rendered lines); phones and tablets keep 16/19px in 350/620px.
+const COLUMN = "mx-auto w-full max-w-[660px] px-5 lg:max-w-[740px]";
+const BODY = "text-[16px] leading-[1.7] text-ink md:text-[19px] lg:text-[20px]";
 
 /** The ==highlight== colours (the admin's HIGHLIGHT_COLORS — keep in sync). The
  *  marker in lib/inline-format.tsx reads them through the --hl variable. */
@@ -92,7 +96,7 @@ function Figure({
   // wide as the text. The same on EVERY screen (owner, 2026-10-14 evening):
   // a bigger reach on desktop (70–130px) made the images "way bigger than the
   // text line length", which phones never had. Image ≈ text width + 10px:
-  // 364px on a 390px phone, 630px from md up. The caption stays in the text
+  // 364px on a 390px phone, 630px from md, 710px from lg. The caption stays in the text
   // column, under the picture.
   const place = flushTop ? "-mx-5 -mt-7 md:mx-0 md:mt-0" : "-mx-3 mt-8";
   const frame = flushTop
@@ -126,7 +130,7 @@ function Figure({
             alt={image.alt}
             width={image.width}
             height={image.height}
-            sizes={flushTop ? "(max-width: 768px) 92vw, 620px" :"(max-width: 767px) 94vw, 630px"}
+            sizes={flushTop ? "(max-width: 768px) 92vw, 620px" :"(max-width: 767px) 94vw, (max-width: 1023px) 630px, 710px"}
             priority={priority}
             className={`h-auto w-full ${radius}`}
           />
@@ -239,7 +243,7 @@ function Block({ b, products, preview }: { b: ListicleBlock; products: Record<st
               <li key={i} className={`flex break-inside-avoid gap-3 border-line py-4 last:pb-0 md:gap-4 md:py-5 ${i > 0 ? "border-t" : ""} ${!b.title && i === 0 ? "pt-0" : ""}`}>
                 <TickBox tick={tick} delay={i * 90} />
                 <div className="min-w-0 flex-1">
-                  {c.title && <p className="text-[17px] font-bold leading-snug text-cocoa md:text-[18px]">{withInline(c.title)}</p>}
+                  {c.title && <p className="text-[17px] font-bold leading-snug text-cocoa md:text-[18px] lg:text-[20px]">{withInline(c.title)}</p>}
                   {c.text && (
                     <div className={`mt-1.5 ${BODY}`}>
                       <Paragraphs text={c.text} />
@@ -355,7 +359,7 @@ function Block({ b, products, preview }: { b: ListicleBlock; products: Record<st
               {b.contentsTitle && <p className="text-[15px] font-bold text-cocoa">{b.contentsTitle}</p>}
               <ul className="mt-2 space-y-1.5">
                 {b.contents.map((c, i) => (
-                  <li key={i} className={`flex gap-2 ${BODY} md:text-[17px]`}>
+                  <li key={i} className={`flex gap-2 ${BODY} md:text-[17px] lg:text-[17px]`}>
                     <Check size={18} className="mt-1 flex-none text-gold" strokeWidth={3} aria-hidden />
                     <span>{withInline(c)}</span>
                   </li>
@@ -412,12 +416,12 @@ export function ListicleView({
   const byline = [l.byline.author, l.byline.date, l.byline.readTime].filter(Boolean).join(" · ");
 
   return (
-    // Wide screens: the article is a SHEET (max 1100px) on a sand "desk", the
+    // Wide screens: the article is a SHEET (max 1200px) on a sand "desk", the
     // way the owner's reference advertorial (solbase.co) frames its column
     // (owner, 2026-10-14 evening: on a 1920px display the bare 620px column
     // read "squished in the middle"; scaling the type up didn't fix it). The
     // column keeps its reading measure; the sheet gives it a page to sit on.
-    // Below 1100px the sheet is the full width, so phones/tablets/laptops are
+    // Below 1200px the sheet is the full width, so phones/tablets/laptops are
     // unchanged.
     <div className="lg:bg-sand">
     {/* A soft warm white, halfway between white and the old cream (owner,
@@ -425,7 +429,7 @@ export function ListicleView({
         pure white was too stark) — the site's paper since 2026-10-14. The old
         cream (cream-deep) marks the boxes — product card, checklist, callouts —
         which stand out more against it. */}
-    <article className="bg-paper pb-16 md:pb-24 lg:mx-auto lg:min-h-screen lg:max-w-[1100px]" style={{ "--hl": HIGHLIGHT_CSS[l.highlight] } as CSSProperties}>
+    <article className="bg-paper pb-16 md:pb-24 lg:mx-auto lg:min-h-screen lg:max-w-[1200px]" style={{ "--hl": HIGHLIGHT_CSS[l.highlight] } as CSSProperties}>
       <header className={`${COLUMN} pt-6 md:pt-10`}>
         {l.topStrip && <p className={`text-[13px] font-semibold ${MUTED}`}>{l.topStrip}</p>}
         {/* tracking-tight on the large serif (sweep S8): at 32–46px default
