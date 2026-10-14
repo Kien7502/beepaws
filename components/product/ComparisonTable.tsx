@@ -100,10 +100,10 @@ export function ComparisonTable({
 
           {/* Left — heading */}
           <div className="shrink-0 text-center md:w-1/3 md:text-left">
-            <h2 className="font-display mb-4 text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[33px]">
+            <h2 className="type-h2 mb-4 text-cocoa">
               {heading}
             </h2>
-            <p className="mx-auto max-w-sm leading-relaxed text-brown md:mx-0">
+            <p className="type-lead mx-auto max-w-sm text-brown md:mx-0">
               {lead}
             </p>
           </div>
@@ -155,7 +155,7 @@ export function ComparisonTable({
                     <div className={`flex h-12 w-12 items-center justify-center rounded-full ${isUs ? "bg-cocoa" : "bg-cream"}`}>
                       <Icon size={20} className={isUs ? "text-gold" : "text-brown"} />
                     </div>
-                    <span className={`text-xs uppercase tracking-wider ${isUs ? "font-extrabold text-cocoa" : "font-bold text-brown"}`}>
+                    <span className={`type-label ${isUs ? "font-extrabold text-cocoa" : "font-bold text-brown"}`}>
                       {col.label}
                     </span>
                   </div>

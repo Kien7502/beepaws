@@ -60,7 +60,7 @@ export function FAQSection({
       <div className="container mx-auto max-w-3xl px-4 md:px-6">
 
         <div className="mb-12 text-center">
-          <h2 className="font-display text-3xl md:text-[33px] font-semibold tracking-tight text-cocoa leading-tight">
+          <h2 className="type-h2 text-cocoa">
             {heading}
           </h2>
         </div>

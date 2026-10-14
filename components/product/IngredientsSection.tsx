@@ -118,10 +118,10 @@ export function IngredientsSection({
   return (
     <section className="ds-reveal-in bg-toffee py-14 md:py-20">
       <div className="container mx-auto max-w-6xl px-4 md:px-6">
-        <h2 className="font-display mx-auto mb-3 max-w-3xl text-center text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[33px]">
+        <h2 className="type-h2 mx-auto mb-3 max-w-3xl text-center text-cocoa">
           {heading}
         </h2>
-        <p className="mx-auto mb-8 max-w-xl text-center text-base text-brown md:mb-10">
+        <p className="type-lead mx-auto mb-8 max-w-xl text-center text-brown md:mb-10">
           {lead}
         </p>
 

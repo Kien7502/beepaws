@@ -410,7 +410,7 @@ export async function ProductPageView({
                 wrong. Consumables run without an eyebrow until a metafield
                 makes it authorable per product. */}
             {isDevice && (
-              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-honey-tint px-3 py-1.5 text-[12px] font-bold uppercase tracking-[0.07em] text-clay-deep">
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-honey-tint px-3 py-1.5 type-label font-bold text-clay-deep">
                 Vet-grade technology · At home
               </span>
             )}
@@ -421,7 +421,7 @@ export async function ProductPageView({
                 hero_copy authored this falls back to the old behaviour — product
                 title as H1, no subheadline — so non-device PDPs are untouched. */}
             {hero?.headline && (
-              <p className="mt-3 text-[13px] font-semibold uppercase tracking-[0.08em] text-brown">
+              <p className="type-label mt-3 font-semibold text-brown">
                 {product.title}
               </p>
             )}
@@ -444,7 +444,7 @@ export async function ProductPageView({
             </h1>
 
             {hero?.subheadline && (
-              <p className="mt-3 text-[16.5px] leading-relaxed text-brown">
+              <p className="type-lead mt-3 text-brown">
                 {hero.subheadline}
               </p>
             )}
@@ -698,7 +698,7 @@ export async function ProductPageView({
       {discoveryProducts.length > 0 && (
         <div className="ds-reveal-in border-t border-line bg-cream">
           <div className="mx-auto max-w-5xl px-4 py-14 md:px-6 md:py-16">
-            <h2 className="font-display mb-8 text-center text-2xl font-semibold tracking-tight text-cocoa md:text-3xl">
+            <h2 className="type-h2 mb-8 text-center text-cocoa">
               More from BeePaws
             </h2>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

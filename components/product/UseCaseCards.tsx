@@ -54,10 +54,10 @@ export function UseCaseCards({
   return (
     <section className="ds-reveal-in bg-cream py-14 md:py-20">
       <div className="container mx-auto max-w-7xl px-4 md:px-6">
-        <h2 className="font-display mb-2 text-center text-3xl font-semibold tracking-tight text-cocoa md:text-4xl">
+        <h2 className="type-h2 mb-2 text-center text-cocoa">
           {heading}
         </h2>
-        <p className="mb-10 text-center text-base text-brown">
+        <p className="type-lead mb-10 text-center text-brown">
           {lead}
         </p>
 
@@ -96,7 +96,7 @@ export function UseCaseCards({
                     clay-deep, 5.9:1. Each card's own colour used to fill it, and
                     the amber card's white badge read 2.0:1 (visual plan #4). The
                     card colour still drives the gradient and the title rule. */}
-                <span className="absolute left-4 top-4 z-10 rounded-full bg-clay-deep px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white">
+                <span className="absolute left-4 top-4 z-10 rounded-full bg-clay-deep px-3 py-1 type-badge font-extrabold text-white">
                   {c.label}
                 </span>
                 {c.image ? (
@@ -120,8 +120,8 @@ export function UseCaseCards({
               {/* Content */}
               <div className="flex flex-col gap-2 p-6">
                 <div className="h-1 w-8 rounded-full" style={{ background: c.from }} />
-                <h3 className="font-display text-xl font-semibold text-cocoa">{c.title}</h3>
-                <p className="text-[14.5px] leading-relaxed text-brown">{c.description}</p>
+                <h3 className="type-title text-cocoa">{c.title}</h3>
+                <p className="type-card text-brown">{c.description}</p>
               </div>
             </div>
           ))}

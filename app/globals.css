@@ -57,6 +57,90 @@
   --font-sans:    var(--font-hanken),   ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
+/* ─── Type scale (experiment/type-scale, 2026-10-14) ──────────────────────────
+   One named role per job instead of a size per component: the PDP had drifted
+   to 51 text styles in 18 sizes on phones (section headings alone at 30, 33,
+   34 and 36px; body copy at 12.5–16.5px in half-pixel steps; uppercase labels
+   in four sizes and seven letter-spacings). Phone → desktop (md, 768px).
+   Tracking tightens as type grows and opens up on small capitals; leading
+   loosens as type shrinks. Weight stays with the component (font-bold etc.)
+   except on the serif headings, which are always semibold. The hero headline
+   keeps its own display style.
+   (The serif roles name --font-fraunces directly: `@theme inline` does not
+   emit --font-display as a variable, so var(--font-display) was empty here.) */
+@utility type-h2 {
+  font-family: var(--font-fraunces), ui-serif, Georgia, "Times New Roman", serif;
+  font-weight: 600;
+  font-size: 1.875rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  @media (width >= 48rem) {
+    font-size: 2.25rem;
+  }
+}
+@utility type-h3 {
+  font-family: var(--font-fraunces), ui-serif, Georgia, "Times New Roman", serif;
+  font-weight: 600;
+  font-size: 1.5rem;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  @media (width >= 48rem) {
+    font-size: 1.75rem;
+  }
+}
+@utility type-title {
+  font-family: var(--font-fraunces), ui-serif, Georgia, "Times New Roman", serif;
+  font-weight: 600;
+  font-size: 1.125rem;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  @media (width >= 48rem) {
+    font-size: 1.25rem;
+  }
+}
+/* Section intros + the hero subhead. */
+@utility type-lead {
+  font-size: 1rem;
+  line-height: 1.55;
+  @media (width >= 48rem) {
+    font-size: 1.125rem;
+  }
+}
+/* Running paragraphs. */
+@utility type-body {
+  font-size: 1rem;
+  line-height: 1.65;
+}
+/* Text inside cards: pain points, steps, use cases, Calm Start days, the
+   guarantee, FAQ answers. */
+@utility type-card {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+/* Notes and hints. */
+@utility type-small {
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+@utility type-caption {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+/* Small capitals: eyebrows, kickers, column labels. */
+@utility type-label {
+  font-size: 0.75rem;
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+/* Pills on cards and photos. */
+@utility type-badge {
+  font-size: 0.6875rem;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 :root {
   /* ─── Warm Honey palette — raw hex values (single source of truth) ────── */
   /* Paper + cream are one step lighter since 2026-10-14 (owner, after the

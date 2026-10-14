@@ -45,12 +45,12 @@ export function CalmStart({
         {/* The pitch — top left on desktop, first on phones. */}
         <div className="md:col-start-1 md:row-start-1">
           {heading && (
-            <h2 className="font-display mb-4 text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[33px]">
+            <h2 className="type-h2 mb-4 text-cocoa">
               {withAccent(heading)}
             </h2>
           )}
           {paragraphs.map((p, i) => (
-            <p key={i} className="mb-3 text-base leading-relaxed text-brown">
+            <p key={i} className="type-body mb-3 text-brown">
               {withBold(p)}
             </p>
           ))}
@@ -80,7 +80,7 @@ export function CalmStart({
                   </span>
                   <div className="min-w-0 flex-1 rounded-2xl bg-card p-5 shadow-[0_4px_20px_-10px_rgba(74,46,22,0.12)] md:p-6">
                     <div className="mb-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                      <span className="text-xs font-extrabold uppercase tracking-[0.12em] text-clay-deep">Day {i + 1}</span>
+                      <span className="type-label font-extrabold text-clay-deep">Day {i + 1}</span>
                       {d.dose?.trim() && (
                         <span className="rounded-full bg-honey-tint px-2.5 py-0.5 text-xs font-semibold text-cocoa">
                           {keepHyphenated(d.dose.trim())}
@@ -88,10 +88,10 @@ export function CalmStart({
                       )}
                     </div>
                     {d.title?.trim() && (
-                      <h3 className="font-display mb-1.5 text-lg font-semibold text-cocoa md:text-xl">{d.title.trim()}</h3>
+                      <h3 className="type-title mb-1.5 text-cocoa">{d.title.trim()}</h3>
                     )}
                     {d.body?.trim() && (
-                      <p className="text-[15px] leading-relaxed text-brown">{withBold(d.body.trim())}</p>
+                      <p className="type-card text-brown">{withBold(d.body.trim())}</p>
                     )}
                   </div>
                 </li>
@@ -105,7 +105,7 @@ export function CalmStart({
                   <Sofa size={20} strokeWidth={2} aria-hidden />
                 </span>
                 <div className="min-w-0 flex-1 rounded-2xl bg-cocoa p-5 md:p-6">
-                  <p className="font-display text-lg font-semibold leading-snug text-cream md:text-xl">
+                  <p className="type-title text-cream">
                     {keepHyphenated(closing)}
                   </p>
                 </div>
@@ -122,7 +122,7 @@ export function CalmStart({
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card text-clay-deep">
               <Mail size={18} aria-hidden />
             </span>
-            <p className="text-sm leading-relaxed text-cocoa">{keepHyphenated(emailNote)}</p>
+            <p className="type-small text-cocoa">{keepHyphenated(emailNote)}</p>
           </div>
         )}
       </div>

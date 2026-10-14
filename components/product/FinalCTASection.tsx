@@ -65,10 +65,10 @@ export function FinalCTASection({
     <section className="ds-reveal-in bg-bark py-14 md:py-20">
       <div className="container mx-auto max-w-4xl px-4 md:px-6">
         <div className="text-center">
-          <h2 className="font-display text-3xl font-semibold leading-tight text-white md:text-[34px]">
+          <h2 className="type-h2 text-white">
             {heading}
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-[15px] text-cream/80 md:text-base">
+          <p className="type-lead mx-auto mt-4 max-w-xl text-cream/80">
             {body}
           </p>
 
@@ -97,10 +97,10 @@ export function FinalCTASection({
               </div>
             </div>
             <div className="text-center md:text-left">
-              <h3 className="font-display text-xl font-semibold leading-tight text-cocoa md:text-2xl">
+              <h3 className="type-title text-cocoa">
                 {g.title}
               </h3>
-              <p className="mt-2 text-[14.5px] leading-relaxed text-brown md:text-[15px]">
+              <p className="type-card mt-2 text-brown">
                 {g.description}
               </p>
             </div>
@@ -110,7 +110,7 @@ export function FinalCTASection({
               page opens and closes on the same three promises. */}
           {/* cream/70 (not the old #A8A48F) — that hex sat at ~3.9:1 on bark,
               under the 4.5:1 AA floor for text this small. */}
-          <p className="mt-7 text-xs font-bold uppercase tracking-[0.08em] text-cream/70">
+          <p className="type-label mt-7 font-bold text-cream/70">
             {keepHyphenated(smallPrint)}
           </p>
         </div>

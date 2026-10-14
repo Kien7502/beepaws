@@ -79,14 +79,14 @@ export function BeforeAfterSlider({
       <div className="container mx-auto grid max-w-6xl items-start gap-6 px-4 md:grid-cols-[43fr_57fr] md:grid-rows-[auto_1fr] md:gap-x-14 md:gap-y-6 md:px-6">
         {/* Left, row 1: the argument. */}
         <div className="md:col-start-1 md:row-start-1">
-          <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[33px]">
+          <h2 className="type-h2 text-cocoa">
             {heading}
           </h2>
-          <p className="mt-3 max-w-md text-base leading-relaxed text-brown">
+          <p className="type-lead mt-3 max-w-md text-brown">
             {lead}
           </p>
 
-          <p className="mt-5 inline-flex items-center gap-2 text-sm text-brown/70">
+          <p className="type-small mt-5 inline-flex items-center gap-2 text-brown/70">
             <ArrowLeftRight size={16} className="text-clay" aria-hidden />
             Drag the handle to compare.
           </p>
@@ -544,10 +544,10 @@ function BeforeAfterPanel({ slide, hint = false }: { slide: BeforeAfterSlide; hi
       </div>
 
       {/* Corner tags */}
-      <span className="absolute bottom-3 left-3 rounded-full bg-black/55 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-white">
+      <span className="absolute bottom-3 left-3 rounded-full bg-black/55 px-3 py-1 type-badge font-extrabold text-white">
         {slide.beforeLabel ?? "Before"}
       </span>
-      <span className="absolute bottom-3 right-3 rounded-full bg-black/55 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-white">
+      <span className="absolute bottom-3 right-3 rounded-full bg-black/55 px-3 py-1 type-badge font-extrabold text-white">
         {slide.afterLabel ?? "After"}
       </span>
 

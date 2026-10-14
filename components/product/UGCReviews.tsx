@@ -189,7 +189,7 @@ export function UGCReviews({
   return (
     <section className="ds-reveal-in bg-sand py-14 md:py-20 overflow-hidden">
       <div className="container mx-auto max-w-7xl px-4 md:px-6 mb-10">
-        <h2 className="font-display mb-2 text-center text-3xl font-semibold tracking-tight text-cocoa md:text-[33px]">
+        <h2 className="type-h2 mb-2 text-center text-cocoa">
           {heading}
         </h2>
         <p className="text-center text-base text-brown">

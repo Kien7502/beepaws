@@ -70,10 +70,10 @@ export function Mechanism({
   return (
     <section className="ds-reveal-in bg-toffee py-14 md:py-20">
       <div className="container mx-auto max-w-6xl px-4 md:px-6">
-        <h2 className="font-display mx-auto mb-3 max-w-3xl text-center text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[33px]">
+        <h2 className="type-h2 mx-auto mb-3 max-w-3xl text-center text-cocoa">
           {withAccent(introHeading)}
         </h2>
-        <p className="mx-auto mb-12 max-w-xl text-center text-base text-brown">
+        <p className="type-lead mx-auto mb-12 max-w-xl text-center text-brown">
           {introLead}
         </p>
 
@@ -126,7 +126,7 @@ export function Mechanism({
           </div>
 
           <div>
-            <h3 className="font-display mb-3 text-2xl font-semibold text-cocoa md:text-[30px]">
+            <h3 className="type-h3 mb-3 text-cocoa">
               {paradoxHeading}
             </h3>
             {/* Justified (Word-style flush edges) from md up. hyphens-auto rides
@@ -137,7 +137,7 @@ export function Mechanism({
                 and split words ("en-zyme", "be-gins") — so left-aligned, no
                 hyphens, below md (visual plan #5, 2026-10-13). */}
             {paragraphs.map((para, i) => (
-              <p key={i} className="mb-3 text-left hyphens-manual md:text-justify md:hyphens-auto text-[15.5px] leading-relaxed text-brown">
+              <p key={i} className="mb-3 text-left hyphens-manual md:text-justify md:hyphens-auto type-body text-brown">
                 {withBold(para)}
               </p>
             ))}
@@ -154,10 +154,10 @@ export function Mechanism({
             keeps the three equal inside the slider, which was never a card-era
             change. Width matches the intro row: both fill the container. */}
         <div className="mt-16">
-          <h2 className="font-display mx-auto mb-3 max-w-3xl text-center text-2xl font-semibold leading-tight tracking-tight text-cocoa md:text-3xl">
+          <h2 className="type-h3 mx-auto mb-3 max-w-3xl text-center text-cocoa">
             {stepsHeading}
           </h2>
-          <p className="mx-auto mb-10 max-w-xl text-center text-base text-brown">
+          <p className="type-lead mx-auto mb-10 max-w-xl text-center text-brown">
             {stepsLead}
           </p>
           {/* Phones: one step at a time; md+: the same three-column grid as before. */}
@@ -172,10 +172,10 @@ export function Mechanism({
                 <div className="font-display text-3xl font-bold text-gold-deep md:text-[34px]">
                   {step.number}
                 </div>
-                <h3 className="font-display mb-2 mt-1.5 text-lg font-semibold text-cocoa">
+                <h3 className="type-title mb-2 mt-1.5 text-cocoa">
                   {step.title}
                 </h3>
-                <p className="text-sm leading-relaxed text-brown">
+                <p className="type-card text-brown">
                   {step.description}
                 </p>
               </div>

@@ -60,7 +60,7 @@ export function FAQAccordion({ rows, variant = "card" }: { rows: FAQRow[]; varia
                   {faq.icon}
                 </span>
               )}
-              <span className={compact ? "text-[13.5px] font-bold text-cocoa" : "flex-1 font-extrabold text-cocoa"}>
+              <span className={compact ? "type-small font-bold text-cocoa" : "flex-1 font-extrabold text-cocoa"}>
                 {faq.q}
               </span>
               <Plus
@@ -79,8 +79,8 @@ export function FAQAccordion({ rows, variant = "card" }: { rows: FAQRow[]; varia
               <div className="overflow-hidden">
                 <p
                   className={`${
-                    compact ? "pb-2 text-[13px]" : "pb-5 pl-14 pr-5 text-[14.5px]"
-                  } leading-relaxed text-brown transition-opacity duration-200 ${
+                    compact ? "pb-2 type-caption" : "pb-5 pl-14 pr-5 type-card"
+                  } text-brown transition-opacity duration-200 ${
                     isOpen ? "opacity-100" : "opacity-0"
                   }`}
                 >

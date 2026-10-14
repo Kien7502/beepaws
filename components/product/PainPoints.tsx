@@ -48,10 +48,10 @@ export function PainPoints({
     // drift made the buy area and the story read as one unseparated blob.
     <section className="ds-reveal-in bg-cream py-14 md:py-20">
       <div className="container mx-auto max-w-6xl px-4 md:px-6">
-        <h2 className="font-display mx-auto mb-3 max-w-3xl text-center text-3xl font-semibold leading-tight tracking-tight text-cocoa md:text-[33px]">
+        <h2 className="type-h2 mx-auto mb-3 max-w-3xl text-center text-cocoa">
           {heading}
         </h2>
-        <p className="mx-auto mb-10 max-w-xl text-center text-base text-brown">
+        <p className="type-lead mx-auto mb-10 max-w-xl text-center text-brown">
           {lead}
         </p>
 
@@ -67,10 +67,10 @@ export function PainPoints({
               <div className="font-display mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-honey-tint text-[15px] font-bold text-clay-deep">
                 {p.number}
               </div>
-              <h3 className="font-display text-lg font-semibold text-cocoa md:text-[19px] mb-1.5">
+              <h3 className="type-title mb-1.5 text-cocoa">
                 {p.title}
               </h3>
-              <p className="text-[14.5px] leading-relaxed text-brown">
+              <p className="type-card text-brown">
                 {keepHyphenated(p.description)}
               </p>
             </div>

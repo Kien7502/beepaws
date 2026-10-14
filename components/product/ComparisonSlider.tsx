@@ -108,7 +108,7 @@ export function ComparisonSlider({
                     {col.icon}
                   </span>
                   <span
-                    className={`text-center text-xs uppercase tracking-wider ${
+                    className={`type-label text-center ${
                       i === 0 ? "font-extrabold text-cocoa" : "font-bold text-brown"
                     }`}
                   >
