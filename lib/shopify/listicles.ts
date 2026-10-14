@@ -1,3 +1,4 @@
+import { bindDashes } from "@/lib/typography";
 import "server-only";
 
 import { unstable_cache } from "next/cache";
@@ -222,7 +223,8 @@ function block(v: unknown, i: number): ListicleBlock | null {
 }
 
 export function sanitizeListicle(raw: unknown): Listicle {
-  const o = obj(raw);
+  // bindDashes: an em dash never starts a wrapped line (lib/typography.ts).
+  const o = obj(bindDashes(raw));
   const by = obj(o.byline),
     top = obj(o.topCta),
     sticky = obj(o.stickyCta),

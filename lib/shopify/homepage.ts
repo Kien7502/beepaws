@@ -1,3 +1,4 @@
+import { bindDashes } from "@/lib/typography";
 import "server-only";
 
 import { unstable_cache } from "next/cache";
@@ -131,7 +132,8 @@ function zoomOf(rec: Record<string, unknown>): { zoom?: number } {
 }
 
 export function sanitizeHomepage(raw: unknown): HomepageBlocks {
-  const blocksRaw = (raw as { blocks?: unknown })?.blocks;
+  // bindDashes: an em dash never starts a wrapped line (lib/typography.ts).
+  const blocksRaw = (bindDashes(raw) as { blocks?: unknown })?.blocks;
   if (!Array.isArray(blocksRaw)) return {};
 
   const out: HomepageBlocks = {};

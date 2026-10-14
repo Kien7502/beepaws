@@ -1,3 +1,4 @@
+import { bindDashes } from "@/lib/typography";
 import type { BeepawsMetafields } from "@/types/metafields";
 
 // Map a beepaws-admin draft (snake_case keys, already-native JSON values) onto the
@@ -5,8 +6,10 @@ import type { BeepawsMetafields } from "@/types/metafields";
 // keep the two key lists in sync (same 28 keys). Draft values are NOT JSON strings
 // (unlike Shopify metafields), so no JSON.parse.
 export function beepawsFromDraft(content: Record<string, unknown>): BeepawsMetafields {
+  // bindDashes: an em dash never starts a wrapped line (lib/typography.ts).
+  const c = bindDashes(content);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const g = (k: string): any => content?.[k] ?? null;
+  const g = (k: string): any => c?.[k] ?? null;
   return {
     comparisonRows: g("comparison_rows"),
     useCases: g("use_cases"),

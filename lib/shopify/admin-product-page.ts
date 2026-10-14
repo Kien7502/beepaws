@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { BeepawsMetafields } from "@/types/metafields";
+import { bindDashes } from "@/lib/typography";
 import { adminGraphqlFetch } from "./admin-graphql";
 
 type ShopifyNodeRef =
@@ -238,7 +239,8 @@ function normalizeMetafields(metafields: AdminMetafield[]) {
   const parseBeepaws = <T>(key: string): T | null => {
     const raw = byKey[`beepaws.${key}`]?.value ?? null;
     if (!raw) return null;
-    try { return JSON.parse(raw) as T; } catch { return null; }
+    // bindDashes: an em dash never starts a wrapped line (lib/typography.ts).
+    try { return bindDashes(JSON.parse(raw)) as T; } catch { return null; }
   };
 
   const beepaws: BeepawsMetafields = {
