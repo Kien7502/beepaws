@@ -108,7 +108,7 @@ function Figure({
     return (
       <figure className={place}>
         <div className={frame}>
-          <div className={`flex aspect-[3/2] w-full items-center justify-center border-2 border-dashed border-line bg-cream px-8 text-center text-[13px] leading-snug text-brown/80 ${radius}`}>
+          <div className={`flex aspect-[3/2] w-full items-center justify-center border-2 border-dashed border-line bg-cream-deep px-8 text-center text-[13px] leading-snug text-brown/80 ${radius}`}>
             Image goes here{image.alt ? ` — ${image.alt}` : ""}
           </div>
         </div>
@@ -161,7 +161,7 @@ function TickBox({ tick, delay }: { tick: boolean; delay: number }) {
   return (
     <span
       aria-hidden
-      className={`mt-[2px] flex size-[22px] flex-none items-center justify-center rounded-[6px] border-2 border-brown/45 bg-paper-soft md:mt-[3px] md:size-6 ${
+      className={`mt-[2px] flex size-[22px] flex-none items-center justify-center rounded-[6px] border-2 border-brown/45 bg-paper md:mt-[3px] md:size-6 ${
         tick
           ? "transition-[background-color,border-color] duration-200 group-data-[ticked]/sheet:animate-[tick-pop_360ms_ease-out_both] group-data-[ticked]/sheet:border-gold group-data-[ticked]/sheet:bg-gold motion-reduce:transition-none group-data-[ticked]/sheet:motion-reduce:animate-none print:border-gold print:bg-gold"
           : ""
@@ -188,7 +188,7 @@ function SubHeading({ text }: { text: string }) {
 }
 
 /** Sand box on desktop; on phones a left honey border with no fill (less weight). */
-const BOX = "mt-8 border-l-[3px] border-gold pl-4 md:rounded md:border-l-0 md:bg-cream md:p-6";
+const BOX = "mt-8 border-l-[3px] border-gold pl-4 md:rounded md:border-l-0 md:bg-cream-deep md:p-6";
 
 function Block({ b, products, preview }: { b: ListicleBlock; products: Record<string, ListicleProductInfo>; preview?: boolean }) {
   switch (b.type) {
@@ -262,7 +262,7 @@ function Block({ b, products, preview }: { b: ListicleBlock; products: Record<st
       // edge, tighter padding): inside the text margins the tick-box column
       // left ~274px for the text and the sheet came out taller than the
       // cards it replaced.
-      const frame = "-mx-3 mt-8 rounded-lg bg-cream px-4 py-6 md:mx-0 md:px-8 md:py-7";
+      const frame = "-mx-3 mt-8 rounded-lg bg-cream-deep px-4 py-6 md:mx-0 md:px-8 md:py-7";
       return tick ? <ChecklistTicks className={frame}>{sheet}</ChecklistTicks> : <div className={frame}>{sheet}</div>;
     }
     case "timeline":
@@ -291,7 +291,7 @@ function Block({ b, products, preview }: { b: ListicleBlock; products: Record<st
                     last ? "bg-clay-deep" : "bg-card ring-2 ring-gold"
                   }`}
                 >
-                  <span className={`h-2 w-2 rounded-full ${last ? "bg-cream" : "bg-gold"}`} />
+                  <span className={`h-2 w-2 rounded-full ${last ? "bg-cream-deep" : "bg-gold"}`} />
                 </span>
                 <div className="min-w-0 flex-1">
                   {s.label && (
@@ -344,7 +344,7 @@ function Block({ b, products, preview }: { b: ListicleBlock; products: Record<st
       const image = b.image.src ? b.image : info?.image;
       return (
         // data-listicle-end: the floating button is gone from here on.
-        <section data-listicle-end="" className="mt-10 break-inside-avoid overflow-hidden rounded-lg bg-cream px-5 py-7 text-center md:p-8">
+        <section data-listicle-end="" className="mt-10 break-inside-avoid overflow-hidden rounded-lg bg-cream-deep px-5 py-7 text-center md:p-8">
           {image && <Figure image={image} flushTop />}
           <h3 className="mt-6 font-display text-[26px] font-bold leading-tight tracking-tight text-cocoa md:text-[30px]">
             {b.name || info?.title || b.product?.title}
@@ -411,11 +411,12 @@ export function ListicleView({
   const byline = [l.byline.author, l.byline.date, l.byline.readTime].filter(Boolean).join(" · ");
 
   return (
-    // A soft warm white, halfway between white and the site's cream (owner,
+    // A soft warm white, halfway between white and the old cream (owner,
     // 2026-10-13: the cream read "a bit too heavy" over a ten-minute read;
-    // pure white was too stark). The cream marks the boxes — product card,
-    // checklist cards, callouts — which stand out more against it.
-    <article className="bg-paper-soft pb-16 md:pb-24" style={{ "--hl": HIGHLIGHT_CSS[l.highlight] } as CSSProperties}>
+    // pure white was too stark) — the site's paper since 2026-10-14. The old
+    // cream (cream-deep) marks the boxes — product card, checklist, callouts —
+    // which stand out more against it.
+    <article className="bg-paper pb-16 md:pb-24" style={{ "--hl": HIGHLIGHT_CSS[l.highlight] } as CSSProperties}>
       <header className={`${COLUMN} pt-6 md:pt-10`}>
         {l.topStrip && <p className={`text-[13px] font-semibold ${MUTED}`}>{l.topStrip}</p>}
         {/* tracking-tight on the large serif (sweep S8): at 32–46px default

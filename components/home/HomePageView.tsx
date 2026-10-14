@@ -298,10 +298,10 @@ export function HomePageView({ blocks }: { blocks: HomepageBlocks }) {
             after the §5↔§6 swap. */}
 
         {/* WAVE — bark → cream: closes the dark proof band into the spotlight. */}
-        <WaveDivider from="#5E3C22" to="#FBF3E1" flip />
+        <WaveDivider from="#5E3C22" to="var(--cream)" flip />
         </>
       ) : (
-        <WaveDivider from="#F2E7CC" to="#FBF3E1" flip />
+        <WaveDivider from="#F2E7CC" to="var(--cream)" flip />
       )}
 
       {/* ───── Section 6 · Routing band - "Start with their teeth" (spec §4) ──────

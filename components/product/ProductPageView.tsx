@@ -553,7 +553,7 @@ export async function ProductPageView({
         <>
           {/* WAVE — cream → toffee: the agitation resolves straight into
               Mechanism (Reason + 3-step + feels-broken cocoa-inset callout). */}
-          <WaveDivider from="#FBF3E1" to="#E5C58C" />
+          <WaveDivider from="var(--cream)" to="#E5C58C" />
           <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
             <Mechanism
               steps={beepaws?.mechanismSteps}
@@ -573,11 +573,11 @@ export async function ProductPageView({
               toffee → card wave joins the two sections directly. */}
           {calmStartShown ? (
             <>
-              <WaveDivider from="#E5C58C" to="#FBF3E1" flip />
+              <WaveDivider from="#E5C58C" to="var(--cream)" flip />
               <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
                 <CalmStart intro={beepaws?.calmStartIntro?.[0]} days={beepaws?.calmStartDays} />
               </div>
-              <WaveDivider from="#FBF3E1" to="#FFFFFF" />
+              <WaveDivider from="var(--cream)" to="#FFFFFF" />
             </>
           ) : (
             /* WAVE — toffee → card: into BeforeAfterSlider */
@@ -597,7 +597,7 @@ export async function ProductPageView({
           {/* Consumable-tagged: "What's inside" takes the Mechanism slot —
               same toffee band, same wave act-breaks, so consumable PDPs keep
               the device pages' rhythm. */}
-          <WaveDivider from="#FBF3E1" to="#E5C58C" />
+          <WaveDivider from="var(--cream)" to="#E5C58C" />
           <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
             <IngredientsSection
               groups={beepaws?.ingredientGroups}

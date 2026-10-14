@@ -8,7 +8,7 @@
      place. */
   --color-cream:      var(--cream);
   --color-paper:      var(--paper);
-  --color-paper-soft: var(--paper-soft);
+  --color-cream-deep: var(--cream-deep);
   --color-card:       var(--card);
   --color-clay:       var(--clay);
   --color-clay-deep:  var(--clay-deep);
@@ -59,12 +59,15 @@
 
 :root {
   /* ─── Warm Honey palette — raw hex values (single source of truth) ────── */
-  --cream:      #FBF3E1;   /* warm cream — page sections                  */
-  --paper:      #FDF8EC;   /* base page background                        */
-  /* Halfway between white and paper: the listicle's page (owner, 2026-10-13 —
-     the cream read "too heavy" over a long read, pure white too stark). To be
-     tested on the PDP too (visual plan). */
-  --paper-soft: #FEFBF5;
+  /* Paper + cream are one step lighter since 2026-10-14 (owner, after the
+     listicle: the old tones read "a bit too heavy"; pure white was too stark).
+     Was paper #FDF8EC, cream #FBF3E1 — each moved up one step, so neighbouring
+     bands keep the same contrast. */
+  --cream:      #FDF8EC;   /* warm cream — page sections                  */
+  --paper:      #FEFBF5;   /* base page background                        */
+  /* The old cream, for BOXES that sit on a paper page and must still stand
+     out from it: the listicle's callouts, checklist, product card. */
+  --cream-deep: #FBF3E1;
   --card:       #FFFFFF;
   --clay:       #C56A1E;   /* burnt amber — logo fur, brand primary       */
   /* Clay for SMALL TEXT on the light grounds (visual plan #4, 2026-10-13).

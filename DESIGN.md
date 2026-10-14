@@ -17,7 +17,8 @@ critique's "visuals templated, voice strong").
 
 Palette lives once in `:root` (raw hex) and is exposed as Tailwind tokens via `@theme inline`.
 
-**Surfaces (light):** `paper #FDF8EC` (page base) · `cream #FBF3E1` · `sand #F2E7CC` ·
+**Surfaces (light):** `paper #FEFBF5` (page base) · `cream #FDF8EC` · `cream-deep #FBF3E1` (boxes on a
+paper page) · `sand #F2E7CC` ·
 `honey-tint #F6E6C6` (bands, tints) · `card #FFFFFF` (cards).
 **Warm-dark:** `toffee #E5C58C` (mid band) · `bark #5E3C22` (closing band) · `cocoa #4A2E16`
 (headings, deepest ink) · `brown #4A3B2A` (secondary text) · `ink #2A1B0E` (body).

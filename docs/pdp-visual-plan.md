@@ -81,13 +81,15 @@ or layout change. The findings are mostly small craft fixes.
    **Revisit (owner):** How it works now ends on the step slider and "feels a bit
    hanging" — look again during the owner's full-page pass.
 
-## To test (owner, 2026-10-13)
+## Lighter page colour — DONE (owner, 2026-10-14)
 
-- **Lighter page colour.** The owner found the listicle's cream page "a bit too heavy" and
-  spotted the same on the PDP. The listicle now uses `--paper-soft` (`#FEFBF5`, halfway
-  between white and the cream `--paper`; pure white was too stark). Try it on the PDP: the
-  page base and the sections that sit on `paper`/`cream`, keeping the toffee / honey / dark
-  bands as they are. Judge readability over a full scroll on a phone.
+Tested on the PDP with screenshots (now vs one step lighter, phone + desktop) and kept,
+site-wide: `--paper` #FDF8EC → **#FEFBF5** (the listicle's page), `--cream` #FBF3E1 →
+**#FDF8EC**; each tone moved up one step, so neighbouring bands keep their contrast. The
+PDP's and homepage's cream waves now read `var(--cream)` instead of a hex. The listicle's
+boxes keep the old cream as `--cream-deep` (#FBF3E1) so they still stand out on its page.
+Toffee, sand (FAQ), honey and the dark bands are unchanged — the owner can still ask for the
+FAQ band one step lighter (it now reads as the darkest light band).
 
 ## Bigger tidy — later
 
