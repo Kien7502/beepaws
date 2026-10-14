@@ -93,11 +93,14 @@ FAQ band one step lighter (it now reads as the darkest light band).
 
 ## Bigger tidy — later
 
-8. **Type scale — DONE except the buy box (owner, 2026-10-14).** Ten named roles
+8. **Type scale — DONE (owner, 2026-10-14).** Ten named roles
    (`type-*`, see DESIGN.md → Typography) applied to every section and the hero: 51 → 37
    styles and 18 → 14 sizes on phones, all 10 section headings one style. Owner: "mostly
    looks the same, which is good"; the paradox read spaced out at the body role's 16px, so
-   it uses the card role (15px). Left: `VariantSelector` (15.5 / 14.5 / 12.5px).
+   it uses the card role (15px). Buy box converted the same afternoon (kit names 15,
+   descriptions + contents 13, pills 11): the page ends at 30 styles / 12 sizes on phones,
+   no half-pixel sizes. The trust line's dots now ride on the item before them, so a wrapped
+   line never starts with "·".
    Original note: 50 distinct text styles on the page, including half-pixel
    sizes (12.5, 13.5, 14.5, 15.5, 16.5px), and same-size headings with different
    tracking (30px "You smelled it first…" is tightened, 30px "Your vet's $1,400

@@ -791,7 +791,7 @@ export default function VariantSelector({
                 >
                   <span className="min-w-0 truncate">{opt.label}</span>
                   {!opt.availableForSale && (
-                    <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-brown">
+                    <span className="shrink-0 type-badge font-semibold text-brown">
                       Sold out
                     </span>
                   )}
@@ -816,7 +816,7 @@ export default function VariantSelector({
             <div className="mb-6">
               <div className="mb-4 flex items-center gap-3">
                 <div className="h-px flex-1 bg-line" />
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-brown">
+                <span className="type-badge font-extrabold text-brown">
                   Purchase options
                 </span>
                 <div className="h-px flex-1 bg-line" />
@@ -861,8 +861,8 @@ export default function VariantSelector({
                             : undefined
                         }
                       />
-                      <span className="block text-[15px] font-bold text-cocoa">{opt.name}</span>
-                      <span className="mt-0.5 block text-[12.5px] leading-snug text-brown">
+                      <span className="block type-card font-bold text-cocoa">{opt.name}</span>
+                      <span className="mt-0.5 block type-caption text-brown">
                         {opt.desc}
                       </span>
                     </div>
@@ -874,7 +874,7 @@ export default function VariantSelector({
 
           <div className="mb-4 flex items-center gap-3">
             <div className="h-px flex-1 bg-line" />
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-brown">
+            <span className="type-badge font-extrabold text-brown">
               Choose your quantities
             </span>
             <div className="h-px flex-1 bg-line" />
@@ -892,11 +892,11 @@ export default function VariantSelector({
                   } ${soldOut ? "opacity-60" : ""}`}
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-[15px] font-bold text-cocoa">{label}</p>
+                    <p className="truncate type-card font-bold text-cocoa">{label}</p>
                     {soldOut ? (
-                      <p className="text-[12.5px] text-brown">Out of stock</p>
+                      <p className="type-caption text-brown">Out of stock</p>
                     ) : (
-                      <p className="text-[12.5px] text-brown">
+                      <p className="type-caption text-brown">
                         {formatMoney(parseFloat(unitAmountFor(v)), v.price.currencyCode)} each
                         {/* Struck one-time price when a plan discounts it. */}
                         {activePlan && unitAmountFor(v) !== v.price.amount && (
@@ -1024,7 +1024,7 @@ export default function VariantSelector({
       <div>
         <div className="mb-4 flex items-center gap-3">
           <div className="h-px flex-1 bg-line" />
-          <span className="text-[10px] font-extrabold uppercase tracking-widest text-brown">
+          <span className="type-badge font-extrabold text-brown">
             Bundle &amp; Save
           </span>
           <div className="h-px flex-1 bg-line" />
@@ -1083,27 +1083,27 @@ export default function VariantSelector({
 
                 {/* Floating flag — sits half-above the card border at top-right. */}
                 {badge && (
-                  <span className="absolute -top-2.5 right-3.5 rounded-full bg-cocoa px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.06em] text-white">
+                  <span className="absolute -top-2.5 right-3.5 rounded-full bg-cocoa px-2.5 py-0.5 type-badge font-extrabold text-white">
                     {badge}
                   </span>
                 )}
 
                 {/* Title row: tier name + price on one baseline. */}
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-[15.5px] font-bold text-cocoa">{tierName(view)}</span>
-                  <span className="text-[15.5px] font-bold tabular-nums text-cocoa">
+                  <span className="type-card font-bold text-cocoa">{tierName(view)}</span>
+                  <span className="type-card font-bold tabular-nums text-cocoa">
                     {formatMoney(tTotal, tCurrency)}
                   </span>
                 </div>
 
                 {description && (
-                  <p className="mt-0.5 text-[12.5px] leading-snug text-brown">{keepHyphenated(description)}</p>
+                  <p className="mt-0.5 type-caption text-brown">{keepHyphenated(description)}</p>
                 )}
 
                 {/* What's included — for the SELECTED tier only, so the others
                     stay a scannable name + price + description row. */}
                 {selected && (tb ? (
-                  <ul className="mt-2 space-y-1 text-[12px] text-brown">
+                  <ul className="mt-2 space-y-1 type-caption text-brown">
                     {mergeByProduct(tb.components).map((c, ci) => (
                       <li key={c.handle} className="flex items-center gap-2">
                         <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded-md border border-line bg-cream">
@@ -1140,7 +1140,7 @@ export default function VariantSelector({
                           )}
                         </span>
                         {ci === 0 && (
-                          <span className="ml-auto shrink-0 rounded-full bg-honey-tint px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-gold-deep">
+                          <span className="ml-auto shrink-0 rounded-full bg-honey-tint px-1.5 py-0.5 type-badge font-extrabold text-gold-deep">
                             Bundle
                           </span>
                         )}
@@ -1148,7 +1148,7 @@ export default function VariantSelector({
                     ))}
                   </ul>
                 ) : (
-                  <ul className="mt-2 space-y-1 text-[12px] text-brown">
+                  <ul className="mt-2 space-y-1 type-caption text-brown">
                     <li className="flex items-center gap-2">
                       <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded-md border border-line bg-cream">
                         <Image
@@ -1179,7 +1179,7 @@ export default function VariantSelector({
                           />
                         </span>
                         <span className="min-w-0 truncate">1× {gift.title}</span>
-                        <span className="shrink-0 rounded-full bg-honey-tint px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-gold-deep">
+                        <span className="shrink-0 rounded-full bg-honey-tint px-1.5 py-0.5 type-badge font-extrabold text-gold-deep">
                           Gift
                         </span>
                         <span className="ml-auto shrink-0 tabular-nums">
@@ -1203,7 +1203,7 @@ export default function VariantSelector({
                     {bGroups.map((grp, gi) => (
                       <div key={grp.product ?? `g${gi}`} className="space-y-1.5">
                         {grp.product && (
-                          <p className="text-[14.5px] font-bold text-cocoa">{grp.product}</p>
+                          <p className="type-card font-bold text-cocoa">{grp.product}</p>
                         )}
                         {grp.opts.map((opt) => {
                           const colorMode = opt.label.toLowerCase().includes("color");
@@ -1213,7 +1213,7 @@ export default function VariantSelector({
                               key={opt.name}
                               className="flex flex-wrap items-center gap-x-2 gap-y-1.5"
                             >
-                              <span className="text-[11px] font-semibold text-brown">
+                              <span className="type-caption font-semibold text-brown">
                                 {opt.label}:
                               </span>
                               {opt.values.map((value) => {
@@ -1284,7 +1284,7 @@ export default function VariantSelector({
       <div>
 
         {educationNote && (
-          <div className="mb-3 flex items-start gap-2 rounded-xl border-[1.8px] border-line bg-cream px-3 py-2.5 text-xs leading-relaxed text-brown">
+          <div className="mb-3 flex items-start gap-2 rounded-xl border-[1.8px] border-line bg-cream px-3 py-2.5 type-caption text-brown">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-clay" aria-hidden />
             <span>{educationNote}</span>
           </div>
@@ -1328,7 +1328,7 @@ export default function VariantSelector({
           {buyingNow ? "Opening checkout…" : "Buy it now"}
         </button>
         {buyNowError && (
-          <p role="alert" className="mt-2 text-center text-xs text-rose-600">
+          <p role="alert" className="mt-2 text-center type-caption text-rose-600">
             {buyNowError}
           </p>
         )}
@@ -1338,11 +1338,16 @@ export default function VariantSelector({
             a named human behind the warranty is the trust signal. */}
         {/* No free-shipping promise (owner, 2026-10-13); 60-day guarantee per the
             revision doc. */}
-        <p className="mt-2.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs font-medium text-brown">
-          <span>60-day returns, no questions asked</span>
-          <span aria-hidden className="text-brown/40">·</span>
-          <span>No anesthesia needed</span>
-          <span aria-hidden className="text-brown/40">·</span>
+        {/* Each dot rides on the item before it (nowrap), so a wrapped line can
+            end with a dot but never start with one — at 13px the phone line
+            wrapped as "· Real-person support" (2026-10-14). */}
+        <p className="mt-2.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center type-caption font-medium text-brown">
+          <span className="whitespace-nowrap">
+            60-day returns, no questions asked<span aria-hidden className="ml-2 text-brown/40">·</span>
+          </span>
+          <span className="whitespace-nowrap">
+            No anesthesia needed<span aria-hidden className="ml-2 text-brown/40">·</span>
+          </span>
           <span>Real-person support</span>
         </p>
 
@@ -1352,7 +1357,7 @@ export default function VariantSelector({
 
 
         {addedVia === "box" && (
-          <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-sm font-semibold text-positive">
+          <p className="mt-3 flex items-center justify-center gap-1.5 text-center type-small font-semibold text-positive">
             <CheckCircle2 size={16} />
             Added to cart!{" "}
             <button

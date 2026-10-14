@@ -12,7 +12,7 @@ export function BundleContents({ items }: { items: BundleComponent[] }) {
     <div className="mt-6 overflow-hidden rounded-2xl border border-line bg-card">
       <div className="flex items-center gap-2 border-b border-line bg-honey-tint/50 px-4 py-3">
         <Package className="h-4 w-4 text-gold-deep" aria-hidden />
-        <p className="text-sm font-bold uppercase tracking-wider text-cocoa">
+        <p className="type-label font-bold text-cocoa">
           What&apos;s included
         </p>
       </div>

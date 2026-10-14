@@ -83,7 +83,7 @@ export function StickyAddToCart({ product }: { product: Product }) {
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm md:text-[14.5px] font-extrabold text-cocoa">{summary.title}</p>
+          <p className="truncate text-sm font-extrabold text-cocoa">{summary.title}</p>
           <p className="truncate text-[13px] text-brown">
             <span className="font-bold">{summary.price}</span>
             {summary.detail && <span> · {summary.detail}</span>}
