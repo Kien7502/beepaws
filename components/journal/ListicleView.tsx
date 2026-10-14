@@ -26,8 +26,12 @@ export type ListicleProductInfo = { price: string | null; image: ListicleImage |
 // Desktop measure (sweep S7, 2026-10-13): 18px in a 680px text column held ~87
 // characters per full line; 19px in 620px holds ~73 (comfortable is 60–75).
 // Phones are unchanged (16px, full width).
-const COLUMN = "mx-auto w-full max-w-[660px] px-5";
-const BODY = "text-[16px] leading-[1.7] text-ink md:text-[19px]";
+// Wide screens (owner, 2026-10-14: on a 1920px display the 620px column read
+// "squished in the middle"): the whole article scales up from xl and 2xl —
+// column, body size, headings and images together — so it fills more of the
+// screen while lines stay ~70 characters (700px at 20px, 740px at 21px).
+const COLUMN = "mx-auto w-full max-w-[660px] px-5 xl:max-w-[740px] 2xl:max-w-[780px]";
+const BODY = "text-[16px] leading-[1.7] text-ink md:text-[19px] xl:text-[20px] 2xl:text-[21px]";
 
 /** The ==highlight== colours (the admin's HIGHLIGHT_COLORS — keep in sync). The
  *  marker in lib/inline-format.tsx reads them through the --hl variable. */
@@ -93,13 +97,13 @@ function Figure({
   // beside the 660px column), 70px out from lg — image ~364px wide on a 390px
   // phone (was 336), ~746px on desktop (was 606). The caption stays in the
   // text column, under the picture.
-  const place = flushTop ? "-mx-5 -mt-7 md:mx-0 md:mt-0" : "-mx-3 mt-8 md:-mx-8 lg:-mx-[70px]";
+  const place = flushTop ? "-mx-5 -mt-7 md:mx-0 md:mt-0" : "-mx-3 mt-8 md:-mx-8 lg:-mx-[70px] xl:-mx-[110px] 2xl:-mx-[130px]";
   const frame = flushTop
     ? ""
     : "rounded-xl border border-line bg-card p-1 shadow-[0_3px_14px_-8px_rgba(74,46,22,0.28)] md:p-1.5";
   const radius = flushTop ? "md:rounded-lg" : "rounded-lg";
   const caption = image.caption && (
-    <figcaption className={`mt-2 text-[13px] italic ${flushTop ? "px-5 md:px-0" : "px-3 md:px-8 lg:px-[70px]"} ${MUTED}`}>
+    <figcaption className={`mt-2 text-[13px] italic ${flushTop ? "px-5 md:px-0" : "px-3 md:px-8 lg:px-[70px] xl:px-[110px] 2xl:px-[130px]"} ${MUTED}`}>
       {image.caption}
     </figcaption>
   );
@@ -125,7 +129,7 @@ function Figure({
             alt={image.alt}
             width={image.width}
             height={image.height}
-            sizes={flushTop ? "(max-width: 768px) 92vw, 620px" :"(max-width: 767px) 94vw, (max-width: 1023px) 670px, 746px"}
+            sizes={flushTop ? "(max-width: 768px) 92vw, 620px" :"(max-width: 767px) 94vw, (max-width: 1023px) 670px, (max-width: 1279px) 746px, (max-width: 1535px) 906px, 986px"}
             priority={priority}
             className={`h-auto w-full ${radius}`}
           />
@@ -184,7 +188,7 @@ function TickBox({ tick, delay }: { tick: boolean; delay: number }) {
 }
 
 function SubHeading({ text }: { text: string }) {
-  return <h3 className="mt-10 font-display text-[21px] font-bold text-cocoa md:text-[24px]">{withInline(text)}</h3>;
+  return <h3 className="mt-10 font-display text-[21px] font-bold text-cocoa md:text-[24px] xl:text-[26px] 2xl:text-[27px]">{withInline(text)}</h3>;
 }
 
 /** Sand box on desktop; on phones a left honey border with no fill (less weight). */
@@ -213,7 +217,7 @@ function Block({ b, products, preview }: { b: ListicleBlock; products: Record<st
     case "callout":
       return (
         <aside className={BOX}>
-          {b.title && <p className="font-display text-[19px] font-bold text-cocoa md:text-[21px]">{withInline(b.title)}</p>}
+          {b.title && <p className="font-display text-[19px] font-bold text-cocoa md:text-[21px] xl:text-[22px] 2xl:text-[23px]">{withInline(b.title)}</p>}
           <div className={`${b.title ? "mt-3" : ""} ${BODY}`}>
             <Paragraphs text={b.text} />
           </div>
@@ -232,13 +236,13 @@ function Block({ b, products, preview }: { b: ListicleBlock; products: Record<st
       const tick = b.tickOnRead ?? true;
       const sheet = (
         <>
-          {b.title && <h3 className="font-display text-[20px] font-bold leading-tight text-cocoa md:text-[23px]">{withInline(b.title)}</h3>}
+          {b.title && <h3 className="font-display text-[20px] font-bold leading-tight text-cocoa md:text-[23px] xl:text-[25px] 2xl:text-[26px]">{withInline(b.title)}</h3>}
           <ul className={b.title ? "mt-4 border-t border-line" : ""}>
             {b.items.map((c, i) => (
               <li key={i} className={`flex break-inside-avoid gap-3 border-line py-4 last:pb-0 md:gap-4 md:py-5 ${i > 0 ? "border-t" : ""} ${!b.title && i === 0 ? "pt-0" : ""}`}>
                 <TickBox tick={tick} delay={i * 90} />
                 <div className="min-w-0 flex-1">
-                  {c.title && <p className="text-[17px] font-bold leading-snug text-cocoa md:text-[18px]">{withInline(c.title)}</p>}
+                  {c.title && <p className="text-[17px] font-bold leading-snug text-cocoa md:text-[18px] xl:text-[20px] 2xl:text-[21px]">{withInline(c.title)}</p>}
                   {c.text && (
                     <div className={`mt-1.5 ${BODY}`}>
                       <Paragraphs text={c.text} />
@@ -295,7 +299,7 @@ function Block({ b, products, preview }: { b: ListicleBlock; products: Record<st
                 </span>
                 <div className="min-w-0 flex-1">
                   {s.label && (
-                    <p className="font-display text-[19px] font-bold leading-snug text-cocoa md:text-[21px]">{withInline(s.label)}</p>
+                    <p className="font-display text-[19px] font-bold leading-snug text-cocoa md:text-[21px] xl:text-[22px] 2xl:text-[23px]">{withInline(s.label)}</p>
                   )}
                   <div className={`mt-1.5 ${BODY}`}>
                     <Paragraphs text={s.text} />
@@ -346,7 +350,7 @@ function Block({ b, products, preview }: { b: ListicleBlock; products: Record<st
         // data-listicle-end: the floating button is gone from here on.
         <section data-listicle-end="" className="mt-10 break-inside-avoid overflow-hidden rounded-lg bg-cream-deep px-5 py-7 text-center md:p-8">
           {image && <Figure image={image} flushTop />}
-          <h3 className="mt-6 font-display text-[26px] font-bold leading-tight tracking-tight text-cocoa md:text-[30px]">
+          <h3 className="mt-6 font-display text-[26px] font-bold leading-tight tracking-tight text-cocoa md:text-[30px] xl:text-[33px] 2xl:text-[35px]">
             {b.name || info?.title || b.product?.title}
           </h3>
           {b.contents.length > 0 && (
@@ -354,7 +358,7 @@ function Block({ b, products, preview }: { b: ListicleBlock; products: Record<st
               {b.contentsTitle && <p className="text-[15px] font-bold text-cocoa">{b.contentsTitle}</p>}
               <ul className="mt-2 space-y-1.5">
                 {b.contents.map((c, i) => (
-                  <li key={i} className={`flex gap-2 ${BODY} md:text-[17px]`}>
+                  <li key={i} className={`flex gap-2 ${BODY} md:text-[17px] xl:text-[18px] 2xl:text-[18px]`}>
                     <Check size={18} className="mt-1 flex-none text-gold" strokeWidth={3} aria-hidden />
                     <span>{withInline(c)}</span>
                   </li>
@@ -421,8 +425,8 @@ export function ListicleView({
         {l.topStrip && <p className={`text-[13px] font-semibold ${MUTED}`}>{l.topStrip}</p>}
         {/* tracking-tight on the large serif (sweep S8): at 32–46px default
             letter-spacing reads loose; the PDP's headings are tightened too. */}
-        <h1 className="mt-6 font-display text-[32px] font-bold leading-[1.12] tracking-tight text-cocoa md:mt-8 md:text-[46px]">{l.headline}</h1>
-        {l.subhead && <p className="mt-4 text-[18px] leading-snug text-brown md:text-[21px]">{withInline(l.subhead)}</p>}
+        <h1 className="mt-6 font-display text-[32px] font-bold leading-[1.12] tracking-tight text-cocoa md:mt-8 md:text-[46px] xl:text-[52px] 2xl:text-[56px]">{l.headline}</h1>
+        {l.subhead && <p className="mt-4 text-[18px] leading-snug text-brown md:text-[21px] xl:text-[22px] 2xl:text-[23px]">{withInline(l.subhead)}</p>}
         {byline && <p className={`mt-5 text-[14px] ${MUTED}`}>{byline}</p>}
         {l.checklist.length > 0 && (
           <ul className="mt-7 space-y-2.5">
@@ -450,7 +454,7 @@ export function ListicleView({
             {s.heading && (
               <h2
                 {...(first ? { "data-listicle-start": "" } : {})}
-                className={`font-display font-bold leading-tight tracking-tight text-cocoa ${s.kind === "intro" ? "text-[24px] md:text-[28px]" : "text-[26px] md:text-[34px]"}`}
+                className={`font-display font-bold leading-tight tracking-tight text-cocoa ${s.kind === "intro" ? "text-[24px] md:text-[28px] xl:text-[30px] 2xl:text-[32px]" : "text-[26px] md:text-[34px] xl:text-[37px] 2xl:text-[40px]"}`}
               >
                 {/* The number in clay, the heading in brown: a colour cue for skimming,
                     still the same serif on the same line (visual guide §3). Clay, not
