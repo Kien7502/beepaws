@@ -5,6 +5,7 @@ import {
   SHOPIFY_CART_COOKIE,
 } from "@/lib/shopify/storefront-cart";
 import { buildStorefrontCartPermalinkFromLines } from "@/lib/shopify/cart-permalink";
+import { ensureKitShippingCode } from "@/lib/shopify/kit-shipping";
 
 const VARIANT_GID = /^gid:\/\/shopify\/ProductVariant\/\d+$/;
 const SELLING_PLAN_GID = /^gid:\/\/shopify\/SellingPlan\/\d+$/;
@@ -65,6 +66,9 @@ export async function POST(req: Request) {
     // cart persisted in a 14-day cookie — every buy-now stacked onto all the
     // previous ones, so Shopify checkout showed items from earlier sessions.
     const { cartId, checkoutUrl } = await createCartWithLines(lines);
+    // A kit bought straight away gets its free-shipping code before checkout
+    // opens (lib/shopify/kit-shipping.ts). Never blocks the purchase.
+    await ensureKitShippingCode(cartId).catch((e) => console.warn("[kit-shipping]", e instanceof Error ? e.message : e));
 
     const res = NextResponse.json({ checkoutUrl, cartId });
     // Clear the legacy merge-cart cookie so the stale accumulated cart is

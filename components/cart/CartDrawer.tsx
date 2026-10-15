@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { X, Minus, Plus, Trash2, ShoppingBag, ArrowRight, Loader2, RefreshCcw } from "lucide-react";
+import { X, Minus, Plus, Trash2, ShoppingBag, ArrowRight, Loader2, RefreshCcw, Truck } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { useCart, cartLineKey } from "@/components/cart/CartProvider";
 
@@ -28,6 +28,8 @@ export function CartDrawer() {
     removeItem,
     checkoutUrl,
     isCartLoading,
+    kitShipping,
+    syncKitShipping,
   } = useCart();
 
   const drawerRef = useRef<HTMLElement>(null);
@@ -72,6 +74,10 @@ export function CartDrawer() {
     if (items.length === 0 || checkoutLoading) return;
     setCheckoutError(null);
     if (checkoutUrl) {
+      // The cart's free-shipping-on-kits code must match what's in it before
+      // checkout opens; capped at 4s so a slow call never strands the shopper.
+      setCheckoutLoading(true);
+      await Promise.race([syncKitShipping(), new Promise((r) => setTimeout(r, 4000))]);
       window.location.href = checkoutUrl;
       return;
     }
@@ -408,8 +414,14 @@ export function CartDrawer() {
                 {formatMoney(subtotalAmount, subtotalCurrency)}
               </span>
             </div>
+            {kitShipping && (
+              <p className="mb-2 flex items-center justify-center gap-1.5 text-sm font-semibold text-positive">
+                <Truck size={16} aria-hidden />
+                Free standard shipping on your kit
+              </p>
+            )}
             <p className="mb-4 text-center text-xs text-slate-500">
-              Shipping &amp; taxes calculated at checkout
+              {kitShipping ? "Taxes calculated at checkout" : <>Shipping &amp; taxes calculated at checkout</>}
             </p>
             <Button
               type="button"

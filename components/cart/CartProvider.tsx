@@ -150,6 +150,11 @@ type CartContextValue = {
   closeDrawer: () => void;
   checkoutUrl: string;
   isCartLoading: boolean;
+  /** The cart's free-shipping-on-kits code — present while the cart holds a
+   *  kit and the feature is on (lib/shopify/kit-shipping.ts). */
+  kitShipping: { code: string; endsAt: string } | null;
+  /** Bring that code up to date now; checkout awaits it before leaving. */
+  syncKitShipping: () => Promise<void>;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -328,6 +333,39 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   >(KIT_KEY, {});
   const [hydrated, setHydrated] = useState(false);
   const [isCartLoading, setIsCartLoading] = useState(false);
+  // Free shipping on kits: after every cart change the server attaches, renews
+  // or removes this cart's code (app/api/cart/kit-shipping). Calls run one at a
+  // time, so two can't each create a code for the same cart.
+  const [kitShipping, setKitShipping] = useState<{ cartId: string; code: string; endsAt: string } | null>(null);
+  const kitSyncChain = useRef<Promise<void>>(Promise.resolve());
+  const kitCartId = shopifyCart?.id ?? null;
+  const syncKitShipping = useCallback((): Promise<void> => {
+    const cartId = kitCartId;
+    if (!cartId) return Promise.resolve();
+    const run = kitSyncChain.current.then(async () => {
+      try {
+        const res = await fetch("/api/cart/kit-shipping", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cartId }),
+        });
+        const data = (await res.json()) as { kitShipping?: { code: string; endsAt: string } | null };
+        setKitShipping(data.kitShipping ? { cartId, ...data.kitShipping } : null);
+      } catch {
+        /* keep what we had — no code just means standard shipping */
+      }
+    });
+    kitSyncChain.current = run;
+    return run;
+  }, [kitCartId]);
+  const kitLinesSig = shopifyCart
+    ? `${shopifyCart.id}|${shopifyCart.lines.map((l) => `${l.merchandiseId}x${l.quantity}`).join(",")}`
+    : "";
+  useEffect(() => {
+    if (!kitLinesSig) return;
+    const t = setTimeout(() => void syncKitShipping(), 400);
+    return () => clearTimeout(t);
+  }, [kitLinesSig, syncKitShipping]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [lastAddedAt, setLastAddedAt] = useState(0);
   const [lastAddedQuantity, setLastAddedQuantity] = useState(0);
@@ -791,6 +829,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       closeDrawer: () => setDrawerOpen(false),
       checkoutUrl,
       isCartLoading,
+      // Only the current cart's code counts (a cleared or replaced cart's
+      // state may still be here until the next sync lands).
+      kitShipping:
+        kitShipping && shopifyCart && kitShipping.cartId === shopifyCart.id
+          ? { code: kitShipping.code, endsAt: kitShipping.endsAt }
+          : null,
+      syncKitShipping,
     };
   }, [
     items,
@@ -807,6 +852,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     clearCart,
     drawerOpen,
     isCartLoading,
+    kitShipping,
+    syncKitShipping,
   ]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
