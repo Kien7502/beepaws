@@ -86,6 +86,28 @@ async function readConfig(): Promise<KitShippingConfig> {
   return value;
 }
 
+/**
+ * For the product page: is free shipping on kits switched on? Read through
+ * Next's data cache under the "products" tag, so the PDP stays static (ISR) —
+ * an uncached read here would make every product page dynamic. The admin card
+ * refreshes the tag when it saves, the same way a Push does. (The cart route
+ * reads the settings through the short in-memory cache above instead.)
+ */
+export async function kitShippingEnabled(): Promise<boolean> {
+  if (!hasAdminApiCredentials()) return false;
+  try {
+    const res = await adminGraphqlFetch<{ data?: { shop?: { metafield?: { value?: string } | null } } }>({
+      query: `{ shop { metafield(namespace: "beepaws", key: "kit_shipping") { value } } }`,
+      cache: "force-cache",
+      tags: ["products"],
+    });
+    const raw = res.body.data?.shop?.metafield?.value;
+    return raw ? sanitizeKitShipping(JSON.parse(raw)).enabled : false;
+  } catch {
+    return false;
+  }
+}
+
 // ─── Cart (Storefront API) ───────────────────────────────────────────────────
 
 type CartRead = {

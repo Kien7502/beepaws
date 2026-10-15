@@ -9,7 +9,7 @@ import type { BundleTierCopy } from "@/types/metafields";
 // fully erased at compile time so nothing server-side reaches the client.
 import type { SellingPlanOption } from "@/lib/shopify/selling-plans";
 import Button from "@/components/ui/Button";
-import { CheckCircle2, Info, ShoppingBag, Loader2, Minus, Plus } from "lucide-react";
+import { CheckCircle2, Info, ShoppingBag, Loader2, Minus, Plus, Truck } from "lucide-react";
 import { useCart, type LocalCartItem } from "@/components/cart/CartProvider";
 import { useProductMedia } from "./ProductMediaSync";
 import { usePublishBuyBox } from "./BuyBoxSync";
@@ -177,6 +177,9 @@ type Props = {
   variantGroup?: VariantGroupOption[] | null;
   /** Picker label for the group ("Flavor", "Scent"). */
   variantGroupLabel?: string | null;
+  /** Free shipping on kits is switched on (admin Discounts card): a selected
+   *  kit lists "Free standard shipping" with its contents. */
+  kitShippingOn?: boolean;
 };
 
 export default function VariantSelector({
@@ -188,6 +191,7 @@ export default function VariantSelector({
   sellingPlans,
   variantGroup,
   variantGroupLabel,
+  kitShippingOn = false,
 }: Props) {
   // VARIANT GROUP (combined listing): the picked member decides which PRODUCT
   // this buy box sells. Everything below reads `activeProduct`, never the
@@ -1146,6 +1150,18 @@ export default function VariantSelector({
                         )}
                       </li>
                     ))}
+                    {/* Free shipping on kits (owner's pick, 2026-10-15: a line in
+                        the selected kit's contents, part of what you get). Only
+                        while the admin switch is on — the cart then carries the
+                        per-cart code that makes it true. */}
+                    {kitShippingOn && (
+                      <li className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-line bg-honey-tint text-gold-deep">
+                          <Truck size={14} strokeWidth={2.25} aria-hidden />
+                        </span>
+                        <span className="font-semibold text-cocoa">Free standard shipping</span>
+                      </li>
+                    )}
                   </ul>
                 ) : (
                   <ul className="mt-2 space-y-1 type-caption text-brown">

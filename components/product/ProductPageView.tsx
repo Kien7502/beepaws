@@ -27,6 +27,7 @@ import { BundleContents } from "@/components/product/BundleContents";
 import { WaveDivider } from "@/components/ui/WaveDivider";
 import { ProductMediaSync } from "@/components/product/ProductMediaSync";
 import RevealObserver from "@/components/RevealObserver";
+import { kitShippingEnabled } from "@/lib/shopify/kit-shipping";
 import type { FaqItem } from "@/types/metafields";
 
 type FullProduct = Awaited<ReturnType<typeof getFullProductForPage>>;
@@ -218,6 +219,7 @@ export async function ProductPageView({
     variantGroupRaw,
     autoDiscounts,
     discoveryRaw,
+    kitShippingOn,
   ] = await Promise.all([
     bundleItemsP,
     sellingPlansP,
@@ -227,6 +229,9 @@ export async function ProductPageView({
     curatedHandles.length
       ? Promise.all(curatedHandles.map((h) => getProduct(h)))
       : Promise.resolve([]),
+    // Free shipping on kits (admin Discounts card) — only fetched when a tier
+    // sells a bundle, the only place the badge can show.
+    beepaws?.bundleTiers?.some((t) => t?.bundle?.handle) ? kitShippingEnabled() : Promise.resolve(false),
   ]);
 
   // Members that failed to resolve drop out; <2 usable options = ordinary
@@ -500,6 +505,7 @@ export async function ProductPageView({
                 sellingPlans={sellingPlans}
                 variantGroup={variantGroup.length > 1 ? variantGroup : null}
                 variantGroupLabel={beepaws?.variantGroupLabel}
+                kitShippingOn={kitShippingOn}
               />
             </div>
 
