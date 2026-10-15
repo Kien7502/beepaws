@@ -39,6 +39,10 @@ export type KitShippingConfig = {
   /** % below the kit total the minimum may sit, so a promo code doesn't push a
    *  kit order under it (Shopify checks the minimum AFTER other discounts). */
   promoAllowance: number;
+  /** Store-wide cap on live codes: carts are public, so a script could make
+   *  thousands; past this many no new code is made (that cart just gets
+   *  standard shipping) until older ones expire and are swept. */
+  maxLiveCodes: number;
 };
 
 export const KIT_SHIPPING_TITLE = "BeePaws Kit Shipping";
@@ -47,7 +51,7 @@ const ATTRIBUTE_KEY = "_kitship";
 /** A code this close to expiring is replaced rather than handed to checkout. */
 const RENEW_WITHIN_MS = 60 * 60 * 1000;
 
-const DEFAULTS: KitShippingConfig = { enabled: false, hours: 48, maxShippingPrice: 10, promoAllowance: 0 };
+const DEFAULTS: KitShippingConfig = { enabled: false, hours: 48, maxShippingPrice: 10, promoAllowance: 0, maxLiveCodes: 500 };
 
 const num = (v: unknown, lo: number, hi: number, dflt: number) => {
   const n = typeof v === "number" ? v : Number(v);
@@ -61,6 +65,7 @@ export function sanitizeKitShipping(raw: unknown): KitShippingConfig {
     hours: Math.round(num(o.hours, 1, 24 * 14, DEFAULTS.hours)),
     maxShippingPrice: num(o.maxShippingPrice, 0, 1000, DEFAULTS.maxShippingPrice),
     promoAllowance: num(o.promoAllowance, 0, 50, DEFAULTS.promoAllowance),
+    maxLiveCodes: Math.round(num(o.maxLiveCodes, 10, 100_000, DEFAULTS.maxLiveCodes)),
   };
 }
 
@@ -157,7 +162,36 @@ function newCode(): string {
   return KIT_SHIPPING_CODE_PREFIX + Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
 }
 
+/** Live kit codes: Shopify's count (fetched at most every 30s per server
+ *  instance) PLUS the codes this instance made in the last 2 minutes. Shopify's
+ *  search lags behind new discounts — measured 2026-10-15: right after making
+ *  11, a search found 10 and a fresh count read low — so the count alone let
+ *  the 11th through a cap of 10. Codes the index has already caught up on are
+ *  counted twice for up to 2 minutes: the safe side for a cap. */
+let liveCount: { at: number; n: number } | null = null;
+const madeHere: number[] = [];
+const INDEX_LAG_MS = 120_000;
+
+async function liveCodes(): Promise<number> {
+  const now = Date.now();
+  while (madeHere.length && now - madeHere[0] > INDEX_LAG_MS) madeHere.shift();
+  if (!liveCount || now - liveCount.at >= 30_000) {
+    const res = await adminGraphqlFetch<{ data?: { discountNodesCount?: { count: number } } }>({
+      query: `query kitShipLive($q: String!) { discountNodesCount(query: $q) { count } }`,
+      variables: { q: `title:${KIT_SHIPPING_TITLE}* AND status:active` },
+    });
+    liveCount = { at: now, n: res.body.data?.discountNodesCount?.count ?? 0 };
+  }
+  return liveCount.n + madeHere.length;
+}
+
+/** Thrown when the store-wide cap is reached; the route treats it as "no code". */
+export class KitShippingCapReached extends Error {}
+
 async function createCode(min: string, config: KitShippingConfig): Promise<KitRecord> {
+  if ((await liveCodes()) >= config.maxLiveCodes) {
+    throw new KitShippingCapReached(`kit shipping: ${config.maxLiveCodes} live codes reached — no new code until some expire`);
+  }
   const code = newCode();
   const now = Date.now();
   const endsAt = new Date(now + config.hours * 3600_000).toISOString();
@@ -185,6 +219,7 @@ async function createCode(min: string, config: KitShippingConfig): Promise<KitRe
   if (!payload?.codeDiscountNode?.id) {
     throw new Error(`kit shipping code not created: ${payload?.userErrors?.map((e) => e.message).join("; ") || "no id"}`);
   }
+  madeHere.push(Date.now());
   return { code, min, endsAt };
 }
 
