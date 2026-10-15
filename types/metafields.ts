@@ -210,6 +210,8 @@ export interface Guarantee {
 // Calm Start Protocol (revision doc 2026-10-05 §3) — beepaws.calm_start_intro
 // (single entry) + beepaws.calm_start_days (one entry per day, in order).
 export interface CalmStartIntro {
+  /** One line on a dark strip between How it works and this section. */
+  bridge?: string;
   heading?: string;
   /** Blank line = new paragraph; **bold** supported. */
   lead?: string;

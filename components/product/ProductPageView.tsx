@@ -27,6 +27,7 @@ import { BundleContents } from "@/components/product/BundleContents";
 import { WaveDivider } from "@/components/ui/WaveDivider";
 import { ProductMediaSync } from "@/components/product/ProductMediaSync";
 import RevealObserver from "@/components/RevealObserver";
+import { CalmBridge } from "@/components/product/CalmBridge";
 import { kitShippingEnabled } from "@/lib/shopify/kit-shipping";
 import type { FaqItem } from "@/types/metafields";
 
@@ -77,6 +78,7 @@ export async function ProductPageView({
   const calmStartShown =
     !!beepaws?.calmStartIntro?.[0]?.heading?.trim() ||
     (beepaws?.calmStartDays ?? []).some((d) => d?.title?.trim() || d?.body?.trim());
+  const calmBridge = beepaws?.calmStartIntro?.[0]?.bridge?.trim() || null;
   const uci = beepaws?.useCasesIntro?.[0];
   const ci = beepaws?.comparisonIntro?.[0];
   const fi = beepaws?.faqIntro?.[0];
@@ -579,7 +581,17 @@ export async function ProductPageView({
               toffee → card wave joins the two sections directly. */}
           {calmStartShown ? (
             <>
-              <WaveDivider from="#E5C58C" to="var(--cream)" flip />
+              {/* Optional dark bridge line (round 2 #3): the toffee section ends
+                  on the strip's flat edge, and the wave rises out of the strip
+                  into Calm Start's cream instead of out of the toffee. */}
+              {calmBridge ? (
+                <>
+                  <CalmBridge text={calmBridge} />
+                  <WaveDivider from="var(--bark)" to="var(--cream)" flip />
+                </>
+              ) : (
+                <WaveDivider from="#E5C58C" to="var(--cream)" flip />
+              )}
               <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
                 <CalmStart intro={beepaws?.calmStartIntro?.[0]} days={beepaws?.calmStartDays} />
               </div>
