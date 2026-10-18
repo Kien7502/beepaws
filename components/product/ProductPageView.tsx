@@ -27,7 +27,6 @@ import { BundleContents } from "@/components/product/BundleContents";
 import { WaveDivider } from "@/components/ui/WaveDivider";
 import { ProductMediaSync } from "@/components/product/ProductMediaSync";
 import RevealObserver from "@/components/RevealObserver";
-import { CalmBridge } from "@/components/product/CalmBridge";
 import { kitShippingEnabled } from "@/lib/shopify/kit-shipping";
 import type { FaqItem } from "@/types/metafields";
 
@@ -78,7 +77,6 @@ export async function ProductPageView({
   const calmStartShown =
     !!beepaws?.calmStartIntro?.[0]?.heading?.trim() ||
     (beepaws?.calmStartDays ?? []).some((d) => d?.title?.trim() || d?.body?.trim());
-  const calmBridge = beepaws?.calmStartIntro?.[0]?.bridge?.trim() || null;
   const uci = beepaws?.useCasesIntro?.[0];
   const ci = beepaws?.comparisonIntro?.[0];
   const fi = beepaws?.faqIntro?.[0];
@@ -572,6 +570,7 @@ export async function ProductPageView({
               paradoxBody={mechParadoxBody}
               stepsHeading={blank(msi?.heading) ?? blank(mi?.stepsHeading)}
               stepsLead={blank(msi?.lead) ?? blank(mi?.stepsLead)}
+              stepsClosing={blank(msi?.closing)}
               diagramImageUrl={blank(mi?.diagramImageUrl)}
             />
           </div>
@@ -581,17 +580,10 @@ export async function ProductPageView({
               toffee → card wave joins the two sections directly. */}
           {calmStartShown ? (
             <>
-              {/* Optional dark bridge line (round 2 #3): the toffee section ends
-                  on the strip's flat edge, and the wave rises out of the strip
-                  into Calm Start's cream instead of out of the toffee. */}
-              {calmBridge ? (
-                <>
-                  <CalmBridge text={calmBridge} />
-                  <WaveDivider from="var(--bark)" to="var(--cream)" flip />
-                </>
-              ) : (
-                <WaveDivider from="#E5C58C" to="var(--cream)" flip />
-              )}
+              {/* How it works ends on its own closing line (round 3 #1,
+                  2026-10-18: it replaced a dark "bridge" strip that read like a
+                  floating banner), so the wave runs straight into Calm Start. */}
+              <WaveDivider from="#E5C58C" to="var(--cream)" flip />
               <div style={{ marginTop: "-3px", position: "relative", zIndex: 1 }}>
                 <CalmStart intro={beepaws?.calmStartIntro?.[0]} days={beepaws?.calmStartDays} />
               </div>

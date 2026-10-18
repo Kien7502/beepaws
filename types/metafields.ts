@@ -210,8 +210,6 @@ export interface Guarantee {
 // Calm Start Protocol (revision doc 2026-10-05 §3) — beepaws.calm_start_intro
 // (single entry) + beepaws.calm_start_days (one entry per day, in order).
 export interface CalmStartIntro {
-  /** One line on a dark strip between How it works and this section. */
-  bridge?: string;
   heading?: string;
   /** Blank line = new paragraph; **bold** supported. */
   lead?: string;
@@ -233,6 +231,11 @@ export interface SectionIntro {
   lead?: string;
   // Comparison table only — small print rendered under the table.
   footnote?: string;
+}
+
+/** Header over the mechanism steps, plus the line that closes the section. */
+export interface MechanismStepsIntro extends SectionIntro {
+  closing?: string;
 }
 
 // Final CTA section copy — heading + body + the small-print promise line.
@@ -277,7 +280,7 @@ export interface BeepawsMetafields {
   heroCopy: HeroCopy[] | null;
   mechanismIntro: MechanismIntro[] | null;
   /** Header over the mechanism STEPS (its own metafield since 2026-09-20). */
-  mechanismStepsIntro: SectionIntro[] | null;
+  mechanismStepsIntro: MechanismStepsIntro[] | null;
   calmStartIntro: CalmStartIntro[] | null;
   calmStartDays: CalmStartDay[] | null;
   guarantee: Guarantee[] | null;

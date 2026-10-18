@@ -1,6 +1,7 @@
 import type { MechanismStep } from "@/types/metafields";
 import Image from "next/image";
-import { withBold, withAccent } from "@/lib/inline-format";
+import { Fragment, type ReactNode } from "react";
+import { withBold, withAccent, keepHyphenated } from "@/lib/inline-format";
 import { CardSlider } from "@/components/product/Slider";
 
 // Defaults are intentional Lorem ipsum placeholders. Per-product copy lives
@@ -28,6 +29,23 @@ const DEFAULT_STEPS: MechanismStep[] = [
   },
 ];
 
+/** `**accent**` in clay-deep, like withAccent — but an accent run that ENDS the
+ *  line takes its own line from md up (statement, then the question it plants);
+ *  a first render broke the sentence mid-phrase ("fit / your lap"). */
+function closingParts(text: string): ReactNode {
+  const parts = text.split(/\*\*([\s\S]+?)\*\*/g);
+  const endsAccent = parts.length > 1 && parts[parts.length - 1].trim() === "";
+  return parts.map((part, i) =>
+    i % 2 === 1 ? (
+      <span key={i} className={`text-clay-deep ${endsAccent && i === parts.length - 2 ? "md:block" : ""}`}>
+        {keepHyphenated(part)}
+      </span>
+    ) : (
+      <Fragment key={i}>{keepHyphenated(part)}</Fragment>
+    ),
+  );
+}
+
 interface Props {
   steps?: MechanismStep[] | null;
   // Optional intro overrides; defaults keep the dental-scaler narrative.
@@ -45,6 +63,9 @@ interface Props {
   paradoxBody?: string;
   stepsHeading?: string;
   stepsLead?: string;
+  /** Optional line after the step cards that closes the section and hands the
+   *  reader to Calm Start (round 3 #1, option A). `**accent**` supported. */
+  stepsClosing?: string;
   diagramImageUrl?: string | null;
 }
 
@@ -56,6 +77,7 @@ export function Mechanism({
   paradoxBody = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\n\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
   stepsHeading = "Lorem ipsum steps heading",
   stepsLead = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+  stepsClosing,
   diagramImageUrl = null,
 }: Props) {
   const data = steps && steps.length > 0 ? steps : DEFAULT_STEPS;
@@ -184,6 +206,13 @@ export function Mechanism({
               </div>
             ))}
           />
+          {/* The section's conclusion: it plants the question Calm Start
+              answers, so the next section can open cold. */}
+          {stepsClosing && (
+            <p className="type-lead mx-auto mt-10 max-w-2xl text-balance text-center text-cocoa">
+              {closingParts(stepsClosing)}
+            </p>
+          )}
         </div>
 
       </div>
