@@ -1,6 +1,6 @@
 import { getFullProductForPage, getProduct, getProducts } from "@/lib/shopify/queries";
 import { getVariantGroupPrimary } from "@/lib/shopify/variant-groups";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ProductPageView } from "@/components/product/ProductPageView";
 
 // ISR: revalidate via webhook → revalidateTag("products")
@@ -25,7 +25,7 @@ export const revalidate = 3600;
 // build time costs prerendering, never the build.
 export async function generateStaticParams() {
   const products = await getProducts();
-  return products.map((p) => ({ handle: p.handle }));
+  return products.filter((p) => !p.pageHidden).map((p) => ({ handle: p.handle }));
 }
 
 export async function generateMetadata({
@@ -97,6 +97,12 @@ export default async function ProductPage({
   // lorem placeholder sections for them. Direct URLs 404 instead (cart bundle
   // lines deliberately don't link here).
   if (product.tags?.includes("bundle")) return notFound();
+
+  // "Product page: hidden" in the admin (2026-10-21): the product still sells —
+  // inside kits, or added to a cart elsewhere — but its own page isn't ready, so
+  // its URL goes home instead of showing placeholder sections. Temporary (307):
+  // switching it back on restores the page with the next refresh.
+  if (product.pageHidden) redirect("/");
 
   return (
     <ProductPageView product={product} fullProduct={fullProduct} handle={handle} />

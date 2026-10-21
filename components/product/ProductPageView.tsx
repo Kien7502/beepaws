@@ -337,7 +337,8 @@ export async function ProductPageView({
   // handle; unresolvable refs (draft/deleted), this product itself, and
   // bundle-tagged products (whose PDPs 404 by design) are dropped; capped at 6.
   const discoveryProducts = discoveryRaw
-    .filter((p): p is Product => Boolean(p && !p.tags?.includes("bundle")))
+    // …and products whose page is hidden in the admin (they'd link to a redirect).
+    .filter((p): p is Product => Boolean(p && !p.tags?.includes("bundle") && !p.pageHidden))
     .slice(0, 6);
 
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");

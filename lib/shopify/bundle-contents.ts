@@ -12,6 +12,8 @@ export type BundleComponent = {
   title: string; // component product title
   handle: string; // component product handle (for linking to its PDP)
   imageUrl: string | null;
+  /** The component has no page of its own (beepaws.page_hidden): list it, don't link it. */
+  pageHidden: boolean;
 };
 
 type BundleContentsResponse = {
@@ -30,6 +32,7 @@ type BundleContentsResponse = {
                       title: string;
                       handle: string;
                       featuredImage: { url: string } | null;
+                      pageHidden: { value: string | null } | null;
                     };
                   };
                 };
@@ -63,6 +66,7 @@ export async function getBundleContents(handle: string): Promise<BundleComponent
                         title
                         handle
                         featuredImage { url }
+                        pageHidden: metafield(namespace: "beepaws", key: "page_hidden") { value }
                       }
                     }
                   }
@@ -96,5 +100,6 @@ export async function getBundleContents(handle: string): Promise<BundleComponent
     title: edge.node.productVariant.product.title,
     handle: edge.node.productVariant.product.handle,
     imageUrl: edge.node.productVariant.product.featuredImage?.url ?? null,
+    pageHidden: edge.node.productVariant.product.pageHidden?.value === "true",
   }));
 }

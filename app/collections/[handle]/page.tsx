@@ -32,9 +32,10 @@ export default async function CollectionPage({
   const collectionHandle = resolvedParams.handle;
   // Hide Shopify bundle products (tagged `bundle`) from collection grids, and
   // collapse variant groups to their primary (contract §3) so flavours of one
-  // product don't appear as near-duplicate rows.
+  // product don't appear as near-duplicate rows. Products whose page is hidden
+  // in the admin (2026-10-21) are left out too.
   const products = await withoutVariantGroupMembers(
-    (await getProducts({ collectionHandle })).filter((p) => !p.tags?.includes("bundle")),
+    (await getProducts({ collectionHandle })).filter((p) => !p.tags?.includes("bundle") && !p.pageHidden),
   );
 
   const title = formatCollectionTitle(collectionHandle);

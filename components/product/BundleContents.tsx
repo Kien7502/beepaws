@@ -29,12 +29,17 @@ export function BundleContents({ items }: { items: BundleComponent[] }) {
               />
             </div>
             <div className="min-w-0 flex-1">
-              <Link
-                href={`/products/${it.handle}`}
-                className="truncate text-sm font-semibold text-cocoa hover:underline"
-              >
-                {it.title}
-              </Link>
+              {it.pageHidden ? (
+                // No page of its own yet (admin "Product page: hidden"): name only.
+                <span className="truncate text-sm font-semibold text-cocoa">{it.title}</span>
+              ) : (
+                <Link
+                  href={`/products/${it.handle}`}
+                  className="truncate text-sm font-semibold text-cocoa hover:underline"
+                >
+                  {it.title}
+                </Link>
+              )}
             </div>
             <span className="shrink-0 text-xs font-bold text-brown">×{it.quantity}</span>
           </li>

@@ -33,6 +33,10 @@ export type Product = {
   tagline?: string | null;
   tags?: string[];
   seo: SEO;
+  /** beepaws.page_hidden (admin → Manage → "Product page", 2026-10-21): the
+   *  product still sells (e.g. inside kits) but has no page of its own yet —
+   *  its URL redirects home and it's left out of listings and links. */
+  pageHidden?: boolean;
 };
 
 export type ProductVariant = {

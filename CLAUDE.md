@@ -144,6 +144,12 @@ renders today's built-in defaults — so wiring them is post-launch, not a block
   (null locally); the AnnouncementBar then shows a fixed "We currently ship to the United States only" (same grid
   cell, no height change; cached per session). Google can't be told to hide organic results abroad; Merchant
   Center isn't used (owner runs Meta ads).
+- **Hidden product pages** (owner, 2026-10-21): product metafield `beepaws.page_hidden` (boolean, set by the
+  admin editor's "Page shown / hidden" switch) → `Product.pageHidden` (admin-catalog fragment). A hidden
+  product keeps SELLING (stays Active, e.g. inside kits) but its PDP redirects (307) to `/`, it's left out of
+  generateStaticParams, the collection grids and the "More from BeePaws" picks, and kit contents
+  (`BundleContents`, `VariantSelector`) name it without a link (`BundleComponent.pageHidden`). Launch state: both
+  sprays hidden (their pages have no content yet). Cart-drawer lines still link (client side; the link redirects).
 - **Legal policies** (2026-10-21): `/policies/privacy-policy` and `/policies/terms-of-service` render Shopify's
   own texts (Settings → Policies) via `lib/shopify/policies.ts` (Storefront API, cached, `revalidate: 3600` since
   no refresh fires on a Shopify edit — `shopifyFetch` grew a `revalidate` option for this). Unset → 404, and the

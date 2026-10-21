@@ -68,9 +68,10 @@ export default async function ShopAllPage({
   // Hide Shopify bundle products (tagged `bundle`) from the catalog grid - they
   // sell via their own page / a cross-sell on component PDPs, not mixed in here.
   // Variant groups collapse to their primary (contract §3): one row per page,
-  // not one per flavour.
+  // not one per flavour. Products whose page is hidden in the admin ("Product
+  // page: hidden", 2026-10-21) sell only elsewhere (kits), so they're left out.
   const products = sortProducts(
-    await withoutVariantGroupMembers(rawProducts.filter((p) => !p.tags?.includes("bundle"))),
+    await withoutVariantGroupMembers(rawProducts.filter((p) => !p.tags?.includes("bundle") && !p.pageHidden)),
     sort,
   );
 

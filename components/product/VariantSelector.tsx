@@ -121,7 +121,7 @@ export type TierBundle = {
   currencyCode: string;
   /** null when the bundle has no image of its own (see kitImage). */
   imageUrl: string | null;
-  components: { quantity: number; title: string; handle: string; imageUrl: string | null }[];
+  components: { quantity: number; title: string; handle: string; imageUrl: string | null; pageHidden?: boolean }[];
   variants: TierBundleVariant[];
 };
 
@@ -1129,7 +1129,9 @@ export default function VariantSelector({
                               state survives; stopPropagation so the card's
                               selectTier doesn't fire), with a taller hit area
                               (py-1 -my-1) for a deliberate tap. */}
-                          {c.handle === product.handle ? (
+                          {/* A component with no page of its own (admin "Product
+                              page: hidden", 2026-10-21) is named, not linked. */}
+                          {c.handle === product.handle || c.pageHidden ? (
                             <span className="text-cocoa">{c.title}</span>
                           ) : (
                             <a

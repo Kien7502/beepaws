@@ -76,6 +76,7 @@ type AdminProductNode = {
   // handles that for the product page itself).
   reviewsMetafield: { value: string | null } | null;
   taglineMetafield: { value: string | null } | null;
+  pageHiddenMetafield: { value: string | null } | null;
   seo: { title: string | null; description: string | null } | null;
 };
 
@@ -133,6 +134,9 @@ const PRODUCT_FRAGMENT = `
       value
     }
     taglineMetafield: metafield(namespace: "beepaws", key: "tagline") {
+      value
+    }
+    pageHiddenMetafield: metafield(namespace: "beepaws", key: "page_hidden") {
       value
     }
     seo {
@@ -269,6 +273,7 @@ function mapAdminProduct(node: AdminProductNode): Product {
       title: node.seo?.title || node.title,
       description: (node.seo?.description || plain).slice(0, 320),
     },
+    pageHidden: node.pageHiddenMetafield?.value === "true",
   };
 }
 
