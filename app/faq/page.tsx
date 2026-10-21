@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { SimpleArticle } from "@/components/layout/SimpleArticle";
+import { HANDLING_DAYS, RETURN_DAYS, SHIPS_TO, TRANSIT_DAYS, range } from "@/lib/store-policy";
 
 export const metadata = {
   title: "FAQ | BeePaws",
@@ -13,14 +14,14 @@ export const metadata = {
 const QUESTIONS: { q: string; a: ReactNode }[] = [
   {
     q: "Where do you ship?",
-    a: <>We ship within the United States.</>,
+    a: <>We ship within the {SHIPS_TO.name}.</>,
   },
   {
     q: "How long does delivery take?",
     a: (
       <>
-        Orders leave our warehouse within 1–3 business days, and most arrive about 5–9 days
-        after that. You&apos;ll get an email with your tracking link as soon as yours ships.
+        Orders leave our warehouse within {range(HANDLING_DAYS)} business days, and most arrive
+        about {range(TRANSIT_DAYS)} days after that. You&apos;ll get an email with your tracking link as soon as yours ships.
         More on the{" "}
         <Link href="/shipping" className="font-semibold text-[var(--color-primary)] hover:underline">
           shipping page
@@ -43,8 +44,8 @@ const QUESTIONS: { q: string; a: ReactNode }[] = [
     a: (
       <>
         Get in touch as soon as you can. If your order hasn&apos;t shipped yet, we&apos;ll do
-        our best to change or cancel it. Once it&apos;s on its way, our 60-day promise still
-        covers you.
+        our best to change or cancel it. Once it&apos;s on its way, our {RETURN_DAYS}-day promise
+        still covers you.
       </>
     ),
   },
@@ -52,8 +53,8 @@ const QUESTIONS: { q: string; a: ReactNode }[] = [
     q: "What if it doesn't work for my dog?",
     a: (
       <>
-        Every order comes with our 60-day promise: if it&apos;s not right for you or your
-        dog, return it for a full refund. See{" "}
+        Every order comes with our {RETURN_DAYS}-day promise: if it&apos;s not right for you or
+        your dog, return it for a full refund. See{" "}
         <Link href="/returns" className="font-semibold text-[var(--color-primary)] hover:underline">
           returns
         </Link>

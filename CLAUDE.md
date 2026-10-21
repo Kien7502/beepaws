@@ -135,6 +135,13 @@ renders today's built-in defaults — so wiring them is post-launch, not a block
   nothing) and was DELETED with its CSS block. To bring a homepage back: render `<HomePageView>` in
   `app/page.tsx` once the admin's `dental-spotlight` image is in and the pillar line "real photos —
   never stock fur" is reworded (the images are AI).
+- **US-only signals + shared policy facts** (owner, 2026-10-21): `lib/store-policy.ts` holds the shipping/returns
+  numbers (US only, 1–3 days handling, 5–9 days transit, free standard over $70, $8 standard, 60-day returns); the
+  shipping, returns and FAQ pages AND the PDP's JSON-LD (`shippingDetails` + `hasMerchantReturnPolicy`) read them —
+  change them there. `<html lang="en-US">`. Visitors abroad: `/api/geo` returns Vercel's `x-vercel-ip-country`
+  (null locally); the AnnouncementBar then shows a fixed "We currently ship to the United States only" (same grid
+  cell, no height change; cached per session). Google can't be told to hide organic results abroad; Merchant
+  Center isn't used (owner runs Meta ads).
 - **Store details** (2026-10-21) — `beepaws.store_info` shop metafield (admin Settings → Store
   details): the contact page's support email, read by `lib/shopify/store-info.ts` under the `store`
   cache tag (allowed by `/api/revalidate`); no address → the page points to the order confirmation email.

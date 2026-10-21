@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SimpleArticle } from "@/components/layout/SimpleArticle";
+import { RETURN_DAYS } from "@/lib/store-policy";
 
 export const metadata = {
   title: "Returns & Refunds | BeePaws",
@@ -20,8 +21,8 @@ export default function ReturnsPage() {
       ]}
     >
       <p>
-        Every BeePaws order comes with our <strong>60-day promise</strong>. Use it at home
-        for up to 60 days after delivery. If you don&apos;t see the hardened plaque chipping
+        Every BeePaws order comes with our <strong>{RETURN_DAYS}-day promise</strong>. Use it at
+        home for up to {RETURN_DAYS} days after delivery. If you don&apos;t see the hardened plaque chipping
         away, or it&apos;s simply not the right fit for your dog, return it for a full refund.
       </p>
       <p>

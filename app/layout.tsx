@@ -46,9 +46,10 @@ export default function RootLayout({
 }>) {
   // data-season drives the seasonal skin (lib/theme.ts → the [data-season]
   // blocks in globals.css). Server-rendered, so the right palette is in the
-  // first paint — no flash of the default.
+  // first paint — no flash of the default. lang en-US (2026-10-21): the store
+  // sells to the US only, and this tells search engines the page is US English.
   return (
-    <html lang="en" data-season={activeSeason()} suppressHydrationWarning>
+    <html lang="en-US" data-season={activeSeason()} suppressHydrationWarning>
       <body className={`${fraunces.variable} ${hankenGrotesk.variable} antialiased min-h-screen flex flex-col`}>
         <CartProvider>
           {/* SiteChrome drops the header/footer/back-to-top on the journal pages

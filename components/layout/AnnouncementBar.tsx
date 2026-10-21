@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { SHIPS_TO } from "@/lib/store-policy";
 
 /**
  * The cocoa announcement bar: three short positioning messages, one at a time
@@ -16,6 +17,12 @@ import { useEffect, useState, type ReactNode } from "react";
  * what that setting asks to stop). Inactive messages are aria-hidden, so a
  * screen reader reads the one on show and isn't interrupted by the rotation.
  * The no-break space before each dash keeps it on the first word's line.
+ *
+ * Visitors from outside the US (owner, 2026-10-21: US-only shipping) see one
+ * fixed message instead — that we ship to the US only — so nobody finds out at
+ * checkout. Their country comes from /api/geo (the host's geo header; none in
+ * local dev), asked once per session. That message sits in the same grid cell
+ * as the others, so switching to it never changes the bar's height.
  */
 const MESSAGES: ReactNode[] = [
   <>
@@ -29,14 +36,44 @@ const MESSAGES: ReactNode[] = [
     {" "}— even for skittish dogs
   </>,
 ];
+const ABROAD: ReactNode = (
+  <>
+    We currently ship to the <b className="text-gold">{SHIPS_TO.name}</b> only
+  </>
+);
+const ALL = [...MESSAGES, ABROAD];
+const ABROAD_INDEX = MESSAGES.length;
+const GEO_KEY = "beepaws.geo"; // sessionStorage: the visitor's country ("" = unknown)
 const INTERVAL_MS = 4500;
 
 export function AnnouncementBar() {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [abroad, setAbroad] = useState(false);
 
   useEffect(() => {
-    if (paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const apply = (country: string) => setAbroad(!!country && country !== SHIPS_TO.code);
+    let cached: string | null = null;
+    try {
+      cached = sessionStorage.getItem(GEO_KEY);
+    } catch {}
+    if (cached !== null) {
+      apply(cached);
+      return;
+    }
+    fetch("/api/geo")
+      .then((r) => r.json() as Promise<{ country: string | null }>)
+      .then(({ country }) => {
+        try {
+          sessionStorage.setItem(GEO_KEY, country ?? "");
+        } catch {}
+        apply(country ?? "");
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (abroad || paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     let timer = 0;
     const start = () => {
       window.clearInterval(timer);
@@ -50,8 +87,9 @@ export function AnnouncementBar() {
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", start);
     };
-  }, [paused]);
+  }, [paused, abroad]);
 
+  const shown = abroad ? ABROAD_INDEX : active;
   return (
     <div
       className="grid bg-cocoa px-2 py-2.5 text-center text-xs font-medium tracking-wide text-cream md:text-sm"
@@ -60,12 +98,13 @@ export function AnnouncementBar() {
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
-      {MESSAGES.map((m, i) => {
-        const state = i === active ? "translate-y-0 opacity-100" : i === (active + MESSAGES.length - 1) % MESSAGES.length ? "-translate-y-1.5 opacity-0" : "translate-y-1.5 opacity-0";
+      {ALL.map((m, i) => {
+        const leaving = !abroad && i === (active + MESSAGES.length - 1) % MESSAGES.length;
+        const state = i === shown ? "translate-y-0 opacity-100" : leaving ? "-translate-y-1.5 opacity-0" : "translate-y-1.5 opacity-0";
         return (
           <p
             key={i}
-            aria-hidden={i !== active}
+            aria-hidden={i !== shown}
             className={`[grid-area:1/1] transition-[opacity,translate] duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none ${state}`}
           >
             {m}

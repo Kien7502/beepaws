@@ -28,6 +28,7 @@ import { WaveDivider } from "@/components/ui/WaveDivider";
 import { ProductMediaSync } from "@/components/product/ProductMediaSync";
 import RevealObserver from "@/components/RevealObserver";
 import { kitShippingEnabled } from "@/lib/shopify/kit-shipping";
+import { FREE_STANDARD_OVER, HANDLING_DAYS, RETURN_DAYS, SHIPS_TO, STANDARD_RATE, TRANSIT_DAYS } from "@/lib/store-policy";
 import type { FaqItem } from "@/types/metafields";
 
 type FullProduct = Awaited<ReturnType<typeof getFullProductForPage>>;
@@ -340,6 +341,13 @@ export async function ProductPageView({
     .slice(0, 6);
 
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
+  // Shipping + returns for Google (owner wants US-only reach, 2026-10-21): the
+  // offer ships to the US only, with handling/transit times and the 60-day
+  // return window from lib/store-policy.ts — the same facts the shipping and
+  // returns pages state. The rate is for the quoted (entry) price: free at or
+  // over the threshold, or when that entry offer is a kit while kit shipping is on.
+  const shipsFree = Number(displayPriceAmount) >= FREE_STANDARD_OVER || (!!tierZero && kitShippingOn);
+  const currency = product.priceRange.minVariantPrice.currencyCode;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -356,6 +364,23 @@ export async function ProductPageView({
         ? "https://schema.org/InStock"
         : "https://schema.org/OutOfStock",
       seller: { "@type": "Organization", name: "BeePaws" },
+      shippingDetails: {
+        "@type": "OfferShippingDetails",
+        shippingRate: { "@type": "MonetaryAmount", value: shipsFree ? 0 : STANDARD_RATE, currency },
+        shippingDestination: { "@type": "DefinedRegion", addressCountry: SHIPS_TO.code },
+        deliveryTime: {
+          "@type": "ShippingDeliveryTime",
+          handlingTime: { "@type": "QuantitativeValue", minValue: HANDLING_DAYS.min, maxValue: HANDLING_DAYS.max, unitCode: "DAY" },
+          transitTime: { "@type": "QuantitativeValue", minValue: TRANSIT_DAYS.min, maxValue: TRANSIT_DAYS.max, unitCode: "DAY" },
+        },
+      },
+      hasMerchantReturnPolicy: {
+        "@type": "MerchantReturnPolicy",
+        applicableCountry: SHIPS_TO.code,
+        returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+        merchantReturnDays: RETURN_DAYS,
+        returnMethod: "https://schema.org/ReturnByMail",
+      },
     },
   };
 
