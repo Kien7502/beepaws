@@ -18,7 +18,8 @@ import { shopifyFetch } from "./index";
  *     catalogue later can't loosen it, unlike one shared code (owner's point);
  *   - single use, expiring after `hours` (default 48) — a returning shopper just
  *     gets a fresh one, so the expiry never costs them the free shipping;
- *   - `maximumShippingPrice` caps it to Standard ($8 today), Express stays paid;
+ *   - `maximumShippingPrice` caps the rate it frees (Standard is the only option,
+ *     $10 since 2026-10-21; a pricier option added later would stay paid);
  *   - combines with product (tier gifts) and order (promo) discounts.
  * The cart remembers its code in the private `_kitship` attribute. Codes are
  * replaced when the kit total changes or expiry nears, removed (and deleted)
@@ -34,7 +35,7 @@ export type KitShippingConfig = {
   enabled: boolean;
   /** Code lifetime in hours. */
   hours: number;
-  /** Shipping rates up to this price are made free (keeps Express paid). */
+  /** Shipping rates up to this price are made free (Standard is $10: keep it ≥ 10). */
   maxShippingPrice: number;
   /** % below the kit total the minimum may sit, so a promo code doesn't push a
    *  kit order under it (Shopify checks the minimum AFTER other discounts). */

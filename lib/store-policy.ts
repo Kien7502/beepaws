@@ -15,8 +15,10 @@ export const TRANSIT_DAYS = { min: 5, max: 9 } as const;
 /** Standard shipping is free at or above this order total (USD) — Shopify's General shipping profile. */
 export const FREE_STANDARD_OVER = 70;
 
-/** Standard rate below that (USD), measured with test carts 2026-10-15. Only Google's data quotes it. */
-export const STANDARD_RATE = 8;
+/** The one shipping option: Standard at this rate (USD) below the free threshold.
+ *  Owner, 2026-10-21: Standard only (no Express) at $10. The admin's "Free
+ *  shipping on kits" cap ("free on rates up to") must stay at or above it. */
+export const STANDARD_RATE = 10;
 
 /** The 60-day promise (PDP guarantee block + FAQ). */
 export const RETURN_DAYS = 60;

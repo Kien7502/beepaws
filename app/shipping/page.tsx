@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SimpleArticle } from "@/components/layout/SimpleArticle";
 import { kitShippingEnabled } from "@/lib/shopify/kit-shipping";
-import { FREE_STANDARD_OVER, HANDLING_DAYS, SHIPS_TO, TRANSIT_DAYS, range } from "@/lib/store-policy";
+import { FREE_STANDARD_OVER, HANDLING_DAYS, SHIPS_TO, STANDARD_RATE, TRANSIT_DAYS, range } from "@/lib/store-policy";
 
 export const metadata = {
   title: "Shipping | BeePaws",
@@ -37,9 +37,9 @@ export default async function ShippingPage() {
         <strong>Delivery:</strong> most orders arrive about {range(TRANSIT_DAYS)} days after they ship.
       </p>
       <p>
-        <strong>Cost:</strong> standard shipping is free on orders over ${FREE_STANDARD_OVER}
-        {kitsShipFree ? " and on every kit" : ""}. Otherwise it&apos;s calculated at
-        checkout, where you can also choose Express.
+        <strong>Cost:</strong> ${STANDARD_RATE} standard shipping, free on orders over $
+        {FREE_STANDARD_OVER}
+        {kitsShipFree ? " and on every kit" : ""}.
       </p>
       <p>
         Questions about an order? Get in touch through{" "}
