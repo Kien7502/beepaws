@@ -136,7 +136,7 @@ renders today's built-in defaults — so wiring them is post-launch, not a block
   `app/page.tsx` once the admin's `dental-spotlight` image is in and the pillar line "real photos —
   never stock fur" is reworded (the images are AI).
 - **US-only signals + shared policy facts** (owner, 2026-10-21): `lib/store-policy.ts` holds the shipping/returns
-  numbers (US only, 1–3 days handling, 5–9 days transit, free standard over $70, $10 standard — the only option since 2026-10-21, no Express — 60-day returns); the
+  numbers (US only, 1–3 days handling, 5–9 days transit, $10 standard — the only option since 2026-10-21, no Express, and no free-over-$X threshold (dropped on purpose: kits ship free via the kit-shipping switch) — 60-day returns); the
   shipping, returns and FAQ pages AND the PDP's JSON-LD (`shippingDetails` + `hasMerchantReturnPolicy`) read them —
   change them there. `<html lang="en-US">`. Visitors abroad: `/api/geo` returns Vercel's `x-vercel-ip-country`
   (null locally); the AnnouncementBar then shows a fixed "We currently ship to the United States only" (same grid

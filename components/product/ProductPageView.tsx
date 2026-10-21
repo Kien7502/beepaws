@@ -28,7 +28,7 @@ import { WaveDivider } from "@/components/ui/WaveDivider";
 import { ProductMediaSync } from "@/components/product/ProductMediaSync";
 import RevealObserver from "@/components/RevealObserver";
 import { kitShippingEnabled } from "@/lib/shopify/kit-shipping";
-import { FREE_STANDARD_OVER, HANDLING_DAYS, RETURN_DAYS, SHIPS_TO, STANDARD_RATE, TRANSIT_DAYS } from "@/lib/store-policy";
+import { HANDLING_DAYS, RETURN_DAYS, SHIPS_TO, STANDARD_RATE, TRANSIT_DAYS } from "@/lib/store-policy";
 import type { FaqItem } from "@/types/metafields";
 
 type FullProduct = Awaited<ReturnType<typeof getFullProductForPage>>;
@@ -344,9 +344,10 @@ export async function ProductPageView({
   // Shipping + returns for Google (owner wants US-only reach, 2026-10-21): the
   // offer ships to the US only, with handling/transit times and the 60-day
   // return window from lib/store-policy.ts — the same facts the shipping and
-  // returns pages state. The rate is for the quoted (entry) price: free at or
-  // over the threshold, or when that entry offer is a kit while kit shipping is on.
-  const shipsFree = Number(displayPriceAmount) >= FREE_STANDARD_OVER || (!!tierZero && kitShippingOn);
+  // returns pages state. The rate is for the quoted (entry) offer: $10 standard,
+  // or free when that offer is a kit while kit shipping is on (there's no
+  // free-over-$X threshold since 2026-10-21).
+  const shipsFree = !!tierZero && kitShippingOn;
   const currency = product.priceRange.minVariantPrice.currencyCode;
   const jsonLd = {
     "@context": "https://schema.org",

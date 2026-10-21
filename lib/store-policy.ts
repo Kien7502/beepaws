@@ -12,12 +12,11 @@ export const HANDLING_DAYS = { min: 1, max: 3 } as const;
 /** Days from shipped to delivered (owner, from the HyperSKU dashboard). */
 export const TRANSIT_DAYS = { min: 5, max: 9 } as const;
 
-/** Standard shipping is free at or above this order total (USD) — Shopify's General shipping profile. */
-export const FREE_STANDARD_OVER = 70;
-
-/** The one shipping option: Standard at this rate (USD) below the free threshold.
- *  Owner, 2026-10-21: Standard only (no Express) at $10. The admin's "Free
- *  shipping on kits" cap ("free on rates up to") must stay at or above it. */
+/** The one shipping option: Standard, this rate (USD) on every order.
+ *  Owner, 2026-10-21: Standard only (no Express) at $10, and NO free-over-$X
+ *  threshold (dropped on purpose): kits ship free through the admin's "Free
+ *  shipping on kits" switch instead, whose cap ("free on rates up to") must stay
+ *  at or above this rate. */
 export const STANDARD_RATE = 10;
 
 /** The 60-day promise (PDP guarantee block + FAQ). */
