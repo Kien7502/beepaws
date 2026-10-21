@@ -556,6 +556,35 @@ body {
   }
 }
 
+/* ─── Shopify policy text (app/policies/[handle], 2026-10-21) ──────────────
+   Merchant HTML from Shopify's admin, so the elements it uses are styled here
+   rather than given classes; Tailwind's reset strips lists and headings bare. */
+/* Shopify wraps the text in a <div>, so space siblings at any depth. */
+.policy-body :is(p, ul, ol, div, table, h1, h2, h3, h4) + :is(p, ul, ol, div, table) { margin-top: 1rem; }
+.policy-body :is(p, ul, ol, div, table, h1, h2, h3, h4) + :is(h1, h2, h3, h4) { margin-top: 2rem; }
+.policy-body h1,
+.policy-body h2,
+.policy-body h3,
+.policy-body h4 {
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-foreground);
+}
+.policy-body :is(h1, h2, h3, h4) + :is(p, ul, ol) { margin-top: 0; }
+.policy-body h1, .policy-body h2 { font-size: 1.25rem; }
+.policy-body h3, .policy-body h4 { font-size: 1.0625rem; }
+.policy-body ul, .policy-body ol { padding-left: 1.5rem; }
+.policy-body ul { list-style: disc; }
+.policy-body ol { list-style: decimal; }
+.policy-body li + li { margin-top: 0.5rem; }
+.policy-body a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  overflow-wrap: anywhere;
+}
+
 /* ─── Print (the admin tool's PDF export, 2026-10-02) ──────────────────────
    The admin's "PDF" button prints a page through Chromium onto US Letter: a
    faithful snapshot of the screen layout (its print pipeline also hides fixed

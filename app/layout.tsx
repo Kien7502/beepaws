@@ -8,6 +8,7 @@ import { CartDrawer } from "@/components/cart/CartDrawer";
 import { ScrollToTopButton } from "@/components/ui/ScrollToTopButton";
 import { SiteChrome } from "@/components/layout/SiteChrome";
 import { activeSeason } from "@/lib/theme";
+import { LEGAL_POLICIES, getLegalPolicies } from "@/lib/shopify/policies";
 
 // Warm Honey type system: Fraunces (display serif) for headings + brand
 // moments, Hanken Grotesk (humanist sans) for body. next/font assigns each a
@@ -39,11 +40,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Footer links to the legal policies set in Shopify (lib/shopify/policies.ts,
+  // cached + hourly): a policy that isn't set has no link, so none can 404.
+  const policies = await getLegalPolicies();
+  const legal = LEGAL_POLICIES.filter((p) => policies[p.handle]).map((p) => ({ href: `/policies/${p.handle}`, label: p.label }));
   // data-season drives the seasonal skin (lib/theme.ts → the [data-season]
   // blocks in globals.css). Server-rendered, so the right palette is in the
   // first paint — no flash of the default. lang en-US (2026-10-21): the store
@@ -61,7 +66,7 @@ export default function RootLayout({
             {children}
           </main>
           <SiteChrome>
-            <Footer />
+            <Footer legal={legal} />
           </SiteChrome>
           <CartDrawer />
           <SiteChrome>

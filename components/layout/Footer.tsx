@@ -31,7 +31,9 @@ const SOCIAL: { name: string; url: string; icon: React.ReactNode }[] = [
 // the dogs/cats collections are populated.
 const SHOW_CATEGORY_LINKS = false;
 
-const Footer = () => {
+// Privacy Policy / Terms of Service: only the policies set in Shopify, worked
+// out server-side by the root layout (this is a client component) — 2026-10-21.
+const Footer = ({ legal = [] }: { legal?: { href: string; label: string }[] }) => {
   // Palette pass 2026-07-21: the footer was deep forest green (#15241A), the
   // last survivor of the abandoned Forest re-theme. Nothing else on the site
   // was green, so it read as a different site's footer, and green now means
@@ -125,9 +127,22 @@ const Footer = () => {
 
           {/* Bottom */}
           <div className="pt-8 border-t border-cream/15 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-cream/60 text-xs">
-              © {new Date().getFullYear()} BeePaws. All rights reserved.
-            </p>
+            <div className="flex flex-col items-center gap-2 md:flex-row md:gap-5">
+              <p className="text-cream/60 text-xs">
+                © {new Date().getFullYear()} BeePaws. All rights reserved.
+              </p>
+              {legal.length > 0 && (
+                <ul className="flex items-center gap-4">
+                  {legal.map((l) => (
+                    <li key={l.href}>
+                      <Link href={l.href} className="inline-block py-2 text-xs text-cream/60 hover:text-gold transition-colors">
+                        {l.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
             {/* Icon-only links: each needs a name for screen readers, and p-2/-m-2
                 gives a ~38px tap area without moving the icons. Only accounts
                 with a real url render (see SOCIAL). */}

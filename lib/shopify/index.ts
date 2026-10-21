@@ -12,12 +12,16 @@ export async function shopifyFetch<T>({
   tags,
   variables,
   silent = false,
+  revalidate,
 }: ShopifyFetchParams & {
   headers?: HeadersInit;
   /** Skip the console.error on failure — for optional-enhancement callers
    * (e.g. selling plans) whose catch-and-degrade path shouldn't spam the
    * dev overlay on every render when a scope is missing. */
   silent?: boolean;
+  /** Seconds before a cached result is refetched — for data edited in
+   * Shopify's own admin, where no refresh tag ever fires (store policies). */
+  revalidate?: number;
 }): Promise<{ status: number; body: T } | never> {
   try {
     const host = normalizeStorefrontApiHost(
@@ -43,7 +47,9 @@ export async function shopifyFetch<T>({
         ...(variables && { variables }),
       }),
       cache,
-      ...(tags && { next: { tags } }),
+      ...((tags || revalidate !== undefined) && {
+        next: { ...(tags && { tags }), ...(revalidate !== undefined && { revalidate }) },
+      }),
     });
 
     const body = (await result.json()) as {

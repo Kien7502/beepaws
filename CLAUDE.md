@@ -142,6 +142,11 @@ renders today's built-in defaults — so wiring them is post-launch, not a block
   (null locally); the AnnouncementBar then shows a fixed "We currently ship to the United States only" (same grid
   cell, no height change; cached per session). Google can't be told to hide organic results abroad; Merchant
   Center isn't used (owner runs Meta ads).
+- **Legal policies** (2026-10-21): `/policies/privacy-policy` and `/policies/terms-of-service` render Shopify's
+  own texts (Settings → Policies) via `lib/shopify/policies.ts` (Storefront API, cached, `revalidate: 3600` since
+  no refresh fires on a Shopify edit — `shopifyFetch` grew a `revalidate` option for this). Unset → 404, and the
+  root layout passes the footer only the links that exist (Footer is a client component). Styling for
+  Shopify's HTML is `.policy-body` in globals.css. Shipping + returns stay our own pages (/shipping, /returns).
 - **Store details** (2026-10-21) — `beepaws.store_info` shop metafield (admin Settings → Store
   details): the contact page's support email, read by `lib/shopify/store-info.ts` under the `store`
   cache tag (allowed by `/api/revalidate`); no address → the page points to the order confirmation email.
