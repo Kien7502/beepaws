@@ -85,7 +85,9 @@ export async function POST(req: Request) {
   // metafields, so this manual path is the trigger).
   // `listicles` = the beepaws_listicles shop metafields (admin listicle editor,
   // 2026-10-06), pinged the same way after a listicle Publish / Unpublish.
-  const allowedTags = ["products", "collections", "homepage", "listicles"];
+  // `store` = the beepaws.store_info shop metafield (admin Settings → Store
+  // details, 2026-10-21): the contact page's support email.
+  const allowedTags = ["products", "collections", "homepage", "listicles", "store"];
   if (!allowedTags.includes(tag)) {
     return NextResponse.json({ error: `tag must be one of: ${allowedTags.join(", ")}` }, { status: 400 });
   }

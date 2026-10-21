@@ -129,6 +129,15 @@ renders today's built-in defaults — so wiring them is post-launch, not a block
   hardcoded page. Keys consumed (`HOMEPAGE_KEYS`): `hero`, `healthy-home`, `why-scene`,
   `proof-1/2/3`, `dental-spotlight` — published back to the admin repo's copy of the doc.
   Real photos are still placeholders; publishing blocks is how they land.
+  **`/` is NOT the homepage at launch (owner, 2026-10-21):** `app/page.tsx` redirects (307) to
+  `/products/beepaws-ultrasonic-plaque-remover`. The interim hardcoded homepage it replaced was the
+  original grooming-store template (fake press logos, ratings, testimonials, a 15%-off signup wired to
+  nothing) and was DELETED with its CSS block. To bring a homepage back: render `<HomePageView>` in
+  `app/page.tsx` once the admin's `dental-spotlight` image is in and the pillar line "real photos —
+  never stock fur" is reworded (the images are AI).
+- **Store details** (2026-10-21) — `beepaws.store_info` shop metafield (admin Settings → Store
+  details): the contact page's support email, read by `lib/shopify/store-info.ts` under the `store`
+  cache tag (allowed by `/api/revalidate`); no address → the page points to the order confirmation email.
   **Preview** (`f36cb17`): `/preview/homepage` renders the admin's unsaved draft,
   `?mode=published` renders the live metafield UNCACHED (so a draft-vs-live compare can't
   show stale ISR content); the PDP preview gained the same `?mode=published`. Both are

@@ -13,6 +13,9 @@ export const metadata = {
 // in step with Shopify if any of those change. The kit sentence follows the
 // admin's "Free shipping on kits" switch, read through the same cached,
 // `products`-tagged lookup as the PDP, so switching it refreshes this page too.
+// Re-checked hourly too, so a build that couldn't reach Shopify mends itself.
+export const revalidate = 3600;
+
 export default async function ShippingPage() {
   const kitsShipFree = await kitShippingEnabled();
   return (
