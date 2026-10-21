@@ -1,32 +1,34 @@
 import { SimpleArticle } from "@/components/layout/SimpleArticle";
-import { ContactForm } from "@/components/contact/ContactForm";
 
 export const metadata = {
   title: "Contact | BeePaws",
   description: "Get in touch with BeePaws for order help and questions.",
 };
 
+// The one support address (launch prep, 2026-10-21). The demo contact form that
+// sat here sent nothing anywhere, so it was removed: email only.
+const SUPPORT_EMAIL = "hello@beepaws.example";
+
 export default function ContactPage() {
   return (
     <SimpleArticle
       title="Contact us"
-      description="We are here to help with orders, products, and general questions."
+      description="Questions about an order, your plaque remover or a return? A real person reads every message."
       breadcrumbs={[
         { label: "Home", href: "/" },
         { label: "Contact" },
       ]}
     >
       <p>
-        Email{" "}
+        Email us at{" "}
         <a
-          href="mailto:hello@beepaws.example"
+          href={`mailto:${SUPPORT_EMAIL}`}
           className="font-semibold text-[var(--color-primary)] hover:underline"
         >
-          hello@beepaws.example
-        </a>{" "}
-        or use the form below (demo—does not send data yet).
+          {SUPPORT_EMAIL}
+        </a>
+        . For an order, include your order number so we can help faster.
       </p>
-      <ContactForm />
     </SimpleArticle>
   );
 }
