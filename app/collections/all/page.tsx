@@ -11,7 +11,7 @@ import Button from "@/components/ui/Button";
 
 export const metadata = {
   title: "Shop All | BeePaws",
-  description: "Shop all premium pet supplies and accessories at BeePaws.",
+  description: "The BeePaws ultrasonic plaque remover, its kits and dental spray.",
 };
 
 // ISR: revalidate via webhook → revalidateTag("products")

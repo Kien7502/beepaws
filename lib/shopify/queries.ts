@@ -36,95 +36,91 @@ type GetProductsOpts = {
 };
 
 // ─── cache wrappers (pass through in dev — see cache() above) ────────────────
+//
+// A failed read must THROW, never come back as "nothing" (2026-10-21).
+// unstable_cache stores whatever its function returns, and these used to catch
+// errors and return [] / null — so one Shopify timeout during a build was
+// cached as "this product has no content": the PDP rendered its Lorem
+// placeholders and Next kept that page for an hour. Now only a real "not found"
+// returns empty; an error skips the cache, gets retried uncached, and if it
+// still fails, throws — a build then stops (the previous deploy stays live) and
+// a background revalidation keeps serving the last good page.
 
 const _cachedGetProducts = cache(
-  async (opts: GetProductsOpts): Promise<Product[]> => {
-    if (!hasAdminApiCredentials()) return [];
-    try {
-      return await adminGetProducts(opts);
-    } catch (e) {
-      console.error("[shopify] products fetch failed:", e);
-      return [];
-    }
-  },
+  async (opts: GetProductsOpts): Promise<Product[]> =>
+    hasAdminApiCredentials() ? adminGetProducts(opts) : [],
   ["shopify-products"],
   { tags: ["products"], revalidate: REVALIDATE },
 );
 
 const _cachedGetProduct = cache(
-  async (handle: string): Promise<Product | null> => {
-    if (!hasAdminApiCredentials()) return null;
-    try {
-      return (await adminGetProductByHandle(handle)) ?? null;
-    } catch (e) {
-      console.error("[shopify] product fetch failed:", e);
-      return null;
-    }
-  },
+  async (handle: string): Promise<Product | null> =>
+    hasAdminApiCredentials() ? ((await adminGetProductByHandle(handle)) ?? null) : null,
   ["shopify-product"],
   { tags: ["products"], revalidate: REVALIDATE },
 );
 
 const _cachedGetFullProduct = cache(
-  async (handle: string): Promise<AdminFullProductForPage | null> => {
-    if (!hasAdminApiCredentials()) return null;
-    try {
-      const products = await adminGetFullProductsForPage({ handle });
-      return products[0] ?? null;
-    } catch (e) {
-      console.error("[shopify] full product fetch failed:", e);
-      return null;
-    }
-  },
+  async (handle: string): Promise<AdminFullProductForPage | null> =>
+    hasAdminApiCredentials() ? ((await adminGetFullProductsForPage({ handle }))[0] ?? null) : null,
   ["shopify-product-full"],
   { tags: ["products", "product-full"], revalidate: REVALIDATE },
 );
 
-// ─── Direct-fetch fallbacks (no cache layer) ──────────────────────────────────
-
-async function _directGetProducts(opts: GetProductsOpts): Promise<Product[]> {
-  if (!hasAdminApiCredentials()) return [];
-  try { return await adminGetProducts(opts); } catch { return []; }
+/** Up to 3 tries with a short backoff (0.5s, 1s); rethrows the last error. */
+async function retry<T>(label: string, fn: () => Promise<T>): Promise<T> {
+  let last: unknown;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      return await fn();
+    } catch (e) {
+      last = e;
+      if (attempt < 2) await new Promise((r) => setTimeout(r, 500 * 2 ** attempt));
+    }
+  }
+  console.error(`[shopify] ${label} failed after 3 tries:`, last);
+  throw last;
 }
 
-async function _directGetProduct(handle: string): Promise<Product | undefined> {
-  if (!hasAdminApiCredentials()) return undefined;
-  try { return await adminGetProductByHandle(handle); } catch { return undefined; }
-}
+// ─── Public API (cache, then an uncached retry) ──────────────────────────────
 
-async function _directGetFullProduct(handle: string): Promise<AdminFullProductForPage | undefined> {
-  if (!hasAdminApiCredentials()) return undefined;
-  try {
-    const products = await adminGetFullProductsForPage({ handle });
-    return products[0];
-  } catch { return undefined; }
-}
-
-// ─── Public API (cache with direct-fetch fallback) ───────────────────────────
-
+/** The catalog. Never throws: a Shopify failure returns [] for THIS request
+ *  only (nothing is cached) — its callers (prebuilding product pages, the
+ *  collection pages) degrade to "no list" rather than a broken page. */
 export async function getProducts(opts: GetProductsOpts = {}): Promise<Product[]> {
   try {
     return await _cachedGetProducts(opts);
   } catch {
-    return _directGetProducts(opts);
+    try {
+      return await retry("products fetch", async () => (hasAdminApiCredentials() ? adminGetProducts(opts) : []));
+    } catch {
+      return [];
+    }
   }
 }
 
+/** One product; undefined = it doesn't exist. THROWS when Shopify can't be read. */
 export async function getProduct(handle: string): Promise<Product | undefined> {
   try {
     return (await _cachedGetProduct(handle)) ?? undefined;
   } catch {
-    return _directGetProduct(handle);
+    return retry(`product ${handle}`, async () =>
+      hasAdminApiCredentials() ? await adminGetProductByHandle(handle) : undefined,
+    );
   }
 }
 
+/** A product's page content; undefined = no such product. THROWS when Shopify
+ *  can't be read — so a product page never renders its placeholders by accident. */
 export async function getFullProductForPage(
   handle: string,
 ): Promise<AdminFullProductForPage | undefined> {
   try {
     return (await _cachedGetFullProduct(handle)) ?? undefined;
   } catch {
-    return _directGetFullProduct(handle);
+    return retry(`full product ${handle}`, async () =>
+      hasAdminApiCredentials() ? (await adminGetFullProductsForPage({ handle }))[0] : undefined,
+    );
   }
 }
 

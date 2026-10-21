@@ -270,32 +270,48 @@ export function sanitizeListicle(raw: unknown): Listicle {
 type OneBody = { data?: { shop?: { metafield?: { value?: string } | null } } };
 type ListBody = { data?: { shop?: { metafields?: { nodes?: { key: string }[] } } } };
 
+// A failed read THROWS (2026-10-21): returning null used to be cached by
+// unstable_cache as "no such listicle", so one Shopify timeout meant an hour of
+// 404s on an ad landing page. Only a missing or empty metafield is "not found".
 async function fetchListicle(slug: string): Promise<Listicle | null> {
   if (!hasAdminApiCredentials() || !slugifyListicle(slug)) return null;
+  const res = await adminGraphqlFetch<OneBody>({
+    query: `query Listicle($key: String!) { shop { metafield(namespace: "${NS}", key: $key) { value } } }`,
+    variables: { key: slug },
+  });
+  const value = res.body.data?.shop?.metafield?.value;
+  if (!value) return null;
+  let parsed: unknown;
   try {
-    const res = await adminGraphqlFetch<OneBody>({
-      query: `query Listicle($key: String!) { shop { metafield(namespace: "${NS}", key: $key) { value } } }`,
-      variables: { key: slug },
-    });
-    const value = res.body.data?.shop?.metafield?.value;
-    if (!value) return null;
-    const l = sanitizeListicle(JSON.parse(value));
-    return l.headline ? { ...l, slug } : null;
+    parsed = JSON.parse(value);
   } catch {
-    return null; // unreadable = not found, never a crash
+    return null; // malformed JSON in the metafield = nothing publishable
   }
+  const l = sanitizeListicle(parsed);
+  return l.headline ? { ...l, slug } : null;
 }
 
 async function fetchListicleSlugs(): Promise<string[]> {
   if (!hasAdminApiCredentials()) return [];
-  try {
-    const res = await adminGraphqlFetch<ListBody>({
-      query: `query ListicleSlugs { shop { metafields(namespace: "${NS}", first: 100) { nodes { key } } } }`,
-    });
-    return (res.body.data?.shop?.metafields?.nodes ?? []).map((n) => n.key).filter((k) => !!slugifyListicle(k));
-  } catch {
-    return [];
+  const res = await adminGraphqlFetch<ListBody>({
+    query: `query ListicleSlugs { shop { metafields(namespace: "${NS}", first: 100) { nodes { key } } } }`,
+  });
+  return (res.body.data?.shop?.metafields?.nodes ?? []).map((n) => n.key).filter((k) => !!slugifyListicle(k));
+}
+
+/** Up to 3 tries with a short backoff; rethrows the last error. */
+async function retry<T>(fn: () => Promise<T>): Promise<T> {
+  let last: unknown;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      return await fn();
+    } catch (e) {
+      last = e;
+      if (attempt < 2) await new Promise((r) => setTimeout(r, 500 * 2 ** attempt));
+    }
   }
+  console.error("[listicles] Shopify read failed after 3 tries:", last);
+  throw last;
 }
 
 // Admin GraphQL is POST (no fetch-level caching), so wrap like the homepage —
@@ -309,19 +325,36 @@ const cachedSlugs = prod
   ? unstable_cache(fetchListicleSlugs, ["beepaws-listicle-slugs"], { tags: ["listicles"], revalidate: 3600 })
   : fetchListicleSlugs;
 
-export function getListicle(slug: string): Promise<Listicle | null> {
-  return cachedListicle(slug);
+/** A published listicle; null = none at that address. THROWS when Shopify
+ *  can't be read: the page errors, so Next keeps serving the last good copy. */
+export async function getListicle(slug: string): Promise<Listicle | null> {
+  try {
+    return await cachedListicle(slug);
+  } catch {
+    return retry(() => fetchListicle(slug));
+  }
 }
 
-export function getListicleSlugs(): Promise<string[]> {
-  return cachedSlugs();
+/** Addresses to prebuild. Never throws: on a failure nothing is prebuilt and
+ *  each listicle renders (and is cached) on its first visit. */
+export async function getListicleSlugs(): Promise<string[]> {
+  try {
+    return await cachedSlugs();
+  } catch {
+    try {
+      return await retry(fetchListicleSlugs);
+    } catch {
+      return [];
+    }
+  }
 }
 
 // ─── Product cards ───────────────────────────────────────────────────────────
 
 /** Price + fallback image for every product a listicle's product cards name,
  *  read from the store at render time (cached with the catalog), so a card can
- *  never show a stale price. A product that can't be read just shows no price. */
+ *  never show a stale price. A product that no longer exists shows no price;
+ *  a Shopify failure throws (see below). */
 export async function listicleProducts(
   l: Listicle,
 ): Promise<Record<string, { price: string | null; image: ListicleImage | null; title: string }>> {
@@ -331,25 +364,25 @@ export async function listicleProducts(
     ),
   ];
   const out: Record<string, { price: string | null; image: ListicleImage | null; title: string }> = {};
+  // getProduct throws when Shopify can't be read (lib/shopify/queries.ts): the
+  // page then errors and Next keeps the last good copy, rather than caching an
+  // ad landing page with a price-less product card for an hour (2026-10-21).
+  // A product that doesn't exist (any more) just shows no card details.
   await Promise.all(
     handles.map(async (handle) => {
-      try {
-        const p = await getProduct(handle);
-        if (!p) return;
-        const m = p.priceRange?.minVariantPrice;
-        const img = p.images?.edges?.[0]?.node;
-        out[handle] = {
-          title: p.title,
-          price: m
-            ? new Intl.NumberFormat("en-US", { style: "currency", currency: m.currencyCode || "USD" }).format(Number(m.amount))
-            : null,
-          image: img?.url
-            ? { src: img.url, alt: img.altText || p.title, caption: "", width: img.width || undefined, height: img.height || undefined }
-            : null,
-        };
-      } catch {
-        /* no price is better than a broken page */
-      }
+      const p = await getProduct(handle);
+      if (!p) return;
+      const m = p.priceRange?.minVariantPrice;
+      const img = p.images?.edges?.[0]?.node;
+      out[handle] = {
+        title: p.title,
+        price: m
+          ? new Intl.NumberFormat("en-US", { style: "currency", currency: m.currencyCode || "USD" }).format(Number(m.amount))
+          : null,
+        image: img?.url
+          ? { src: img.url, alt: img.altText || p.title, caption: "", width: img.width || undefined, height: img.height || undefined }
+          : null,
+      };
     }),
   );
   return out;

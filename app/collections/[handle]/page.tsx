@@ -19,7 +19,7 @@ export async function generateMetadata({
   const title = formatCollectionTitle(resolvedParams.handle);
   return {
     title: `${title} | BeePaws`,
-    description: `Shop ${title.toLowerCase()} — premium pet supplies at BeePaws.`,
+    description: `Shop ${title.toLowerCase()} at BeePaws.`,
   };
 }
 

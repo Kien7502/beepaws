@@ -32,7 +32,9 @@ const hankenGrotesk = Hanken_Grotesk({
 
 export const metadata: Metadata = {
   title: "BeePaws",
-  description: "Your pet deserves the best - Shop premium pet supplies.",
+  // Launch (2026-10-21): the template's "premium pet supplies" line is gone;
+  // only claims the product pages make (no anesthesia, 60-day promise).
+  description: "At-home ultrasonic plaque removal for dogs. No anesthesia, no vet bill, and a 60-day promise.",
   icons: {
     icon: "/icon.png",
     apple: "/icon.png",
