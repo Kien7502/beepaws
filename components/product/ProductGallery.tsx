@@ -132,6 +132,10 @@ export function ProductGallery({ productTitle, images, fallbackUrl }: Props) {
   // functional update. Writing the ref immediately lets quick taps accumulate.
   const last = list.length - 1;
   const activeRef = useRef(active);
+  // Mutated during render, not an effect — see the comment above: an effect
+  // would read one render behind, which is exactly the dropped-tap bug this
+  // ref exists to fix.
+  // eslint-disable-next-line react-hooks/refs
   activeRef.current = active;
   function step(delta: number) {
     const next = Math.max(0, Math.min(last, activeRef.current + delta));

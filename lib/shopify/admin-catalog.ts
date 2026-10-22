@@ -2,7 +2,6 @@ import "server-only";
 
 import type { Collection, Image, Product, ProductVariant } from "@/types/shopify";
 import { adminGraphqlFetch } from "./admin-graphql";
-import { shopifyFetch } from "./index";
 import { SHOW_REVIEWS } from "@/lib/reviews";
 
 function stripHtml(html: string | null | undefined): string {
