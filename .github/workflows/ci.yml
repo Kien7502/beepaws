@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    name: tsc · lint · build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - run: npm ci
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      # No Shopify credentials are set here on purpose: every catalog call
+      # degrades to an empty result without them (see lib/shopify/queries.ts
+      # hasAdminApiCredentials() guards), so this still builds — it just
+      # prebuilds 0 product pages instead of the real catalog. That's enough
+      # to catch compile/type/lint regressions before they reach main; it is
+      # NOT a substitute for checking a real Vercel preview build.
+      - name: Build
+        run: npm run build
