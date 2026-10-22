@@ -436,7 +436,12 @@ export async function ProductPageView({
     <div className="relative" style={{ overflowX: "clip" }}>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        // product.title/description are Shopify Admin-authored content — the
+        // same untrusted-injection-surface tier as beepaws.* metafields (see
+        // CLAUDE.md "Security posture"). JSON.stringify doesn't escape "<", so
+        // a value containing the literal "</script>" would terminate this tag
+        // early and let the rest of the string execute as page HTML/script.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
 
       {/* Below-fold sections fade/rise in as they enter the viewport (same

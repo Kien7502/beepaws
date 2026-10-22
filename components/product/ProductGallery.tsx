@@ -142,7 +142,6 @@ export function ProductGallery({ productTitle, images, fallbackUrl }: Props) {
   // mirror the same scroll behaviour clicks get.
   useEffect(() => {
     scrollActiveIntoView(active);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
   return (

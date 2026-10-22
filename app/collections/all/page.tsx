@@ -3,7 +3,6 @@ import { getProducts } from "@/lib/shopify/queries";
 import { withoutVariantGroupMembers } from "@/lib/shopify/variant-groups";
 import { hasAdminApiCredentials } from "@/lib/shopify/admin-credentials";
 import ProductCard from "@/components/product/ProductCard";
-import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import SortDropdown from "@/components/product/SortDropdown";
 import { SORT_OPTIONS, type SortValue } from "@/lib/sort-options";
 import type { Product } from "@/types/shopify";

@@ -68,10 +68,15 @@ const Header = () => {
     return () => window.clearTimeout(t);
   }, [lastAddedAt]);
 
-  // Close the menu on navigation (route change).
-  useEffect(() => {
+  // Close the menu on navigation (route change). Adjusted during render
+  // (React's documented pattern for resetting state on a prop change)
+  // instead of an effect — same result, one fewer render pass, and avoids
+  // the react-hooks/set-state-in-effect lint error.
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
     setMobileOpen(false);
-  }, [pathname]);
+  }
 
   return (
     // Warm Honey re-skin: paper bg + hairline border (no shadow). Sticky stays.
