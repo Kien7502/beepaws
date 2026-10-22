@@ -63,6 +63,12 @@ const Header = () => {
 
   useEffect(() => {
     if (!lastAddedAt) return;
+    // react-hooks/set-state-in-effect fires here, but this genuinely can't
+    // move to render: it's a timed animation (show now, hide in 850ms via a
+    // real timer), not state derivable from props. Flagged by the new
+    // React-Compiler-readiness rule, not a live bug — no compiler in this
+    // build yet.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShowCartPulse(true);
     const t = window.setTimeout(() => setShowCartPulse(false), 850);
     return () => window.clearTimeout(t);

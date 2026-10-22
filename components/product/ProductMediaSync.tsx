@@ -44,12 +44,21 @@ export function ProductMediaSync({
   // `useEffect([setActiveByUrl])` fire constantly. For a variant group the
   // list is the combined reel of every member's images, so a member's own
   // image URL resolves to its index here.
+  //
+  // react-hooks/refs (React-Compiler-readiness) flags mutating ref.current
+  // during render. Moving this into an effect would make setActiveByUrl read
+  // a one-render-stale value in the window between render and effect —
+  // exactly the flicker this "latest ref" pattern exists to prevent — so the
+  // mutation is deliberately kept here. Revisit if this app ever opts into
+  // the React Compiler.
   const urlsRef = useRef(imageUrls);
+  // eslint-disable-next-line react-hooks/refs
   urlsRef.current = imageUrls;
   // Ref-mirror of activeIndex so setActiveByUrl can compare against the current
   // index without being recreated (it must stay identity-stable — consumers
-  // depend on it in effects).
+  // depend on it in effects). Same rationale as urlsRef above.
   const activeIndexRef = useRef(activeIndex);
+  // eslint-disable-next-line react-hooks/refs
   activeIndexRef.current = activeIndex;
 
   const setActiveByUrl = useCallback((url: string | null | undefined) => {
