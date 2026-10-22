@@ -13,6 +13,7 @@ type CartOpResult = {
     cartCreate?: {
       cart?: { id?: string; checkoutUrl?: string; totalQuantity?: number };
       userErrors?: { field?: string[]; message: string }[];
+      warnings?: { code: string; message: string }[];
     };
   };
 };
@@ -27,6 +28,10 @@ const CART_CREATE = `
       }
       userErrors {
         field
+        message
+      }
+      warnings {
+        code
         message
       }
     }
@@ -73,10 +78,22 @@ export async function createCartWithLines(
   // 2026-07-18). totalQuantity only counts visible lines, so a shortfall means
   // some posted line got ghosted; fail loudly rather than hand back a checkout
   // for a cart the customer can't see the contents of.
+  //
+  // Shopify DOES say why, in `warnings` (e.g. MERCHANDISE_OUT_OF_STOCK) - it took
+  // a manual API dig on 2026-09-30 to find that every line was being refused as
+  // "already sold out". So the reason now goes to the server log for the owner,
+  // and the shopper gets a plain sentence (this text is shown under Buy it now
+  // and in the cart drawer, so it must not talk about Shopify internals).
   const expectedQuantity = lines.reduce((sum, l) => sum + l.quantity, 0);
   if ((cart.totalQuantity ?? expectedQuantity) < expectedQuantity) {
+    console.warn(
+      "[cart] Shopify dropped lines from a new cart:",
+      JSON.stringify(payload?.warnings ?? []),
+      "posted:",
+      JSON.stringify(lines.map((l) => l.merchandiseId)),
+    );
     throw new UnsellableLinesError(
-      "Some items are not available for purchase right now — they may be unpublished or archived in Shopify.",
+      "Sorry, this can't be bought right now. Please try again in a little while.",
     );
   }
 

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { HomepageBlock } from "@/lib/shopify/homepage";
+import { cropSizes, cropStyle } from "@/lib/home-crop";
 
 /**
  * Fills a homepage image slot: renders the admin-authored block image
@@ -25,9 +26,12 @@ export function HomeSlotImage({
         src={block.image}
         alt={block.alt}
         fill
-        sizes={sizes}
+        sizes={cropSizes(sizes, block.zoom)}
         priority={priority}
         className="object-cover"
+        // Aim the crop at the admin-set focal point (centre when unset) and
+        // zoom around it. The caller's container clips (overflow-hidden).
+        style={cropStyle(block)}
       />
     );
   }

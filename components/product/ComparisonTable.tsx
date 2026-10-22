@@ -137,8 +137,10 @@ export function ComparisonTable({
               }))}
             />
 
-            {/* DESKTOP — the real side-by-side table, where the comparison works. */}
-            <div className="hidden md:block">
+            {/* DESKTOP — the real side-by-side table, where the comparison works.
+                Also what PRINTS at any width (the admin's PDF export): paper can't
+                swipe the phone slider, so it gets every column at once. */}
+            <div className="hidden md:block print:block">
 
             {/* Column header badges — sit above the table card, aligned over their
                 columns (wider first column for the row labels). */}

@@ -35,6 +35,14 @@ export interface HomepageBlock {
   image: string;
   /** Accessible alt text for the image ("" allowed). */
   alt: string;
+  /** Focal point, % of the image (0 = left/top). Slots crop with object-cover,
+   *  and the hero is a tall strip on phones - this aims the crop at the subject
+   *  instead of the centre. Absent = centre. */
+  focusX?: number;
+  focusY?: number;
+  /** Zoom around the focal point, 1 (none) to 2. Absent = 1. Applied by
+   *  lib/home-crop.ts (2026-10-02). */
+  zoom?: number;
   /** Optional plain-text overrides (never HTML — render through the storefront's
    * own typography). `body` may contain \n line breaks. */
   heading?: string;
@@ -105,6 +113,23 @@ function safeHref(v: unknown): string | undefined {
   }
 }
 
+/** Both halves or nothing; clamped to 0-100 (mirror of the admin's focusOf). */
+function focusOf(rec: Record<string, unknown>): { focusX?: number; focusY?: number } {
+  const x = Number(rec.focusX), y = Number(rec.focusY);
+  if (rec.focusX == null || rec.focusY == null || !Number.isFinite(x) || !Number.isFinite(y)) return {};
+  const c = (n: number) => Math.max(0, Math.min(100, n));
+  return { focusX: c(x), focusY: c(y) };
+}
+
+/** Zoom: 1 (none) to MAX_ZOOM, 2 decimals; absent or <= 1 = none (mirror of the
+ *  admin's zoomOf - the same cap on both sides). */
+const MAX_ZOOM = 2;
+function zoomOf(rec: Record<string, unknown>): { zoom?: number } {
+  const z = Math.round(Number(rec.zoom) * 100) / 100;
+  if (rec.zoom == null || !Number.isFinite(z) || z <= 1) return {};
+  return { zoom: Math.min(MAX_ZOOM, z) };
+}
+
 export function sanitizeHomepage(raw: unknown): HomepageBlocks {
   const blocksRaw = (raw as { blocks?: unknown })?.blocks;
   if (!Array.isArray(blocksRaw)) return {};
@@ -125,6 +150,8 @@ export function sanitizeHomepage(raw: unknown): HomepageBlocks {
       alt: asString(rec.alt).trim(),
       heading: optText(rec.heading),
       body: optText(rec.body),
+      ...focusOf(rec),
+      ...zoomOf(rec),
       // A CTA needs BOTH halves — one without the other renders nothing.
       ...(ctaLabel && ctaHref ? { ctaLabel, ctaHref } : {}),
     };

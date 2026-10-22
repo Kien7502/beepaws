@@ -23,8 +23,18 @@ export function useSlider(count: number) {
   // closure dropped taps: two taps (or a swipe and a tap) landing before React
   // re-rendered both read the same `active` and moved only one step.
   const step = (delta: number) => setActive((a) => clamp(a + delta));
+  const swipe = useSwipe(step);
+  return { active, last, go, step, swipe };
+}
+
+/**
+ * The swipe half of useSlider, on its own for sliders that keep their index
+ * somewhere else (ProductGallery shares its index with the variant picker).
+ * Spread the result onto the element that should take the gesture.
+ */
+export function useSwipe(onStep: (delta: number) => void) {
   const touch = useRef<{ x: number; y: number } | null>(null);
-  const swipe = {
+  return {
     onTouchStart: (e: TouchEvent) => {
       const t = e.touches[0];
       touch.current = { x: t.clientX, y: t.clientY };
@@ -36,10 +46,9 @@ export function useSlider(count: number) {
       const t = e.changedTouches[0];
       const dx = t.clientX - start.x;
       const dy = t.clientY - start.y;
-      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) step(dx < 0 ? 1 : -1);
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) onStep(dx < 0 ? 1 : -1);
     },
   };
-  return { active, last, go, step, swipe };
 }
 
 type SliderNav = { active: number; last: number; go: (i: number) => void; step: (delta: number) => void };
@@ -78,7 +87,7 @@ export function SliderArrow({
       onClick={() => step(prev ? -1 : 1)}
       disabled={prev ? active === 0 : active === last}
       aria-label={`${prev ? "Previous" : "Next"} ${noun}`}
-      className={`flex items-center justify-center rounded-full transition-opacity ${look} ${className}`}
+      className={`flex items-center justify-center rounded-full transition-opacity print:hidden ${look} ${className}`}
       style={style}
     >
       {prev ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -94,7 +103,7 @@ export function SliderDots({
   className = "",
 }: Pick<SliderNav, "active" | "go"> & { labels: string[]; className?: string }) {
   return (
-    <div className={`flex items-center justify-center gap-2 ${className}`}>
+    <div className={`flex items-center justify-center gap-2 print:hidden ${className}`}>
       {labels.map((label, i) => (
         <button
           key={i}
@@ -121,7 +130,7 @@ export function SliderControls({
 }: SliderNav & { labels: string[]; noun?: string; className?: string }) {
   const nav = { active, last, step, noun };
   return (
-    <div className={`flex items-center justify-center gap-4 ${className}`}>
+    <div className={`flex items-center justify-center gap-4 print:hidden ${className}`}>
       <SliderArrow dir="prev" {...nav} />
       <SliderDots active={active} go={go} labels={labels} />
       <SliderArrow dir="next" {...nav} />
@@ -192,14 +201,16 @@ export function CardSlider({
           drop shadows vertically and turn this into a scroll container. */}
       <div className="max-md:overflow-x-clip" {...swipe}>
         <div
-          className={`flex md:grid md:grid-cols-3 max-md:[transform:translateX(var(--slide-x))] max-md:transition-transform ${SLIDE_EASE}`}
+          // Print (the admin's PDF export): the phone strip stacks every card
+          // instead of showing the current one - paper can't be swiped.
+          className={`flex md:grid md:grid-cols-3 max-md:[transform:translateX(var(--slide-x))] max-md:transition-transform print:![transform:none] max-md:print:flex-col ${SLIDE_EASE}`}
           style={trackStyle}
         >
           {slides.map((slide, i) => (
             // `grid` so the card inside stretches: equal heights in the phone strip
             // (flex stretches the wrappers to the tallest card) and in the desktop
             // grid, as before.
-            <div key={i} className="grid w-full shrink-0 md:w-auto">
+            <div key={i} className="grid w-full shrink-0 break-inside-avoid md:w-auto">
               {slide}
             </div>
           ))}

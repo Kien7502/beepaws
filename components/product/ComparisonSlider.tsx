@@ -73,7 +73,7 @@ export function ComparisonSlider({
   const { active, last, go, step, swipe } = useSlider(columns.length);
 
   return (
-    <div className="md:hidden">
+    <div className="md:hidden print:hidden">
       {/* Same geometry for header and card so the sliding header sits exactly
           over the value column. The header's transparent side borders mirror the
           card's 1px border — without them the two 44% splits resolve against

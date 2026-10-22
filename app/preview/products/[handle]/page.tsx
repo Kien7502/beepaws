@@ -1,6 +1,5 @@
 import {
   getFullProductForPageUncached,
-  getPaymentMethods,
   getProductUncached,
 } from "@/lib/shopify/queries";
 import { notFound } from "next/navigation";
@@ -26,14 +25,13 @@ export default async function PreviewProductPage({
   }
   const { handle } = await params;
   const { admin, mode } = await searchParams;
-  const [fullProduct, product, paymentMethods, draft] = await Promise.all([
+  const [fullProduct, product, draft] = await Promise.all([
     // UNCACHED: catalog reads are force-cache'd until revalidateTag("products"),
     // so the cached versions kept serving the OLD images/price after an edit —
     // the preview looked broken when it was just stale. Payment methods stay
     // cached (they don't change while you edit a product).
     getFullProductForPageUncached(handle),
     getProductUncached(handle),
-    getPaymentMethods(),
     // `?mode=published` skips the draft entirely, so the page renders from the
     // PUBLISHED Shopify content — the "live" half of the admin's compare view.
     // (The catalog cache is passthrough in dev, which is where preview runs, so
@@ -81,7 +79,7 @@ export default async function PreviewProductPage({
   const mergedProduct = draftTags ? { ...product, tags: draftTags } : product;
 
   return (
-    <ProductPageView product={mergedProduct} fullProduct={mergedFull} paymentMethods={paymentMethods} handle={handle} />
+    <ProductPageView product={mergedProduct} fullProduct={mergedFull} handle={handle} />
   );
 }
 

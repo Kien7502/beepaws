@@ -2,10 +2,10 @@ import { getBundleContents } from "@/lib/shopify/bundle-contents";
 import { getSellingPlans } from "@/lib/shopify/selling-plans";
 import { isSellableOnStorefront } from "@/lib/shopify/storefront-visibility";
 import { getBeePawsAutoDiscounts } from "@/lib/shopify/discounts";
-import { getFullProductForPage, getPaymentMethods, getProduct, getProducts } from "@/lib/shopify/queries";
+import { getFullProductForPage, getProduct, getProducts } from "@/lib/shopify/queries";
 import VariantSelector from "@/components/product/VariantSelector";
 import { ProductGallery } from "@/components/product/ProductGallery";
-import { Check, Plus } from "lucide-react";
+import { Check } from "lucide-react";
 import { contentIcon } from "@/lib/content-icons";
 import { ProductDetailsSections } from "@/components/product/ProductDetailsSections";
 import { FinalCTASection } from "@/components/product/FinalCTASection";
@@ -13,7 +13,9 @@ import { StickyAddToCart } from "@/components/product/StickyAddToCart";
 import { ComparisonTable } from "@/components/product/ComparisonTable";
 import { UseCaseCards } from "@/components/product/UseCaseCards";
 import { FAQSection } from "@/components/product/FAQSection";
+import { FAQAccordion } from "@/components/product/FAQAccordion";
 import { UGCReviews } from "@/components/product/UGCReviews";
+import { SHOW_REVIEWS } from "@/lib/reviews";
 import { BeforeAfterSlider } from "@/components/product/BeforeAfterSlider";
 import { PainPoints } from "@/components/product/PainPoints";
 import { Mechanism } from "@/components/product/Mechanism";
@@ -27,7 +29,6 @@ import type { FaqItem } from "@/types/metafields";
 
 type FullProduct = Awaited<ReturnType<typeof getFullProductForPage>>;
 type Product = NonNullable<Awaited<ReturnType<typeof getProduct>>>;
-type PaymentMethods = Awaited<ReturnType<typeof getPaymentMethods>>;
 
 // The full PDP render, shared by the live product page and the admin draft
 // preview route (app/preview/products/[handle]). Async: it resolves the
@@ -37,12 +38,10 @@ type PaymentMethods = Awaited<ReturnType<typeof getPaymentMethods>>;
 export async function ProductPageView({
   product,
   fullProduct,
-  paymentMethods,
   handle,
 }: {
   product: Product;
   fullProduct: FullProduct;
-  paymentMethods: PaymentMethods;
   handle: string;
 }) {
   const fallbackUrl = "/product-placeholder.svg";
@@ -574,7 +573,6 @@ export async function ProductPageView({
               <VariantSelector
                 product={product}
                 addonProducts={recommendedBundleProducts}
-                paymentMethods={paymentMethods}
                 educationNote={beepaws?.educationNote}
                 bundleTiers={beepaws?.bundleTiers}
                 tierBundles={tierBundles}
@@ -593,21 +591,11 @@ export async function ProductPageView({
             {/* The questions that stop a purchase, answered at the buy box
                 (hero doc §8). Same faq_items as the section below — an item
                 marked buy-box-only is answered here and left out of that list,
-                so nothing is said twice. <details> keeps this zero-JS. */}
+                so nothing is said twice. Same accordion as that section, in its
+                compact look, so they open and close with the same motion. */}
             {buyBoxFaqs.length > 0 && (
               <div className="mt-5 border-t border-line pt-2">
-                {buyBoxFaqs.map((f, i) => (
-                  <details key={i} className="group border-b border-line py-2 last:border-0">
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[13.5px] font-bold text-cocoa">
-                      {f.q}
-                      <Plus
-                        className="h-4 w-4 shrink-0 text-gold-deep transition-transform duration-200 group-open:rotate-45"
-                        aria-hidden
-                      />
-                    </summary>
-                    <p className="pt-2 text-[13px] leading-relaxed text-brown">{f.a}</p>
-                  </details>
-                ))}
+                <FAQAccordion variant="compact" rows={buyBoxFaqs.map((f) => ({ q: f.q, a: f.a }))} />
               </div>
             )}
 
@@ -717,17 +705,21 @@ export async function ProductPageView({
         </div>
       )}
 
-      {/* BeforeAfterSlider → UGCReviews — direct, hairline border. */}
-      <div className="border-t border-line">
-        <UGCReviews
-          reviews={beepaws?.reviews}
-          eyebrow={blank(ri?.eyebrow)}
-          heading={blank(ri?.heading)}
-          lead={blank(ri?.lead)}
-        />
-      </div>
+      {/* BeforeAfterSlider → UGCReviews — direct, hairline border. Hidden until
+          real customer reviews exist (lib/reviews.ts); with it off, the
+          before/after meets UseCaseCards over the same single hairline. */}
+      {SHOW_REVIEWS && (
+        <div className="border-t border-line">
+          <UGCReviews
+            reviews={beepaws?.reviews}
+            eyebrow={blank(ri?.eyebrow)}
+            heading={blank(ri?.heading)}
+            lead={blank(ri?.lead)}
+          />
+        </div>
+      )}
 
-      {/* UGCReviews → UseCaseCards — proof lands first, then "made for the pet
+      {/* (UGCReviews →) UseCaseCards — proof lands first, then "made for the pet
           you actually have" answers the fit question the proof raises. */}
       <div className="border-t border-line">
         <UseCaseCards

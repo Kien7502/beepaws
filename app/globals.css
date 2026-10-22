@@ -435,3 +435,46 @@ body {
     border-color: #355135;
   }
 }
+
+/* ─── Print (the admin tool's PDF export, 2026-10-02) ──────────────────────
+   The admin's "PDF" button prints a page through Chromium onto US Letter: a
+   faithful snapshot of the screen layout (its print pipeline also hides fixed
+   overlays and un-sticks sticky bars). Paper doesn't scroll, so whatever only
+   appears on scroll must simply be there, and nothing is mid-animation.
+   Sliders print flat - see Slider.tsx / ComparisonSlider.tsx. */
+@media print {
+  .ds-reveal,
+  .ds-reveal-in > *,
+  .ds-stagger > * {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  /* Never cut a picture, card, quote or list item across two pages (cards are
+     articles or block links - a category tile was sliced in half), and keep
+     each heading on the page with what follows it. */
+  img,
+  figure,
+  article,
+  a,
+  blockquote,
+  li,
+  tr {
+    break-inside: avoid;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    break-after: avoid;
+  }
+  /* Next's dev-mode badge (the admin's Live preview renders through next dev). */
+  nextjs-portal {
+    display: none !important;
+  }
+}
