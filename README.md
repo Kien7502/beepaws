@@ -39,7 +39,7 @@ Get-Process -Name node | Stop-Process -Force
 
 ### Next.js version is pinned (exact)
 
-`package.json` pins `"next"` and `"eslint-config-next"` exact (no caret) — **16.4.0** since 2026-10-10. It sat at 16.1.6 until then, which by October carried 35 security advisories (two critical); the bump cleared every runtime one (what `npm audit` still lists is lint tooling only).
+`package.json` pins `"next"` and `"eslint-config-next"` exact (no caret) — **16.4.3** since 2026-10-26. It sat at 16.1.6 until 2026-10-10, which by October carried 35 security advisories (two critical); the bump to 16.4.0 cleared every runtime one. Then two new critical advisories + one high covered 16.0.0–16.4.0 (fixed in 16.4.1), and `next build` started stopping with a `SecurityFatalError` until upgraded → 16.4.3 (none of the three hit this code: no Server Actions, no `use cache`, sharp already ≥ 0.35.5). What `npm audit` still lists is lint tooling only (zod via eslint-plugin-react-hooks).
 
 Why the pin exists: Next 16.2.x had a Turbopack dev-mode regression where the redirect to Shopify checkout, then Back, left the page un-hydrated (CSS works, nothing clickable). Production was never affected, but dev was unusable for checkout testing.
 
