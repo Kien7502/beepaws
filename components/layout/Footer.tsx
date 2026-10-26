@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Instagram, Facebook } from 'lucide-react';
 import { WaveDivider } from '@/components/ui/WaveDivider';
+import { NewsletterForm } from '@/components/layout/NewsletterForm';
 import titleIcon from '@/app/Title_icon.png';
 
 /** The X (formerly Twitter) mark — lucide only has the old bird. */
@@ -80,19 +81,7 @@ const Footer = ({ legal = [] }: { legal?: { href: string; label: string }[] }) =
               <h4 className="font-bold text-cream uppercase text-[13px] tracking-wider mb-3">
                 Subscribe to our newsletter
               </h4>
-              <div className="flex w-full max-w-sm gap-2">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="w-full rounded-full border-2 border-white/15 bg-white/8 px-5 py-3 text-white placeholder-white/55 focus:border-gold focus:outline-none focus:ring-4 focus:ring-gold/25 transition-all font-medium"
-                />
-                <button
-                  type="button"
-                  className="shrink-0 rounded-full bg-gold px-5 py-3 font-bold text-cocoa transition-colors hover:bg-gold-deep"
-                >
-                  Subscribe
-                </button>
-              </div>
+              <NewsletterForm />
             </div>
 
             {/* Quick Links. Dogs/Cats return when their collections are

@@ -155,6 +155,13 @@ renders today's built-in defaults — so wiring them is post-launch, not a block
   no refresh fires on a Shopify edit — `shopifyFetch` grew a `revalidate` option for this). Unset → 404, and the
   root layout passes the footer only the links that exist (Footer is a client component). Styling for
   Shopify's HTML is `.policy-body` in globals.css. Shipping + returns stay our own pages (/shipping, /returns).
+- **Newsletter** (2026-10-26; the footer form used to be a button wired to nothing): `components/layout/NewsletterForm.tsx`
+  → `POST /api/newsletter` → `lib/shopify/newsletter.ts`: the email becomes a Shopify customer with email-marketing
+  consent (single opt-in, tag `newsletter`; an existing customer just gets consent switched on), so Shopify Email can
+  send now and Klaviyo imports the subscribers later. Same answer whether or not the address was already a customer
+  (no "who shops here" leak). Guards: honeypot field `company` (fake success), 5 tries/min per IP. **Needs the app's
+  `read_customers` + `write_customers` scopes** — without them the form shows "We couldn't sign you up just now".
+  The Admin token is cached until it expires (~a day): restart the dev server after a scope change.
 - **Your privacy choices** (2026-10-26): `/privacy-choices` is the opt-out the privacy policy promises. Shopify's
   text links "here" to `/pages/data-sharing-opt-out` on the Shopify-hosted store; the redirect theme keeps the path,
   and `next.config.ts` redirects it to our page. One-click opt-out saved in this browser (cookie `beepaws_optout`),
