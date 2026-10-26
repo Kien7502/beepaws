@@ -40,6 +40,12 @@ const nextConfig: NextConfig = {
     imageSizes: [64, 128, 256, 384],
   },
 
+  // Shopify's privacy policy links its opt-out page on the Shopify-hosted store;
+  // the redirect theme sends that path here, so it lands on our own page
+  // (app/privacy-choices, 2026-10-26).
+  async redirects() {
+    return [{ source: "/pages/data-sharing-opt-out", destination: "/privacy-choices", permanent: true }];
+  },
 };
 
 export default nextConfig;

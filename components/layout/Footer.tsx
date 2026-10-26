@@ -132,7 +132,11 @@ const Footer = ({ legal = [] }: { legal?: { href: string; label: string }[] }) =
                 © {new Date().getFullYear()} BeePaws. All rights reserved.
               </p>
               {legal.length > 0 && (
-                <ul className="flex items-center gap-4">
+                // Phones: capped narrow so the three links wrap onto two centred
+                // lines — one row reached under the floating scroll-to-top
+                // button (fixed bottom-24 right-4), which sits level with this
+                // row at the end of the page (2026-10-26).
+                <ul className="flex max-w-[17rem] flex-wrap items-center justify-center gap-x-4 md:max-w-none">
                   {legal.map((l) => (
                     <li key={l.href}>
                       <Link href={l.href} className="inline-block py-2 text-xs text-cream/60 hover:text-gold transition-colors">

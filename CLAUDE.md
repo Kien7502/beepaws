@@ -155,6 +155,14 @@ renders today's built-in defaults — so wiring them is post-launch, not a block
   no refresh fires on a Shopify edit — `shopifyFetch` grew a `revalidate` option for this). Unset → 404, and the
   root layout passes the footer only the links that exist (Footer is a client component). Styling for
   Shopify's HTML is `.policy-body` in globals.css. Shipping + returns stay our own pages (/shipping, /returns).
+- **Your privacy choices** (2026-10-26): `/privacy-choices` is the opt-out the privacy policy promises. Shopify's
+  text links "here" to `/pages/data-sharing-opt-out` on the Shopify-hosted store; the redirect theme keeps the path,
+  and `next.config.ts` redirects it to our page. One-click opt-out saved in this browser (cookie `beepaws_optout`),
+  Global Privacy Control honoured automatically, email route for everywhere else; linked last in the footer's legal
+  row (always shown). **Rule: the page says the site runs no trackers and that any added later won't run for
+  opted-out visitors — so ANY tracker/pixel (Meta is planned) must be gated on `optedOut()` from
+  `lib/privacy-choice.ts`, and the page text updated when one is added.** Phones: the legal row wraps onto two
+  lines (`max-w-[17rem]`) — one row ran under the fixed scroll-to-top button.
 - **Store details** (2026-10-21) — `beepaws.store_info` shop metafield (admin Settings → Store
   details): the contact page's support email, read by `lib/shopify/store-info.ts` under the `store`
   cache tag (allowed by `/api/revalidate`); no address → the page points to the order confirmation email.

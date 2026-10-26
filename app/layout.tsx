@@ -50,7 +50,11 @@ export default async function RootLayout({
   // Footer links to the legal policies set in Shopify (lib/shopify/policies.ts,
   // cached + hourly): a policy that isn't set has no link, so none can 404.
   const policies = await getLegalPolicies();
-  const legal = LEGAL_POLICIES.filter((p) => policies[p.handle]).map((p) => ({ href: `/policies/${p.handle}`, label: p.label }));
+  // "Your privacy choices" (our own page, always there) follows them.
+  const legal = [
+    ...LEGAL_POLICIES.filter((p) => policies[p.handle]).map((p) => ({ href: `/policies/${p.handle}`, label: p.label })),
+    { href: "/privacy-choices", label: "Your privacy choices" },
+  ];
   // data-season drives the seasonal skin (lib/theme.ts → the [data-season]
   // blocks in globals.css). Server-rendered, so the right palette is in the
   // first paint — no flash of the default. lang en-US (2026-10-21): the store
