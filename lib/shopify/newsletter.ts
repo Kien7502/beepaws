@@ -21,10 +21,12 @@ export function cleanEmail(raw: unknown): string | null {
 
 type UserErrors = { userErrors?: { field?: string[] | null; message: string }[] };
 
+// No consentUpdatedAt: Shopify then stamps its own time. Ours was refused as
+// "must not be in the future" when the server clock ran a little ahead
+// (2026-10-26, first live test).
 const consent = () => ({
   marketingState: "SUBSCRIBED",
   marketingOptInLevel: "SINGLE_OPT_IN",
-  consentUpdatedAt: new Date().toISOString(),
 });
 
 async function findCustomer(email: string) {
