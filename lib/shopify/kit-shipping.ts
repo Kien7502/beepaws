@@ -134,12 +134,19 @@ async function readCart(cartId: string): Promise<CartRead | null> {
   return res.body.data?.cart ?? null;
 }
 
+/** `$codes` must be declared non-null (`[String!]!`, the argument's own type):
+ *  Shopify began rejecting the nullable `[String!]` with "Nullability mismatch"
+ *  some time after 2026-10-15 (same API version), so every code was created and
+ *  then never reached the cart — found 2026-10-26 (owner's test: 9 orphan codes,
+ *  $10 shipping at checkout). */
 async function setCartCodes(cartId: string, codes: string[]) {
-  await shopifyFetch({
+  const res = await shopifyFetch<{ data?: { cartDiscountCodesUpdate?: { userErrors?: { message: string }[] } } }>({
     cache: "no-store",
-    query: `mutation kitShipCodes($id: ID!, $codes: [String!]) { cartDiscountCodesUpdate(cartId: $id, discountCodes: $codes) { userErrors { message } } }`,
+    query: `mutation kitShipCodes($id: ID!, $codes: [String!]!) { cartDiscountCodesUpdate(cartId: $id, discountCodes: $codes) { userErrors { message } } }`,
     variables: { id: cartId, codes },
   });
+  const errors = res.body.data?.cartDiscountCodesUpdate?.userErrors ?? [];
+  if (errors.length) throw new Error(`kit shipping: cart codes not updated: ${errors.map((e) => e.message).join("; ")}`);
 }
 
 /** cartAttributesUpdate replaces ALL attributes, so the others are written back. */
@@ -301,7 +308,14 @@ export async function ensureKitShippingCode(cartId: string): Promise<KitShipping
   if (current && record) return { code: record.code, endsAt: record.endsAt };
 
   const fresh = await createCode(min, config);
-  await setCartCodes(cartId, [...others, fresh.code]);
+  try {
+    await setCartCodes(cartId, [...others, fresh.code]);
+  } catch (e) {
+    // Never leave a code in the store that no cart holds: each later cart change
+    // would make another (how 9 piled up in one test, 2026-10-26).
+    await deleteCodes([fresh.code]).catch(() => {});
+    throw e;
+  }
   await setCartRecord(cartId, cart.attributes, fresh);
   await deleteCodes(ours.map((d) => d.code)).catch(() => {});
   await sweepExpired().catch(() => {});
