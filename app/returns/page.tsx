@@ -46,7 +46,7 @@ export default async function ReturnsPage() {
             Changed your mind, or picked the wrong color or kit? Within {CANCEL_HOURS} hours of ordering,
             use the button in your order confirmation email, or {contact} with your order number.
             We&apos;ll cancel your order for a full refund, and you&apos;re free to place a new one. After{" "}
-            {CANCEL_HOURS} hours your order is with our warehouse and can&apos;t be canceled.
+            {CANCEL_HOURS} hours, your order is with our warehouse and can&apos;t be canceled.
           </p>
         </div>
 
@@ -54,14 +54,14 @@ export default async function ReturnsPage() {
           <H2>Our {PROMISE_DAYS}-day promise</H2>
           <p>
             Use your BeePaws product for up to {PROMISE_DAYS} days after it&apos;s delivered. If it doesn&apos;t
-            work for your dog (for example, your dog still won&apos;t settle for the plaque remover after the
-            Calm Start Protocol, or you&apos;re not seeing the plaque come away), {contact} and tell us what
+            work for your dog (for example, your dog still won&apos;t tolerate the plaque remover after the
+            Calm Start Protocol, or you&apos;re not seeing the plaque coming away), {contact} and tell us what
             happened. We&apos;ll help you troubleshoot first. If it still isn&apos;t working, we&apos;ll give you a
-            full refund for it. In most cases you won&apos;t need to send anything back.
+            full refund. In most cases you won&apos;t need to send anything back.
           </p>
           <ul className="mt-3 list-disc space-y-1 pl-5">
             <li>We&apos;ll ask for a photo or a short video that shows the problem.</li>
-            <li>Damage from drops, chewing or misuse isn&apos;t covered.</li>
+            <li>Damage from drops, chewing, or misuse isn&apos;t covered.</li>
             <li>A change of mind isn&apos;t covered (see below).</li>
           </ul>
         </div>
@@ -104,7 +104,7 @@ export default async function ReturnsPage() {
           <H2>How refunds are paid</H2>
           <p>
             Approved refunds go back to your original payment method within {REFUND_DAYS} days. Your bank
-            may take a few more days to show them.
+            may take a few more days to post the refund.
           </p>
         </div>
 
