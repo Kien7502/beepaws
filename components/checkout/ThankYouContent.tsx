@@ -36,6 +36,9 @@ export function ThankYouContent() {
     const storedCartId = getStoredCartId();
     if (storedCartId && storedCartId === returnedCartId) {
       clearCart();
+      // One-time confirmation side-effect (clearing the cart), not state
+      // derived from props — has to run in the effect that performs it.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCartCleared(true);
     }
     // Intentionally run once on mount — clearCart/markCartCompleted are

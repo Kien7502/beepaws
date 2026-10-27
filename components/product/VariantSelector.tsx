@@ -274,7 +274,14 @@ export default function VariantSelector({
     groupOptions?.find((o) => o.handle === groupHandle) ?? groupOptions?.[0] ?? null;
   const activeProduct = activeGroupOption?.product ?? product;
 
-  const variants = activeProduct.variants.edges.map((e) => e.node);
+  // Memoised so its identity is stable across renders when the underlying
+  // edges haven't changed — without this, every downstream useMemo keyed on
+  // `variants` (optionGroups, etc.) recomputed every render anyway, since a
+  // fresh .map() result never matches the previous one by reference.
+  const variants = useMemo(
+    () => activeProduct.variants.edges.map((e) => e.node),
+    [activeProduct.variants.edges],
+  );
   const multi = variants.length > 1;
 
   // Variant identity is held as an ID, not an object: when the group member
@@ -917,6 +924,12 @@ export default function VariantSelector({
         if (!res.ok || !data.checkoutUrl) {
           throw new Error(data.error || "Couldn't open checkout");
         }
+        // react-hooks/immutability flags this as mutating a variable defined
+        // outside the component (window). It's a navigation side-effect in an
+        // event handler after an awaited fetch — not a render-time mutation —
+        // the standard way to redirect to checkout. Same at every other
+        // window.location.href below.
+        // eslint-disable-next-line react-hooks/immutability
         window.location.href = data.checkoutUrl;
       } catch (e) {
         setBuyingNow(false);
@@ -941,6 +954,7 @@ export default function VariantSelector({
         if (!res.ok || !data.checkoutUrl) {
           throw new Error(data.error || "Couldn't open checkout");
         }
+        // eslint-disable-next-line react-hooks/immutability
         window.location.href = data.checkoutUrl;
       } catch (e) {
         setBuyingNow(false);
@@ -976,6 +990,7 @@ export default function VariantSelector({
         if (!res.ok || !data.checkoutUrl) {
           throw new Error(data.error || "Couldn't open checkout");
         }
+        // eslint-disable-next-line react-hooks/immutability
         window.location.href = data.checkoutUrl;
       } catch (e) {
         setBuyingNow(false);
@@ -1012,6 +1027,7 @@ export default function VariantSelector({
       if (!res.ok || !data.checkoutUrl) {
         throw new Error(data.error || "Couldn't open checkout");
       }
+      // eslint-disable-next-line react-hooks/immutability
       window.location.href = data.checkoutUrl;
     } catch (e) {
       setBuyingNow(false);

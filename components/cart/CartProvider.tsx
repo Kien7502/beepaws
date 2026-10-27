@@ -284,10 +284,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const openCart = useCallback(() => setIsCartOpen(true), []);
   const closeCart = useCallback(() => setIsCartOpen(false), []);
 
-  // Stable refs for stale-closure-safe debounce callbacks
+  // Stable refs for stale-closure-safe debounce callbacks. Mutated during
+  // render (not an effect) so every callback that reads them — even one
+  // invoked synchronously within this same render — sees the latest value;
+  // see the same rationale on ProductMediaSync's urlsRef.
   const shopifyCartRef = useRef<ShopifyCart | null>(null);
+  // eslint-disable-next-line react-hooks/refs
   shopifyCartRef.current = shopifyCart;
   const localItemsRef = useRef<LocalCartItem[]>([]);
+  // eslint-disable-next-line react-hooks/refs
   localItemsRef.current = localItems;
 
   const debounceTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
@@ -388,6 +393,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(BUNDLE_COMPONENTS_KEY);
+      // localStorage isn't available during SSR/first paint, so hydrating
+      // from it has to happen in an effect, not during render.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (raw) setBundleComponentsById(JSON.parse(raw) as Record<string, BundleComponentLite[]>);
     } catch {}
   }, []);
@@ -401,7 +409,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(VARIANT_GROUP_KEY);
+      // Same rationale as the bundle-components hydration above.
       if (raw)
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setVariantGroupById(
           JSON.parse(raw) as Record<string, NonNullable<LocalCartItem["variantGroup"]>>,
         );
