@@ -28,7 +28,7 @@ import { WaveDivider } from "@/components/ui/WaveDivider";
 import { ProductMediaSync } from "@/components/product/ProductMediaSync";
 import RevealObserver from "@/components/RevealObserver";
 import { kitShippingEnabled } from "@/lib/shopify/kit-shipping";
-import { HANDLING_DAYS, RETURN_DAYS, SHIPS_TO, STANDARD_RATE, TRANSIT_DAYS } from "@/lib/store-policy";
+import { HANDLING_DAYS, SHIPS_TO, STANDARD_RATE, TRANSIT_DAYS } from "@/lib/store-policy";
 import type { FaqItem } from "@/types/metafields";
 
 type FullProduct = Awaited<ReturnType<typeof getFullProductForPage>>;
@@ -342,12 +342,13 @@ export async function ProductPageView({
     .slice(0, 6);
 
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
-  // Shipping + returns for Google (owner wants US-only reach, 2026-10-21): the
-  // offer ships to the US only, with handling/transit times and the 60-day
-  // return window from lib/store-policy.ts — the same facts the shipping and
-  // returns pages state. The rate is for the quoted (entry) offer: $10 standard,
-  // or free when that offer is a kit while kit shipping is on (there's no
-  // free-over-$X threshold since 2026-10-21).
+  // Shipping for Google (owner wants US-only reach, 2026-10-21): the offer ships
+  // to the US only, with handling/transit times from lib/store-policy.ts — the
+  // same facts the shipping page states. The rate is for the quoted (entry)
+  // offer: $10 standard, or free when that offer is a kit while kit shipping is
+  // on (there's no free-over-$X threshold since 2026-10-21). No return policy
+  // entry (removed 2026-10-27): nothing is sent back — the 60-day promise refunds
+  // without a return — which Google's return fields can't describe.
   const shipsFree = !!tierZero && kitShippingOn;
   const currency = product.priceRange.minVariantPrice.currencyCode;
   const jsonLd = {
@@ -375,13 +376,6 @@ export async function ProductPageView({
           handlingTime: { "@type": "QuantitativeValue", minValue: HANDLING_DAYS.min, maxValue: HANDLING_DAYS.max, unitCode: "DAY" },
           transitTime: { "@type": "QuantitativeValue", minValue: TRANSIT_DAYS.min, maxValue: TRANSIT_DAYS.max, unitCode: "DAY" },
         },
-      },
-      hasMerchantReturnPolicy: {
-        "@type": "MerchantReturnPolicy",
-        applicableCountry: SHIPS_TO.code,
-        returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
-        merchantReturnDays: RETURN_DAYS,
-        returnMethod: "https://schema.org/ReturnByMail",
       },
     },
   };

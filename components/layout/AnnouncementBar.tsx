@@ -23,10 +23,16 @@ import { SHIPS_TO } from "@/lib/store-policy";
  * checkout. Their country comes from /api/geo (the host's geo header; none in
  * local dev), asked once per session. That message sits in the same grid cell
  * as the others, so switching to it never changes the bar's height.
+ *
+ * Keep every message to ONE line on a 320px phone: the longest sets the bar's
+ * height for all. Measured 2026-10-27: "…it works for your dog, or your money
+ * back" wrapped below 390px wide; "…it works, or your money back" fits at 320.
+ * The guarantee message follows the refund policy (owner, 2026-10-27): never
+ * "risk-free" / "no questions" / "money-back guarantee".
  */
 const MESSAGES: ReactNode[] = [
   <>
-    <b className="text-gold">60-day</b> risk-free guarantee{" "}— no questions, no hassle
+    <b className="text-gold">60-day</b> promise{" "}— it works, or your money back
   </>,
   <>
     No anesthesia, no vet bill{" "}— <b className="text-gold">under $50</b>

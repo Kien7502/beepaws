@@ -137,10 +137,16 @@ renders today's built-in defaults — so wiring them is post-launch, not a block
   nothing) and was DELETED with its CSS block. To bring a homepage back: render `<HomePageView>` in
   `app/page.tsx` once the admin's `dental-spotlight` image is in and the pillar line "real photos —
   never stock fur" is reworded (the images are AI).
-- **US-only signals + shared policy facts** (owner, 2026-10-21): `lib/store-policy.ts` holds the shipping/returns
-  numbers (US only, 1–3 days handling, 5–9 days transit, $10 standard — the only option since 2026-10-21, no Express, and no free-over-$X threshold (dropped on purpose: kits ship free via the kit-shipping switch) — 60-day returns); the
-  shipping, returns and FAQ pages AND the PDP's JSON-LD (`shippingDetails` + `hasMerchantReturnPolicy`) read them —
-  change them there. `<html lang="en-US">`. Visitors abroad: `/api/geo` returns Vercel's `x-vercel-ip-country`
+- **US-only signals + shared policy facts** (owner, 2026-10-21): `lib/store-policy.ts` holds the shipping/refund
+  numbers (US only, 2–4 days handling since 2026-10-27 — HyperSKU's 1–3 plus the 24-hour cancel window, auto-pay off —
+  5–9 days transit, $10 standard — the only option since 2026-10-21, no Express, and no free-over-$X threshold (dropped on purpose: kits ship free via the kit-shipping switch) — and the refund policy's numbers: 60-day promise,
+  24-hour cancel, 7-day damage claims, refunds within 7 days, 20%/90-day change-of-mind code); the shipping, returns
+  and FAQ pages AND the PDP's JSON-LD (`shippingDetails`) read them — change them there. **Refund policy (owner
+  approved 2026-10-27, admin `docs/shopify-policies.md`):** `/returns` carries the same text as Shopify's refund
+  policy — change both together. Refunds are made WITHOUT a return (no return address), so the JSON-LD has no
+  `hasMerchantReturnPolicy` any more. **Wording rule:** never "money-back guarantee", "satisfaction guarantee",
+  "risk-free" or "no questions" (FTC 16 CFR 239.3: those promise a full refund on request; a change of mind gets a
+  code here) — say "60-day promise" and state the condition. US spelling in customer copy (color, canceled). `<html lang="en-US">`. Visitors abroad: `/api/geo` returns Vercel's `x-vercel-ip-country`
   (null locally); the AnnouncementBar then shows a fixed "We currently ship to the United States only" (same grid
   cell, no height change; cached per session). Google can't be told to hide organic results abroad; Merchant
   Center isn't used (owner runs Meta ads).

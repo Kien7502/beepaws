@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { SimpleArticle } from "@/components/layout/SimpleArticle";
-import { HANDLING_DAYS, RETURN_DAYS, SHIPS_TO, TRANSIT_DAYS, range } from "@/lib/store-policy";
+import { CANCEL_HOURS, HANDLING_DAYS, PROMISE_DAYS, SHIPS_TO, TRANSIT_DAYS, range } from "@/lib/store-policy";
 
 export const metadata = {
   title: "FAQ | BeePaws",
@@ -43,9 +43,10 @@ const QUESTIONS: { q: string; a: ReactNode }[] = [
     q: "Can I change or cancel my order?",
     a: (
       <>
-        Get in touch as soon as you can. If your order hasn&apos;t shipped yet, we&apos;ll do
-        our best to change or cancel it. Once it&apos;s on its way, our {RETURN_DAYS}-day promise
-        still covers you.
+        You can cancel within {CANCEL_HOURS} hours of ordering for a full refund: use the button in
+        your order confirmation email, or email us. Ordered the wrong color or kit? Cancel and place
+        a new order in that time. After {CANCEL_HOURS} hours, your order is with our warehouse and
+        can&apos;t be canceled.
       </>
     ),
   },
@@ -53,10 +54,11 @@ const QUESTIONS: { q: string; a: ReactNode }[] = [
     q: "What if it doesn't work for my dog?",
     a: (
       <>
-        Every order comes with our {RETURN_DAYS}-day promise: if it&apos;s not right for you or
-        your dog, return it for a full refund. See{" "}
+        Our {PROMISE_DAYS}-day promise covers you: if it doesn&apos;t work for your dog, tell us what
+        happened. We&apos;ll help first, and if it still isn&apos;t working, we&apos;ll refund you in full.
+        See{" "}
         <Link href="/returns" className="font-semibold text-[var(--color-primary)] hover:underline">
-          returns
+          returns &amp; refunds
         </Link>
         .
       </>

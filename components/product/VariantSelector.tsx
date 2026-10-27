@@ -1354,14 +1354,14 @@ export default function VariantSelector({
         {/* Compact trust line — sits flush under the CTA at the decision moment. */}
         {/* Copy audit §1.9: "Secure checkout" is corporate-logistics voice;
             a named human behind the warranty is the trust signal. */}
-        {/* No free-shipping promise (owner, 2026-10-13); 60-day guarantee per the
-            revision doc. */}
+        {/* No free-shipping promise (owner, 2026-10-13); the 60-day promise (wording
+            per the refund policy the owner approved 2026-10-27). */}
         {/* Each dot rides on the item before it (nowrap), so a wrapped line can
             end with a dot but never start with one — at 13px the phone line
             wrapped as "· Real-person support" (2026-10-14). */}
         <p className="mt-2.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center type-caption font-medium text-brown">
           <span className="whitespace-nowrap">
-            60-day returns, no questions asked<span aria-hidden className="ml-2 text-brown/40">·</span>
+            60-day promise<span aria-hidden className="ml-2 text-brown/40">·</span>
           </span>
           <span className="whitespace-nowrap">
             No anesthesia needed<span aria-hidden className="ml-2 text-brown/40">·</span>
