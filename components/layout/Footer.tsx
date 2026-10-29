@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { Instagram, Facebook } from 'lucide-react';
 import { WaveDivider } from '@/components/ui/WaveDivider';
 import { NewsletterForm } from '@/components/layout/NewsletterForm';
-import titleIcon from '@/app/Title_icon.png';
+import wordmark from '@/app/beepaws-wordmark.svg';
 
 /** The X (formerly Twitter) mark — lucide only has the old bird. */
 function XLogo({ size = 22 }: { size?: number }) {
@@ -68,7 +68,7 @@ const Footer = ({ legal = [] }: { legal?: { href: string; label: string }[] }) =
             {/* Brand & Newsletter */}
             <div className="col-span-1 md:col-span-2">
               <Link href="/" className="inline-block mb-4">
-                <Image src={titleIcon} alt="BeePaws" className="h-9 w-auto" />
+                <Image src={wordmark} alt="BeePaws" className="h-9 w-auto" unoptimized />
               </Link>
               {/* Category-neutral on purpose: no grooming mention while that
                   line is unlaunched (never-tease rule; deliberate deviation

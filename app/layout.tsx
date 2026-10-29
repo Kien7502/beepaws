@@ -35,11 +35,9 @@ export const metadata: Metadata = {
   // Launch (2026-10-21): the template's "premium pet supplies" line is gone;
   // only claims the product pages make (no anesthesia, 60-day promise).
   description: "At-home ultrasonic plaque removal for dogs. No anesthesia, no vet bill, and a 60-day promise.",
-  icons: {
-    icon: "/icon.png",
-    apple: "/icon.png",
-    shortcut: "/icon.png",
-  },
+  // Icons come from the file conventions in app/: favicon.ico (16/32/48), icon.png
+  // (512 square) and apple-icon.png (180, on the paper color). The old 1233x1613
+  // icon.png (~1 MB) + icon.jpeg were fetched by every new visitor for a 16px tab icon.
 };
 
 export default async function RootLayout({

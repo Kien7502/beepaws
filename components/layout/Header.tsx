@@ -8,7 +8,7 @@ import { ShoppingCart, Menu, X } from "lucide-react";
 import { SearchOverlay } from "./SearchOverlay";
 import { AnnouncementBar } from "./AnnouncementBar";
 import { useCart } from "@/components/cart/CartProvider";
-import titleIcon from "@/app/Title_icon.png";
+import wordmark from "@/app/beepaws-wordmark.svg";
 
 // LAUNCH NAV MODE (2026-07-26). The device launches with essentially one
 // product, so a full inline nav reads as empty. Until the spray (and more
@@ -108,11 +108,13 @@ const Header = () => {
               desktop in full mode. */}
           <div className={`flex-1 text-center ${SHOW_FULL_NAV ? "md:flex-none md:text-left" : ""}`}>
             <Link href="/" className="inline-block">
+              {/* Vector wordmark (~2 KB gzipped, sharp at any size): served as-is, not optimized. */}
               <Image
-                src={titleIcon}
+                src={wordmark}
                 alt="BeePaws"
                 className="h-9 w-auto md:h-11"
                 priority
+                unoptimized
               />
             </Link>
           </div>
