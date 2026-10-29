@@ -34,8 +34,8 @@ const QUESTIONS: { q: string; a: ReactNode }[] = [
     q: "When does my Calm Start guide arrive?",
     a: (
       <>
-        As soon as you order: it&apos;s in your order confirmation email, so you can read
-        it before your plaque remover arrives.
+        When your order ships: it&apos;s in your shipping confirmation email, with your tracking
+        link, so you can read it before your plaque remover arrives.
       </>
     ),
   },
